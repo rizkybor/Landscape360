@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useMapStore } from '../store/useMapStore';
 import { useSurveyStore } from '../store/useSurveyStore';
-import { Activity, Eye, Monitor, Ruler, ChevronDown, ChevronUp, Settings, Search } from 'lucide-react';
+import { Activity, Eye, Monitor, Ruler, ChevronDown, ChevronUp, Settings, Search, BookOpen, Sparkles } from 'lucide-react';
 
 export const ControlPanel = () => {
+  const navigate = useNavigate();
   const { 
     contourInterval, setContourInterval,
     elevationExaggeration, setElevationExaggeration,
@@ -51,10 +53,10 @@ export const ControlPanel = () => {
       {!isOpen && (
         <button 
           onClick={() => setIsOpen(true)}
-          className="fixed top-4 left-4 z-30 p-4 bg-blue-600 text-white rounded-full shadow-2xl border-2 border-white/20 active:scale-95 transition-transform hover:bg-blue-500"
+          className="fixed top-4 left-6 z-30 p-4 bg-blue-600 text-white rounded-full shadow-2xl border-2 border-white/20 active:scale-95 transition-transform hover:bg-blue-500"
           title="Open Controls"
         >
-          <Settings size={24} />
+          <Activity size={18} />
         </button>
       )}
 
@@ -67,24 +69,54 @@ export const ControlPanel = () => {
         bg-black/80 backdrop-blur-xl border-t md:border border-white/20 text-white shadow-2xl flex flex-col
         ${!isOpen ? 'translate-y-full md:translate-y-0 md:opacity-0 md:pointer-events-none' : 'translate-y-0'}
       `}>
-        {/* Header / Drag Handle for Mobile */}
+        {/* Branding Header (Glassmorphism) - FIXED POSITIONING */}
+        <div className="p-4 border-b border-white/10 bg-white/5 backdrop-blur-md rounded-t-2xl md:rounded-t-xl relative overflow-hidden shrink-0">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/10 blur-2xl rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          
+          <div className="flex items-center justify-between mb-3">
+             <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                  <Activity size={16} className="text-white" />
+                </div>
+                <div>
+                  <h2 className="font-bold text-sm tracking-tight leading-none">GeoPortal 360</h2>
+                  <span className="text-[10px] text-blue-300 font-mono tracking-wider">v1.0 Pro</span>
+                </div>
+             </div>
+             
+             {/* Desktop Close/Minimize Button moved here for better layout */}
+             <button 
+                onClick={(e) => { e.stopPropagation(); setIsOpen(false); }}
+                className="hidden md:block p-1 hover:bg-white/10 rounded text-gray-400"
+              >
+                <ChevronUp size={16} />
+              </button>
+          </div>
+
+          <div className="flex gap-2">
+             <button className="flex-1 py-1.5 bg-gradient-to-r from-yellow-500/10 to-yellow-600/10 border border-yellow-500/30 rounded text-[10px] font-medium text-yellow-200 hover:bg-yellow-500/20 transition-colors flex items-center justify-center gap-1">
+               Get Started
+             </button>
+             <button 
+                onClick={() => navigate('/docs')}
+                className="flex-1 py-1.5 bg-white/5 border border-white/10 rounded text-[10px] font-medium text-gray-300 hover:bg-white/10 transition-colors flex items-center justify-center gap-1"
+             >
+               <BookOpen size={10} /> Docs
+             </button>
+          </div>
+        </div>
+
+        {/* Header / Drag Handle for Mobile - NOW JUST A SUB-HEADER FOR CONTROLS */}
         <div 
-          className="p-4 flex justify-between items-center border-b border-white/10 cursor-pointer md:cursor-default"
+          className="p-3 flex justify-between items-center border-b border-white/10 cursor-pointer md:cursor-default bg-black/20"
           onClick={() => { if (window.innerWidth < 768) setIsOpen(false) }}
         >
-          <h3 className="font-bold flex items-center gap-2">
-            <Activity size={18} className="text-blue-400" />
+          <h3 className="font-bold flex items-center gap-2 text-xs text-gray-400 uppercase tracking-wider">
+            <Activity size={14} className="text-blue-400" />
             Terrain Controls
           </h3>
           <button className="md:hidden p-1 hover:bg-white/10 rounded">
             <ChevronDown size={20} />
-          </button>
-          {/* Desktop Close/Minimize - Optional, but let's keep it visible on desktop */}
-          <button 
-            onClick={(e) => { e.stopPropagation(); setIsOpen(false); }}
-            className="hidden md:block p-1 hover:bg-white/10 rounded text-gray-400"
-          >
-            <ChevronUp size={16} />
           </button>
         </div>
         
@@ -272,21 +304,42 @@ export const TelemetryOverlay = ({ info }: { info: { lng: number, lat: number, e
   if (!info) return null;
   
   return (
-    <div className="absolute bottom-8 right-8 z-10 bg-black/60 backdrop-blur-md border border-white/10 p-3 rounded-lg text-white text-xs font-mono pointer-events-none shadow-lg">
-       <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-          <span className="text-gray-400">Lng:</span>
-          <span>{info.lng.toFixed(5)}</span>
-          <span className="text-gray-400">Lat:</span>
-          <span>{info.lat.toFixed(5)}</span>
-          <span className="text-gray-400">Elev:</span>
-          <span>{info.elev.toFixed(1)}m</span>
-          <span className="text-gray-400">Slope:</span>
-          <span>{info.slope.toFixed(1)}°</span>
-          <div className="col-span-2 h-px bg-white/10 my-1"></div>
-          <span className="text-gray-400">Pitch:</span>
-          <span>{info.pitch.toFixed(1)}°</span>
-          <span className="text-gray-400">Bearing:</span>
-          <span>{info.bearing.toFixed(1)}°</span>
+    <div className="absolute bottom-8 right-8 z-10 bg-white/5 backdrop-blur-xl border border-white/10 p-4 rounded-xl text-white text-xs font-mono pointer-events-none shadow-2xl overflow-hidden group">
+       {/* Glass reflection effect */}
+       <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none"></div>
+       
+       <div className="grid grid-cols-2 gap-x-6 gap-y-2 relative z-10">
+          <div className="flex justify-between items-center">
+             <span className="text-blue-300/70">Lng</span>
+             <span className="font-bold">{info.lng.toFixed(5)}</span>
+          </div>
+          <div className="flex justify-between items-center">
+             <span className="text-blue-300/70">Lat</span>
+             <span className="font-bold">{info.lat.toFixed(5)}</span>
+          </div>
+          <div className="flex justify-between items-center">
+             <span className="text-blue-300/70">Elev</span>
+             <span className="font-bold text-yellow-300">{info.elev.toFixed(1)}m</span>
+          </div>
+          <div className="flex justify-between items-center">
+             <span className="text-blue-300/70">Slope</span>
+             <span className="font-bold">{info.slope.toFixed(1)}°</span>
+          </div>
+          
+          <div className="col-span-2 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent my-1"></div>
+          
+          <div className="flex justify-between items-center">
+             <span className="text-blue-300/70">Pitch</span>
+             <span>{info.pitch.toFixed(1)}°</span>
+          </div>
+          <div className="flex justify-between items-center">
+             <span className="text-blue-300/70">Bearing</span>
+             <span>{info.bearing.toFixed(1)}°</span>
+          </div>
+       </div>
+
+       <div className="mt-3 pt-2 border-t border-white/5 text-[8px] text-center text-gray-500 uppercase tracking-widest opacity-50 group-hover:opacity-100 transition-opacity">
+          Powered by GeoPortal 360
        </div>
     </div>
   );
