@@ -1,7 +1,7 @@
-import React, { useEffect, useCallback, useState } from 'react';
-import { useMap, Source, Layer } from 'react-map-gl/mapbox';
+import { useEffect, useState } from 'react';
+import { Source, Layer, useMap } from 'react-map-gl/mapbox';
 import { useSurveyStore } from '../store/useSurveyStore';
-import mapboxgl from 'mapbox-gl';
+import type { MapMouseEvent } from 'mapbox-gl';
 import type { FeatureCollection } from 'geojson';
 
 export const PlottingLayer = () => {
@@ -16,7 +16,7 @@ export const PlottingLayer = () => {
     if (!mapRef || !isPlotMode) return;
     const map = mapRef.getMap();
 
-    const handleClick = (e: mapboxgl.MapMouseEvent) => {
+    const handleClick = (e: MapMouseEvent) => {
       const { lng, lat } = e.lngLat;
       
       // Query elevation
@@ -32,7 +32,7 @@ export const PlottingLayer = () => {
       addPoint({ lng, lat, elevation });
     };
 
-    const handleMouseMove = (e: mapboxgl.MapMouseEvent) => {
+    const handleMouseMove = (e: MapMouseEvent) => {
         setCursorLocation([e.lngLat.lng, e.lngLat.lat]);
         map.getCanvas().style.cursor = 'crosshair';
     };
@@ -79,6 +79,7 @@ export const PlottingLayer = () => {
           color: g.color,
           isActive: g.id === activeGroupId 
         }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
     }
   });
@@ -93,6 +94,7 @@ export const PlottingLayer = () => {
               coordinates: [[lastPoint.lng, lastPoint.lat], cursorLocation] 
           },
           properties: { type: 'preview', color: activeGroup.color }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
   }
 

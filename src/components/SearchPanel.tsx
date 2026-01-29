@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useMapStore } from '../store/useMapStore';
 import { Search, X, MapPin, Loader2 } from 'lucide-react';
 
@@ -47,7 +47,7 @@ export const SearchPanel = () => {
       );
       const data = await response.json();
       if (data.features) {
-        setResults(data.features.map((f: any) => ({
+        setResults(data.features.map((f: { id: string; place_name: string; center: [number, number]; place_type: string[] }) => ({
           id: f.id,
           place_name: f.place_name,
           center: f.center,
