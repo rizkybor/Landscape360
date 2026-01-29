@@ -6,8 +6,10 @@ import type { FeatureCollection } from 'geojson';
 
 export const PlottingLayer = () => {
   const { current: mapRef } = useMap();
-  const { isPlotMode, points, addPoint } = useSurveyStore();
+  const { isPlotMode, groups, activeGroupId, addPoint } = useSurveyStore();
   const [cursorLocation, setCursorLocation] = useState<[number, number] | null>(null);
+
+  const activeGroup = groups.find(g => g.id === activeGroupId) || groups[0];
 
   // Handle Map Click
   useEffect(() => {
@@ -15,9 +17,6 @@ export const PlottingLayer = () => {
     const map = mapRef.getMap();
 
     const handleClick = (e: mapboxgl.MapMouseEvent) => {
-      // Prevent clicking on existing points/UI if possible, but map click is global
-      // e.preventDefault(); // This might block other interactions if not careful
-      
       const { lng, lat } = e.lngLat;
       
       // Query elevation
@@ -51,11 +50,17 @@ export const PlottingLayer = () => {
   // Prepare GeoJSON
   const pointsGeoJSON: FeatureCollection = {
     type: 'FeatureCollection',
-    features: points.map(p => ({
+    features: groups.flatMap(g => g.points.map(p => ({
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [p.lng, p.lat] },
-      properties: { id: p.id, elevation: p.elevation }
-    }))
+      properties: { 
+        id: p.id, 
+        elevation: p.elevation, 
+        groupId: g.id, 
+        color: g.color,
+        isActive: g.id === activeGroupId
+      }
+    })))
   };
 
   const linesGeoJSON: FeatureCollection = {
@@ -63,30 +68,35 @@ export const PlottingLayer = () => {
     features: []
   };
 
-  if (points.length >= 2) {
-    // Create lines between sequential points
-    const coordinates = points.map(p => [p.lng, p.lat]);
-    linesGeoJSON.features.push({
-      type: 'Feature',
-      geometry: { type: 'LineString', coordinates },
-      properties: {}
-    });
-  }
+  groups.forEach(g => {
+    if (g.points.length >= 2) {
+      const coordinates = g.points.map(p => [p.lng, p.lat]);
+      linesGeoJSON.features.push({
+        type: 'Feature',
+        geometry: { type: 'LineString', coordinates },
+        properties: { 
+          groupId: g.id, 
+          color: g.color,
+          isActive: g.id === activeGroupId 
+        }
+      } as any);
+    }
+  });
 
-  // Preview line from last point to cursor
-  if (isPlotMode && points.length > 0 && cursorLocation) {
-      const lastPoint = points[points.length - 1];
+  // Preview line from last point of active group to cursor
+  if (isPlotMode && activeGroup && activeGroup.points.length > 0 && cursorLocation) {
+      const lastPoint = activeGroup.points[activeGroup.points.length - 1];
       linesGeoJSON.features.push({
           type: 'Feature',
           geometry: { 
               type: 'LineString', 
               coordinates: [[lastPoint.lng, lastPoint.lat], cursorLocation] 
           },
-          properties: { type: 'preview' }
-      });
+          properties: { type: 'preview', color: activeGroup.color }
+      } as any);
   }
 
-  if (!points.length && !isPlotMode) return null;
+  if (!groups.length && !isPlotMode) return null;
 
   return (
     <>
@@ -95,11 +105,10 @@ export const PlottingLayer = () => {
           id="survey-points-circle"
           type="circle"
           paint={{
-            'circle-radius': 6,
-            'circle-color': '#FFD700', // Gold
-            'circle-stroke-width': 2,
+            'circle-radius': ['case', ['get', 'isActive'], 8, 6],
+            'circle-color': ['get', 'color'],
+            'circle-stroke-width': ['case', ['get', 'isActive'], 3, 2],
             'circle-stroke-color': '#000000',
-            // To prevent z-fighting/sinking, standard circles are draped on terrain by default in Mapbox GL JS v2/v3
             'circle-pitch-alignment': 'viewport'
           }}
         />
@@ -110,11 +119,10 @@ export const PlottingLayer = () => {
           id="survey-lines-path"
           type="line"
           paint={{
-            'line-color': ['match', ['get', 'type'], 'preview', '#FFFFFF', '#FFD700'],
-            'line-width': ['match', ['get', 'type'], 'preview', 2, 4],
-            'line-dasharray': ['match', ['get', 'type'], 'preview', [2, 2], [1]],
-            // Clamping strategy
-            // 'line-z-offset' helps lift it slightly if supported, but typically not needed for draped lines
+            'line-color': ['get', 'color'],
+            'line-width': ['case', ['match', ['get', 'type'], 'preview', true, false], 2, 4],
+            'line-dasharray': ['case', ['match', ['get', 'type'], 'preview', true, false], [2, 2], [1]],
+            'line-opacity': ['case', ['get', 'isActive'], 1, 0.5]
           }}
           layout={{
               'line-join': 'round',

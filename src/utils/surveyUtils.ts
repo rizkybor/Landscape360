@@ -6,6 +6,7 @@ export interface AzimuthData {
   backAzimuth: number;    // degrees
   horizontalDistance: number; // meters
   slope: number; // percentage
+  slopeDegrees: number; // degrees
   elevationDiff: number; // meters
 }
 
@@ -28,18 +29,28 @@ export const getAzimuthData = (p1: SurveyPoint, p2: SurveyPoint): AzimuthData =>
   const horizontalDistance = turf.distance(from, to, { units: 'kilometers' }) * 1000;
 
   // 4. Elevation & Slope
-  const elevationDiff = p2.elevation - p1.elevation;
+  const rise = p2.elevation - p1.elevation; // Perubahan Vertikal (Elevation Diff)
+  const run = horizontalDistance; // Perubahan Horizontal
   
-  // Slope in percentage: (rise / run) * 100
-  // Handle division by zero
-  const slope = horizontalDistance > 0 ? (elevationDiff / horizontalDistance) * 100 : 0;
+  // Slope (Persentase): Menggunakan rumus (Rise / Run) * 100
+  // Ini adalah standar dalam teknik sipil, pembuatan jalan, dan konstruksi.
+  // Artinya: Medan turun/naik X unit vertikal untuk setiap 100 unit horizontal.
+  const slope = run > 0 ? (rise / run) * 100 : 0;
+  
+  // Slope (Derajat): Menggunakan rumus arctan(Rise / Run)
+  // Ini lebih sering digunakan dalam geologi, navigasi, dan pendakian.
+  // Artinya: Sudut yang terbentuk antara garis horizontal dengan permukaan tanah.
+  const slopeDegrees = run > 0 
+    ? Math.atan(rise / run) * (180 / Math.PI) 
+    : 0;
 
   return {
     forwardAzimuth,
     backAzimuth,
     horizontalDistance,
     slope,
-    elevationDiff
+    slopeDegrees,
+    elevationDiff: rise
   };
 };
 
@@ -58,4 +69,21 @@ export const formatDistance = (meters: number): string => {
     return `${(meters / 1000).toFixed(2)} km`;
   }
   return `${meters.toFixed(1)} m`;
+};
+
+/**
+ * Converts decimal degrees to DMS (Degrees, Minutes, Seconds) format
+ */
+export const toDMS = (deg: number, isLat: boolean): string => {
+  const absolute = Math.abs(deg);
+  const degrees = Math.floor(absolute);
+  const minutesNotTruncated = (absolute - degrees) * 60;
+  const minutes = Math.floor(minutesNotTruncated);
+  const seconds = ((minutesNotTruncated - minutes) * 60).toFixed(2);
+
+  const hemisphere = isLat 
+    ? (deg >= 0 ? 'N' : 'S') 
+    : (deg >= 0 ? 'E' : 'W');
+
+  return `${degrees}°${minutes}'${seconds}" ${hemisphere}`;
 };
