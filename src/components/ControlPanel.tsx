@@ -61,7 +61,7 @@ export const ControlPanel = () => {
       )}
 
       <div className={`
-        fixed z-20 transition-all duration-300 ease-in-out
+        fixed z-50 transition-all duration-300 ease-in-out
         /* Mobile: Bottom Sheet style */
         bottom-0 left-0 right-0 max-h-[70vh] rounded-t-2xl
         /* Desktop: Floating style */
@@ -304,7 +304,7 @@ export const TelemetryOverlay = ({ info }: { info: { lng: number, lat: number, e
   if (!info) return null;
   
   return (
-    <div className="fixed md:absolute top-20 right-4 md:top-auto md:bottom-8 md:right-8 z-10 bg-black/40 md:bg-white/5 backdrop-blur-xl border border-white/10 p-3 md:p-4 rounded-xl text-white text-xs font-mono pointer-events-none shadow-2xl overflow-hidden group max-w-[180px] md:max-w-none">
+    <div className="fixed bottom-6 right-4 md:absolute md:bottom-8 md:right-8 z-30 md:z-10 bg-black/60 md:bg-white/5 backdrop-blur-xl border border-white/10 p-3 md:p-4 rounded-xl text-white text-xs font-mono pointer-events-none shadow-2xl overflow-hidden group max-w-[180px] md:max-w-none">
        {/* Glass reflection effect */}
        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none"></div>
        
