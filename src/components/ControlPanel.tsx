@@ -304,11 +304,11 @@ export const TelemetryOverlay = ({ info }: { info: { lng: number, lat: number, e
   if (!info) return null;
   
   return (
-    <div className="absolute bottom-8 right-8 z-10 bg-white/5 backdrop-blur-xl border border-white/10 p-4 rounded-xl text-white text-xs font-mono pointer-events-none shadow-2xl overflow-hidden group">
+    <div className="fixed md:absolute top-20 right-4 md:top-auto md:bottom-8 md:right-8 z-10 bg-black/40 md:bg-white/5 backdrop-blur-xl border border-white/10 p-3 md:p-4 rounded-xl text-white text-xs font-mono pointer-events-none shadow-2xl overflow-hidden group max-w-[180px] md:max-w-none">
        {/* Glass reflection effect */}
        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none"></div>
        
-       <div className="grid grid-cols-2 gap-x-6 gap-y-2 relative z-10">
+       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1 md:gap-y-2 relative z-10">
           <div className="flex justify-between items-center">
              <span className="text-blue-300/70">Lng</span>
              <span className="font-bold">{info.lng.toFixed(5)}</span>
@@ -326,7 +326,7 @@ export const TelemetryOverlay = ({ info }: { info: { lng: number, lat: number, e
              <span className="font-bold">{info.slope.toFixed(1)}°</span>
           </div>
           
-          <div className="col-span-2 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent my-1"></div>
+          <div className="md:col-span-2 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent my-1"></div>
           
           <div className="flex justify-between items-center">
              <span className="text-blue-300/70">Pitch</span>
@@ -338,7 +338,7 @@ export const TelemetryOverlay = ({ info }: { info: { lng: number, lat: number, e
           </div>
        </div>
 
-       <div className="mt-3 pt-2 border-t border-white/5 text-[8px] text-center text-gray-500 uppercase tracking-widest opacity-50 group-hover:opacity-100 transition-opacity">
+       <div className="hidden md:block mt-3 pt-2 border-t border-white/5 text-[8px] text-center text-gray-500 uppercase tracking-widest opacity-50 group-hover:opacity-100 transition-opacity">
           Powered by GeoPortal 360
        </div>
     </div>
