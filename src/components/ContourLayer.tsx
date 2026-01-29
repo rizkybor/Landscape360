@@ -16,6 +16,9 @@ export const ContourLayer = () => {
     if (!map) return;
 
     const updateContours = () => {
+      // Check if map style is loaded
+      if (!map.isStyleLoaded()) return;
+
       // Check if terrain is loaded or we can get elevation
       // Also check bounds
       const bounds = map.getBounds();

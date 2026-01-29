@@ -111,8 +111,13 @@ export const ThreeScene = () => {
 
     return () => {
       map.off('style.load', addLayer);
-      if (map.getStyle() && map.getLayer(customLayerId)) {
-        map.removeLayer(customLayerId);
+      try {
+        if (map.getStyle() && map.getLayer(customLayerId)) {
+          map.removeLayer(customLayerId);
+        }
+      } catch (e) {
+        // Ignore cleanup errors if map is already destroyed or style is gone
+        console.warn("Error removing Three.js layer:", e);
       }
     };
   }, [mapRef]);
