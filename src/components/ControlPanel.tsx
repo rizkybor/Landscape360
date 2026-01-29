@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useMapStore } from '../store/useMapStore';
 import { useSurveyStore } from '../store/useSurveyStore';
-import { Activity, RotateCw, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Eye, Monitor, Ruler, ChevronDown, ChevronUp, Settings } from 'lucide-react';
+import { Activity, RotateCw, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Eye, Monitor, Ruler, ChevronDown, ChevronUp, Settings, Search } from 'lucide-react';
 
 export const ControlPanel = () => {
   const { 
@@ -11,7 +11,8 @@ export const ControlPanel = () => {
     activeView, setActiveView,
     pitch, bearing, setPitch, setBearing,
     mouseControlMode, setMouseControlMode,
-    showContours, setShowContours
+    showContours, setShowContours,
+    showSearch, setShowSearch
   } = useMapStore();
 
   const { isPlotMode, togglePlotMode } = useSurveyStore();
@@ -96,7 +97,16 @@ export const ControlPanel = () => {
         </div>
         
         <div className="p-4 space-y-4 overflow-y-auto custom-scrollbar">
- {/* Surveyor Toggle */}
+          {/* Search Toggle */}
+          <button
+              onClick={() => setShowSearch(!showSearch)}
+              className={`w-full flex items-center justify-center gap-2 py-3 md:py-2 text-xs font-bold rounded transition-colors ${showSearch ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/50' : 'bg-white/20 hover:bg-white/30 text-blue-200 border border-blue-500/30'}`}
+          >
+              <Search size={14} />
+              {showSearch ? 'Hide Search' : 'Show Search'}
+          </button>
+
+          {/* Surveyor Toggle */}
           <button
               onClick={togglePlotMode}
               className={`w-full flex items-center justify-center gap-2 py-3 md:py-2 text-xs font-bold rounded transition-colors ${isPlotMode ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/50' : 'bg-white/20 hover:bg-white/30 text-yellow-200 border border-yellow-500/30'}`}

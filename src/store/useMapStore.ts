@@ -11,6 +11,7 @@ interface MapState {
   opacity: number;
   mouseControlMode: 'camera' | 'map';
   showContours: boolean;
+  showSearch: boolean;
   
   setCenter: (center: [number, number]) => void;
   setZoom: (zoom: number) => void;
@@ -20,6 +21,7 @@ interface MapState {
   setElevationExaggeration: (factor: number) => void;
   setOpacity: (opacity: number) => void;
   setShowContours: (show: boolean) => void;
+  setShowSearch: (show: boolean) => void;
   setActiveView: (view: '2D' | '3D') => void;
   setMouseControlMode: (mode: 'camera' | 'map') => void;
   setMapState: (state: Partial<Omit<MapState, 'actions'>>) => void;
@@ -36,6 +38,7 @@ export const useMapStore = create<MapState>((set) => ({
   opacity: 0.8,
   mouseControlMode: 'camera', // Default to Camera Mode (Left=Rotate)
   showContours: true,
+  showSearch: false,
 
   setCenter: (center) => set({ center }),
   setZoom: (zoom) => set({ zoom }),
@@ -45,6 +48,7 @@ export const useMapStore = create<MapState>((set) => ({
   setElevationExaggeration: (elevationExaggeration) => set({ elevationExaggeration }),
   setOpacity: (opacity) => set({ opacity }),
   setShowContours: (showContours) => set({ showContours }),
+  setShowSearch: (showSearch) => set({ showSearch }),
   setActiveView: (activeView) => set({ activeView }),
   setMouseControlMode: (mouseControlMode) => set({ mouseControlMode }),
   setMapState: (newState) => set((state) => ({ ...state, ...newState })),
