@@ -9,7 +9,6 @@ interface MapState {
   activeView: '2D' | '3D';
   elevationExaggeration: number;
   opacity: number;
-  isAutoRotating: boolean;
   mouseControlMode: 'camera' | 'map';
   
   setCenter: (center: [number, number]) => void;
@@ -20,7 +19,6 @@ interface MapState {
   setElevationExaggeration: (factor: number) => void;
   setOpacity: (opacity: number) => void;
   setActiveView: (view: '2D' | '3D') => void;
-  setIsAutoRotating: (isRotating: boolean) => void;
   setMouseControlMode: (mode: 'camera' | 'map') => void;
   setMapState: (state: Partial<Omit<MapState, 'actions'>>) => void;
 }
@@ -34,7 +32,6 @@ export const useMapStore = create<MapState>((set) => ({
   activeView: '3D', // Default to 3D mode
   elevationExaggeration: 1.5, // Slightly exaggerate terrain for better effect
   opacity: 0.8,
-  isAutoRotating: false,
   mouseControlMode: 'camera', // Default to Camera Mode (Left=Rotate)
 
   setCenter: (center) => set({ center }),
@@ -45,7 +42,6 @@ export const useMapStore = create<MapState>((set) => ({
   setElevationExaggeration: (elevationExaggeration) => set({ elevationExaggeration }),
   setOpacity: (opacity) => set({ opacity }),
   setActiveView: (activeView) => set({ activeView }),
-  setIsAutoRotating: (isAutoRotating) => set({ isAutoRotating }),
   setMouseControlMode: (mouseControlMode) => set({ mouseControlMode }),
   setMapState: (newState) => set((state) => ({ ...state, ...newState })),
 }));

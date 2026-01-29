@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useMapStore } from '../store/useMapStore';
-import { Activity, RotateCw, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Eye, Monitor, MousePointer2 } from 'lucide-react';
+import { useSurveyStore } from '../store/useSurveyStore';
+import { Activity, RotateCw, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Eye, Monitor, Ruler } from 'lucide-react';
 
 export const ControlPanel = () => {
   const { 
@@ -8,10 +9,11 @@ export const ControlPanel = () => {
     elevationExaggeration, setElevationExaggeration,
     opacity, setOpacity,
     activeView, setActiveView,
-    isAutoRotating, setIsAutoRotating,
     pitch, bearing, setPitch, setBearing,
     mouseControlMode, setMouseControlMode
   } = useMapStore();
+
+  const { isPlotMode, togglePlotMode } = useSurveyStore();
 
   const joystickRef = useRef<HTMLDivElement>(null);
   const [isJoystickDragging, setIsJoystickDragging] = useState(false);
@@ -62,23 +64,9 @@ export const ControlPanel = () => {
           className="bg-black/40 p-3 rounded-lg cursor-move select-none active:bg-blue-600/20 transition-colors border border-white/5"
           onMouseDown={() => { setIsJoystickDragging(true); document.body.style.cursor = 'grabbing'; }}
         >
-          <p className="text-[10px] text-gray-400 mb-2 text-center uppercase tracking-wider font-bold pointer-events-none">
-            🖱️ Drag Here to Rotate/Tilt
-          </p>
-          <div className="h-24 rounded bg-white/5 flex items-center justify-center relative overflow-hidden group">
-             <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 opacity-20 pointer-events-none">
-                <div className="border-r border-b border-white/20"></div>
-                <div className="border-r border-b border-white/20"></div>
-                <div className="border-b border-white/20"></div>
-                <div className="border-r border-b border-white/20"></div>
-                <div className="border-r border-b border-white/20"></div>
-                <div className="border-b border-white/20"></div>
-             </div>
-             <RotateCw size={32} className="opacity-50 group-hover:opacity-80 transition-opacity" />
-             {isJoystickDragging && <div className="absolute inset-0 bg-blue-500/10 flex items-center justify-center text-xs font-bold text-blue-200">Active</div>}
-          </div>
+         
           
-          <div className="flex gap-2 mt-2">
+          <div className="flex gap-2">
              <button onClick={() => { setPitch(0); setBearing(0); }} className="flex-1 py-1 text-[10px] bg-white/10 hover:bg-white/20 rounded flex items-center justify-center gap-1">
                <Monitor size={12} /> Reset Top
              </button>
@@ -121,13 +109,13 @@ export const ControlPanel = () => {
             </div>
         </div>
 
-        {/* Auto Orbit Toggle */}
+        {/* Surveyor Toggle */}
         <button
-            onClick={() => setIsAutoRotating(!isAutoRotating)}
-            className={`w-full flex items-center justify-center gap-2 py-2 text-xs font-bold rounded transition-colors ${isAutoRotating ? 'bg-yellow-500 text-black animate-pulse' : 'bg-white/20 hover:bg-white/30 text-white'}`}
+            onClick={togglePlotMode}
+            className={`w-full flex items-center justify-center gap-2 py-2 text-xs font-bold rounded transition-colors ${isPlotMode ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/50' : 'bg-white/20 hover:bg-white/30 text-yellow-200 border border-yellow-500/30'}`}
         >
-            <RotateCw size={14} className={isAutoRotating ? 'animate-spin' : ''} />
-            {isAutoRotating ? 'Stop Orbit' : 'Auto Orbit (Turntable)'}
+            <Ruler size={14} />
+            {isPlotMode ? 'Exit Surveyor Mode' : 'Start Surveyor Mode'}
         </button>
 
         {/* View Mode */}
