@@ -6,8 +6,14 @@ import type { BBox, FeatureCollection, LineString, MultiLineString } from 'geojs
  * Calculates elevation at a given point using Mapbox's queryTerrainElevation
  */
 const getElevation = (map: mapboxgl.Map, lng: number, lat: number): number => {
-  const elevation = map.queryTerrainElevation(new mapboxgl.LngLat(lng, lat));
-  return elevation || 0;
+  try {
+    // Check if style is loaded to avoid errors
+    if (!map.isStyleLoaded()) return 0;
+    const elevation = map.queryTerrainElevation(new mapboxgl.LngLat(lng, lat));
+    return elevation || 0;
+  } catch (e) {
+    return 0;
+  }
 };
 
 /**
