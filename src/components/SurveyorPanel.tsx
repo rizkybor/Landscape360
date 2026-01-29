@@ -41,6 +41,8 @@ export const SurveyorPanel = () => {
   }, [isDragging]);
 
   const onMouseDown = (e: React.MouseEvent) => {
+    // Disable drag on mobile
+    if (window.innerWidth < 768) return;
     if ((e.target as HTMLElement).closest('button')) return;
     setIsDragging(true);
     dragRef.current = { startX: e.clientX, startY: e.clientY, panelX: position.x, panelY: position.y };
@@ -68,13 +70,16 @@ export const SurveyorPanel = () => {
   return (
     <div 
       className={`
-        fixed z-20 transition-shadow duration-300
-        ${position.x === 0 && position.y === 0 ? 'top-28 right-4 left-4 sm:left-auto w-auto sm:w-80' : 'w-80'}
-        bg-black/80 backdrop-blur-md border border-yellow-500/30 rounded-xl text-white shadow-2xl overflow-hidden font-mono
+        fixed z-20 transition-all duration-300
+        ${position.x === 0 && position.y === 0 
+            ? 'top-20 left-4 right-4 md:left-auto md:right-4 md:top-28 w-auto md:w-80' 
+            : 'w-auto md:w-80'}
+        bg-black/90 md:bg-black/80 backdrop-blur-md border border-yellow-500/30 rounded-xl text-white shadow-2xl overflow-hidden font-mono
+        max-h-[50vh] md:max-h-[70vh] flex flex-col
       `}
       style={{
-        transform: position.x !== 0 || position.y !== 0 ? `translate(${position.x}px, ${position.y}px)` : undefined,
-        ...(position.x !== 0 || position.y !== 0 ? { top: '112px', right: '16px' } : {})
+        transform: (window.innerWidth >= 768 && (position.x !== 0 || position.y !== 0)) ? `translate(${position.x}px, ${position.y}px)` : undefined,
+        ...((window.innerWidth >= 768 && (position.x !== 0 || position.y !== 0)) ? { top: '112px', right: '16px' } : {})
       }}
     >
       {/* Header */}
@@ -123,7 +128,7 @@ export const SurveyorPanel = () => {
           </div>
 
           {activeGroup ? (
-            <div className="p-4 overflow-y-auto custom-scrollbar">
+            <div className="p-4 overflow-y-auto custom-scrollbar flex-1">
               {/* Active Group Header */}
               <div className="flex justify-between items-center mb-4 pb-2 border-b border-white/5">
                 <div className="flex items-center gap-2 flex-1 mr-2">
