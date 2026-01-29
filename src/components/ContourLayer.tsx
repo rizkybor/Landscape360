@@ -6,11 +6,14 @@ import type { FeatureCollection, LineString, MultiLineString } from 'geojson';
 
 export const ContourLayer = () => {
   const { current: mapRef } = useMap();
-  const { contourInterval } = useMapStore();
+  const { contourInterval, showContours } = useMapStore();
   const [contours, setContours] = useState<FeatureCollection<LineString | MultiLineString> | null>(null);
 
   useEffect(() => {
-    if (!mapRef) return;
+    if (!mapRef || !showContours) {
+      setContours(null);
+      return;
+    }
 
     const map = mapRef.getMap();
     if (!map) return;
@@ -49,9 +52,9 @@ export const ContourLayer = () => {
       map.off('moveend', updateContours);
       map.off('idle', updateContours);
     };
-  }, [mapRef, contourInterval]);
+  }, [mapRef, contourInterval, showContours]);
 
-  if (!contours) return null;
+  if (!contours || !showContours) return null;
 
   return (
     <Source id="contours" type="geojson" data={contours}>

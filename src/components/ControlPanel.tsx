@@ -10,7 +10,8 @@ export const ControlPanel = () => {
     opacity, setOpacity,
     activeView, setActiveView,
     pitch, bearing, setPitch, setBearing,
-    mouseControlMode, setMouseControlMode
+    mouseControlMode, setMouseControlMode,
+    showContours, setShowContours
   } = useMapStore();
 
   const { isPlotMode, togglePlotMode } = useSurveyStore();
@@ -176,8 +177,19 @@ export const ControlPanel = () => {
               </div>
             </div>
 
+            {/* Contour Toggle */}
+            <div className="flex items-center justify-between">
+              <label className="text-xs text-gray-300">Show Contours</label>
+              <button
+                onClick={() => setShowContours(!showContours)}
+                className={`w-10 h-5 rounded-full p-1 transition-colors ${showContours ? 'bg-blue-600' : 'bg-white/10'}`}
+              >
+                <div className={`w-3 h-3 bg-white rounded-full shadow transition-transform ${showContours ? 'translate-x-5' : 'translate-x-0'}`} />
+              </button>
+            </div>
+
             {/* Contour Interval */}
-            <div>
+            <div className={showContours ? 'opacity-100 transition-opacity' : 'opacity-50 pointer-events-none transition-opacity'}>
               <label className="text-xs text-gray-300 mb-1 flex justify-between">
                 <span>Contour Interval</span>
                 <span>{contourInterval}m</span>
@@ -186,11 +198,26 @@ export const ControlPanel = () => {
                 type="range"
                 min="10"
                 max="500"
-                step="10"
+                step="2.5"
                 value={contourInterval}
                 onChange={(e) => setContourInterval(Number(e.target.value))}
                 className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500"
               />
+              <div className="flex justify-between mt-2 gap-1">
+                 {[12.5, 25, 50, 100].map(val => (
+                    <button 
+                       key={val}
+                       onClick={() => setContourInterval(val)}
+                       className={`flex-1 text-[10px] py-1 rounded border transition-colors ${
+                           contourInterval === val 
+                           ? 'bg-blue-600 border-blue-500 text-white font-bold' 
+                           : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
+                       }`}
+                    >
+                       {val}m
+                    </button>
+                 ))}
+              </div>
             </div>
 
             {/* Elevation Exaggeration */}
