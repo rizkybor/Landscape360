@@ -11,7 +11,7 @@ const getElevation = (map: mapboxgl.Map, lng: number, lat: number): number => {
     if (!map.isStyleLoaded()) return 0;
     const elevation = map.queryTerrainElevation(new mapboxgl.LngLat(lng, lat));
     return elevation || 0;
-  } catch (e) {
+  } catch {
     return 0;
   }
 };

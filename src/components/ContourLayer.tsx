@@ -6,14 +6,11 @@ import type { FeatureCollection, LineString, MultiLineString } from 'geojson';
 
 export const ContourLayer = () => {
   const { current: mapRef } = useMap();
-  const { contourInterval, showContours } = useMapStore();
+  const { contourInterval } = useMapStore();
   const [contours, setContours] = useState<FeatureCollection<LineString | MultiLineString> | null>(null);
 
   useEffect(() => {
-    if (!mapRef || !showContours) {
-      setContours(null);
-      return;
-    }
+    if (!mapRef) return;
 
     const map = mapRef.getMap();
     if (!map) return;
@@ -52,9 +49,9 @@ export const ContourLayer = () => {
       map.off('moveend', updateContours);
       map.off('idle', updateContours);
     };
-  }, [mapRef, contourInterval, showContours]);
+  }, [mapRef, contourInterval]);
 
-  if (!contours || !showContours) return null;
+  if (!contours) return null;
 
   // Determine Index Interval based on Base Interval (Readability Priority)
   // Logic: 

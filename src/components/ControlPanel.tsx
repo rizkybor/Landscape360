@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useMapStore } from '../store/useMapStore';
 import { useSurveyStore } from '../store/useSurveyStore';
-import { Activity, RotateCw, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Eye, Monitor, Ruler, ChevronDown, ChevronUp, Settings, Search } from 'lucide-react';
+import { Activity, Eye, Monitor, Ruler, ChevronDown, ChevronUp, Settings, Search } from 'lucide-react';
 
 export const ControlPanel = () => {
   const { 
@@ -44,14 +44,6 @@ export const ControlPanel = () => {
        window.removeEventListener('mouseup', handleUp);
     };
   }, [isJoystickDragging, bearing, pitch, setBearing, setPitch]);
-
-  const handleTilt = (delta: number) => {
-    setPitch(Math.min(85, Math.max(0, pitch + delta)));
-  };
-
-  const handleRotate = (delta: number) => {
-    setBearing(bearing + delta);
-  };
 
   return (
     <>

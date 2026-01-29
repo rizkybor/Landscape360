@@ -7,8 +7,8 @@ import { useSurveyStore } from '../store/useSurveyStore';
 interface ThreeCustomLayer extends mapboxgl.CustomLayerInterface {
   camera: THREE.Camera;
   scene: THREE.Scene;
-  renderer: THREE.WebGLRenderer;
-  map: mapboxgl.Map;
+  renderer: THREE.WebGLRenderer | null;
+  map: mapboxgl.Map | null;
   updateMarkers: () => void;
 }
 
@@ -30,8 +30,8 @@ export const ThreeScene = () => {
       renderingMode: '3d',
       camera: new THREE.Camera(),
       scene: new THREE.Scene(),
-      renderer: null as any,
-      map: null as any,
+      renderer: null,
+      map: null,
       updateMarkers: () => {}, // Placeholder
 
       onAdd: function (map: mapboxgl.Map, gl: WebGLRenderingContext) {
@@ -54,6 +54,7 @@ export const ThreeScene = () => {
         this.map = map;
       },
       render: function (_gl: WebGLRenderingContext, matrix: number[]) {
+        if (!this.renderer || !this.map) return;
         const m = new THREE.Matrix4().fromArray(matrix);
         this.camera.projectionMatrix = m;
         this.renderer.resetState();

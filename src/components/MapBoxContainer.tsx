@@ -27,7 +27,7 @@ export const MapBoxContainer: React.FC<Props> = ({ overrideViewMode, className, 
   const { 
     center, zoom, pitch, bearing, 
     activeView, elevationExaggeration,
-    mouseControlMode,
+    mouseControlMode, showContours,
     setCenter, setZoom, setPitch, setBearing
   } = useMapStore();
 
@@ -35,6 +35,7 @@ export const MapBoxContainer: React.FC<Props> = ({ overrideViewMode, className, 
 
   const [telemetry, setTelemetry] = useState<{ lng: number, lat: number, elev: number, slope: number, pitch: number, bearing: number } | null>(null);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleMove = useCallback((evt: any) => {
     // Update global state ONLY if triggered by user interaction (avoids loops with programmatic updates)
     if (evt.originalEvent) { 
@@ -127,7 +128,7 @@ export const MapBoxContainer: React.FC<Props> = ({ overrideViewMode, className, 
         { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
       );
     }
-  }, []); // Empty dependency array to run only once on mount
+  }, [setCenter, setZoom]); // Empty dependency array to run only once on mount
 
   // Custom Mouse Interaction Handler (Left=Rotate, Right=Pan)
   useEffect(() => {
@@ -303,6 +304,7 @@ export const MapBoxContainer: React.FC<Props> = ({ overrideViewMode, className, 
           "high-color": "#add8e6",
           "space-color": "#d8f2ff",
           "star-intensity": 0.0
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any : undefined}
         reuseMaps
       >
@@ -327,7 +329,7 @@ export const MapBoxContainer: React.FC<Props> = ({ overrideViewMode, className, 
           />
         )}
 
-        <ContourLayer />
+        {showContours && <ContourLayer />}
         <PlottingLayer />
         {mode === '3D' && <ThreeScene />}
 

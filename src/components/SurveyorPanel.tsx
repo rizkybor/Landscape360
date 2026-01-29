@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSurveyStore } from '../store/useSurveyStore';
+import type { SurveyGroup, SurveyPoint } from '../store/useSurveyStore';
 import { getAzimuthData, formatDegrees, formatDistance, toDMS } from '../utils/surveyUtils';
-import { Trash2, Copy, X, GripHorizontal, Plus, ChevronRight, ChevronDown, Edit2, Check } from 'lucide-react';
+import { Trash2, Copy, X, GripHorizontal, Plus, Edit2, Check } from 'lucide-react';
 
 export const SurveyorPanel = () => {
   const { 
@@ -45,7 +46,7 @@ export const SurveyorPanel = () => {
     dragRef.current = { startX: e.clientX, startY: e.clientY, panelX: position.x, panelY: position.y };
   };
 
-  const startEditing = (g: any) => {
+  const startEditing = (g: SurveyGroup) => {
     setEditingGroupId(g.id);
     setEditName(g.name);
   };
@@ -59,7 +60,7 @@ export const SurveyorPanel = () => {
 
   if (groups.length === 0 && !isPlotMode) return null;
 
-  const copyCoords = (p: any) => {
+  const copyCoords = (p: SurveyPoint) => {
     const text = `Lat: ${p.lat.toFixed(6)} (${toDMS(p.lat, true)})\nLng: ${p.lng.toFixed(6)} (${toDMS(p.lng, false)})\nElev: ${p.elevation.toFixed(1)}m`;
     navigator.clipboard.writeText(text);
   };
@@ -227,7 +228,7 @@ export const SurveyorPanel = () => {
   );
 };
 
-const DataCard = ({ p1, p2 }: { p1: any, p2: any }) => {
+const DataCard = ({ p1, p2 }: { p1: SurveyPoint, p2: SurveyPoint }) => {
     const data = getAzimuthData(p1, p2);
     return (
         <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[10px]">
