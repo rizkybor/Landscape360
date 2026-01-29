@@ -7,6 +7,8 @@ import { useMapStore } from '../store/useMapStore';
 import { ThreeScene } from './ThreeScene';
 import { ContourLayer } from './ContourLayer';
 import { ControlPanel, TelemetryOverlay } from './ControlPanel';
+import { PlottingLayer } from './PlottingLayer';
+import { SurveyorPanel } from './SurveyorPanel';
 
 // Placeholder token - User needs to replace this
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || 'pk.eyJ1Ijoicml6a3lhamllIiwiYSI6ImNsZ2J4bDQ4bjA0Z2wzZHF5c3J2aGZ3eWcifQ.8-lIqB1r8P9S3p3Q2j4xQw';
@@ -23,33 +25,12 @@ export const MapBoxContainer: React.FC<Props> = ({ overrideViewMode, className, 
   const mapRef = useRef<MapRef>(null);
   const { 
     center, zoom, pitch, bearing, 
-    activeView, elevationExaggeration, isAutoRotating,
+    activeView, elevationExaggeration,
     mouseControlMode,
     setCenter, setZoom, setPitch, setBearing
   } = useMapStore();
 
   const mode = overrideViewMode || activeView;
-
-  // Auto-Rotate Logic (Orbit)
-  useEffect(() => {
-    if (!isAutoRotating || !mapRef.current) return;
-    const map = mapRef.current.getMap();
-    if (!map) return;
-
-    let animationFrameId: number;
-    
-    const rotateCamera = (timestamp: number) => {
-      // Rotate around center by changing bearing
-      // ~12 degrees per second
-      const currentBearing = map.getBearing();
-      map.setBearing(currentBearing + 0.2); 
-      animationFrameId = requestAnimationFrame(rotateCamera);
-    };
-
-    animationFrameId = requestAnimationFrame(rotateCamera);
-
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [isAutoRotating]);
 
   const [telemetry, setTelemetry] = useState<{ lng: number, lat: number, elev: number, slope: number, pitch: number, bearing: number } | null>(null);
 
@@ -82,8 +63,8 @@ export const MapBoxContainer: React.FC<Props> = ({ overrideViewMode, className, 
     const pitchDiff = Math.abs(p - pitch);
     const bearingDiff = Math.abs(b - bearing);
 
-    // Only update map if store is significantly different (and not auto-rotating)
-    if (!isAutoRotating && (centerDiff > EPS || zoomDiff > EPS || pitchDiff > EPS || bearingDiff > EPS)) {
+    // Only update map if store is significantly different
+    if (centerDiff > EPS || zoomDiff > EPS || pitchDiff > EPS || bearingDiff > EPS) {
        // Ensure style is ready before easing
        if (!map.isStyleLoaded()) return;
 
@@ -95,7 +76,7 @@ export const MapBoxContainer: React.FC<Props> = ({ overrideViewMode, className, 
          duration: 400 // Smooth transition for button clicks
        });
     }
-  }, [center, zoom, pitch, bearing, mode, isAutoRotating]);
+  }, [center, zoom, pitch, bearing, mode]);
 
   const handleMouseMove = useCallback((evt: mapboxgl.MapMouseEvent) => {
     const map = mapRef.current?.getMap();
@@ -346,6 +327,7 @@ export const MapBoxContainer: React.FC<Props> = ({ overrideViewMode, className, 
         )}
 
         <ContourLayer />
+        <PlottingLayer />
         {mode === '3D' && <ThreeScene />}
 
         <GeolocateControl 
@@ -362,6 +344,7 @@ export const MapBoxContainer: React.FC<Props> = ({ overrideViewMode, className, 
 
       {showControls && <ControlPanel />}
       {showControls && <TelemetryOverlay info={telemetry} />}
+      <SurveyorPanel />
     </div>
   );
 };
