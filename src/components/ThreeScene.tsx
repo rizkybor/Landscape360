@@ -14,7 +14,7 @@ interface ThreeCustomLayer extends mapboxgl.CustomLayerInterface {
 
 export const ThreeScene = () => {
   const { current: mapRef } = useMap();
-  const { points } = useSurveyStore();
+  const { groups } = useSurveyStore();
   
   // Ref to hold the scene so we can update it from other effects
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -98,17 +98,19 @@ export const ThreeScene = () => {
           }
       }
 
+      const allPoints = groups.flatMap(g => g.points.map(p => ({ ...p, color: g.color })));
+
       // Add new markers
-      if (points.length === 0) {
+      if (allPoints.length === 0) {
           mapRef.getMap().triggerRepaint();
           return;
       }
 
       const geometry = new THREE.CylinderGeometry(2, 2, 200, 16); // Taller beam
       geometry.translate(0, 100, 0); // Pivot at bottom
-      const material = new THREE.MeshPhongMaterial({ color: 0xFFD700, transparent: true, opacity: 0.6 });
 
-      points.forEach(p => {
+      allPoints.forEach(p => {
+          const material = new THREE.MeshPhongMaterial({ color: p.color, transparent: true, opacity: 0.6 });
           const modelOrigin = mapboxgl.MercatorCoordinate.fromLngLat(
               { lng: p.lng, lat: p.lat },
               p.elevation
@@ -125,7 +127,7 @@ export const ThreeScene = () => {
       });
       
       mapRef.getMap().triggerRepaint();
-  }, [points, mapRef]);
+  }, [groups, mapRef]);
 
   return null;
 };
