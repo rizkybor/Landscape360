@@ -290,7 +290,6 @@ export const ControlPanel = () => {
           </div>
 
           <div className="pt-4 mt-2 border-t border-white/10 text-[10px] text-center text-gray-500 font-mono">
-             <p>Licensed by</p>
              <p className="font-bold text-gray-400">Makopala Universitas Budi Luhur</p>
              <p>Div. Gunung Hutan | MKP.33-532-KRB</p>
           </div>

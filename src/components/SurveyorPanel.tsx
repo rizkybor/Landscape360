@@ -80,7 +80,7 @@ export const SurveyorPanel = () => {
             ? 'top-20 left-4 right-4 md:left-auto md:right-4 md:top-28 w-auto md:w-80' 
             : 'w-auto md:w-80'}
         bg-black/90 md:bg-black/80 backdrop-blur-md border border-yellow-500/30 rounded-xl text-white shadow-2xl overflow-hidden font-mono
-        max-h-[50vh] md:max-h-[70vh] flex flex-col
+        max-h-[60vh] md:max-h-[75vh] flex flex-col
       `}
       style={{
         transform: (window.innerWidth >= 768 && (position.x !== 0 || position.y !== 0)) ? `translate(${position.x}px, ${position.y}px)` : undefined,
@@ -107,9 +107,9 @@ export const SurveyorPanel = () => {
       </div>
 
       {!isMinimized && (
-        <div className="flex flex-col max-h-[70vh]">
+        <div className="flex-1 flex flex-col min-h-0">
           {/* Group Tabs/Selector */}
-          <div className="bg-white/5 border-b border-white/10 p-2 overflow-x-auto flex gap-2 scrollbar-hide">
+          <div className="bg-white/5 border-b border-white/10 p-2 overflow-x-auto flex gap-2 scrollbar-hide shrink-0">
             {groups.map(g => (
               <button
                 key={g.id}
@@ -133,7 +133,7 @@ export const SurveyorPanel = () => {
           </div>
 
           {activeGroup ? (
-            <div className="p-4 overflow-y-auto custom-scrollbar flex-1">
+            <div className="p-4 overflow-y-auto custom-scrollbar flex-1 min-h-0">
               {/* Active Group Header */}
               <div className="flex justify-between items-center mb-4 pb-2 border-b border-white/5">
                 <div className="flex items-center gap-2 flex-1 mr-2">
