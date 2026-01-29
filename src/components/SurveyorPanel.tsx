@@ -7,14 +7,19 @@ import { Trash2, Copy, X, GripHorizontal, Plus, Edit2, Check } from 'lucide-reac
 export const SurveyorPanel = () => {
   const { 
     groups, activeGroupId, isPlotMode, 
-    togglePlotMode, createGroup, deleteGroup, 
+    createGroup, deleteGroup, 
     setActiveGroup, removePoint, clearPoints,
-    updateGroupName 
+    updateGroupName, setPlotMode
   } = useSurveyStore();
   
   const [isMinimized, setIsMinimized] = useState(false);
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [tempName, setEditName] = useState('');
+
+  // Close Handler (Exits Plot Mode)
+  const handleClose = () => {
+    setPlotMode(false);
+  };
   
   // Draggable State
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -70,7 +75,7 @@ export const SurveyorPanel = () => {
   return (
     <div 
       className={`
-        fixed z-20 transition-all duration-300
+        fixed z-[60] transition-all duration-300
         ${position.x === 0 && position.y === 0 
             ? 'top-20 left-4 right-4 md:left-auto md:right-4 md:top-28 w-auto md:w-80' 
             : 'w-auto md:w-80'}
@@ -85,7 +90,7 @@ export const SurveyorPanel = () => {
       {/* Header */}
       <div 
         onMouseDown={onMouseDown}
-        className="bg-yellow-600/20 p-3 flex justify-between items-center border-b border-yellow-500/20 cursor-move active:cursor-grabbing select-none"
+        className="bg-yellow-600/20 p-3 flex justify-between items-center border-b border-yellow-500/20 cursor-move active:cursor-grabbing select-none shrink-0"
       >
         <h3 className="font-bold text-yellow-400 flex items-center gap-2">
           <GripHorizontal size={14} className="opacity-50" />
@@ -95,7 +100,7 @@ export const SurveyorPanel = () => {
             <button onClick={() => setIsMinimized(!isMinimized)} className="text-gray-400 hover:text-white">
                 {isMinimized ? 'Show' : 'Hide'}
             </button>
-            <button onClick={togglePlotMode} className="text-gray-400 hover:text-white">
+            <button onClick={handleClose} className="text-gray-400 hover:text-white">
                 <X size={16} />
             </button>
         </div>

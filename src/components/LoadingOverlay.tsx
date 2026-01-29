@@ -1,20 +1,21 @@
 import { useEffect, useState } from 'react';
 
-export const LoadingOverlay = () => {
+export const LoadingOverlay = ({ onComplete }: { onComplete?: () => void }) => {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(false);
+      onComplete?.();
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [onComplete]);
 
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black text-white animate-fade-out pointer-events-none">
+    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black text-white animate-fade-out pointer-events-auto">
       <div className="text-center relative overflow-hidden p-8">
         <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-4 relative z-10 animate-fade-in-up">
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-white to-blue-400 bg-[length:200%_auto] animate-shine">

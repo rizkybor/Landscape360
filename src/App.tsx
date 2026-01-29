@@ -2,17 +2,21 @@ import { Routes, Route, useNavigate } from 'react-router-dom';
 import { MapDashboard } from './components/MapDashboard';
 import { DocsPage } from './components/DocsPage';
 import { LoadingOverlay } from './components/LoadingOverlay';
+import { useState } from 'react';
 
 function App() {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
 
   return (
     <>
-      <LoadingOverlay />
-      <Routes>
-        <Route path="/" element={<MapDashboard />} />
-        <Route path="/docs" element={<DocsPage onBack={() => navigate('/')} />} />
-      </Routes>
+      <LoadingOverlay onComplete={() => setIsLoading(false)} />
+      {!isLoading && (
+        <Routes>
+          <Route path="/" element={<MapDashboard />} />
+          <Route path="/docs" element={<DocsPage onBack={() => navigate('/')} />} />
+        </Routes>
+      )}
     </>
   );
 }
