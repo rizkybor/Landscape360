@@ -1,4 +1,4 @@
-import { ArrowLeft, BookOpen, Layers, MousePointer, Activity } from 'lucide-react';
+import { ArrowLeft, BookOpen, Layers, MousePointer, Activity, Camera } from 'lucide-react';
 
 interface Props {
   onBack?: () => void;
@@ -69,6 +69,31 @@ export const DocsPage = ({ onBack }: Props) => {
                   <li><strong className="text-gray-200">Right Click + Drag:</strong> Rotate Camera</li>
                 </ul>
               </div>
+            </div>
+            
+            {/* Screenshot Feature Docs */}
+            <div className="flex items-center gap-2 text-purple-400 mb-2 mt-8">
+              <Camera size={20} />
+              <h3 className="text-xl font-bold">Export & Capture</h3>
+            </div>
+            <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-4">
+              <p className="text-sm text-gray-400">
+                Capture high-resolution snapshots of your current view for reports or presentations.
+              </p>
+              <ul className="space-y-3 text-sm text-gray-400">
+                <li className="flex gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-2 shrink-0"></div>
+                  <span><strong>Save as PNG:</strong> High-quality image export, best for digital presentations.</span>
+                </li>
+                <li className="flex gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-2 shrink-0"></div>
+                  <span><strong>Save as JPG:</strong> Compressed image export, optimized for sharing.</span>
+                </li>
+                <li className="flex gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-2 shrink-0"></div>
+                  <span><strong>Export to PDF:</strong> Generates a document-ready PDF of the current map view. Note: UI overlays are excluded for a cleaner output.</span>
+                </li>
+              </ul>
             </div>
           </div>
 

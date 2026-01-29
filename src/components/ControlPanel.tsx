@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMapStore } from '../store/useMapStore';
 import { useSurveyStore } from '../store/useSurveyStore';
-import { Activity, Eye, Monitor, Ruler, ChevronDown, ChevronUp, Settings, Search, BookOpen, Sparkles } from 'lucide-react';
+import { Activity, Eye, Monitor, Ruler, ChevronDown, ChevronUp, Search, BookOpen } from 'lucide-react';
 
 export const ControlPanel = () => {
   const navigate = useNavigate();
@@ -76,7 +76,7 @@ export const ControlPanel = () => {
           <div className="flex items-center justify-between mb-3">
              <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                  <Activity size={16} className="text-white" />
+                  <span className="text-white text-lg">✨</span>
                 </div>
                 <div>
                   <h2 className="font-bold text-sm tracking-tight leading-none">GeoPortal 360</h2>
