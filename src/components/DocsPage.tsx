@@ -33,12 +33,15 @@ export const DocsPage = ({ onBack }: Props) => {
         <div className="max-w-4xl mx-auto px-6 py-12 space-y-16">
           
           {/* Intro */}
-        <section className="space-y-4">
-          <h2 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-white">
-            GeoPortal 360 User Guide
+        <section className="space-y-4 text-center pb-8 border-b border-white/10">
+          <h2 className="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-white to-blue-400 bg-[length:200%_auto] animate-shine">
+            GeoPortal 360
           </h2>
-          <p className="text-xl text-gray-400 leading-relaxed">
-            Welcome to the comprehensive guide for GeoPortal 360. This platform provides professional-grade terrain visualization, contour analysis, and survey plotting tools directly in your browser.
+          <p className="text-xl text-blue-200/80 font-light tracking-wide uppercase">
+            Precision in Every Dimension
+          </p>
+          <p className="text-lg text-gray-400 leading-relaxed max-w-2xl mx-auto mt-6">
+            GeoPortal 360 is an advanced web-based terrain visualization and survey platform designed for professionals. It combines high-fidelity 3D mapping, real-time contour generation, and precise survey plotting tools to deliver actionable geospatial insights directly in your browser.
           </p>
         </section>
 
