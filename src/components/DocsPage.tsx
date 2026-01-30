@@ -244,9 +244,18 @@ export const DocsPage = ({ onBack }: Props) => {
 
           {/* Footer */}
           <footer className="pt-12 border-t border-white/10 text-center text-gray-600 text-sm">
+          <span className="text-gray-600 text-sm">
+                Contact Information :{" "}
+                <a
+                  href="mailto:rizkyak994@gmail.com"
+                  className="hover:text-blue-400 transition-colors"
+                >
+                  rizkyak994@gmail.com
+                </a>
+              </span>
             <p>
-              &copy; 2026 GeoPortal 360. Developed by 532 | Makopala Universitas
-              Budi Luhur.
+              &copy; 2026 GeoPortal 360. Developed by Makopala Universitas Budi
+              Luhur.
             </p>
           </footer>
         </div>
