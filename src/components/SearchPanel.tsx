@@ -74,7 +74,7 @@ export const SearchPanel = () => {
   if (!showSearch) return null;
 
   return (
-    <div className="fixed top-20 left-4 z-[60] w-[calc(100%-32px)] md:w-80 bg-black/80 backdrop-blur-md border border-white/20 rounded-xl text-white shadow-2xl overflow-hidden font-mono flex flex-col max-h-[50vh] md:max-h-[60vh]">
+    <div className="fixed top-20 left-4 z-[60] w-[calc(100%-32px)] md:w-64 bg-black/80 backdrop-blur-md border border-white/20 rounded-xl text-white shadow-2xl overflow-hidden font-mono flex flex-col max-h-[50vh] md:max-h-[60vh]">
       {/* Header */}
       <div className="p-3 border-b border-white/10 flex justify-between items-center bg-blue-600/20">
         <h3 className="font-bold flex items-center gap-2 text-blue-300">
