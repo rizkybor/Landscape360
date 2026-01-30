@@ -10,7 +10,7 @@ import { ControlPanel, TelemetryOverlay } from './ControlPanel';
 import { PlottingLayer } from './PlottingLayer';
 import { SurveyorPanel } from './SurveyorPanel';
 import { SearchPanel } from './SearchPanel';
-import { ScreenshotControl } from './ScreenshotControl';
+// import { ScreenshotControl } from './ScreenshotControl';
 
 // Placeholder token - User needs to replace this
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || 'pk.eyJ1Ijoicml6a3lhamllIiwiYSI6ImNsZ2J4bDQ4bjA0Z2wzZHF5c3J2aGZ3eWcifQ.8-lIqB1r8P9S3p3Q2j4xQw';
@@ -345,7 +345,7 @@ export const MapBoxContainer: React.FC<Props> = ({ overrideViewMode, className, 
           }}
         />
         <NavigationControl position="top-right" />
-        <ScreenshotControl />
+        {/* <ScreenshotControl /> */}
       </Map>
 
       {showControls && <ControlPanel />}
