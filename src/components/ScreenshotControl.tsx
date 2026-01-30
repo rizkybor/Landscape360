@@ -52,7 +52,7 @@ export const ScreenshotControl = () => {
   };
 
   return (
-    <div className="fixed top-4 right-20 z-30 no-screenshot">
+    <div className="fixed bottom-27 md:bottom-24 left-8 z-30 no-screenshot">
       {!isOpen ? (
         <button
           onClick={() => setIsOpen(true)}

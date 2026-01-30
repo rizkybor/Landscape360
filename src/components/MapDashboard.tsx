@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { MapBoxContainer } from "./MapBoxContainer";
 import { Split, Maximize } from "lucide-react";
+import { ScreenshotControl } from "./ScreenshotControl";
 
 export const MapDashboard = () => {
   const [isSplitScreen, setIsSplitScreen] = useState(false);
@@ -27,14 +28,39 @@ export const MapDashboard = () => {
         <MapBoxContainer />
       )}
 
+      <ScreenshotControl />
+
       {/* Split Screen Toggle */}
       <button
+  onClick={() => setIsSplitScreen(!isSplitScreen)}
+  className="
+    /* Positioning */
+    cursor-pointer absolute bottom-12 md:bottom-8 left-8 z-30 
+    
+    /* Glassmorphism Core */
+    bg-white/10 backdrop-blur-md 
+    border border-white/20 
+    
+    /* Styling & Effects */
+    p-3 rounded-full shadow-lg 
+    text-white 
+    transition-all duration-300
+    
+    /* Hover State */
+    hover:bg-white/20 hover:scale-105 hover:border-white/40
+    active:scale-95
+  "
+  title={isSplitScreen ? "Single View" : "Split Screen"}
+>
+  {isSplitScreen ? <Maximize size={18} /> : <Split size={20} />}
+</button>
+      {/* <button
         onClick={() => setIsSplitScreen(!isSplitScreen)}
-        className="cursor-pointer absolute bottom-24 md:bottom-8 left-8 z-30 bg-white text-gray-900 p-3 rounded-full shadow-xl hover:bg-gray-100 transition-colors border-2 border-transparent hover:border-gray-200"
+        className="cursor-pointer absolute bottom-20 md:bottom-8 left-8 z-30 bg-white text-gray-900 p-3 rounded-full shadow-xl hover:bg-gray-100 transition-colors border-2 border-transparent hover:border-gray-200"
         title={isSplitScreen ? "Single View" : "Split Screen"}
       >
         {isSplitScreen ? <Maximize size={20} /> : <Split size={20} />}
-      </button>
+      </button> */}
     </div>
   );
 };
