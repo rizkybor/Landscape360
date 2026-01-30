@@ -126,7 +126,7 @@ export const ControlPanel = () => {
         bottom-0 left-0 right-0 max-h-[70vh] rounded-t-2xl
         /* Desktop: Floating style */
         md:top-4 md:left-4 md:bottom-auto md:right-auto md:w-64 md:rounded-xl
-        bg-black/80 backdrop-blur-xl border-t md:border border-white/20 text-white shadow-2xl flex flex-col
+        bg-black/60 backdrop-blur-xl border-t md:border border-white/20 text-white shadow-2xl flex flex-col
         ${!isOpen ? "translate-y-full md:translate-y-0 md:opacity-0 md:pointer-events-none" : "translate-y-0"}
       `}
       >
@@ -191,7 +191,7 @@ export const ControlPanel = () => {
             <Activity size={14} className="text-blue-400" />
             Terrain Controls
           </h3>
-          <button className="md:hidden p-1 hover:bg-white/10 rounded">
+          <button className="cursor-pointer md:hidden p-1 hover:bg-white/10 rounded">
             <ChevronDown size={20} />
           </button>
         </div>
@@ -397,6 +397,7 @@ export const ControlPanel = () => {
             <p className="font-bold text-gray-400">
               Makopala Universitas Budi Luhur
             </p>
+            <p>@2026</p>
             {/* <p>Div. Gunung Hutan | MKP.33-532-KRB</p> */}
           </div>
         </div>
