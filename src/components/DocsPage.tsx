@@ -21,7 +21,7 @@ export const DocsPage = ({ onBack }: Props) => {
           <div className="flex items-center gap-4">
             <button
               onClick={onBack}
-              className="p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white"
+              className="cursor-pointer p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white"
             >
               <ArrowLeft size={20} />
             </button>

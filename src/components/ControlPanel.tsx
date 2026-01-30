@@ -71,17 +71,51 @@ export const ControlPanel = () => {
     <>
       {/* FAB for Mobile/Desktop when closed */}
       {!isOpen && (
+        // <button
+        //   onClick={() => setIsOpen(true)}
+        //   className="fixed top-4 left-6 z-30 p-4 bg-black/60 md:bg-white/5 backdrop-blur-xl text-white rounded-full shadow-2xl border-2 border-white/20 active:scale-95 transition-transform hover:bg-blue-900"
+        //   title="Open Controls"
+        // >
+        //   <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none"></div>
+        //   {/* <Activity size={18} /> */}
+        //   <img
+        //           src={geoportalLogo}
+        //           alt="GeoPortal 360"
+        //           className="w-8 h-8 object-contain"
+        //         />
+        // </button>
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed top-4 left-6 z-30 p-4 bg-gray-600 text-white rounded-full shadow-2xl border-2 border-white/20 active:scale-95 transition-transform hover:bg-blue-900"
           title="Open Controls"
+          className="
+    fixed top-4 left-6 z-30
+    w-14 h-14
+    flex items-center justify-center
+    rounded-full
+
+    bg-white/10
+    backdrop-blur-xl backdrop-saturate-150
+
+    border border-white/20
+    shadow-lg shadow-black/30
+
+    hover:bg-white/20
+    hover:shadow-blue-500/30
+
+        cursor-pointer
+    active:scale-95
+    transition-all duration-300
+  "
         >
-          {/* <Activity size={18} /> */}
+          {/* glass highlight */}
+          <span className="absolute inset-0 rounded-full bg-gradient-to-br from-white/30 via-transparent to-transparent opacity-60 pointer-events-none" />
+
+          {/* logo */}
           <img
-                  src={geoportalLogo}
-                  alt="GeoPortal 360"
-                  className="w-8 h-8 object-contain"
-                />
+            src={geoportalLogo}
+            alt="GeoPortal 360"
+            className="w-8 h-8 object-contain relative z-10"
+          />
         </button>
       )}
 
@@ -105,11 +139,11 @@ export const ControlPanel = () => {
               {/* <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-500/20">
                 <Activity size={14} />
                 </div> */}
-                <img
-                  src={geoportalLogo}
-                  alt="GeoPortal 360"
-                  className="w-12 h-12 object-contain"
-                />
+              <img
+                src={geoportalLogo}
+                alt="GeoPortal 360"
+                className="w-12 h-12 object-contain"
+              />
 
               <div>
                 <h2 className="font-bold text-sm tracking-tight leading-none">
@@ -127,7 +161,7 @@ export const ControlPanel = () => {
                 e.stopPropagation();
                 setIsOpen(false);
               }}
-              className="hidden md:block p-1 hover:bg-white/10 rounded text-gray-400"
+              className="cursor-pointer hidden md:block p-1 hover:bg-white/10 rounded text-gray-400"
             >
               <ChevronUp size={16} />
             </button>
@@ -139,7 +173,7 @@ export const ControlPanel = () => {
             </button>
             <button
               onClick={() => navigate("/docs")}
-              className="flex-1 py-1.5 bg-white/5 border border-white/10 rounded text-[10px] font-medium text-gray-300 hover:bg-white/10 transition-colors flex items-center justify-center gap-1"
+              className="cursor-pointer flex-1 py-1.5 bg-white/5 border border-white/10 rounded text-[10px] font-medium text-gray-300 hover:bg-white/10 transition-colors flex items-center justify-center gap-1"
             >
               <BookOpen size={10} /> Docs
             </button>
@@ -166,7 +200,7 @@ export const ControlPanel = () => {
           {/* Search Toggle */}
           <button
             onClick={() => setShowSearch(!showSearch)}
-            className={`w-full flex items-center justify-center gap-2 py-3 md:py-2 text-xs font-bold rounded transition-colors ${showSearch ? "bg-blue-500 text-white shadow-lg shadow-blue-500/50" : "bg-white/20 hover:bg-white/30 text-blue-200 border border-blue-500/30"}`}
+            className={`cursor-pointer w-full flex items-center justify-center gap-2 py-3 md:py-2 text-xs font-bold rounded transition-colors ${showSearch ? "bg-blue-500 text-white shadow-lg shadow-blue-500/50" : "bg-white/20 hover:bg-white/30 text-blue-200 border border-blue-500/30"}`}
           >
             <Search size={14} />
             {showSearch ? "Hide Search" : "Show Search"}
@@ -175,7 +209,7 @@ export const ControlPanel = () => {
           {/* Surveyor Toggle */}
           <button
             onClick={togglePlotMode}
-            className={`w-full flex items-center justify-center gap-2 py-3 md:py-2 text-xs font-bold rounded transition-colors ${isPlotMode ? "bg-yellow-500 text-black shadow-lg shadow-yellow-500/50" : "bg-white/20 hover:bg-white/30 text-yellow-200 border border-yellow-500/30"}`}
+            className={`cursor-pointer w-full flex items-center justify-center gap-2 py-3 md:py-2 text-xs font-bold rounded transition-colors ${isPlotMode ? "bg-yellow-500 text-black shadow-lg shadow-yellow-500/50" : "bg-white/20 hover:bg-white/30 text-yellow-200 border border-yellow-500/30"}`}
           >
             <Ruler size={14} />
             {isPlotMode ? "Exit Navigator Mode" : "Start Navigator Mode"}
@@ -212,7 +246,7 @@ export const ControlPanel = () => {
                   setPitch(0);
                   setBearing(0);
                 }}
-                className="flex-1 py-1 text-[10px] bg-white/10 hover:bg-white/20 rounded flex items-center justify-center gap-1"
+                className="cursor-pointer flex-1 py-1 text-[10px] bg-white/10 hover:bg-white/20 rounded flex items-center justify-center gap-1"
               >
                 <Monitor size={12} /> Reset Top
               </button>
@@ -220,7 +254,7 @@ export const ControlPanel = () => {
                 onClick={() => {
                   setPitch(80);
                 }}
-                className="flex-1 py-1 text-[10px] bg-white/10 hover:bg-white/20 rounded flex items-center justify-center gap-1"
+                className="cursor-pointer flex-1 py-1 text-[10px] bg-white/10 hover:bg-white/20 rounded flex items-center justify-center gap-1"
               >
                 <Eye size={12} /> Side View
               </button>
@@ -235,13 +269,13 @@ export const ControlPanel = () => {
             <div className="flex bg-black/20 rounded p-1">
               <button
                 onClick={() => setMouseControlMode("camera")}
-                className={`flex-1 py-1 rounded transition-colors ${mouseControlMode === "camera" ? "bg-blue-500 text-white" : "hover:bg-white/10"}`}
+                className={`cursor-pointer flex-1 py-1 rounded transition-colors ${mouseControlMode === "camera" ? "bg-blue-500 text-white" : "hover:bg-white/10"}`}
               >
                 Camera (Left=Rot)
               </button>
               <button
                 onClick={() => setMouseControlMode("map")}
-                className={`flex-1 py-1 rounded transition-colors ${mouseControlMode === "map" ? "bg-blue-500 text-white" : "hover:bg-white/10"}`}
+                className={`cursor-pointer flex-1 py-1 rounded transition-colors ${mouseControlMode === "map" ? "bg-blue-500 text-white" : "hover:bg-white/10"}`}
               >
                 Map (Left=Pan)
               </button>
@@ -276,7 +310,7 @@ export const ControlPanel = () => {
               <label className="text-xs text-gray-300">Show Contours</label>
               <button
                 onClick={() => setShowContours(!showContours)}
-                className={`w-10 h-5 rounded-full p-1 transition-colors ${showContours ? "bg-blue-600" : "bg-white/10"}`}
+                className={`cursor-pointer w-10 h-5 rounded-full p-1 transition-colors ${showContours ? "bg-blue-600" : "bg-white/10"}`}
               >
                 <div
                   className={`w-3 h-3 bg-white rounded-full shadow transition-transform ${showContours ? "translate-x-5" : "translate-x-0"}`}
@@ -310,7 +344,7 @@ export const ControlPanel = () => {
                   <button
                     key={val}
                     onClick={() => setContourInterval(val)}
-                    className={`flex-1 text-[10px] py-1 rounded border transition-colors ${
+                    className={`cursor-pointer flex-1 text-[10px] py-1 rounded border transition-colors ${
                       contourInterval === val
                         ? "bg-blue-600 border-blue-500 text-white font-bold"
                         : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10"

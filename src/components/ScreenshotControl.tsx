@@ -56,7 +56,7 @@ export const ScreenshotControl = () => {
       {!isOpen ? (
         <button
           onClick={() => setIsOpen(true)}
-          className="p-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-white hover:bg-white/20 transition-all shadow-lg hover:scale-105"
+          className="cursor-pointer p-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-white hover:bg-white/20 transition-all shadow-lg hover:scale-105"
           title="Take Screenshot"
           disabled={isCapturing}
         >
@@ -68,7 +68,7 @@ export const ScreenshotControl = () => {
               <h3 className="font-bold text-sm flex items-center gap-2">
                  <Camera size={16} className="text-blue-400" /> Capture View
               </h3>
-              <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-white">
+              <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-white cursor-pointer">
                  <X size={16} />
               </button>
            </div>
@@ -77,7 +77,7 @@ export const ScreenshotControl = () => {
               <button 
                 onClick={() => handleCapture('png')}
                 disabled={isCapturing}
-                className="flex items-center gap-3 px-4 py-2 bg-white/5 hover:bg-blue-600/20 border border-white/10 rounded-lg text-xs transition-colors text-left group"
+                className="cursor-pointer flex items-center gap-3 px-4 py-2 bg-white/5 hover:bg-blue-600/20 border border-white/10 rounded-lg text-xs transition-colors text-left group"
               >
                  <div className="p-1.5 bg-blue-500/20 rounded group-hover:bg-blue-500 text-blue-300 group-hover:text-white transition-colors">
                     <ImageIcon size={14} />
@@ -91,7 +91,7 @@ export const ScreenshotControl = () => {
               <button 
                 onClick={() => handleCapture('jpg')}
                 disabled={isCapturing}
-                className="flex items-center gap-3 px-4 py-2 bg-white/5 hover:bg-blue-600/20 border border-white/10 rounded-lg text-xs transition-colors text-left group"
+                className="cursor-pointer flex items-center gap-3 px-4 py-2 bg-white/5 hover:bg-blue-600/20 border border-white/10 rounded-lg text-xs transition-colors text-left group"
               >
                  <div className="p-1.5 bg-blue-500/20 rounded group-hover:bg-blue-500 text-blue-300 group-hover:text-white transition-colors">
                     <ImageIcon size={14} />
@@ -105,7 +105,7 @@ export const ScreenshotControl = () => {
               <button 
                 onClick={() => handleCapture('pdf')}
                 disabled={isCapturing}
-                className="flex items-center gap-3 px-4 py-2 bg-white/5 hover:bg-red-600/20 border border-white/10 rounded-lg text-xs transition-colors text-left group"
+                className="cursor-pointer flex items-center gap-3 px-4 py-2 bg-white/5 hover:bg-red-600/20 border border-white/10 rounded-lg text-xs transition-colors text-left group"
               >
                  <div className="p-1.5 bg-red-500/20 rounded group-hover:bg-red-500 text-red-300 group-hover:text-white transition-colors">
                     <FileText size={14} />
