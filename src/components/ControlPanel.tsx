@@ -73,10 +73,15 @@ export const ControlPanel = () => {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed top-4 left-6 z-30 p-4 bg-blue-600 text-white rounded-full shadow-2xl border-2 border-white/20 active:scale-95 transition-transform hover:bg-blue-500"
+          className="fixed top-4 left-6 z-30 p-4 bg-gray-600 text-white rounded-full shadow-2xl border-2 border-white/20 active:scale-95 transition-transform hover:bg-blue-900"
           title="Open Controls"
         >
-          <Activity size={18} />
+          {/* <Activity size={18} /> */}
+          <img
+                  src={geoportalLogo}
+                  alt="GeoPortal 360"
+                  className="w-8 h-8 object-contain"
+                />
         </button>
       )}
 
