@@ -397,7 +397,7 @@ export const ControlPanel = () => {
             <p className="font-bold text-gray-400">
               Makopala Universitas Budi Luhur
             </p>
-            <p>Div. Gunung Hutan | MKP.33-532-KRB</p>
+            {/* <p>Div. Gunung Hutan | MKP.33-532-KRB</p> */}
           </div>
         </div>
       </div>
