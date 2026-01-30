@@ -3,10 +3,12 @@
   <url>
     <loc>https://geoportal360.jcdigital.co.id/</loc>
     <lastmod>2026-01-30</lastmod>
+    <priority>1.0</priority>
   </url>
 
   <url>
     <loc>https://geoportal360.jcdigital.co.id/docs</loc>
     <lastmod>2026-01-30</lastmod>
+    <priority>0.8</priority>
   </url>
 </urlset>
