@@ -405,12 +405,36 @@ export const ControlPanel = () => {
             </div>
           </div>
 
-          <div className="pt-4 mt-2 border-t border-white/10 text-[10px] text-center text-gray-500 font-mono">
-            <p className="font-bold text-gray-400">
-              Makopala Universitas Budi Luhur
+          <div className="pt-6 mt-8 border-t border-white/10 text-[10px] text-center text-gray-500 font-mono">
+            <p className="uppercase tracking-[0.2em] mb-1 text-[9px] text-gray-600">
+              In Collaboration With
             </p>
-            <p>@2026</p>
-            {/* <p>Div. Gunung Hutan | MKP.33-532-KRB</p> */}
+
+            <div className="flex flex-col gap-1">
+              {/* Kolaborasi 1: JC Digital */}
+              <div>
+                <a
+                  href="https://instagram.com/jendelacakradigital"
+                  target="_blank"
+                  className="font-bold text-gray-400 hover:text-blue-400 transition-colors uppercase tracking-wider"
+                >
+                  Jendela Cakra Digital
+                </a>
+              </div>
+
+              {/* Kolaborasi 2: Makopala */}
+              <div className="flex flex-col gap-1">
+                <a
+                  href="https://instagram.com/makopala_ubl"
+                  target="_blank"
+                  className="font-bold text-gray-400 hover:text-emerald-400 transition-colors uppercase tracking-wider"
+                >
+                  Makopala Univ. Budi Luhur
+                </a>
+              </div>
+
+              <p className="opacity-50">@2026</p>
+            </div>
           </div>
         </div>
       </div>
@@ -526,7 +550,7 @@ const GetStartedModal = ({
 
         {/* Content */}
         <div className="p-6 flex flex-col h-[calc(80vh-88px-60px)]">
-    <div className="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar">
             {[
               {
                 icon: <Monitor size={18} />,

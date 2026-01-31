@@ -317,24 +317,44 @@ export const DocsPage = ({ onBack }: Props) => {
                 </a>
 
                 {/* Collaboration Info */}
-                <div className="mt-6 flex flex-col items-center gap-3">
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-gray-500">
+                <div className="mt-8 flex flex-col items-center gap-4">
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-gray-500/80 font-semibold">
                     In Collaboration With
                   </p>
-                  <a
-                    href="https://www.instagram.com/jendelacakradigital/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 hover:border-blue-500/50 transition-all duration-300"
-                  >
-                    <Instagram
-                      size={14}
-                      className="text-pink-500 group-hover:scale-110 transition-transform"
-                    />
-                    <span className="text-xs font-semibold tracking-wider text-gray-300 group-hover:text-white">
-                      PT. JENDELA CAKRA DIGITAL
-                    </span>
-                  </a>
+
+                  <div className="flex flex-wrap justify-center gap-3">
+                    {/* Jendela Cakra Digital */}
+                    <a
+                      href="https://instagram.com/jcdigital.co.id"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 hover:border-blue-500/50 transition-all duration-300"
+                    >
+                      <Instagram
+                        size={14}
+                        className="text-pink-500 group-hover:scale-110 transition-transform"
+                      />
+                      <span className="text-[11px] font-bold tracking-wider text-gray-300 group-hover:text-white">
+                        JENDELA CAKRA DIGITAL
+                      </span>
+                    </a>
+
+                    {/* MAKOPALA UBL */}
+                    <a
+                      href="https://www.instagram.com/makopala_ubl/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 hover:border-emerald-500/50 transition-all duration-300"
+                    >
+                      <Instagram
+                        size={14}
+                        className="text-pink-500 group-hover:scale-110 transition-transform"
+                      />
+                      <span className="text-[11px] font-bold tracking-wider text-gray-300 group-hover:text-white">
+                        MAKOPALA UBL
+                      </span>
+                    </a>
+                  </div>
                 </div>
               </div>
 
