@@ -6,7 +6,7 @@ import type { FeatureCollection, LineString, MultiLineString } from 'geojson';
 
 export const ContourLayer = () => {
   const { current: mapRef } = useMap();
-  const { contourInterval } = useMapStore();
+  const { contourInterval, opacity } = useMapStore();
   const [contours, setContours] = useState<FeatureCollection<LineString | MultiLineString> | null>(null);
 
   useEffect(() => {
@@ -82,7 +82,7 @@ export const ContourLayer = () => {
         paint={{
           'line-color': '#FFFFFF',
           'line-width': 0.5,
-          'line-opacity': 0.4
+          'line-opacity': opacity * 0.4
         }}
       />
 
@@ -94,7 +94,7 @@ export const ContourLayer = () => {
         paint={{
           'line-color': '#FFFFFF',
           'line-width': 1.5,
-          'line-opacity': 0.8
+          'line-opacity': opacity
         }}
       />
 
@@ -114,7 +114,8 @@ export const ContourLayer = () => {
         paint={{
           'text-color': '#FFFFFF',
           'text-halo-color': '#000000',
-          'text-halo-width': 1
+          'text-halo-width': 1,
+          'text-opacity': opacity
         }}
       />
     </Source>

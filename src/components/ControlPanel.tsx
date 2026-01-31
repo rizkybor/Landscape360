@@ -69,10 +69,10 @@ export const ControlPanel = () => {
   }, [isJoystickDragging, bearing, pitch, setBearing, setPitch]);
 
   useEffect(() => {
-  const onResize = () => setIsMobile(window.innerWidth < 768);
-  window.addEventListener("resize", onResize);
-  return () => window.removeEventListener("resize", onResize);
-}, []);
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   return (
     <>
@@ -390,11 +390,11 @@ export const ControlPanel = () => {
               </label>
               <input
                 type="range"
-                min="0"
-                max="1"
-                step="0.1"
-                value={opacity}
-                onChange={(e) => setOpacity(Number(e.target.value))}
+                min={0}
+                max={100}
+                step={1}
+                value={Math.round(opacity * 100)}
+                onChange={(e) => setOpacity(Number(e.target.value) / 100)}
                 className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500"
               />
             </div>
