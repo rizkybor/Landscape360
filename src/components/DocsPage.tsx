@@ -17,22 +17,23 @@ export const DocsPage = ({ onBack }: Props) => {
     <div className="h-screen bg-gray-900 text-white font-sans overflow-hidden flex flex-col">
       {/* Header */}
       <div className="shrink-0 sticky top-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/10">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3 sm:gap-4">
             <button
               onClick={onBack}
-              className="cursor-pointer p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white"
+              className="cursor-pointer p-1.5 sm:p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white"
             >
-              <ArrowLeft size={20} />
+              {/* ubah ukuran icon lewat w/h */}
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                <BookOpen size={16} className="text-white" />
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <BookOpen className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
               </div>
-              <h1 className="text-xl font-bold">Documentation</h1>
+              <h1 className="text-lg sm:text-xl font-bold">Documentation</h1>
             </div>
           </div>
-          <span className="text-xs font-mono text-blue-400 border border-blue-500/30 px-2 py-1 rounded bg-blue-500/10">
+          <span className="text-xs font-mono text-blue-400 border border-blue-500/30 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded bg-blue-500/10">
             v1.0 Pro
           </span>
         </div>
@@ -42,27 +43,51 @@ export const DocsPage = ({ onBack }: Props) => {
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         <div className="max-w-4xl mx-auto px-6 py-12 space-y-16">
           {/* Intro */}
-          <section className="space-y-4 text-center pb-8 border-b border-white/10">
+          <section className="space-y-4 text-center pb-6 sm:pb-8 border-b border-white/10">
             <div className="flex justify-center">
               <img
                 src={geoportalLogo}
                 alt="GeoPortal 360"
-                className="w-24 h-24 object-contain"
+                className="w-16 h-16 sm:w-24 sm:h-24 object-contain"
               />
             </div>
-            <h2 className="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-white to-blue-400 bg-[length:200%_auto] animate-shine">
+            <h2 className="text-3xl sm:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-white to-blue-400 bg-[length:200%_auto] animate-shine">
               GeoPortal 360
             </h2>
-            <p className="text-xl text-blue-200/80 font-light tracking-wide uppercase">
+            <p className="text-sm sm:text-xl text-blue-200/80 font-light tracking-wide uppercase">
               Precision in Every Dimension
             </p>
-            <p className="text-lg text-gray-400 leading-relaxed max-w-2xl mx-auto mt-6">
-              GeoPortal 360 is an advanced web-based terrain visualization and
-              survey platform designed for professionals. It combines
-              high-fidelity 3D mapping, real-time contour generation, and
-              precise survey plotting tools to deliver actionable geospatial
-              insights directly in your browser.
+            <p className="text-base sm:text-lg text-gray-400 leading-relaxed max-w-md sm:max-w-2xl mx-auto mt-4 sm:mt-6">
+              GeoPortal 360 is a powerful web-based terrain visualization and
+              analysis platform designed for professionals.
             </p>
+            <p className="text-base sm:text-lg text-gray-400 leading-relaxed max-w-md sm:max-w-2xl mx-auto mt-4 sm:mt-6">
+              It combines high-accuracy 3D mapping, real-time contour mapping,
+              and precision plotting tools complete with Azimuth & Back Azimuth
+              information, UTM coordinates, and Geographic coordinates to
+              provide geospatial insights about the Earth's surface right in
+              your browser.
+            </p>
+            {/* ... paragraf sebelumnya ... */}
+
+            <div className="mt-10 flex justify-center">
+              <a
+                href="https://instagram.com/username_anda"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm transition-all hover:bg-white/10 hover:border-blue-500/50 hover:shadow-[0_0_15px_rgba(59,130,246,0.2)]"
+              >
+                <p className="text-[10px] sm:text-xs text-gray-400 flex items-center gap-2 tracking-wider">
+                  <span className="w-1 h-1 rounded-full bg-blue-400 group-hover:animate-ping"></span>
+                  DEVELOPED BY{" "}
+                  <span className="text-blue-100 group-hover:text-blue-400 transition-colors">
+                    RIZKY AJIE KURNIAWAN
+                  </span>
+                  <span className="text-gray-700">/</span>
+                  <span>JAKARTA, INDONESIA</span>
+                </p>
+              </a>
+            </div>
           </section>
 
           {/* Navigation & Controls */}
@@ -243,20 +268,47 @@ export const DocsPage = ({ onBack }: Props) => {
           </section>
 
           {/* Footer */}
-          <footer className="pt-12 border-t border-white/10 text-center text-gray-600 text-sm">
-          <span className="text-gray-600 text-sm">
-                Contact Information :{" "}
+          <footer className="pt-12 pb-8 border-t border-white/5 text-center">
+            <div className="max-w-4xl mx-auto px-4">
+              {/* Contact Section */}
+              <div className="group inline-flex flex-col items-center gap-2 mb-10">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="h-[1px] w-4 bg-blue-500/40"></span>
+                  <p className="text-[10px] uppercase tracking-[0.4em] text-blue-400/70 font-bold">
+                    Contact Information
+                  </p>
+                  <span className="h-[1px] w-4 bg-blue-500/40"></span>
+                </div>
+
                 <a
-                  href="mailto:rizkyak994@gmail.com"
-                  className="hover:text-blue-400 transition-colors"
+                  href="mailto:contact@jcdigital.co.id"
+                  className="relative text-sm sm:text-lg text-gray-400 hover:text-white transition-all duration-500 font-light tracking-wide italic"
                 >
-                  rizkyak994@gmail.com
+                  contact@jcdigital.co.id
+                  {/* Animated underline effect */}
+                  <span className="absolute bottom-[-4px] left-0 w-0 h-[1px] bg-gradient-to-r from-transparent via-blue-500 to-transparent transition-all duration-500 group-hover:w-full"></span>
                 </a>
-              </span>
-            <p>
-              &copy; 2026 GeoPortal 360. Developed by Makopala Universitas Budi
-              Luhur.
-            </p>
+              </div>
+
+              {/* Secondary Info & Copyright */}
+              <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-8 border-t border-white/5 opacity-50 text-[11px] sm:text-xs tracking-widest uppercase font-medium text-gray-500">
+                <div className="flex items-center gap-4">
+                  <span className="hover:text-blue-400 transition-colors cursor-default">
+                    Precision Mapping
+                  </span>
+                  <span className="w-1 h-1 rounded-full bg-gray-800"></span>
+                  <span className="hover:text-blue-400 transition-colors cursor-default">
+                    Real-time Analysis
+                  </span>
+                </div>
+
+                <p className="order-first md:order-last">
+                  &copy; 2026{" "}
+                  <span className="text-gray-300">GeoPortal 360</span>. All
+                  Rights Reserved.
+                </p>
+              </div>
+            </div>
           </footer>
         </div>
       </div>

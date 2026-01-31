@@ -38,7 +38,7 @@ export const ControlPanel = () => {
   } = useMapStore();
 
   const { isPlotMode, togglePlotMode } = useSurveyStore();
-
+  const [showGetStarted, setShowGetStarted] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const joystickRef = useRef<HTMLDivElement>(null);
   const [isJoystickDragging, setIsJoystickDragging] = useState(false);
@@ -175,7 +175,10 @@ export const ControlPanel = () => {
           </div>
 
           <div className="flex gap-2">
-            <button className="flex-1 py-1.5 bg-gradient-to-r from-yellow-500/10 to-yellow-600/10 border border-yellow-500/30 rounded text-[10px] font-medium text-yellow-200 hover:bg-yellow-500/20 transition-colors flex items-center justify-center gap-1">
+            <button
+              onClick={() => setShowGetStarted(true)}
+              className="cursor-pointer flex-1 py-1.5 bg-gradient-to-r from-yellow-500/10 to-yellow-600/10 border border-yellow-500/30 rounded text-[10px] font-medium text-yellow-200 hover:bg-yellow-500/20 transition-colors flex items-center justify-center gap-1"
+            >
               Get Started
             </button>
             <button
@@ -409,6 +412,11 @@ export const ControlPanel = () => {
           </div>
         </div>
       </div>
+
+      <GetStartedModal
+        isOpen={showGetStarted}
+        onClose={() => setShowGetStarted(false)}
+      />
     </>
   );
 };
@@ -466,6 +474,105 @@ export const TelemetryOverlay = ({
 
       <div className="hidden md:block mt-3 pt-2 border-t border-white/5 text-[8px] text-center text-gray-500 uppercase tracking-widest opacity-50 group-hover:opacity-100 transition-opacity">
         Powered by GeoPortal 360
+      </div>
+    </div>
+  );
+};
+
+const GetStartedModal = ({
+  isOpen,
+  onClose,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+      {/* Container Modal */}
+      <div className="relative w-full max-w-lg bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+        {/* Glow Decor */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
+
+        {/* Header */}
+        <div className="p-6 border-b border-white/5 bg-white/[0.02]">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <img
+                src={geoportalLogo}
+                alt="Logo"
+                className="w-10 h-10 object-contain"
+              />
+              <div>
+                <h2 className="text-xl font-bold text-white tracking-tight">
+                  Quick Start Guide
+                </h2>
+                <p className="text-xs text-blue-400 font-mono tracking-widest">
+                  Initialization
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="cursor-pointer p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white"
+            >
+              <ChevronUp className="rotate-180" size={20} />
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-6">
+          <div className="space-y-4">
+            {[
+              {
+                icon: <Monitor size={18} />,
+                title: "Navigation",
+                desc: "Use the virtual joystick or Right-Click to orbit and tilt the terrain.",
+              },
+              {
+                icon: <Activity size={18} />,
+                title: "Terrain Analysis",
+                desc: "Toggle contours and adjust exaggeration to visualize elevation details.",
+              },
+              {
+                icon: <Ruler size={18} />,
+                title: "Survey Tools",
+                desc: "Enter Navigator Mode to plot points and measure Azimuth/Back-Azimuth.",
+              },
+            ].map((item, i) => (
+              <div key={i} className="flex gap-4 group">
+                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-all">
+                  {item.icon}
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-200">
+                    {item.title}
+                  </h4>
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    {item.desc}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Action Call */}
+          <div className="pt-4">
+            <button
+              onClick={onClose}
+              className="cursor-pointer w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-400 hover:text-white transition-all active:scale-[0.98] shadow-lg"
+            >
+              Let's Go
+            </button>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="p-4 bg-black/40 border-t border-white/5 text-center text-[10px] text-gray-600 font-mono">
+          GEOPORTAL 360 v1.0 • 2026
+        </div>
       </div>
     </div>
   );
