@@ -73,7 +73,7 @@ export const DocsPage = ({ onBack }: Props) => {
 
             <div className="mt-10 flex justify-center">
               <a
-                href="https://instagram.com/username_anda"
+                href="https://www.instagram.com/rizkybor/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm transition-all hover:bg-white/10 hover:border-blue-500/50 hover:shadow-[0_0_15px_rgba(59,130,246,0.2)]"
