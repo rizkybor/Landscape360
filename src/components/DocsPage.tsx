@@ -158,23 +158,23 @@ export const DocsPage = ({ onBack }: Props) => {
                   <li className="flex gap-3">
                     <div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-2 shrink-0"></div>
                     <span>
-                      <strong>Save as PNG:</strong> High-quality image export,
-                      best for digital presentations.
+                      <strong className="text-white">Save as PNG:</strong>{" "}
+                      High-quality image export, best for digital presentations.
                     </span>
                   </li>
                   <li className="flex gap-3">
                     <div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-2 shrink-0"></div>
                     <span>
-                      <strong>Save as JPG:</strong> Compressed image export,
-                      optimized for sharing.
+                      <strong className="text-white">Save as JPG:</strong>{" "}
+                      Compressed image export, optimized for sharing.
                     </span>
                   </li>
                   <li className="flex gap-3">
                     <div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-2 shrink-0"></div>
                     <span>
-                      <strong>Export to PDF:</strong> Generates a document-ready
-                      PDF of the current map view. Note: UI overlays are
-                      excluded for a cleaner output.
+                      <strong className="text-white">Export to PDF:</strong>{" "}
+                      Generates a document-ready PDF of the current map view.
+                      Note: UI overlays are excluded for a cleaner output.
                     </span>
                   </li>
                 </ul>
@@ -188,30 +188,52 @@ export const DocsPage = ({ onBack }: Props) => {
               </div>
               <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-4">
                 <p className="text-sm text-gray-400">
-                  Use the Control Panel on the left to customize the terrain
-                  visualization.
+                  Use the <strong className="text-white">Control Panel</strong>{" "}
+                  on the left to fine-tune your terrain visualization. You can
+                  switch between different topographic perspectives and adjust
+                  the following parameters:
                 </p>
                 <ul className="space-y-3 text-sm text-gray-400">
                   <li className="flex gap-3">
                     <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-2 shrink-0"></div>
                     <span>
-                      <strong>Contour Interval:</strong> Adjust the vertical
-                      distance between contour lines (10m - 500m). Index
-                      contours appear every 4th or 5th line.
+                      <strong className="text-white">Contour Interval:</strong>{" "}
+                      Adjust the vertical distance between contour lines (2.5m -
+                      500m). Index contours appear every 5th line.
+                      <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                        <strong>Standard RBI Reference:</strong>
+                        <ul className="list-disc ml-4 mt-1">
+                          <li>1:25,000 (12.5m) - Jawa, Bali, Nusa Tenggara</li>
+                          <li>1:50,000 (25m) - Outside Jawa regions</li>
+                          <li>1:100,000 (50m) - Medium scale</li>
+                          <li>1:250,000 (125m) - Regional scale</li>
+                        </ul>
+                      </div>
                     </span>
                   </li>
                   <li className="flex gap-3">
                     <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-2 shrink-0"></div>
                     <span>
-                      <strong>Exaggeration:</strong> Increase the vertical scale
-                      to highlight subtle terrain features (1.0x - 10.0x).
+                      <strong className="text-white">Exaggeration:</strong>
+                      <br /> Increase the vertical scale to highlight subtle
+                      terrain features (1.0x - 10.0x).
+                      <span className="block mt-1 text-sm text-gray-600 dark:text-gray-400">
+                        Useful for visualizing flat areas or identifying
+                        micro-topography like small ridges and drainage
+                        patterns.
+                      </span>
                     </span>
                   </li>
                   <li className="flex gap-3">
                     <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-2 shrink-0"></div>
                     <span>
-                      <strong>Opacity:</strong> Control the transparency of the
-                      contour layer overlay.
+                      <strong className="text-white">Opacity:</strong>
+                      <br /> Control the transparency of the contour layer
+                      overlay (0% - 100%).
+                      <span className="block mt-1 text-sm text-gray-600 dark:text-gray-400">
+                        Adjust to balance the visibility between contour lines
+                        and the underlying basemap or satellite imagery.
+                      </span>
                     </span>
                   </li>
                 </ul>

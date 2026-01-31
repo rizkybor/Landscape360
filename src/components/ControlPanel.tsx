@@ -350,7 +350,7 @@ export const ControlPanel = () => {
                 className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500"
               />
               <div className="flex justify-between mt-2 gap-1">
-                {[12.5, 25, 50, 100].map((val) => (
+                {[12.5, 25, 50, 125].map((val) => (
                   <button
                     key={val}
                     onClick={() => setContourInterval(val)}
