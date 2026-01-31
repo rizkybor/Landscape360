@@ -80,9 +80,9 @@ export const ContourLayer = () => {
         minzoom={14}
         filter={['!=', ['%', ['get', 'elevation'], indexInterval], 0]}
         paint={{
-          'line-color': '#FFFFFF',
-          'line-width': 0.5,
-          'line-opacity': opacity * 0.4
+          'line-color': '#FFBF00',
+          'line-width': 0.6,
+          'line-opacity': opacity * 1
         }}
       />
 
@@ -92,7 +92,7 @@ export const ContourLayer = () => {
         type="line"
         filter={['==', ['%', ['get', 'elevation'], indexInterval], 0]}
         paint={{
-          'line-color': '#FFFFFF',
+          'line-color': '#FFBF00',
           'line-width': 1.5,
           'line-opacity': opacity
         }}
