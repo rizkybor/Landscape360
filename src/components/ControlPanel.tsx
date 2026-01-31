@@ -39,6 +39,7 @@ export const ControlPanel = () => {
 
   const { isPlotMode, togglePlotMode } = useSurveyStore();
 
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const joystickRef = useRef<HTMLDivElement>(null);
   const [isJoystickDragging, setIsJoystickDragging] = useState(false);
   const [isOpen, setIsOpen] = useState(true); // Default open but will be manageable on mobile
@@ -66,6 +67,12 @@ export const ControlPanel = () => {
       window.removeEventListener("mouseup", handleUp);
     };
   }, [isJoystickDragging, bearing, pitch, setBearing, setPitch]);
+
+  useEffect(() => {
+  const onResize = () => setIsMobile(window.innerWidth < 768);
+  window.addEventListener("resize", onResize);
+  return () => window.removeEventListener("resize", onResize);
+}, []);
 
   return (
     <>
@@ -184,7 +191,7 @@ export const ControlPanel = () => {
         <div
           className="p-3 flex justify-between items-center border-b border-white/10 cursor-pointer md:cursor-default bg-black/20"
           onClick={() => {
-            if (window.innerWidth < 768) setIsOpen(false);
+            if (isMobile) setIsOpen(false);
           }}
         >
           <h3 className="font-bold flex items-center gap-2 text-xs text-gray-400 uppercase tracking-wider">
