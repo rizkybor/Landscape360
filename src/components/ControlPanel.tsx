@@ -11,6 +11,8 @@ import {
   ChevronUp,
   Search,
   BookOpen,
+  Download,
+  Columns,
 } from "lucide-react";
 import geoportalLogo from "../assets/geoportal360.png";
 
@@ -523,8 +525,8 @@ const GetStartedModal = ({
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
-          <div className="space-y-4">
+        <div className="p-6 flex flex-col h-[calc(80vh-88px-60px)]">
+    <div className="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar">
             {[
               {
                 icon: <Monitor size={18} />,
@@ -535,6 +537,33 @@ const GetStartedModal = ({
                 icon: <Activity size={18} />,
                 title: "Terrain Analysis",
                 desc: "Toggle contours and adjust exaggeration to visualize elevation details.",
+              },
+              {
+                icon: <Download size={18} />, // Pastikan icon Download sudah di-import dari library Anda (misal: Lucide)
+                title: "Export & Capture",
+                desc: (
+                  <>
+                    Capture high-resolution snapshots for reports.
+                    <div className="mt-2 grid grid-cols-1 gap-1 text-xs opacity-80">
+                      <span>
+                        • <strong>PNG:</strong> High-quality for digital
+                        presentations.
+                      </span>
+                      <span>
+                        • <strong>JPG:</strong> Compressed for easy sharing.
+                      </span>
+                      <span>
+                        • <strong>PDF:</strong> Document-ready (UI overlays
+                        excluded).
+                      </span>
+                    </div>
+                  </>
+                ),
+              },
+              {
+                icon: <Columns size={18} />, // Atau gunakan icon Layout/Square
+                title: "Split Screen View",
+                desc: "Compare two different map layers or perspectives side-by-side. Sync or unsync camera movements to analyze temporal or thematic changes in the terrain.",
               },
               {
                 icon: <Ruler size={18} />,

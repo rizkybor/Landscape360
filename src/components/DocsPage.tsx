@@ -5,6 +5,7 @@ import {
   MousePointer,
   Activity,
   Camera,
+  Columns,
 } from "lucide-react";
 import geoportalLogo from "../assets/geoportal360.png";
 
@@ -90,13 +91,13 @@ export const DocsPage = ({ onBack }: Props) => {
             </div>
           </section>
 
-          {/* Navigation & Controls */}
           <section className="grid md:grid-cols-2 gap-8">
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-blue-400 mb-2">
                 <MousePointer size={20} />
                 <h3 className="text-xl font-bold">Navigation Controls</h3>
               </div>
+              {/* Navigation & Controls */}
               <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-4">
                 <div>
                   <h4 className="font-bold text-white mb-1">
@@ -182,6 +183,7 @@ export const DocsPage = ({ onBack }: Props) => {
             </div>
 
             <div className="space-y-4">
+              {/* Terrain & Analysis Tools */}
               <div className="flex items-center gap-2 text-green-400 mb-2">
                 <Layers size={20} />
                 <h3 className="text-xl font-bold">Terrain Analysis</h3>
@@ -189,9 +191,8 @@ export const DocsPage = ({ onBack }: Props) => {
               <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-4">
                 <p className="text-sm text-gray-400">
                   Use the <strong className="text-white">Control Panel</strong>{" "}
-                  on the left to fine-tune your terrain visualization. You can
-                  switch between different topographic perspectives and adjust
-                  the following parameters:
+                  on the left to customize your view. Adjust parameters to
+                  fine-tune your topographic analysis:
                 </p>
                 <ul className="space-y-3 text-sm text-gray-400">
                   <li className="flex gap-3">
@@ -217,11 +218,6 @@ export const DocsPage = ({ onBack }: Props) => {
                       <strong className="text-white">Exaggeration:</strong>
                       <br /> Increase the vertical scale to highlight subtle
                       terrain features (1.0x - 10.0x).
-                      <span className="block mt-1 text-sm text-gray-600 dark:text-gray-400">
-                        Useful for visualizing flat areas or identifying
-                        micro-topography like small ridges and drainage
-                        patterns.
-                      </span>
                     </span>
                   </li>
                   <li className="flex gap-3">
@@ -230,13 +226,22 @@ export const DocsPage = ({ onBack }: Props) => {
                       <strong className="text-white">Opacity:</strong>
                       <br /> Control the transparency of the contour layer
                       overlay (0% - 100%).
-                      <span className="block mt-1 text-sm text-gray-600 dark:text-gray-400">
-                        Adjust to balance the visibility between contour lines
-                        and the underlying basemap or satellite imagery.
-                      </span>
                     </span>
                   </li>
                 </ul>
+              </div>
+
+              {/* Split Screen View */}
+              <div className="flex items-center gap-2 text-red-400 mb-2">
+                <Columns size={20} />
+                <h3 className="text-xl font-bold">Split Screen View</h3>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+                <p className="text-sm text-gray-400 leading-relaxed">
+                  Enable dual-screen mode to compare two map perspectives side
+                  by side. You can synchronize camera movements to analyze
+                  terrain changes or layer differences in real time.
+                </p>
               </div>
             </div>
           </section>
