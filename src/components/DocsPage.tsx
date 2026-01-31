@@ -6,6 +6,7 @@ import {
   Activity,
   Camera,
   Columns,
+  Instagram,
 } from "lucide-react";
 import geoportalLogo from "../assets/geoportal360.png";
 
@@ -312,9 +313,29 @@ export const DocsPage = ({ onBack }: Props) => {
                   className="relative text-sm sm:text-lg text-gray-400 hover:text-white transition-all duration-500 font-light tracking-wide italic"
                 >
                   contact@jcdigital.co.id
-                  {/* Animated underline effect */}
                   <span className="absolute bottom-[-4px] left-0 w-0 h-[1px] bg-gradient-to-r from-transparent via-blue-500 to-transparent transition-all duration-500 group-hover:w-full"></span>
                 </a>
+
+                {/* Collaboration Info */}
+                <div className="mt-6 flex flex-col items-center gap-3">
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-gray-500">
+                    In Collaboration With
+                  </p>
+                  <a
+                    href="https://www.instagram.com/jendelacakradigital/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 hover:border-blue-500/50 transition-all duration-300"
+                  >
+                    <Instagram
+                      size={14}
+                      className="text-pink-500 group-hover:scale-110 transition-transform"
+                    />
+                    <span className="text-xs font-semibold tracking-wider text-gray-300 group-hover:text-white">
+                      PT. JENDELA CAKRA DIGITAL
+                    </span>
+                  </a>
+                </div>
               </div>
 
               {/* Secondary Info & Copyright */}
