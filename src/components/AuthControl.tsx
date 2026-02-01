@@ -13,7 +13,7 @@ export const AuthControl = () => {
     loadSavedSurveys, 
     loadSurvey, 
     // saveCurrentSurvey, 
-    // createNewSurvey,
+    createNewSurvey,
     createGroup,
     deleteSurvey,
     currentSurveyId,
@@ -312,6 +312,7 @@ export const AuthControl = () => {
                        <div className="grid grid-cols-2 gap-3 mb-6">
                            <button 
                                onClick={() => { 
+                                   createNewSurvey(); // Reset state for fresh survey
                                    createGroup(); // Start Navigator Mode (new survey group)
                                    setShowMenu(false); 
                                }}
