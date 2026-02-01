@@ -123,14 +123,6 @@ export const AuthControl = () => {
                     <div className="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-blue-600/10 blur-[100px] rounded-full pointer-events-none"></div>
                     <div className="absolute bottom-0 left-0 -mb-16 -ml-16 w-64 h-64 bg-purple-600/10 blur-[100px] rounded-full pointer-events-none"></div>
 
-                    {/* Close Button */}
-                    <button 
-                        onClick={() => setShowMenu(false)}
-                        className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors z-50 p-1 hover:bg-white/10 rounded-full cursor-pointer"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                    </button>
-
                     <div className="p-8 relative z-10">
                         {/* Header */}
                         <div className="text-center mb-8">
@@ -235,6 +227,18 @@ export const AuthControl = () => {
                             </button>
                         </div>
                     </div>
+
+                    {/* Close Button - Moved to bottom for better stacking */}
+                    <button 
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setShowMenu(false);
+                        }}
+                        className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors z-[60] p-2 hover:bg-white/10 rounded-full cursor-pointer"
+                        title="Close Modal"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
                 </div>
             </div>,
             document.body
@@ -271,14 +275,6 @@ export const AuthControl = () => {
                    className="relative w-full max-w-sm bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden"
                    onClick={(e) => e.stopPropagation()}
                >
-                    {/* Close Button */}
-                    <button 
-                       onClick={() => setShowMenu(false)}
-                       className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors z-50 p-1 hover:bg-white/10 rounded-full cursor-pointer"
-                    >
-                       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                   </button>
-
                    <div className="p-6">
                        <div className="flex items-center gap-4 mb-6">
                            {currentUser.user_metadata?.avatar_url ? (
@@ -374,6 +370,18 @@ export const AuthControl = () => {
                            <LogOut size={16} /> Sign Out
                        </button>
                    </div>
+
+                   {/* Close Button - Moved to bottom for better stacking */}
+                   <button 
+                       onClick={(e) => {
+                           e.stopPropagation();
+                           setShowMenu(false);
+                       }}
+                       className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors z-[60] p-2 hover:bg-white/10 rounded-full cursor-pointer"
+                       title="Close Menu"
+                   >
+                       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                   </button>
                </div>
            </div>,
            document.body
