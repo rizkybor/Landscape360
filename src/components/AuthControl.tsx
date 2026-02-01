@@ -23,6 +23,7 @@ export const AuthControl = () => {
   const [showMenu, setShowMenu] = useState(false);
   const [showOfflineManager, setShowOfflineManager] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string>('Free');
 
   useEffect(() => {
     // Check active session
@@ -30,6 +31,11 @@ export const AuthControl = () => {
       setUser(session?.user ?? null);
       if (session?.user) {
         loadSavedSurveys();
+        // Fetch profile
+        supabase.from('profiles').select('status_subscribe').eq('id', session.user.id).single()
+          .then(({ data }) => {
+             if (data) setSubscriptionStatus(data.status_subscribe || 'Free');
+          });
       }
     });
 
@@ -37,6 +43,11 @@ export const AuthControl = () => {
       setUser(session?.user ?? null);
       if (session?.user) {
         loadSavedSurveys();
+        // Fetch profile
+        supabase.from('profiles').select('status_subscribe').eq('id', session.user.id).single()
+          .then(({ data }) => {
+             if (data) setSubscriptionStatus(data.status_subscribe || 'Free');
+          });
       }
     });
 
@@ -303,7 +314,13 @@ export const AuthControl = () => {
                                <h3 className="font-bold text-lg text-white">{currentUser.user_metadata?.full_name || 'Surveyor'}</h3>
                                <p className="text-xs text-gray-400">{currentUser.email}</p>
                                <div className="flex gap-2 mt-2">
-                                  <span className="text-[10px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full border border-blue-500/20">Pro Plan</span>
+                                  <span className={`text-[10px] px-2 py-0.5 rounded-full border ${
+                                    subscriptionStatus === 'Ultimate' 
+                                        ? 'bg-purple-500/20 text-purple-300 border-purple-500/20' 
+                                        : (subscriptionStatus === 'Pro' ? 'bg-blue-500/20 text-blue-300 border-blue-500/20' : 'bg-gray-500/20 text-gray-300 border-gray-500/20')
+                                  }`}>
+                                    {subscriptionStatus} Plan
+                                  </span>
                                </div>
                            </div>
                        </div>

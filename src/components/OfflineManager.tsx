@@ -24,6 +24,19 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
   
   const [downloadName, setDownloadName] = useState('');
   const [isCalculating, setIsCalculating] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string>('Free');
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      supabase.from('profiles').select('status_subscribe').eq('id', user.id).single()
+        .then(({ data }) => {
+          if (data) {
+            setSubscriptionStatus(data.status_subscribe || 'Free');
+          }
+        });
+    }
+  }, [user]);
 
   // Clean up interaction mode when closing
   useEffect(() => {
@@ -87,6 +100,13 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
   const handleDownload = async () => {
     const { count, size, minZoom, maxZoom, bounds } = calculateSize();
     if (!bounds || !downloadName || !minZoom || !maxZoom) return;
+
+    // Check subscription limits
+    const limit = subscriptionStatus === 'Ultimate' ? 100 : (subscriptionStatus === 'Pro' ? 50 : 10);
+    if (Number(size) > limit) {
+        setShowUpgradePrompt(true);
+        return;
+    }
 
     setIsCalculating(true);
 
@@ -374,6 +394,62 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
             Storage Used: {regions.reduce((acc, r) => acc + r.sizeEstMB, 0).toFixed(2)} MB
         </div>
       </div>
+      {showUpgradePrompt && createPortal(
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+            <div 
+                className="relative w-full max-w-sm bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-[0_0_50px_rgba(234,179,8,0.15)] overflow-hidden p-6"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent"></div>
+                
+                <div className="flex flex-col items-center text-center gap-4">
+                    <div className="w-16 h-16 rounded-full bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v8"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41 1.41"/><path d="M22 22H2"/><path d="m8 22 4-10 4 10"/><path d="M11 22v-4"/><path d="M13 22v-4"/></svg>
+                    </div>
+                    
+                    <div>
+                        <h3 className="text-lg font-bold text-white mb-2">Download Limit Exceeded</h3>
+                        <p className="text-sm text-gray-400 mb-4">
+                            Your current <strong>{subscriptionStatus} Plan</strong> is limited to <strong>{subscriptionStatus === 'Ultimate' ? '100' : (subscriptionStatus === 'Pro' ? '50' : '10')}MB</strong> per download.
+                        </p>
+                        <div className="text-xs bg-white/5 rounded-lg p-3 text-left space-y-2 mb-4">
+                            <div className="flex justify-between">
+                                <span className="text-gray-400">Free Plan</span>
+                                <span className="text-white font-mono">10 MB</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-gray-400">Pro Plan</span>
+                                <span className="text-white font-mono">50 MB</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-gray-400">Ultimate Plan</span>
+                                <span className="text-white font-mono">100 MB</span>
+                            </div>
+                        </div>
+                        <p className="text-xs text-gray-500">
+                            To upgrade, please contact us at:
+                        </p>
+                    </div>
+
+                    <div className="flex flex-col gap-2 w-full mt-2">
+                        <a
+                            href={`mailto:contact@jcdigital.co.id?subject=Upgrade Plan Request&body=Hi, I would like to upgrade my plan from ${subscriptionStatus}. My email is ${user?.email}.`}
+                            className="cursor-pointer w-full py-3 bg-yellow-600 hover:bg-yellow-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-yellow-600/20 transition-all flex items-center justify-center gap-2"
+                        >
+                            Request Upgrade
+                        </a>
+                        <button
+                            onClick={() => setShowUpgradePrompt(false)}
+                            className="cursor-pointer w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-bold text-gray-300 transition-all"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };
