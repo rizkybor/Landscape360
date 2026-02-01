@@ -187,7 +187,7 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
                                 setInteractionMode('default');
                                 clearRegionPoints();
                             }}
-                            className="p-1.5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors"
+                            className="p-1.5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors cursor-pointer"
                         >
                             <X size={16} />
                         </button>
