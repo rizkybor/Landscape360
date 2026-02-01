@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMapStore } from "../store/useMapStore";
 import { useSurveyStore } from "../store/useSurveyStore";
+import { AuthControl } from "./AuthControl";
 import {
   Activity,
   Eye,
@@ -140,55 +141,64 @@ export const ControlPanel = () => {
       `}
       >
         {/* Branding Header (Glassmorphism) - FIXED POSITIONING */}
-        <div className="p-4 border-b border-white/10 bg-white/5 backdrop-blur-md rounded-t-2xl md:rounded-t-xl relative overflow-hidden shrink-0">
-          <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/10 blur-2xl rounded-full -translate-y-1/2 translate-x-1/2"></div>
-
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              {/* <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                <Activity size={14} />
-                </div> */}
-              <img
-                src={geoportalLogo}
-                alt="Landscape 360"
-                className="w-12 h-12 object-contain"
-              />
-
-              <div>
-                <h2 className="font-bold text-sm tracking-tight leading-none">
-                  Landscape 360
-                </h2>
-                <span className="text-[10px] text-blue-300 font-mono tracking-wider">
-                  v1.0 Pro
-                </span>
-              </div>
-            </div>
-
-            {/* Desktop Close/Minimize Button moved here for better layout */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsOpen(false);
-              }}
-              className="cursor-pointer hidden md:block p-1 hover:bg-white/10 rounded text-gray-400"
-            >
-              <ChevronUp size={16} />
-            </button>
+        <div className="relative shrink-0 z-20">
+          {/* Background Decor - Clipped */}
+          <div className="absolute inset-0 rounded-t-2xl md:rounded-t-xl overflow-hidden pointer-events-none border-b border-white/10 bg-white/5 backdrop-blur-md">
+             <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/10 blur-2xl rounded-full -translate-y-1/2 translate-x-1/2"></div>
           </div>
 
-          <div className="flex gap-2">
-            <button
-              onClick={() => setShowGetStarted(true)}
-              className="cursor-pointer flex-1 py-1.5 bg-gradient-to-r from-yellow-500/10 to-yellow-600/10 border border-yellow-500/30 rounded text-[10px] font-medium text-yellow-200 hover:bg-yellow-500/20 transition-colors flex items-center justify-center gap-1"
-            >
-              Get Started
-            </button>
-            <button
-              onClick={() => navigate("/docs")}
-              className="cursor-pointer flex-1 py-1.5 bg-white/5 border border-white/10 rounded text-[10px] font-medium text-gray-300 hover:bg-white/10 transition-colors flex items-center justify-center gap-1"
-            >
-              <BookOpen size={10} /> Docs
-            </button>
+          {/* Content - Visible Overflow for Dropdowns */}
+          <div className="relative p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                {/* <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                  <Activity size={14} />
+                  </div> */}
+                <img
+                  src={geoportalLogo}
+                  alt="Landscape 360"
+                  className="w-12 h-12 object-contain"
+                />
+
+                <div>
+                  <h2 className="font-bold text-sm tracking-tight leading-none">
+                    Landscape 360
+                  </h2>
+                  <span className="text-[10px] text-blue-300 font-mono tracking-wider">
+                    v1.0 Pro
+                  </span>
+                </div>
+              </div>
+
+              {/* Desktop Close/Minimize Button moved here for better layout */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsOpen(false);
+                }}
+                className="cursor-pointer hidden md:block p-1 hover:bg-white/10 rounded text-gray-400"
+              >
+                <ChevronUp size={16} />
+              </button>
+            </div>
+
+            <div className="flex gap-2 mb-2">
+              <button
+                onClick={() => setShowGetStarted(true)}
+                className="cursor-pointer flex-1 py-1.5 bg-gradient-to-r from-yellow-500/10 to-yellow-600/10 border border-yellow-500/30 rounded text-[10px] font-medium text-yellow-200 hover:bg-yellow-500/20 transition-colors flex items-center justify-center gap-1"
+              >
+                Get Started
+              </button>
+              <button
+                onClick={() => navigate("/docs")}
+                className="cursor-pointer flex-1 py-1.5 bg-white/5 border border-white/10 rounded text-[10px] font-medium text-gray-300 hover:bg-white/10 transition-colors flex items-center justify-center gap-1"
+              >
+                <BookOpen size={10} /> Docs
+              </button>
+            </div>
+            <div className="flex justify-center relative z-50">
+               <AuthControl />
+            </div>
           </div>
         </div>
 

@@ -15,6 +15,8 @@ import {
   Plus,
   Edit2,
   Check,
+  Save,
+  Loader2
 } from "lucide-react";
 
 export const SurveyorPanel = () => {
@@ -29,6 +31,9 @@ export const SurveyorPanel = () => {
     clearPoints,
     updateGroupName,
     setPlotMode,
+    saveCurrentSurvey,
+    isSyncing,
+    user
   } = useSurveyStore();
 
   const [isMinimized, setIsMinimized] = useState(false);
@@ -145,7 +150,19 @@ export const SurveyorPanel = () => {
           <span className="hidden md:inline">Navigator Tool</span>
         </h3>
 
-        <div className="flex gap-1 md:gap-2">
+        <div className="flex gap-1 md:gap-2 items-center">
+          {user && (
+            <button
+              onClick={() => saveCurrentSurvey()}
+              disabled={isSyncing}
+              className="cursor-pointer text-green-400 hover:text-green-300 px-2 flex items-center gap-1 text-[10px] md:text-xs"
+              title="Save Survey"
+            >
+              {isSyncing ? <Loader2 size={12} className="animate-spin" /> : <Save size={14} />}
+              <span className="hidden md:inline">Save</span>
+            </button>
+          )}
+
           <button
             onClick={() => setIsMinimized(!isMinimized)}
             className="cursor-pointer text-gray-400 hover:text-white text-[10px] md:text-sm px-1"

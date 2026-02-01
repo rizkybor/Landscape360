@@ -13,6 +13,7 @@ import { ThreeScene } from "./ThreeScene";
 import { ContourLayer } from "./ContourLayer";
 import { ControlPanel, TelemetryOverlay } from "./ControlPanel";
 import { PlottingLayer } from "./PlottingLayer";
+import { RegionSelectionLayer } from "./RegionSelectionLayer";
 import { SurveyorPanel } from "./SurveyorPanel";
 import { SearchPanel } from "./SearchPanel";
 
@@ -43,11 +44,16 @@ export const MapBoxContainer: React.FC<MapBoxContainerProps> = ({
     activeView,
     elevationExaggeration,
     mouseControlMode,
+    interactionMode,
+    addRegionPoint,
     showContours,
     setCenter,
     setZoom,
     setPitch,
     setBearing,
+    setBounds,
+    flyToDestination,
+    triggerFlyTo,
   } = useMapStore();
 
   const mode = overrideViewMode || activeView;
@@ -61,6 +67,21 @@ export const MapBoxContainer: React.FC<MapBoxContainerProps> = ({
     bearing: number;
   } | null>(null);
 
+  // Handle flyTo requests
+  useEffect(() => {
+    const map = mapRef.current?.getMap();
+    if (map && flyToDestination) {
+        map.flyTo({
+            center: flyToDestination.center,
+            zoom: flyToDestination.zoom,
+            duration: flyToDestination.duration || 2000,
+            essential: true
+        });
+        // Clear destination after triggering
+        triggerFlyTo(null);
+    }
+  }, [flyToDestination, triggerFlyTo]);
+
   const handleMove = useCallback(
     (evt: any) => {
       if (evt.originalEvent) {
@@ -69,8 +90,18 @@ export const MapBoxContainer: React.FC<MapBoxContainerProps> = ({
         setPitch(evt.viewState.pitch);
         setBearing(evt.viewState.bearing);
       }
+      
+      const bounds = evt.target.getBounds();
+      if (bounds) {
+        setBounds({
+          north: bounds.getNorth(),
+          south: bounds.getSouth(),
+          east: bounds.getEast(),
+          west: bounds.getWest(),
+        });
+      }
     },
-    [setCenter, setZoom, setPitch, setBearing],
+    [setCenter, setZoom, setPitch, setBearing, setBounds],
   );
 
   useEffect(() => {
@@ -107,6 +138,16 @@ export const MapBoxContainer: React.FC<MapBoxContainerProps> = ({
       });
     }
   }, [center, zoom, pitch, bearing, mode]);
+
+  const handleMapClick = useCallback(
+    (evt: mapboxgl.MapMouseEvent) => {
+      if (interactionMode === "draw_region") {
+        const { lng, lat } = evt.lngLat;
+        addRegionPoint([lng, lat]);
+      }
+    },
+    [interactionMode, addRegionPoint]
+  );
 
   const handleMouseMove = useCallback(
     (evt: mapboxgl.MapMouseEvent) => {
@@ -294,6 +335,7 @@ export const MapBoxContainer: React.FC<MapBoxContainerProps> = ({
         }}
         onMove={handleMove}
         onMouseMove={handleMouseMove}
+        onClick={handleMapClick}
         onLoad={() => console.log("Map loaded")}
         onError={(e) => console.error("Map error:", e)}
         scrollZoom={true}
@@ -346,6 +388,7 @@ export const MapBoxContainer: React.FC<MapBoxContainerProps> = ({
 
         {showContours && <ContourLayer />}
         <PlottingLayer />
+        <RegionSelectionLayer />
         {mode === "3D" && <ThreeScene />}
 
         <GeolocateControl
