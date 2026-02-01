@@ -217,7 +217,7 @@ export const AuthControl = () => {
                                     {isLoginView ? "Don't have an account?" : "Already have an account? "}{" "}
                                     <button
                                         onClick={() => { setIsLoginView(!isLoginView); setMessage(null); }}
-                                        className="text-blue-400 hover:text-blue-300 font-semibold transition-colors"
+                                        className="cursor-pointer text-blue-400 hover:text-blue-300 font-semibold transition-colors"
                                     >
                                         {isLoginView ? "Request Account" : "Sign In"}
                                     </button>
@@ -229,7 +229,7 @@ export const AuthControl = () => {
                                     setIsForgotPassword(!isForgotPassword);
                                     setMessage(null);
                                 }}
-                                className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                                className="cursor-pointer text-xs text-gray-500 hover:text-gray-300 transition-colors"
                             >
                                 {isForgotPassword ? "Back to Login" : "Forgot Password? (Request via Email)"}
                             </button>
