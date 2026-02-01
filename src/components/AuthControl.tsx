@@ -22,6 +22,7 @@ export const AuthControl = () => {
   
   const [showMenu, setShowMenu] = useState(false);
   const [showOfflineManager, setShowOfflineManager] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   useEffect(() => {
     // Check active session
@@ -360,9 +361,7 @@ export const AuthControl = () => {
                                                <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        if (confirm('Are you sure you want to delete this survey?')) {
-                                                            deleteSurvey(survey.id);
-                                                        }
+                                                        setDeleteConfirmId(survey.id);
                                                     }}
                                                     className="cursor-pointer p-1.5 hover:bg-red-500/20 text-gray-500 hover:text-red-400 rounded transition-colors opacity-0 group-hover:opacity-100"
                                                     title="Delete Survey"
@@ -403,6 +402,56 @@ export const AuthControl = () => {
 
       {showOfflineManager && createPortal(
         <OfflineManager onClose={() => setShowOfflineManager(false)} />,
+        document.body
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmId && createPortal(
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+            <div 
+                className="relative w-full max-w-xs bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-[0_0_50px_rgba(239,68,68,0.15)] overflow-hidden p-6 animate-in zoom-in-95 duration-300"
+                onClick={(e) => e.stopPropagation()}
+            >
+                {/* Red Glow Decor */}
+                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-red-500/50 to-transparent"></div>
+                
+                <div className="flex flex-col items-center text-center gap-5">
+                    <div className="relative">
+                        <div className="absolute inset-0 bg-red-500/20 blur-xl rounded-full"></div>
+                        <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-red-500/20 to-red-600/10 border border-red-500/30 flex items-center justify-center text-red-500 shadow-inner">
+                            <Trash2 size={28} strokeWidth={1.5} />
+                        </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                        <h3 className="text-xl font-bold text-white tracking-tight">Hapus Survei?</h3>
+                        <p className="text-xs text-gray-400 leading-relaxed px-2">
+                            Tindakan ini tidak dapat dibatalkan. Semua data survei ini akan dihapus secara permanen dari perangkat dan cloud.
+                        </p>
+                    </div>
+
+                    <div className="flex flex-col gap-2 w-full mt-2">
+                        <button
+                            onClick={() => {
+                                if (deleteConfirmId) {
+                                    deleteSurvey(deleteConfirmId);
+                                    setDeleteConfirmId(null);
+                                }
+                            }}
+                            className="cursor-pointer w-full py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-red-600/30 transition-all active:scale-[0.98] border border-red-400/20"
+                        >
+                            Hapus Permanen
+                        </button>
+                        <button
+                            onClick={() => setDeleteConfirmId(null)}
+                            className="cursor-pointer w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition-all active:scale-[0.98]"
+                        >
+                            Batalkan
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>,
         document.body
       )}
     </div>
