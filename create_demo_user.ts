@@ -15,31 +15,38 @@ async function createDemoUser() {
   const existingUser = listUsers?.users.find(u => u.email === email)
   
   if (existingUser) {
-    console.log('Updating existing demo user password...')
-    const { error: updateError } = await supabase.auth.admin.updateUserById(existingUser.id, {
-        password: password
-    })
+    console.log('Found existing user:', existingUser.id)
+    console.log('Confirmed at:', existingUser.email_confirmed_at)
+    console.log('Updating password and confirmation status...')
     
-    if (updateError) {
-        console.error('Error updating user password:', updateError)
-    } else {
-        console.log('Success! Password updated for:', email)
-    }
-  } else {
-    // 2. Create new confirmed user
-    console.log('Creating new confirmed demo user...')
-    const { data, error } = await supabase.auth.admin.createUser({
-        email,
-        password,
+    const { data: updatedUser, error: updateError } = await supabase.auth.admin.updateUserById(existingUser.id, {
+        password: password,
         email_confirm: true,
         user_metadata: { full_name: 'Demo Surveyor' }
     })
-
-    if (error) {
-        console.error('Error creating user:', error)
+    
+    if (updateError) {
+        console.error('Error updating user:', updateError)
     } else {
-        console.log('Success! User created:', data.user.email)
+        console.log('Success! User updated:', updatedUser.user.email)
+        console.log('New confirmed at:', updatedUser.user.email_confirmed_at)
     }
+  } else {
+  
+  // 2. Create new confirmed user
+  console.log('Creating new confirmed demo user...')
+  const { data, error } = await supabase.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { full_name: 'Demo Surveyor' }
+  })
+
+  if (error) {
+    console.error('Error creating user:', error)
+  } else {
+    console.log('Success! User created:', data.user.email)
+  }
   }
 }
 
