@@ -7,6 +7,7 @@ import type { Bounds } from '../utils/tileUtils';
 import { Download, Trash2, Map as MapIcon, Loader2, WifiOff, PenTool, X } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { useSurveyStore } from '../store/useSurveyStore';
+import { createPortal } from 'react-dom';
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -394,6 +395,7 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
             Storage Used: {regions.reduce((acc, r) => acc + r.sizeEstMB, 0).toFixed(2)} MB
         </div>
       </div>
+
       {showUpgradePrompt && createPortal(
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
             <div 
