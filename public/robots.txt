@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://landscape360.jcdigital.co.id/sitemap.xml
