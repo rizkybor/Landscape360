@@ -14,6 +14,7 @@ import {
   BookOpen,
   Download,
   Columns,
+  X,
 } from "lucide-react";
 import geoportalLogo from "../assets/geoportal360.png";
 
@@ -631,6 +632,15 @@ const GetStartedModal = ({
             </button>
           </div>
         </div>
+
+        {/* Close Button - Added absolute close button for better UX */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 cursor-pointer p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white z-[60]"
+          title="Close"
+        >
+          <X size={20} />
+        </button>
 
         {/* Footer */}
         <div className="p-4 bg-black/40 border-t border-white/5 text-center text-[10px] text-gray-600 font-mono">
