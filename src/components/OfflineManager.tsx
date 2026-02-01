@@ -103,7 +103,7 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
     if (!bounds || !downloadName || !minZoom || !maxZoom) return;
 
     // Check subscription limits
-    const limit = subscriptionStatus === 'Ultimate' ? 100 : (subscriptionStatus === 'Pro' ? 50 : 10);
+    const limit = subscriptionStatus === 'Ultimate' ? 25 : (subscriptionStatus === 'Pro' ? 10 : 1);
     if (Number(size) > limit) {
         setShowUpgradePrompt(true);
         return;
@@ -412,20 +412,20 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
                     <div>
                         <h3 className="text-lg font-bold text-white mb-2">Download Limit Exceeded</h3>
                         <p className="text-sm text-gray-400 mb-4">
-                            Your current <strong>{subscriptionStatus} Plan</strong> is limited to <strong>{subscriptionStatus === 'Ultimate' ? '100' : (subscriptionStatus === 'Pro' ? '50' : '10')}MB</strong> per download.
+                            Your current <strong>{subscriptionStatus} Plan</strong> is limited to <strong>{subscriptionStatus === 'Ultimate' ? '25' : (subscriptionStatus === 'Pro' ? '10' : '1')}MB</strong> per download.
                         </p>
                         <div className="text-xs bg-white/5 rounded-lg p-3 text-left space-y-2 mb-4">
                             <div className="flex justify-between">
                                 <span className="text-gray-400">Free Plan</span>
-                                <span className="text-white font-mono">10 MB</span>
+                                <span className="text-white font-mono">1 MB</span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-gray-400">Pro Plan</span>
-                                <span className="text-white font-mono">50 MB</span>
+                                <span className="text-white font-mono">10 MB</span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-gray-400">Ultimate Plan</span>
-                                <span className="text-white font-mono">100 MB</span>
+                                <span className="text-white font-mono">25 MB</span>
                             </div>
                         </div>
                         <p className="text-xs text-gray-500">
