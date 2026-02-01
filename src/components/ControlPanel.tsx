@@ -89,7 +89,7 @@ export const ControlPanel = () => {
         //   {/* <Activity size={18} /> */}
         //   <img
         //           src={geoportalLogo}
-        //           alt="GeoPortal 360"
+        //           alt="Landscape 360"
         //           className="w-8 h-8 object-contain"
         //         />
         // </button>
@@ -122,7 +122,7 @@ export const ControlPanel = () => {
           {/* logo */}
           <img
             src={geoportalLogo}
-            alt="GeoPortal 360"
+            alt="Landscape 360"
             className="w-8 h-8 object-contain relative z-10"
           />
         </button>
@@ -150,13 +150,13 @@ export const ControlPanel = () => {
                 </div> */}
               <img
                 src={geoportalLogo}
-                alt="GeoPortal 360"
+                alt="Landscape 360"
                 className="w-12 h-12 object-contain"
               />
 
               <div>
                 <h2 className="font-bold text-sm tracking-tight leading-none">
-                  GeoPortal 360
+                  Landscape 360
                 </h2>
                 <span className="text-[10px] text-blue-300 font-mono tracking-wider">
                   v1.0 Pro
@@ -499,7 +499,7 @@ export const TelemetryOverlay = ({
       </div>
 
       <div className="hidden md:block mt-3 pt-2 border-t border-white/5 text-[8px] text-center text-gray-500 uppercase tracking-widest opacity-50 group-hover:opacity-100 transition-opacity">
-        Powered by GeoPortal 360
+        Powered by Landscape 360
       </div>
     </div>
   );
@@ -624,7 +624,7 @@ const GetStartedModal = ({
 
         {/* Footer */}
         <div className="p-4 bg-black/40 border-t border-white/5 text-center text-[10px] text-gray-600 font-mono">
-          GEOPORTAL 360 v1.0 • 2026
+          Landscape 360 v1.0 • 2026
         </div>
       </div>
     </div>

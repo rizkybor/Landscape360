@@ -19,7 +19,7 @@ export const LoadingOverlay = ({ onComplete }: { onComplete?: () => void }) => {
       <div className="text-center relative overflow-hidden p-8">
         <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-4 relative z-10 animate-fade-in-up">
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-white to-blue-400 bg-[length:200%_auto] animate-shine">
-            GeoPortal 360
+            Landscape 360
           </span>
         </h1>
         <p className="text-sm md:text-lg text-blue-200/80 uppercase tracking-[0.3em] font-light animate-fade-in-up-delay">
