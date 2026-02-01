@@ -49,18 +49,18 @@ export const DocsPage = ({ onBack }: Props) => {
             <div className="flex justify-center">
               <img
                 src={geoportalLogo}
-                alt="GeoPortal 360"
+                alt="Landscape 360"
                 className="w-16 h-16 sm:w-24 sm:h-24 object-contain"
               />
             </div>
             <h2 className="text-3xl sm:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-white to-blue-400 bg-[length:200%_auto] animate-shine">
-              GeoPortal 360
+              Landscape 360
             </h2>
             <p className="text-sm sm:text-xl text-blue-200/80 font-light tracking-wide uppercase">
               Precision in Every Dimension
             </p>
             <p className="text-base sm:text-lg text-gray-400 leading-relaxed max-w-md sm:max-w-2xl mx-auto mt-4 sm:mt-6">
-              GeoPortal 360 is a powerful web-based terrain visualization and
+              Landscape 360 is a powerful web-based terrain visualization and
               analysis platform designed for professionals.
             </p>
             <p className="text-base sm:text-lg text-gray-400 leading-relaxed max-w-md sm:max-w-2xl mx-auto mt-4 sm:mt-6">
@@ -372,7 +372,7 @@ export const DocsPage = ({ onBack }: Props) => {
 
                 <p className="order-first md:order-last">
                   &copy; 2026{" "}
-                  <span className="text-gray-300">GeoPortal 360</span>. All
+                  <span className="text-gray-300">Landscape 360</span>. All
                   Rights Reserved.
                 </p>
               </div>
