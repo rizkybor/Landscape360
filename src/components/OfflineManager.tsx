@@ -255,7 +255,7 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
             </div>
             <button 
                 onClick={onClose} 
-                className="p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white"
+                className="cursor-pointer p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white"
             >
                 <X size={20} />
             </button>
@@ -288,7 +288,7 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
                                 setInteractionMode('draw_region');
                                 clearRegionPoints();
                             }}
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 mx-auto shadow-lg shadow-blue-900/20"
+                            className="cursor-pointer px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 mx-auto shadow-lg shadow-blue-900/20"
                         >
                             <PenTool size={14} />
                             Start Drawing Region
@@ -339,7 +339,7 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
                                                 e.stopPropagation();
                                                 removeRegion(region.id);
                                             }}
-                                            className="p-1.5 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                            className="cursor-pointer p-1.5 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
                                             title="Delete Map"
                                         >
                                             <Trash2 size={14} />

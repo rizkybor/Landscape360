@@ -102,7 +102,7 @@ export const AuthControl = () => {
         <div className="relative w-full">
             <button
             onClick={() => setShowMenu(true)}
-            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600/80 to-blue-500/80 hover:from-blue-600 hover:to-blue-500 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-lg shadow-blue-500/20 border border-blue-400/30 backdrop-blur-sm"
+            className="cursor-pointer w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600/80 to-blue-500/80 hover:from-blue-600 hover:to-blue-500 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-lg shadow-blue-500/20 border border-blue-400/30 backdrop-blur-sm"
             >
             <LogIn size={14} />
             <span>Sign In / Register</span>
@@ -197,7 +197,7 @@ export const AuthControl = () => {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl text-sm font-bold shadow-lg shadow-blue-600/20 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
+                                className="cursor-pointer w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl text-sm font-bold shadow-lg shadow-blue-600/20 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
                             >
                                 {loading ? (
                                     <Loader2 size={18} className="animate-spin" />
@@ -304,7 +304,7 @@ export const AuthControl = () => {
                                    createGroup(); // Start Navigator Mode (new survey group)
                                    setShowMenu(false); 
                                }}
-                               className="flex flex-col items-center gap-2 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 transition-all group"
+                               className="cursor-pointer flex flex-col items-center gap-2 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 transition-all group"
                            >
                                <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors">
                                    <Plus size={20} />
@@ -313,7 +313,7 @@ export const AuthControl = () => {
                            </button>
                            <button 
                                onClick={() => { setShowOfflineManager(true); setShowMenu(false); }}
-                               className="flex flex-col items-center gap-2 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 transition-all group"
+                               className="cursor-pointer flex flex-col items-center gap-2 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 transition-all group"
                            >
                                <div className="p-2 bg-green-500/10 rounded-lg text-green-400 group-hover:bg-green-500 group-hover:text-white transition-colors">
                                    <WifiOff size={20} />
@@ -339,7 +339,7 @@ export const AuthControl = () => {
                                            >
                                                <button
                                                     onClick={() => { loadSurvey(survey.id); setShowMenu(false); }}
-                                                    className="flex-1 text-left truncate mr-2"
+                                                    className="cursor-pointer flex-1 text-left truncate mr-2"
                                                >
                                                    <span className="block truncate">{survey.name}</span>
                                                    <span className="text-[9px] opacity-50 block">
@@ -354,7 +354,7 @@ export const AuthControl = () => {
                                                             deleteSurvey(survey.id);
                                                         }
                                                     }}
-                                                    className="p-1.5 hover:bg-red-500/20 text-gray-500 hover:text-red-400 rounded transition-colors opacity-0 group-hover:opacity-100"
+                                                    className="cursor-pointer p-1.5 hover:bg-red-500/20 text-gray-500 hover:text-red-400 rounded transition-colors opacity-0 group-hover:opacity-100"
                                                     title="Delete Survey"
                                                >
                                                     <Trash2 size={12} />
@@ -369,7 +369,7 @@ export const AuthControl = () => {
                        {/* Logout Button */}
                        <button
                            onClick={handleLogout}
-                           className="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 transition-all font-medium text-sm"
+                           className="cursor-pointer w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 transition-all font-medium text-sm"
                        >
                            <LogOut size={16} /> Sign Out
                        </button>
