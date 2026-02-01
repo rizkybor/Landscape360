@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useSurveyStore } from '../store/useSurveyStore';
 import { OfflineManager } from './OfflineManager';
-import { LogIn, LogOut, FolderOpen, Plus, Loader2, WifiOff, Trash2 } from 'lucide-react';
+import { LogIn, LogOut, FolderOpen, Plus, Loader2, WifiOff, Trash2, Eye, EyeOff } from 'lucide-react';
 
 export const AuthControl = () => {
   const { 
@@ -46,6 +46,7 @@ export const AuthControl = () => {
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState('demo@landscape360.app');
   const [password, setPassword] = useState('demo12345');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
@@ -173,15 +174,24 @@ export const AuthControl = () => {
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                                         </div>
                                         <input
-                                            type="password"
+                                            type={showPassword ? 'text' : 'password'}
                                             placeholder="••••••••"
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
-                                            className={`w-full bg-white/[0.03] border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-gray-600 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 focus:bg-black/40 transition-all outline-none ${!isLoginView ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            className={`w-full bg-white/[0.03] border border-white/10 rounded-xl py-3 pl-10 pr-12 text-sm text-white placeholder-gray-600 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 focus:bg-black/40 transition-all outline-none ${!isLoginView ? 'opacity-50 cursor-not-allowed' : ''}`}
                                             required={isLoginView}
                                             disabled={!isLoginView}
                                             minLength={6}
                                         />
+                                        {isLoginView && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-blue-400 transition-colors cursor-pointer"
+                                            >
+                                                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             )}
