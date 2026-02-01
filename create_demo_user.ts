@@ -1,8 +1,16 @@
 
 import { createClient } from '@supabase/supabase-js'
+import dotenv from 'dotenv'
 
-const supabaseUrl = 'https://esoolyrdajscrtoidtlc.supabase.co'
-const serviceRoleKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzb29seXJkYWpzY3J0b2lkdGxjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2OTk2NzYzMCwiZXhwIjoyMDg1NTQzNjMwfQ.wLsVgFIQ1uynlJ59e8Ra8NNUU1oY5vyE0XWNi_vUHBw'
+dotenv.config()
+
+const supabaseUrl = process.env.VITE_SUPABASE_URL
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+if (!supabaseUrl || !serviceRoleKey) {
+  console.error('Missing Supabase credentials in .env file')
+  process.exit(1)
+}
 
 const supabase = createClient(supabaseUrl, serviceRoleKey)
 
