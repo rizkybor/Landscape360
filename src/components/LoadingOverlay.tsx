@@ -35,7 +35,7 @@ export const LoadingOverlay = ({ onComplete }: { onComplete?: () => void }) => {
             setIsVisible(false);
             onComplete?.();
           }}
-          className="mt-12 px-8 py-3 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/30 rounded-full text-sm font-medium tracking-wider uppercase transition-all duration-300 animate-fade-in-up-delay-2 group"
+          className="cursor-pointer mt-12 px-8 py-3 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/30 rounded-full text-sm font-medium tracking-wider uppercase transition-all duration-300 animate-fade-in-up-delay-2 group"
         >
           <span className="group-hover:text-blue-300 transition-colors">Get Started</span>
         </button>
