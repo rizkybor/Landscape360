@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
-import { Source, Layer, useMap } from 'react-map-gl/mapbox';
+import { useEffect, useState, useMemo } from 'react';
+import { Source, Layer, useMap, Marker } from 'react-map-gl/mapbox';
 import { useSurveyStore } from '../store/useSurveyStore';
+import { getAzimuthData, formatDegrees, formatDistance, toDMS } from '../utils/surveyUtils';
 import type { MapMouseEvent } from 'mapbox-gl';
 import type { FeatureCollection } from 'geojson';
 
@@ -8,6 +9,7 @@ export const PlottingLayer = () => {
   const { current: mapRef } = useMap();
   const { isPlotMode, groups, activeGroupId, addPoint } = useSurveyStore();
   const [cursorLocation, setCursorLocation] = useState<[number, number] | null>(null);
+  const [hoveredLabelId, setHoveredLabelId] = useState<string | null>(null);
 
   const activeGroup = groups.find(g => g.id === activeGroupId) || groups[0];
 
@@ -50,7 +52,7 @@ export const PlottingLayer = () => {
   // Prepare GeoJSON
   const pointsGeoJSON: FeatureCollection = {
     type: 'FeatureCollection',
-    features: groups.flatMap(g => g.points.map(p => ({
+    features: groups.flatMap(g => g.points.map((p, idx) => ({
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [p.lng, p.lat] },
       properties: { 
@@ -58,7 +60,8 @@ export const PlottingLayer = () => {
         elevation: p.elevation, 
         groupId: g.id, 
         color: g.color,
-        isActive: g.id === activeGroupId
+        isActive: g.id === activeGroupId,
+        label: `P${idx + 1}\n${p.elevation.toFixed(1)}m`
       }
     })))
   };
@@ -68,25 +71,91 @@ export const PlottingLayer = () => {
     features: []
   };
 
-  groups.forEach(g => {
-    if (g.points.length >= 2) {
-      const coordinates = g.points.map(p => [p.lng, p.lat]);
-      linesGeoJSON.features.push({
-        type: 'Feature',
-        geometry: { type: 'LineString', coordinates },
-        properties: { 
-          groupId: g.id, 
-          color: g.color,
-          isActive: g.id === activeGroupId 
-        }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any);
-    }
-  });
+  // Calculate labels for Points (Lat, Lng, Elev)
+  const pointLabels = useMemo(() => {
+    return groups.flatMap(g => g.points.map((p, idx) => ({
+      id: p.id,
+      lng: p.lng,
+      lat: p.lat,
+      elev: p.elevation,
+      name: `Point ${idx + 1}`,
+      color: g.color
+    })));
+  }, [groups]);
+
+  // Calculate measurement labels for Markers
+  const measurementLabels = useMemo(() => {
+      const labels: Array<{
+          id: string;
+          lng: number;
+          lat: number;
+          text: string;
+          subText: string;
+          totalDist: string;
+          color: string;
+      }> = [];
+
+      groups.forEach(g => {
+          if (g.points.length >= 2) {
+              // Continuous line for visual
+              const coordinates = g.points.map(p => [p.lng, p.lat]);
+              linesGeoJSON.features.push({
+                  type: 'Feature',
+                  geometry: { type: 'LineString', coordinates },
+                  properties: { 
+                      groupId: g.id, 
+                      color: g.color,
+                      isActive: g.id === activeGroupId 
+                  }
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              } as any);
+
+              // Calculate labels and accumulated distance
+              let accumulatedDistance = 0;
+
+              for (let i = 0; i < g.points.length - 1; i++) {
+                  const p1 = g.points[i];
+                  const p2 = g.points[i+1];
+                  const data = getAzimuthData(p1, p2);
+                  
+                  accumulatedDistance += data.horizontalDistance;
+
+                  // Midpoint
+                  const midLng = (p1.lng + p2.lng) / 2;
+                  const midLat = (p1.lat + p2.lat) / 2;
+
+                  labels.push({
+                      id: `${g.id}-${i}`,
+                      lng: midLng,
+                      lat: midLat,
+                      text: formatDistance(data.horizontalDistance),
+                      subText: formatDegrees(data.forwardAzimuth),
+                      totalDist: `Total: ${formatDistance(accumulatedDistance)}`,
+                      color: g.color
+                  });
+              }
+          }
+      });
+      return labels;
+  }, [groups, activeGroupId, linesGeoJSON]);
 
   // Preview line from last point of active group to cursor
   if (isPlotMode && activeGroup && activeGroup.points.length > 0 && cursorLocation) {
       const lastPoint = activeGroup.points[activeGroup.points.length - 1];
+      
+      // Calculate preview data
+      const tempPoint = { ...lastPoint, lng: cursorLocation[0], lat: cursorLocation[1], elevation: lastPoint.elevation }; 
+      const data = getAzimuthData(lastPoint, tempPoint);
+      
+      // Calculate accumulated distance for preview
+      let currentTotal = 0;
+      for (let i = 0; i < activeGroup.points.length - 1; i++) {
+          const p1 = activeGroup.points[i];
+          const p2 = activeGroup.points[i+1];
+          currentTotal += getAzimuthData(p1, p2).horizontalDistance;
+      }
+      const previewTotal = currentTotal + data.horizontalDistance;
+
       linesGeoJSON.features.push({
           type: 'Feature',
           geometry: { 
@@ -96,6 +165,20 @@ export const PlottingLayer = () => {
           properties: { type: 'preview', color: activeGroup.color }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
+
+      // Add preview measurement label
+      const midLng = (lastPoint.lng + cursorLocation[0]) / 2;
+      const midLat = (lastPoint.lat + cursorLocation[1]) / 2;
+      
+      measurementLabels.push({
+          id: 'preview-label',
+          lng: midLng,
+          lat: midLat,
+          text: formatDistance(data.horizontalDistance),
+          subText: formatDegrees(data.forwardAzimuth),
+          totalDist: `Total: ${formatDistance(previewTotal)}`,
+          color: activeGroup.color
+      });
   }
 
   if (!groups.length && !isPlotMode) return null;
@@ -107,9 +190,9 @@ export const PlottingLayer = () => {
           id="survey-points-circle"
           type="circle"
           paint={{
-            'circle-radius': ['case', ['get', 'isActive'], 8, 6],
+            'circle-radius': ['case', ['get', 'isActive'], 6, 4],
             'circle-color': ['get', 'color'],
-            'circle-stroke-width': ['case', ['get', 'isActive'], 3, 2],
+            'circle-stroke-width': ['case', ['get', 'isActive'], 2, 1],
             'circle-stroke-color': '#000000',
             'circle-pitch-alignment': 'viewport'
           }}
@@ -122,9 +205,9 @@ export const PlottingLayer = () => {
           type="line"
           paint={{
             'line-color': ['get', 'color'],
-            'line-width': ['case', ['match', ['get', 'type'], 'preview', true, false], 2, 4],
+            'line-width': ['case', ['match', ['get', 'type'], 'preview', true, false], 2, 3],
             'line-dasharray': ['case', ['match', ['get', 'type'], 'preview', true, false], [2, 2], [1]],
-            'line-opacity': ['case', ['get', 'isActive'], 1, 0.5]
+            'line-opacity': ['case', ['get', 'isActive'], 1, 0.6]
           }}
           layout={{
               'line-join': 'round',
@@ -132,6 +215,89 @@ export const PlottingLayer = () => {
           }}
         />
       </Source>
+
+      {/* Professional Measurement Markers */}
+      {measurementLabels.map((label) => {
+          const isHovered = hoveredLabelId === label.id;
+          return (
+            <Marker
+                key={label.id}
+                longitude={label.lng}
+                latitude={label.lat}
+                anchor="center"
+                style={{ zIndex: isHovered ? 50 : 1 }}
+            >
+                <div 
+                  className={`
+                    bg-white/90 backdrop-blur-md shadow-lg rounded-lg border border-white/40 
+                    flex flex-col items-center transform transition-all duration-200 cursor-default select-none
+                    ${isHovered ? 'scale-110 px-3 py-2' : 'scale-100 px-2 py-0.5 hover:scale-105'}
+                  `}
+                  onMouseEnter={() => setHoveredLabelId(label.id)}
+                  onMouseLeave={() => setHoveredLabelId(null)}
+                >
+                    <span className="text-[10px] font-extrabold text-gray-800 leading-tight drop-shadow-sm whitespace-nowrap">{label.text}</span>
+                    
+                    {isHovered && (
+                        <>
+                            <div className="h-px w-full bg-gray-200 my-1"></div>
+                            <span className="text-[9px] font-medium text-gray-500 leading-tight tracking-wide whitespace-nowrap">{label.subText}</span>
+                            <div className="h-px w-full bg-gray-200 my-1"></div>
+                            <span className="text-[9px] font-bold text-blue-600 leading-tight tracking-wide whitespace-nowrap">{label.totalDist}</span>
+                        </>
+                    )}
+                </div>
+            </Marker>
+          );
+      })}
+
+      {/* Point Info Markers */}
+      {pointLabels.map((label) => {
+          const isHovered = hoveredLabelId === label.id;
+          return (
+            <Marker
+                key={label.id}
+                longitude={label.lng}
+                latitude={label.lat}
+                anchor="bottom"
+                offset={[0, -8]}
+                style={{ zIndex: isHovered ? 60 : 2 }}
+            >
+                <div 
+                  className={`
+                    flex flex-col bg-black/85 backdrop-blur-md rounded-lg shadow-2xl border border-yellow-500/30 
+                    overflow-hidden transform transition-all duration-200 select-none group
+                    ${isHovered ? 'scale-105 min-w-[140px]' : 'scale-100 min-w-0 hover:scale-105'}
+                  `}
+                  onMouseEnter={() => setHoveredLabelId(label.id)}
+                  onMouseLeave={() => setHoveredLabelId(null)}
+                >
+                     {/* Header */}
+                     <div className={`
+                        bg-yellow-500/10 flex justify-between items-center border-yellow-500/20
+                        ${isHovered ? 'px-2.5 py-1.5 border-b' : 'px-2 py-1 gap-2'}
+                     `}>
+                         <span className="text-[10px] font-bold text-yellow-400 uppercase tracking-wider whitespace-nowrap">{label.name}</span>
+                         <span className="text-[9px] font-mono text-yellow-200 font-bold whitespace-nowrap">{label.elev.toFixed(1)}m</span>
+                     </div>
+                     
+                     {/* Body - Only visible on Hover */}
+                     {isHovered && (
+                        <div className="p-2 flex flex-col gap-1">
+                            <div className="flex justify-between items-center gap-3">
+                                <span className="text-[8px] text-gray-500 font-bold uppercase tracking-wider">Lat</span>
+                                <span className="text-[9px] font-mono text-gray-300">{toDMS(label.lat, true)}</span>
+                            </div>
+                            <div className="flex justify-between items-center gap-3">
+                                <span className="text-[8px] text-gray-500 font-bold uppercase tracking-wider">Lng</span>
+                                <span className="text-[9px] font-mono text-gray-300">{toDMS(label.lng, false)}</span>
+                            </div>
+                        </div>
+                     )}
+                </div>
+            </Marker>
+          );
+      })}
     </>
   );
 };

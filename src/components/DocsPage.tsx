@@ -6,6 +6,7 @@ import {
   Activity,
   Camera,
   Columns,
+  WifiOff,
   Instagram,
 } from "lucide-react";
 import geoportalLogo from "../assets/geoportal360.png";
@@ -146,6 +147,74 @@ export const DocsPage = ({ onBack }: Props) => {
                 </div>
               </div>
 
+              {/* Offline Maps Docs */}
+              <div className="flex items-center gap-2 text-cyan-400 mb-2 mt-8">
+                <WifiOff size={20} />
+                <h3 className="text-xl font-bold">Offline Capabilities</h3>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-4">
+                <p className="text-sm text-gray-400">
+                  Work in remote areas without internet connectivity.
+                </p>
+                <ul className="space-y-3 text-sm text-gray-400">
+                  <li className="flex gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 mt-2 shrink-0"></div>
+                    <span>
+                      <strong className="text-white">Offline Maps:</strong>{" "}
+                      Download specific map regions (Satellite + Terrain) for use without internet.
+                    </span>
+                  </li>
+                  <li className="flex gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 mt-2 shrink-0"></div>
+                    <span>
+                      <strong className="text-white">Local Survey Data:</strong>{" "}
+                      View and analyze previously saved surveys even when offline. New data is cached locally until connection is restored.
+                    </span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {/* Terrain & Analysis Tools */}
+              <div className="flex items-center gap-2 text-green-400 mb-2">
+                <Layers size={20} />
+                <h3 className="text-xl font-bold">Terrain Analysis</h3>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-4">
+                <p className="text-sm text-gray-400">
+                  Use the <strong className="text-white">Control Panel</strong>{" "}
+                  on the left to customize your view. Adjust parameters to
+                  fine-tune your topographic analysis:
+                </p>
+                <ul className="space-y-3 text-sm text-gray-400">
+                  <li className="flex gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-2 shrink-0"></div>
+                    <span>
+                      <strong className="text-white">Contour Interval:</strong>{" "}
+                      Adjust the vertical distance between contour lines (2.5m -
+                      500m). Index contours appear every 5th line.
+                    </span>
+                  </li>
+                  <li className="flex gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-2 shrink-0"></div>
+                    <span>
+                      <strong className="text-white">Exaggeration:</strong>
+                      <br /> Increase the vertical scale to highlight subtle
+                      terrain features (1.0x - 10.0x).
+                    </span>
+                  </li>
+                  <li className="flex gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-2 shrink-0"></div>
+                    <span>
+                      <strong className="text-white">Opacity:</strong>
+                      <br /> Control the transparency of the contour layer
+                      overlay (0% - 100%).
+                    </span>
+                  </li>
+                </ul>
+              </div>
+
               {/* Screenshot Feature Docs */}
               <div className="flex items-center gap-2 text-purple-400 mb-2 mt-8">
                 <Camera size={20} />
@@ -177,56 +246,6 @@ export const DocsPage = ({ onBack }: Props) => {
                       <strong className="text-white">Export to PDF:</strong>{" "}
                       Generates a document-ready PDF of the current map view.
                       Note: UI overlays are excluded for a cleaner output.
-                    </span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              {/* Terrain & Analysis Tools */}
-              <div className="flex items-center gap-2 text-green-400 mb-2">
-                <Layers size={20} />
-                <h3 className="text-xl font-bold">Terrain Analysis</h3>
-              </div>
-              <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-4">
-                <p className="text-sm text-gray-400">
-                  Use the <strong className="text-white">Control Panel</strong>{" "}
-                  on the left to customize your view. Adjust parameters to
-                  fine-tune your topographic analysis:
-                </p>
-                <ul className="space-y-3 text-sm text-gray-400">
-                  <li className="flex gap-3">
-                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-2 shrink-0"></div>
-                    <span>
-                      <strong className="text-white">Contour Interval:</strong>{" "}
-                      Adjust the vertical distance between contour lines (2.5m -
-                      500m). Index contours appear every 5th line.
-                      <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                        <strong>Standard RBI Reference:</strong>
-                        <ul className="list-disc ml-4 mt-1">
-                          <li>1:25,000 (12.5m) - Jawa, Bali, Nusa Tenggara</li>
-                          <li>1:50,000 (25m) - Outside Jawa regions</li>
-                          <li>1:100,000 (50m) - Medium scale</li>
-                          <li>1:250,000 (125m) - Regional scale</li>
-                        </ul>
-                      </div>
-                    </span>
-                  </li>
-                  <li className="flex gap-3">
-                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-2 shrink-0"></div>
-                    <span>
-                      <strong className="text-white">Exaggeration:</strong>
-                      <br /> Increase the vertical scale to highlight subtle
-                      terrain features (1.0x - 10.0x).
-                    </span>
-                  </li>
-                  <li className="flex gap-3">
-                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-2 shrink-0"></div>
-                    <span>
-                      <strong className="text-white">Opacity:</strong>
-                      <br /> Control the transparency of the contour layer
-                      overlay (0% - 100%).
                     </span>
                   </li>
                 </ul>
