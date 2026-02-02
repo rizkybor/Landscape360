@@ -86,6 +86,7 @@ export const AuthControl = () => {
       // Update local user state immediately
       if (data.user) {
         setUser(data.user);
+        loadSavedSurveys(); // Reload surveys just in case
       }
       
       setIsEditingProfile(false);
@@ -471,7 +472,12 @@ export const AuthControl = () => {
                                    <FolderOpen size={12} /> Recent Surveys
                                </div>
                                <div className="space-y-1 max-h-32 overflow-y-auto custom-scrollbar">
-                                   {savedSurveys.length === 0 ? (
+                                   {isSyncing && savedSurveys.length === 0 ? (
+                                       <div className="flex items-center gap-2 py-2">
+                                           <Loader2 size={12} className="animate-spin text-blue-400" />
+                                           <span className="text-[10px] text-gray-500">Loading surveys...</span>
+                                       </div>
+                                   ) : savedSurveys.length === 0 ? (
                                        <p className="text-[10px] text-gray-600 italic">No saved surveys found</p>
                                    ) : (
                                        savedSurveys.map(survey => (

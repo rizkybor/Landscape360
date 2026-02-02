@@ -7,18 +7,25 @@ import type { FeatureCollection } from 'geojson';
 
 export const PlottingLayer = () => {
   const { current: mapRef } = useMap();
-  const { isPlotMode, groups, activeGroupId, addPoint } = useSurveyStore();
+  const { isPlotMode, groups, activeGroupId, addPoint, updatePointPosition } = useSurveyStore();
   const [cursorLocation, setCursorLocation] = useState<[number, number] | null>(null);
   const [hoveredLabelId, setHoveredLabelId] = useState<string | null>(null);
+  const [draggedPointId, setDraggedPointId] = useState<string | null>(null);
 
   const activeGroup = groups.find(g => g.id === activeGroupId) || groups[0];
 
-  // Handle Map Click
+  // Handle Map Click (Only if not dragging)
   useEffect(() => {
     if (!mapRef || !isPlotMode) return;
     const map = mapRef.getMap();
 
     const handleClick = (e: MapMouseEvent) => {
+      // Prevent adding point if we just finished dragging
+      if (draggedPointId) {
+          setDraggedPointId(null);
+          return;
+      }
+      
       const { lng, lat } = e.lngLat;
       
       // Query elevation
@@ -35,8 +42,10 @@ export const PlottingLayer = () => {
     };
 
     const handleMouseMove = (e: MapMouseEvent) => {
-        setCursorLocation([e.lngLat.lng, e.lngLat.lat]);
-        map.getCanvas().style.cursor = 'crosshair';
+        if (!draggedPointId) {
+            setCursorLocation([e.lngLat.lng, e.lngLat.lat]);
+            map.getCanvas().style.cursor = 'crosshair';
+        }
     };
 
     map.on('click', handleClick);
@@ -47,7 +56,25 @@ export const PlottingLayer = () => {
       map.off('mousemove', handleMouseMove);
       map.getCanvas().style.cursor = '';
     };
-  }, [mapRef, isPlotMode, addPoint]);
+  }, [mapRef, isPlotMode, addPoint, draggedPointId]);
+
+  const onMarkerDragStart = (id: string) => {
+      setDraggedPointId(id);
+      setCursorLocation(null); // Hide preview line while dragging
+  };
+
+  const onMarkerDrag = (id: string, event: { lngLat: { lng: number; lat: number } }) => {
+      // Find which group this point belongs to
+      const group = groups.find(g => g.points.some(p => p.id === id));
+      if (group) {
+          updatePointPosition(group.id, id, event.lngLat.lat, event.lngLat.lng);
+      }
+  };
+
+  const onMarkerDragEnd = () => {
+      // Small timeout to prevent click event from firing immediately after drag
+      setTimeout(() => setDraggedPointId(null), 100);
+  };
 
   // Prepare GeoJSON
   const pointsGeoJSON: FeatureCollection = {
@@ -79,9 +106,10 @@ export const PlottingLayer = () => {
       lat: p.lat,
       elev: p.elevation,
       name: `Point ${idx + 1}`,
-      color: g.color
+      color: g.color,
+      isActive: g.id === activeGroupId
     })));
-  }, [groups]);
+  }, [groups, activeGroupId]);
 
   // Calculate measurement labels for Markers
   const measurementLabels = useMemo(() => {
@@ -185,20 +213,6 @@ export const PlottingLayer = () => {
 
   return (
     <>
-      <Source id="survey-points" type="geojson" data={pointsGeoJSON}>
-        <Layer
-          id="survey-points-circle"
-          type="circle"
-          paint={{
-            'circle-radius': ['case', ['get', 'isActive'], 6, 4],
-            'circle-color': ['get', 'color'],
-            'circle-stroke-width': ['case', ['get', 'isActive'], 2, 1],
-            'circle-stroke-color': '#000000',
-            'circle-pitch-alignment': 'viewport'
-          }}
-        />
-      </Source>
-
       <Source id="survey-lines" type="geojson" data={linesGeoJSON}>
         <Layer
           id="survey-lines-path"
@@ -251,49 +265,70 @@ export const PlottingLayer = () => {
           );
       })}
 
-      {/* Point Info Markers */}
+      {/* Point Markers (Draggable) */}
       {pointLabels.map((label) => {
           const isHovered = hoveredLabelId === label.id;
+          const isDragging = draggedPointId === label.id;
+          
           return (
             <Marker
                 key={label.id}
                 longitude={label.lng}
                 latitude={label.lat}
-                anchor="bottom"
-                offset={[0, -8]}
-                style={{ zIndex: isHovered ? 60 : 2 }}
+                anchor="center" // Changed to center so the dot is at the coordinate
+                draggable={true}
+                onDragStart={() => onMarkerDragStart(label.id)}
+                onDrag={(e) => onMarkerDrag(label.id, e)}
+                onDragEnd={onMarkerDragEnd}
+                style={{ zIndex: isDragging ? 100 : (isHovered ? 60 : 2) }}
             >
                 <div 
-                  className={`
-                    flex flex-col bg-black/85 backdrop-blur-md rounded-lg shadow-2xl border border-yellow-500/30 
-                    overflow-hidden transform transition-all duration-200 select-none group
-                    ${isHovered ? 'scale-105 min-w-[140px]' : 'scale-100 min-w-0 hover:scale-105'}
-                  `}
-                  onMouseEnter={() => setHoveredLabelId(label.id)}
-                  onMouseLeave={() => setHoveredLabelId(null)}
+                    className="relative flex flex-col items-center group cursor-grab active:cursor-grabbing"
+                    onMouseEnter={() => setHoveredLabelId(label.id)}
+                    onMouseLeave={() => setHoveredLabelId(null)}
                 >
-                     {/* Header */}
-                     <div className={`
-                        bg-yellow-500/10 flex justify-between items-center border-yellow-500/20
-                        ${isHovered ? 'px-2.5 py-1.5 border-b' : 'px-2 py-1 gap-2'}
-                     `}>
-                         <span className="text-[10px] font-bold text-yellow-400 uppercase tracking-wider whitespace-nowrap">{label.name}</span>
-                         <span className="text-[9px] font-mono text-yellow-200 font-bold whitespace-nowrap">{label.elev.toFixed(1)}m</span>
-                     </div>
-                     
-                     {/* Body - Only visible on Hover */}
-                     {isHovered && (
-                        <div className="p-2 flex flex-col gap-1">
-                            <div className="flex justify-between items-center gap-3">
-                                <span className="text-[8px] text-gray-500 font-bold uppercase tracking-wider">Lat</span>
-                                <span className="text-[9px] font-mono text-gray-300">{toDMS(label.lat, true)}</span>
-                            </div>
-                            <div className="flex justify-between items-center gap-3">
-                                <span className="text-[8px] text-gray-500 font-bold uppercase tracking-wider">Lng</span>
-                                <span className="text-[9px] font-mono text-gray-300">{toDMS(label.lng, false)}</span>
-                            </div>
+                    {/* The Dot Visual (Replaces the Circle Layer) */}
+                    <div 
+                        className={`
+                            rounded-full border-2 border-black shadow-sm transition-all duration-200
+                            ${label.isActive ? 'w-4 h-4' : 'w-3 h-3'}
+                            ${isHovered || isDragging ? 'scale-125' : 'scale-100'}
+                        `}
+                        style={{ backgroundColor: label.color }}
+                    ></div>
+
+                    {/* The Label (Positioned Above) */}
+                    <div 
+                      className={`
+                        absolute bottom-full mb-2
+                        flex flex-col bg-black/85 backdrop-blur-md rounded-lg shadow-2xl border border-yellow-500/30 
+                        overflow-hidden transform transition-all duration-200 select-none
+                        ${isHovered || isDragging ? 'scale-105 min-w-[140px] opacity-100' : 'scale-100 min-w-0 opacity-100'}
+                      `}
+                    >
+                        {/* Header */}
+                        <div className={`
+                            bg-yellow-500/10 flex justify-between items-center border-yellow-500/20
+                            ${isHovered || isDragging ? 'px-2.5 py-1.5 border-b' : 'px-2 py-1 gap-2'}
+                        `}>
+                            <span className="text-[10px] font-bold text-yellow-400 uppercase tracking-wider whitespace-nowrap">{label.name}</span>
+                            <span className="text-[9px] font-mono text-yellow-200 font-bold whitespace-nowrap">{label.elev.toFixed(1)}m</span>
                         </div>
-                     )}
+                        
+                        {/* Body - Only visible on Hover/Drag */}
+                        {(isHovered || isDragging) && (
+                            <div className="p-2 flex flex-col gap-1">
+                                <div className="flex justify-between items-center gap-3">
+                                    <span className="text-[8px] text-gray-500 font-bold uppercase tracking-wider">Lat</span>
+                                    <span className="text-[9px] font-mono text-gray-300">{toDMS(label.lat, true)}</span>
+                                </div>
+                                <div className="flex justify-between items-center gap-3">
+                                    <span className="text-[8px] text-gray-500 font-bold uppercase tracking-wider">Lng</span>
+                                    <span className="text-[9px] font-mono text-gray-300">{toDMS(label.lng, false)}</span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </Marker>
           );

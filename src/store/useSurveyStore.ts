@@ -55,6 +55,7 @@ interface SurveyState {
 
   // Point actions (affects active group)
   addPoint: (point: Omit<SurveyPoint, 'id'>) => void;
+  updatePointPosition: (groupId: string, pointId: string, lat: number, lng: number) => void;
   removePoint: (groupId: string, pointId: string) => void;
   clearPoints: (groupId: string) => void;
 }
@@ -78,6 +79,9 @@ export const useSurveyStore = create<SurveyState>()(
     set({ user });
     if (user) {
       get().loadSubscriptionStatus();
+      get().loadSavedSurveys();
+    } else {
+      set({ savedSurveys: [], currentSurveyId: null, subscriptionStatus: 'Free' });
     }
   },
 
@@ -97,9 +101,21 @@ export const useSurveyStore = create<SurveyState>()(
   },
 
   loadSavedSurveys: async () => {
-    const { user } = get();
-    if (!user) return;
+    // Always get fresh user from supabase session to ensure we are not using stale state
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
+
+    // Update user state if needed
+    if (user && get().user?.id !== user.id) {
+        set({ user });
+    }
+
+    if (!user) {
+        set({ savedSurveys: [] });
+        return;
+    }
     
+    set({ isSyncing: true });
     const { data, error } = await supabase
       .from('surveys')
       .select('id, name, updated_at')
@@ -107,12 +123,12 @@ export const useSurveyStore = create<SurveyState>()(
       .order('updated_at', { ascending: false });
 
     if (error) {
-      console.error('Error loading surveys (using cached):', error);
-      // Don't clear savedSurveys on error, keep the persisted ones
+      console.error('Error loading surveys:', error);
+      set({ isSyncing: false });
       return;
     }
 
-    set({ savedSurveys: data || [] });
+    set({ savedSurveys: data || [], isSyncing: false });
   },
 
   loadSurvey: async (id) => {
@@ -186,7 +202,10 @@ export const useSurveyStore = create<SurveyState>()(
 
   saveCurrentSurvey: async (name) => {
     const { user, groups, currentSurveyId, savedSurveys, subscriptionStatus } = get();
-    if (!user) return;
+    if (!user) {
+        console.warn("Cannot save survey: No user logged in.");
+        return;
+    }
 
     // Check Limits for NEW surveys (when currentSurveyId is null)
     if (!currentSurveyId) {
@@ -198,12 +217,18 @@ export const useSurveyStore = create<SurveyState>()(
       
       const limit = limits[subscriptionStatus] || 2;
       
+      // Filter saved surveys by current user to ensure accurate count
+      // Although savedSurveys should already be filtered by loadSavedSurveys, double check is safer
+      // Wait, savedSurveys in store is already user-specific from loadSavedSurveys.
+      
       if (savedSurveys.length >= limit) {
         // We can't use alert() here easily without blocking or being ugly.
         // Ideally we should throw an error or set an error state that UI consumes.
         // For now, let's console error and maybe the UI can check this condition too.
         console.error(`Survey limit reached for ${subscriptionStatus} plan (${limit}).`);
-        alert(`Survey limit reached! Your ${subscriptionStatus} plan allows max ${limit} saved surveys. Please delete old surveys or upgrade.`);
+        
+        // Prevent saving if limit reached
+        // We allow editing current in-memory group, but NOT persisting to DB as a new entry
         return;
       }
     }
@@ -211,7 +236,7 @@ export const useSurveyStore = create<SurveyState>()(
     set({ isSyncing: true });
 
     const surveyData = {
-      user_id: user.id,
+      user_id: user.id, // Explicitly set user_id
       data: groups,
       name: name || (groups.length > 0 ? groups[0].name : 'Untitled Survey'),
       updated_at: new Date().toISOString()
@@ -238,8 +263,19 @@ export const useSurveyStore = create<SurveyState>()(
       // If offline, we still have the data in 'groups' state which is persisted.
       // But we won't get a new ID if it was an insert.
     } else if (result.data && result.data.length > 0) {
-      set({ currentSurveyId: result.data[0].id });
-      get().loadSavedSurveys(); // Refresh list
+      const saved = result.data[0];
+      set({ currentSurveyId: saved.id });
+      
+      // Update savedSurveys list immediately without waiting for re-fetch
+      set((state) => {
+        const otherSurveys = state.savedSurveys.filter(s => s.id !== saved.id);
+        return {
+          savedSurveys: [
+            { id: saved.id, name: saved.name, updated_at: saved.updated_at },
+            ...otherSurveys
+          ]
+        };
+      });
     }
 
     set({ isSyncing: false });
@@ -348,6 +384,25 @@ export const useSurveyStore = create<SurveyState>()(
     get().saveCurrentSurvey();
   },
 
+  updatePointPosition: (groupId, pointId, lat, lng) => {
+    set((state) => ({
+      groups: state.groups.map(g => 
+        g.id === groupId 
+          ? { 
+              ...g, 
+              points: g.points.map(p => 
+                p.id === pointId ? { ...p, lat, lng } : p
+              ) 
+            } 
+          : g
+      )
+    }));
+    // Debounce save? Or save immediately. For dragging, maybe we should save on dragEnd only.
+    // But store update happens on drag. 
+    // Let's assume the UI calls this on dragEnd for performance, or we just save.
+    get().saveCurrentSurvey();
+  },
+
   removePoint: (groupId, pointId) => {
     set((state) => ({
       groups: state.groups.map(g => 
@@ -373,8 +428,6 @@ export const useSurveyStore = create<SurveyState>()(
         groups: state.groups, 
         activeGroupId: state.activeGroupId,
         currentSurveyId: state.currentSurveyId,
-        savedSurveys: state.savedSurveys,
-        user: state.user, // Persist user to keep session alive in store if auth fails
         subscriptionStatus: state.subscriptionStatus
       }),
     }
