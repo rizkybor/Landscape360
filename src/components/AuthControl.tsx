@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useSurveyStore } from '../store/useSurveyStore';
 import { OfflineManager } from './OfflineManager';
-import { LogIn, LogOut, FolderOpen, Plus, Loader2, WifiOff, Trash2, Eye, EyeOff } from 'lucide-react';
+import { LogIn, LogOut, FolderOpen, Plus, Loader2, WifiOff, Trash2, Eye, EyeOff, Pencil, X, Check } from 'lucide-react';
 
 export const AuthControl = () => {
   const { 
@@ -62,6 +62,41 @@ export const AuthControl = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
+  // Upgrade Modal State
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+  // Profile Edit State
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editAvatarUrl, setEditAvatarUrl] = useState('');
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.updateUser({
+        data: {
+          full_name: editName,
+          avatar_url: editAvatarUrl
+        }
+      });
+      
+      if (error) throw error;
+      
+      // Update local user state immediately
+      if (data.user) {
+        setUser(data.user);
+      }
+      
+      setIsEditingProfile(false);
+      setMessage({ type: 'success', text: 'Profile updated successfully' });
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -115,7 +150,7 @@ export const AuthControl = () => {
         <div className="relative w-full">
             <button
             onClick={() => setShowMenu(true)}
-            className="cursor-pointer w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600/80 to-blue-500/80 hover:from-blue-600 hover:to-blue-500 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-lg shadow-blue-500/20 border border-blue-400/30 backdrop-blur-sm"
+            className="cursor-pointer w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600/80 to-blue-500/80 hover:from-blue-600 hover:to-blue-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg shadow-blue-500/20 border border-blue-400/30 backdrop-blur-sm"
             >
             <LogIn size={14} />
             <span>Sign In / Register</span>
@@ -279,7 +314,7 @@ export const AuthControl = () => {
     <div className="relative w-full">
       <button
         onClick={() => setShowMenu(!showMenu)}
-        className="w-full flex items-center justify-center gap-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-200 px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors border border-blue-500/30"
+        className="cursor-pointer w-full flex items-center justify-center gap-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-200 px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors border border-blue-500/30"
       >
         {currentUser.user_metadata?.avatar_url ? (
             <img src={currentUser.user_metadata.avatar_url} className="w-4 h-4 rounded-full" alt="Avatar" />
@@ -299,29 +334,109 @@ export const AuthControl = () => {
                    className="relative w-full max-w-sm bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden"
                    onClick={(e) => e.stopPropagation()}
                >
+                   {/* Header */}
+                   <div className="flex items-center justify-between p-4 border-b border-white/5 bg-white/[0.02]">
+                       <h2 className="text-sm font-bold text-white tracking-wide uppercase flex items-center gap-2">
+                           <div className="w-1 h-4 bg-blue-500 rounded-full"></div>
+                           User Account
+                       </h2>
+                       <button 
+                           onClick={(e) => {
+                               e.stopPropagation();
+                               setShowMenu(false);
+                           }}
+                           className="text-gray-400 hover:text-white transition-colors p-1 hover:bg-white/10 rounded-lg cursor-pointer"
+                           title="Close Menu"
+                       >
+                           <X size={18} />
+                       </button>
+                   </div>
+
                    <div className="p-6">
-                       <div className="flex items-center gap-4 mb-6">
-                           {currentUser.user_metadata?.avatar_url ? (
-                               <img src={currentUser.user_metadata.avatar_url} className="w-16 h-16 rounded-full border-2 border-blue-500" alt="Avatar" />
-                           ) : (
-                               <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-blue-500/30">
-                                   {currentUser.email?.charAt(0).toUpperCase()}
+                       {isEditingProfile ? (
+                           <form onSubmit={handleSaveProfile} className="mb-6 space-y-3 bg-white/5 p-4 rounded-xl border border-white/10">
+                               <div className="flex items-center justify-between mb-2">
+                                   <h3 className="text-sm font-bold text-white">Edit Profile</h3>
+                                   <button 
+                                       type="button" 
+                                       onClick={() => setIsEditingProfile(false)}
+                                       className="cursor-pointer text-gray-400 hover:text-white"
+                                   >
+                                       <X size={14} />
+                                   </button>
                                </div>
-                           )}
-                           <div>
-                               <h3 className="font-bold text-lg text-white">{currentUser.user_metadata?.full_name || 'Surveyor'}</h3>
-                               <p className="text-xs text-gray-400">{currentUser.email}</p>
-                               <div className="flex gap-2 mt-2">
-                                  <span className={`text-[10px] px-2 py-0.5 rounded-full border ${
-                                    subscriptionStatus === 'Ultimate' 
-                                        ? 'bg-purple-500/20 text-purple-300 border-purple-500/20' 
-                                        : (subscriptionStatus === 'Pro' ? 'bg-blue-500/20 text-blue-300 border-blue-500/20' : 'bg-gray-500/20 text-gray-300 border-gray-500/20')
-                                  }`}>
-                                    {subscriptionStatus} Plan
-                                  </span>
+                               
+                               <div className="flex items-center gap-3">
+                                   {editAvatarUrl ? (
+                                       <img src={editAvatarUrl} className="w-12 h-12 rounded-full border border-blue-500/50 object-cover" alt="Preview" onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/48?text=?')} />
+                                   ) : (
+                                       <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-gray-500 text-xs">?</div>
+                                   )}
+                                   <div className="flex-1 space-y-2">
+                                        <input
+                                            type="text"
+                                            value={editName}
+                                            onChange={(e) => setEditName(e.target.value)}
+                                            placeholder="Full Name"
+                                            className="w-full bg-black/40 border border-white/10 rounded px-2 py-1.5 text-xs text-white focus:border-blue-500 outline-none"
+                                        />
+                                        <input
+                                            type="text"
+                                            value={editAvatarUrl}
+                                            onChange={(e) => setEditAvatarUrl(e.target.value)}
+                                            placeholder="Avatar URL (https://...)"
+                                            className="w-full bg-black/40 border border-white/10 rounded px-2 py-1.5 text-xs text-white focus:border-blue-500 outline-none"
+                                        />
+                                   </div>
+                               </div>
+
+                               <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="cursor-pointer w-full bg-blue-600 hover:bg-blue-500 text-white py-1.5 rounded text-xs font-bold transition-colors flex items-center justify-center gap-2"
+                               >
+                                   {loading ? <Loader2 size={12} className="animate-spin" /> : <><Check size={12} /> Save Changes</>}
+                               </button>
+                           </form>
+                       ) : (
+                           <div className="flex items-center gap-4 mb-6 relative group">
+                               {currentUser.user_metadata?.avatar_url ? (
+                                   <img src={currentUser.user_metadata.avatar_url} className="w-16 h-16 rounded-full border-2 border-blue-500 object-cover" alt="Avatar" />
+                               ) : (
+                                   <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-blue-500/30">
+                                       {currentUser.email?.charAt(0).toUpperCase()}
+                                   </div>
+                               )}
+                               <div className="flex-1">
+                                   <div className="flex items-center justify-between">
+                                       <h3 className="font-bold text-lg text-white">{currentUser.user_metadata?.full_name || 'Surveyor'}</h3>
+                                       <button 
+                                           onClick={() => {
+                                               setEditName(currentUser.user_metadata?.full_name || '');
+                                               setEditAvatarUrl(currentUser.user_metadata?.avatar_url || '');
+                                               setIsEditingProfile(true);
+                                           }}
+                                           className="cursor-pointer p-1.5 text-gray-500 hover:text-white bg-transparent hover:bg-white/10 rounded-lg transition-colors"
+                                           title="Edit Profile"
+                                       >
+                                           <Pencil size={14} />
+                                       </button>
+                                   </div>
+                                   <p className="text-xs text-gray-400">{currentUser.email}</p>
+                                   <div className="flex gap-2 mt-2">
+                                      <button 
+                                        onClick={() => setShowUpgradeModal(true)}
+                                        className={`cursor-pointer text-[10px] px-2 py-0.5 rounded-full border hover:brightness-110 transition-all ${
+                                        subscriptionStatus === 'Ultimate' 
+                                            ? 'bg-purple-500/20 text-purple-300 border-purple-500/20' 
+                                            : (subscriptionStatus === 'Pro' ? 'bg-blue-500/20 text-blue-300 border-blue-500/20' : 'bg-gray-500/20 text-gray-300 border-gray-500/20')
+                                      }`}>
+                                        {subscriptionStatus} Plan
+                                      </button>
+                                   </div>
                                </div>
                            </div>
-                       </div>
+                       )}
 
                        {/* Quick Actions Grid */}
                        <div className="grid grid-cols-2 gap-3 mb-6">
@@ -399,18 +514,6 @@ export const AuthControl = () => {
                            <LogOut size={16} /> Sign Out
                        </button>
                    </div>
-
-                   {/* Close Button - Moved to bottom for better stacking */}
-                   <button 
-                       onClick={(e) => {
-                           e.stopPropagation();
-                           setShowMenu(false);
-                       }}
-                       className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors z-[60] p-2 hover:bg-white/10 rounded-full cursor-pointer"
-                       title="Close Menu"
-                   >
-                       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                   </button>
                </div>
            </div>,
            document.body
@@ -418,6 +521,93 @@ export const AuthControl = () => {
 
       {showOfflineManager && createPortal(
         <OfflineManager onClose={() => setShowOfflineManager(false)} />,
+        document.body
+      )}
+
+      {showUpgradeModal && createPortal(
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+            <div 
+                className="relative w-full max-w-2xl bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-[0_0_50px_rgba(59,130,246,0.15)] overflow-hidden flex flex-col max-h-[90vh]"
+                onClick={(e) => e.stopPropagation()}
+            >
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-white/5 bg-white/[0.02]">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center text-blue-400">
+                             <Check size={20} />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-white tracking-tight">Upgrade Plan</h2>
+                            <p className="text-xs text-gray-400">Unlock more features and limits</p>
+                        </div>
+                    </div>
+                    <button 
+                        onClick={() => setShowUpgradeModal(false)}
+                        className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full cursor-pointer"
+                    >
+                        <X size={20} />
+                    </button>
+                </div>
+
+                <div className="p-6 overflow-y-auto custom-scrollbar">
+                    <div className="grid md:grid-cols-3 gap-4">
+                        {/* Free Plan */}
+                        <div className={`p-4 rounded-xl border ${subscriptionStatus === 'Free' ? 'bg-white/5 border-blue-500/50' : 'bg-transparent border-white/10'} relative`}>
+                            {subscriptionStatus === 'Free' && <div className="absolute top-2 right-2 text-[10px] bg-blue-500 text-white px-2 py-0.5 rounded-full font-bold">CURRENT</div>}
+                            <h3 className="font-bold text-white mb-1">Free</h3>
+                            <p className="text-2xl font-bold text-gray-400 mb-4">$0<span className="text-xs font-normal text-gray-500">/mo</span></p>
+                            <ul className="space-y-2 text-xs text-gray-400 mb-4">
+                                <li className="flex gap-2"><span>✓</span> 2 MB max download</li>
+                                <li className="flex gap-2"><span>✓</span> 3 offline maps</li>
+                                <li className="flex gap-2"><span>✓</span> 2 saved surveys</li>
+                            </ul>
+                        </div>
+
+                        {/* Pro Plan */}
+                        <div className={`p-4 rounded-xl border ${subscriptionStatus === 'Pro' ? 'bg-blue-500/10 border-blue-500' : 'bg-transparent border-white/10 hover:border-blue-500/50'} relative transition-colors`}>
+                             {subscriptionStatus === 'Pro' && <div className="absolute top-2 right-2 text-[10px] bg-blue-500 text-white px-2 py-0.5 rounded-full font-bold">CURRENT</div>}
+                            <h3 className="font-bold text-white mb-1 text-blue-400">Pro</h3>
+                            <p className="text-2xl font-bold text-white mb-4">$3.5<span className="text-xs font-normal text-gray-400">/mo</span></p>
+                            <ul className="space-y-2 text-xs text-gray-300 mb-6">
+                                <li className="flex gap-2"><span>✓</span> 10 MB max download</li>
+                                <li className="flex gap-2"><span>✓</span> 6 offline maps</li>
+                                <li className="flex gap-2"><span>✓</span> 5 saved surveys</li>
+                                <li className="flex gap-2"><span>✓</span> Priority Support</li>
+                            </ul>
+                            {subscriptionStatus !== 'Pro' && (
+                                <a
+                                    href="mailto:contact@jcdigital.co.id?subject=Request Upgrade to Pro Plan&body=Hi Admin,%0D%0A%0D%0AI would like to request an upgrade for my account to the Pro Plan ($3.5/mo).%0D%0A%0D%0AThank you."
+                                    className="block w-full py-2 bg-blue-600 hover:bg-blue-500 text-white text-center rounded-lg text-xs font-bold transition-colors"
+                                >
+                                    Upgrade to Pro
+                                </a>
+                            )}
+                        </div>
+
+                        {/* Ultimate Plan */}
+                        <div className={`p-4 rounded-xl border ${subscriptionStatus === 'Ultimate' ? 'bg-purple-500/10 border-purple-500' : 'bg-transparent border-white/10 hover:border-purple-500/50'} relative transition-colors`}>
+                             {subscriptionStatus === 'Ultimate' && <div className="absolute top-2 right-2 text-[10px] bg-purple-500 text-white px-2 py-0.5 rounded-full font-bold">CURRENT</div>}
+                            <h3 className="font-bold text-white mb-1 text-purple-400">Ultimate</h3>
+                            <p className="text-2xl font-bold text-white mb-4">$7<span className="text-xs font-normal text-gray-400">/mo</span></p>
+                            <ul className="space-y-2 text-xs text-gray-300 mb-6">
+                                <li className="flex gap-2"><span>✓</span> 25 MB max download</li>
+                                <li className="flex gap-2"><span>✓</span> 10 offline maps</li>
+                                <li className="flex gap-2"><span>✓</span> 10 saved surveys</li>
+                                <li className="flex gap-2"><span>✓</span> 24/7 Dedicated Support</li>
+                            </ul>
+                            {subscriptionStatus !== 'Ultimate' && (
+                                <a
+                                    href="mailto:contact@jcdigital.co.id?subject=Request Upgrade to Ultimate Plan&body=Hi Admin,%0D%0A%0D%0AI would like to request an upgrade for my account to the Ultimate Plan ($7/mo).%0D%0A%0D%0AThank you."
+                                    className="block w-full py-2 bg-purple-600 hover:bg-purple-500 text-white text-center rounded-lg text-xs font-bold transition-colors"
+                                >
+                                    Upgrade to Ultimate
+                                </a>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>,
         document.body
       )}
 
