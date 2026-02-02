@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { MapBoxContainer } from "./MapBoxContainer";
 import { Split, Maximize } from "lucide-react";
 import { ScreenshotControl } from "./ScreenshotControl";
+import { SEO } from "./SEO";
 import type { MapRef } from "react-map-gl/mapbox";
 
 export const MapDashboard = () => {
@@ -13,6 +14,7 @@ export const MapDashboard = () => {
 
   return (
     <div className="w-full h-screen bg-gray-900 relative overflow-hidden">
+      <SEO />
       {isSplitScreen ? (
         <div className="flex w-full h-full">
           <div className="w-1/2 h-full border-r border-gray-700 relative">

@@ -2,6 +2,7 @@ import { Routes, Route, useNavigate } from 'react-router-dom';
 import { MapDashboard } from './components/MapDashboard';
 import { DocsPage } from './components/DocsPage';
 import { LoadingOverlay } from './components/LoadingOverlay';
+import { SEO } from './components/SEO';
 import { useState } from 'react';
 
 function App() {
@@ -10,6 +11,7 @@ function App() {
 
   return (
     <>
+      <SEO />
       <LoadingOverlay onComplete={() => setIsLoading(false)} />
       {!isLoading && (
         <Routes>
