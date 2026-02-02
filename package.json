@@ -17,6 +17,7 @@
     "@types/three": "^0.182.0",
     "autoprefixer": "^10.4.23",
     "html2canvas": "^1.4.1",
+    "idb": "^8.0.3",
     "jspdf": "^4.0.0",
     "lucide-react": "^0.563.0",
     "mapbox-gl": "^3.18.1",
