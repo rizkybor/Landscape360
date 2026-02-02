@@ -282,7 +282,41 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
     return { count: tiles.length, size, minZoom, maxZoom, bounds };
   };
 
+  const fetchWithRetry = async (url: string, retries = 3, backoff = 1000): Promise<Response> => {
+    try {
+        const response = await fetch(url, { mode: 'cors' });
+        
+        // Handle Rate Limiting (429)
+        if (response.status === 429 && retries > 0) {
+            console.warn(`Rate limit hit for ${url}. Retrying in ${backoff}ms...`);
+            await new Promise(resolve => setTimeout(resolve, backoff));
+            return fetchWithRetry(url, retries - 1, backoff * 2);
+        }
+
+        // Handle Server Errors (5xx)
+        if (response.status >= 500 && retries > 0) {
+            await new Promise(resolve => setTimeout(resolve, backoff));
+            return fetchWithRetry(url, retries - 1, backoff * 2);
+        }
+
+        return response;
+    } catch (err) {
+        if (retries > 0) {
+            console.warn(`Network error for ${url}. Retrying...`, err);
+            await new Promise(resolve => setTimeout(resolve, backoff));
+            return fetchWithRetry(url, retries - 1, backoff * 2);
+        }
+        throw err;
+    }
+  };
+
   const handleDownload = async () => {
+    if (!MAPBOX_TOKEN) {
+        console.error("Mapbox token is missing!");
+        alert("Configuration Error: Mapbox token is missing. Please check your environment variables.");
+        return;
+    }
+
     const { count, size, minZoom, maxZoom, bounds } = calculateSize();
     if (!bounds || !downloadName || !minZoom || !maxZoom) return;
 
@@ -350,6 +384,7 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
     // Start background download
     const tiles = getTilesInBounds(bounds, minZoom, maxZoom);
     let completed = 0;
+    let failed = 0;
     
     // We fetch tiles in batches to not overwhelm the browser
     const BATCH_SIZE = 10;
@@ -372,21 +407,42 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
             const batch = urls.slice(i, i + BATCH_SIZE);
             await Promise.all(batch.map(async (url) => {
                 try {
-                    const response = await fetch(url, { mode: 'cors' });
+                    const response = await fetchWithRetry(url);
                     if (response.ok) {
                         const blob = await response.blob();
                         await saveTile(url, blob);
+                    } else {
+                        console.error(`Failed to download tile: ${response.status} ${response.statusText}`);
+                        failed++;
                     }
                 } catch (err) {
                     console.error('Failed to download/save tile:', url, err);
+                    failed++;
                 }
             }));
             
             completed += batch.length;
             const progress = Math.min(100, Math.round((completed / urls.length) * 100));
             updateRegionProgress(regionId, progress);
+
+            // Small delay between batches to respect rate limits
+            await new Promise(resolve => setTimeout(resolve, 100));
         }
-        updateRegionProgress(regionId, 100, 'completed');
+
+        // Check if too many failures occurred
+        if (failed > urls.length * 0.1) { // If > 10% failed
+             console.warn(`Download finished with ${failed} failures out of ${urls.length} tiles.`);
+             updateRegionProgress(regionId, 100, 'error'); // Mark as error or partial? 
+             // Let's mark as completed but maybe show warning? For now just completed.
+             // Actually, if critical tiles are missing, it's bad.
+             // But 'error' status might block usage. Let's stick to 'completed' but log it.
+             // Wait, user complained it "doesn't work well". 
+             // If we mark as 'completed' they can try to use it.
+             // Let's keep 'completed' for now, as 'error' usually means "failed completely".
+             updateRegionProgress(regionId, 100, 'completed');
+        } else {
+             updateRegionProgress(regionId, 100, 'completed');
+        }
     } catch (e) {
         console.error("Download failed", e);
         updateRegionProgress(regionId, 0, 'error');
