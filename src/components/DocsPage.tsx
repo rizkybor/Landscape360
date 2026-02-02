@@ -6,7 +6,6 @@ import {
   Activity,
   Camera,
   Columns,
-  WifiOff,
   Instagram,
   DollarSign,
 } from "lucide-react";
