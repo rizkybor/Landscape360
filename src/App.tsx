@@ -4,6 +4,7 @@ import { DocsPage } from './components/DocsPage';
 import { LoadingOverlay } from './components/LoadingOverlay';
 import { SEO } from './components/SEO';
 import { useState } from 'react';
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 function App() {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ function App() {
   return (
     <>
       <SEO />
+      <SpeedInsights />
       <LoadingOverlay onComplete={() => setIsLoading(false)} />
       {!isLoading && (
         <Routes>
