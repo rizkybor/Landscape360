@@ -27,6 +27,7 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
   const [isCalculating, setIsCalculating] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string>('Free');
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  const [selectedUpgradePlan, setSelectedUpgradePlan] = useState<'Pro' | 'Ultimate'>('Pro');
 
   useEffect(() => {
     if (user) {
@@ -103,7 +104,7 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
     if (!bounds || !downloadName || !minZoom || !maxZoom) return;
 
     // Check subscription limits
-    const limit = subscriptionStatus === 'Ultimate' ? 25 : (subscriptionStatus === 'Pro' ? 10 : 1);
+    const limit = subscriptionStatus === 'Ultimate' ? 25 : (subscriptionStatus === 'Pro' ? 10 : 2);
     if (Number(size) > limit) {
         setShowUpgradePrompt(true);
         return;
@@ -183,9 +184,85 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
     }
   };
 
+  // Define Upgrade Modal Portal
+  const upgradeModal = showUpgradePrompt && createPortal(
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+        <div 
+            className="relative w-full max-w-sm bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-[0_0_50px_rgba(234,179,8,0.15)] overflow-hidden p-6"
+            onClick={(e) => e.stopPropagation()}
+        >
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent"></div>
+            
+            <div className="flex flex-col items-center text-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v8"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41 1.41"/><path d="M22 22H2"/><path d="m8 22 4-10 4 10"/><path d="M11 22v-4"/><path d="M13 22v-4"/></svg>
+                </div>
+                
+                <div>
+                    <h3 className="text-lg font-bold text-white mb-2">Download Limit Exceeded</h3>
+                    <p className="text-sm text-gray-400 mb-6">
+                        Your current <strong>{subscriptionStatus} Plan</strong> is limited to <strong>{subscriptionStatus === 'Ultimate' ? '25' : (subscriptionStatus === 'Pro' ? '10' : '2')}MB</strong> per download.
+                    </p>
+                    
+                    <div className="grid grid-cols-2 gap-3 mb-6">
+                         {/* Pro Plan Card */}
+                         <button
+                            onClick={() => setSelectedUpgradePlan('Pro')}
+                            className={`cursor-pointer relative p-3 rounded-xl border transition-all ${selectedUpgradePlan === 'Pro' ? 'bg-blue-600/20 border-blue-500 ring-1 ring-blue-500' : 'bg-white/5 border-white/10 hover:border-white/20'}`}
+                         >
+                             {selectedUpgradePlan === 'Pro' && <div className="absolute top-2 right-2 w-2 h-2 bg-blue-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>}
+                             <div className="text-left">
+                                 <div className="text-xs font-bold text-blue-400 mb-1">PRO PLAN</div>
+                                 <div className="text-lg font-bold text-white mb-1">IDR 50.000<span className="text-[10px] text-gray-400 font-normal">/mo</span></div>
+                                 <div className="text-[10px] text-gray-400">Up to 10 MB / download</div>
+                             </div>
+                         </button>
+
+                         {/* Ultimate Plan Card */}
+                         <button
+                            onClick={() => setSelectedUpgradePlan('Ultimate')}
+                            className={`cursor-pointer relative p-3 rounded-xl border transition-all ${selectedUpgradePlan === 'Ultimate' ? 'bg-purple-600/20 border-purple-500 ring-1 ring-purple-500' : 'bg-white/5 border-white/10 hover:border-white/20'}`}
+                         >
+                             {selectedUpgradePlan === 'Ultimate' && <div className="absolute top-2 right-2 w-2 h-2 bg-purple-500 rounded-full shadow-[0_0_10px_rgba(168,85,247,0.5)]"></div>}
+                             <div className="text-left">
+                                 <div className="text-xs font-bold text-purple-400 mb-1">ULTIMATE</div>
+                                 <div className="text-lg font-bold text-white mb-1">IDR 100.000<span className="text-[10px] text-gray-400 font-normal">/mo</span></div>
+                                 <div className="text-[10px] text-gray-400">Up to 25 MB / download</div>
+                             </div>
+                         </button>
+                    </div>
+
+                    <p className="text-xs text-gray-500">
+                        Upgrade to <strong>{selectedUpgradePlan} Plan</strong> via email request:
+                    </p>
+                </div>
+
+                <div className="flex flex-col gap-2 w-full mt-2">
+                    <a
+                        href={`mailto:contact@jcdigital.co.id?subject=Request Upgrade to ${selectedUpgradePlan} Plan&body=Hi Admin,%0D%0A%0D%0AI would like to request an upgrade for my account to the ${selectedUpgradePlan} Plan (${selectedUpgradePlan === 'Pro' ? 'IDR 50.000/mo' : 'IDR 100.000/mo'}).%0D%0A%0D%0AMy Account Email: ${user?.email}%0D%0A%0D%0AThank you.`}
+                        className={`cursor-pointer w-full py-3 text-white rounded-xl text-sm font-bold shadow-lg transition-all flex items-center justify-center gap-2 ${selectedUpgradePlan === 'Ultimate' ? 'bg-purple-600 hover:bg-purple-500 shadow-purple-600/20' : 'bg-blue-600 hover:bg-blue-500 shadow-blue-600/20'}`}
+                    >
+                        Request {selectedUpgradePlan} Upgrade
+                    </a>
+                    <button
+                        onClick={() => setShowUpgradePrompt(false)}
+                        className="cursor-pointer w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-bold text-gray-300 transition-all"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>,
+    document.body
+  );
+
   // If in drawing mode, render a minimal UI overlay instead of the full modal
   if (interactionMode === 'draw_region') {
     const stats = calculateSize();
+    const limit = subscriptionStatus === 'Ultimate' ? 25 : (subscriptionStatus === 'Pro' ? 10 : 2);
+    const isOverLimit = Number(stats.size) > limit;
+
     return (
         <div className="fixed inset-0 z-[100] pointer-events-none flex flex-col justify-end items-center pb-8 px-4">
              {/* Instructions Overlay */}
@@ -230,22 +307,40 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
                             />
                             
                             <div className="flex justify-between text-[10px] text-gray-400 px-1">
-                                <span>Size: <strong className="text-white">{stats.size} MB</strong></span>
+                                <span>Size: <strong className={isOverLimit ? "text-red-400" : "text-white"}>{stats.size} MB</strong></span>
                                 <span>Tiles: <strong className="text-white">{stats.count}</strong></span>
                             </div>
 
+                            {isOverLimit && (
+                                <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-2.5 flex items-start gap-2">
+                                    <div className="min-w-[16px] mt-0.5 text-yellow-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-[10px] font-bold text-yellow-500 mb-0.5">Download Limit Exceeded</p>
+                                        <p className="text-[10px] text-yellow-200/70 leading-relaxed">
+                                            This area ({stats.size} MB) exceeds your {subscriptionStatus} Plan limit of {limit} MB. Please reduce the area size or upgrade your plan.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
                             <button
-                                disabled={!downloadName || stats.count > 5000}
-                                onClick={handleDownload}
-                                className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-800 disabled:text-gray-500 text-white text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2"
+                                disabled={isCalculating || (isOverLimit ? false : (!downloadName || stats.count > 5000))}
+                                onClick={isOverLimit ? () => setShowUpgradePrompt(true) : handleDownload}
+                                className={`cursor-pointer w-full py-2.5 text-white text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
+                                    isOverLimit 
+                                    ? 'bg-yellow-600 hover:bg-yellow-500 shadow-lg shadow-yellow-900/20' 
+                                    : 'bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-900/20 disabled:bg-gray-800 disabled:text-gray-500'
+                                }`}
                             >
-                                {isCalculating ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
-                                Download Region
+                                {isCalculating ? <Loader2 size={14} className="animate-spin" /> : (isOverLimit ? <span className="uppercase">Check Upgrade Options</span> : <><Download size={14} /> Download Region</>)}
                             </button>
                         </div>
                      )}
                 </div>
              </div>
+             {upgradeModal}
         </div>
     );
   }
@@ -396,62 +491,7 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
         </div>
       </div>
 
-      {showUpgradePrompt && createPortal(
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-            <div 
-                className="relative w-full max-w-sm bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-[0_0_50px_rgba(234,179,8,0.15)] overflow-hidden p-6"
-                onClick={(e) => e.stopPropagation()}
-            >
-                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent"></div>
-                
-                <div className="flex flex-col items-center text-center gap-4">
-                    <div className="w-16 h-16 rounded-full bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-500">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v8"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41 1.41"/><path d="M22 22H2"/><path d="m8 22 4-10 4 10"/><path d="M11 22v-4"/><path d="M13 22v-4"/></svg>
-                    </div>
-                    
-                    <div>
-                        <h3 className="text-lg font-bold text-white mb-2">Download Limit Exceeded</h3>
-                        <p className="text-sm text-gray-400 mb-4">
-                            Your current <strong>{subscriptionStatus} Plan</strong> is limited to <strong>{subscriptionStatus === 'Ultimate' ? '25' : (subscriptionStatus === 'Pro' ? '10' : '1')}MB</strong> per download.
-                        </p>
-                        <div className="text-xs bg-white/5 rounded-lg p-3 text-left space-y-2 mb-4">
-                            <div className="flex justify-between">
-                                <span className="text-gray-400">Free Plan</span>
-                                <span className="text-white font-mono">1 MB</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-gray-400">Pro Plan</span>
-                                <span className="text-white font-mono">10 MB</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-gray-400">Ultimate Plan</span>
-                                <span className="text-white font-mono">25 MB</span>
-                            </div>
-                        </div>
-                        <p className="text-xs text-gray-500">
-                            To upgrade, please contact us at:
-                        </p>
-                    </div>
-
-                    <div className="flex flex-col gap-2 w-full mt-2">
-                        <a
-                            href={`mailto:contact@jcdigital.co.id?subject=Upgrade Plan Request&body=Hi, I would like to upgrade my plan from ${subscriptionStatus}. My email is ${user?.email}.`}
-                            className="cursor-pointer w-full py-3 bg-yellow-600 hover:bg-yellow-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-yellow-600/20 transition-all flex items-center justify-center gap-2"
-                        >
-                            Request Upgrade
-                        </a>
-                        <button
-                            onClick={() => setShowUpgradePrompt(false)}
-                            className="cursor-pointer w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-bold text-gray-300 transition-all"
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>,
-        document.body
-      )}
+      {upgradeModal}
     </div>
   );
 };
