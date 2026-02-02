@@ -9,7 +9,7 @@ import { supabase } from '../lib/supabaseClient';
 import { useSurveyStore } from '../store/useSurveyStore';
 import { createPortal } from 'react-dom';
 
-import { saveTile, getTile } from '../utils/offline-db';
+import { saveTile, getTile, deleteTile } from '../utils/offline-db';
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -120,18 +120,42 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
 
             // Merge: keep local version if it exists (it has current device status)
             // Filter out regions that don't belong to current user if they were left over
-            const localMap = new Map(regions.filter(r => !r.userId || r.userId === user.id).map(r => [r.id, r]));
-            let hasNew = false;
+            // We need to fetch ALL regions from supabase, and only keep local regions that are also in supabase OR are purely local (not yet synced? rare case if we sync on create)
+            // Actually, we should trust Supabase as the source of truth for the list.
+            
+            // Create a map of remote regions
+            const remoteMap = new Map(remoteRegions.map(r => [r.id, r]));
+            
+            // Start with local regions, but filter out ones that should be there (based on user) but are not in remote (deleted elsewhere)
+            // If a region has userId matching current user, but is NOT in remoteRegions, it means it was deleted on another device.
+            // So we should remove it from local state.
+            const validLocalRegions = regions.filter(r => {
+                // If it belongs to another user (or no user?), keep it or filter it? 
+                // Let's assume we only care about current user's regions.
+                if (r.userId && r.userId !== user.id) return false; // Wrong user
+                
+                // If it belongs to current user
+                if (r.userId === user.id) {
+                    // It MUST exist in remoteMap, otherwise it was deleted elsewhere
+                    return remoteMap.has(r.id);
+                }
+                
+                // If no userId (legacy), maybe keep it or try to claim it? Let's keep it for now.
+                return true;
+            });
+
+            const mergedMap = new Map(validLocalRegions.map(r => [r.id, r]));
+            let hasChanges = validLocalRegions.length !== regions.length; // If we filtered out deleted ones
 
             remoteRegions.forEach(remote => {
-                if (!localMap.has(remote.id)) {
-                    localMap.set(remote.id, remote);
-                    hasNew = true;
+                if (!mergedMap.has(remote.id)) {
+                    mergedMap.set(remote.id, remote);
+                    hasChanges = true;
                 }
             });
 
-            if (hasNew || regions.length !== localMap.size) {
-                setRegions(Array.from(localMap.values()));
+            if (hasChanges || regions.length !== mergedMap.size) {
+                setRegions(Array.from(mergedMap.values()));
             }
         }
     };
@@ -176,6 +200,9 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
   };
 
   const handleRemoveRegion = async (id: string) => {
+    // 0. Find region first to get bounds for tile cleanup
+    const region = regions.find(r => r.id === id);
+    
     // 1. Remove from local store
     removeRegion(id);
 
@@ -190,6 +217,31 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
         if (error) {
             console.error("Error deleting offline map from Supabase:", error);
         }
+    }
+
+    // 3. Clean up tiles from IndexedDB (Background)
+    if (region && region.status === 'completed') {
+        const tiles = getTilesInBounds(region.bounds, region.minZoom, region.maxZoom);
+        
+        // We do this in batches to not block the main thread
+        const BATCH_SIZE = 50;
+        const urls: string[] = [];
+        tiles.forEach(t => {
+            urls.push(getMapboxTileUrl(t.x, t.y, t.z, MAPBOX_TOKEN));
+            if (t.z <= 15) {
+                urls.push(getTerrainTileUrl(t.x, t.y, t.z, MAPBOX_TOKEN));
+            }
+        });
+
+        // Note: We don't await the whole thing to keep UI snappy, 
+        // but we start the process.
+        const cleanup = async () => {
+            for (let i = 0; i < urls.length; i += BATCH_SIZE) {
+                const batch = urls.slice(i, i + BATCH_SIZE);
+                await Promise.all(batch.map(url => deleteTile(url)));
+            }
+        };
+        cleanup();
     }
   };
 
@@ -624,7 +676,9 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
                                         <button 
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                handleRemoveRegion(region.id);
+                                                if (window.confirm(`Are you sure you want to delete "${region.name}"? This will remove it from all your devices.`)) {
+                                                    handleRemoveRegion(region.id);
+                                                }
                                             }}
                                             className="cursor-pointer p-1.5 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100"
                                             title="Delete Map"
