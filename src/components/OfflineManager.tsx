@@ -478,6 +478,8 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
     document.body
   );
 
+  const userRegions = regions.filter(r => !user || r.userId === user.id);
+
   // If in drawing mode, render a minimal UI overlay instead of the full modal
   if (interactionMode === 'draw_region') {
     const stats = calculateSize();
@@ -642,19 +644,17 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
                             <span className="w-1 h-4 bg-purple-500 rounded-full"></span>
                             Downloaded Maps
                         </h3>
-                        <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded-full text-gray-300">{regions.length}</span>
+                        <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded-full text-gray-300">{userRegions.length}</span>
                     </div>
 
                     <div className="space-y-3">
-                        {regions.filter(r => !user || r.userId === user.id).length === 0 ? (
+                        {userRegions.length === 0 ? (
                             <div className="text-center py-8 border-2 border-dashed border-white/5 rounded-xl">
                                 <WifiOff size={24} className="mx-auto text-gray-600 mb-2 opacity-50" />
                                 <p className="text-xs text-gray-500">No offline maps downloaded yet.</p>
                             </div>
                         ) : (
-                            regions
-                                .filter(r => !user || r.userId === user.id)
-                                .map(region => (
+                            userRegions.map(region => (
                                 <div 
                                     key={region.id} 
                                     className="group bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 rounded-xl p-3 transition-colors cursor-pointer"
@@ -712,7 +712,7 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
         
         {/* Footer */}
         <div className="p-4 bg-black/40 border-t border-white/5 text-center text-[10px] text-gray-600 font-mono">
-            Storage Used: {regions.reduce((acc, r) => acc + r.sizeEstMB, 0).toFixed(2)} MB
+            Storage Used: {userRegions.reduce((acc, r) => acc + r.sizeEstMB, 0).toFixed(2)} MB
         </div>
       </div>
 
