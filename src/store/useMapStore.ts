@@ -48,7 +48,7 @@ export const useMapStore = create<MapState>((set) => ({
   activeView: '3D', // Default to 3D mode
   elevationExaggeration: 1.5, // Slightly exaggerate terrain for better effect
   opacity: 0.8,
-  mouseControlMode: 'camera', // Default to Camera Mode (Left=Rotate)
+  mouseControlMode: 'map', // Default to Map Mode (Left=Pan)
   interactionMode: 'default',
   regionPoints: [],
   showContours: true,

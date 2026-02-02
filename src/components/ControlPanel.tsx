@@ -12,6 +12,7 @@ import {
   ChevronUp,
   Search,
   BookOpen,
+  ArrowUp,
   Download,
   Columns,
   X,
@@ -269,15 +270,23 @@ export const ControlPanel = () => {
                   setPitch(0);
                   setBearing(0);
                 }}
-                className="cursor-pointer flex-1 py-1 text-[10px] bg-white/10 hover:bg-white/20 rounded flex items-center justify-center gap-1"
+                className={`cursor-pointer flex-1 py-1 text-[10px] rounded flex items-center justify-center gap-1 transition-colors ${
+                  pitch < 1 
+                    ? "bg-blue-600 text-white font-bold" 
+                    : "bg-white/10 hover:bg-white/20 text-gray-300"
+                }`}
               >
-                <Monitor size={12} /> Reset Top
+                <ArrowUp size={12} /> Top View
               </button>
               <button
                 onClick={() => {
                   setPitch(80);
                 }}
-                className="cursor-pointer flex-1 py-1 text-[10px] bg-white/10 hover:bg-white/20 rounded flex items-center justify-center gap-1"
+                className={`cursor-pointer flex-1 py-1 text-[10px] rounded flex items-center justify-center gap-1 transition-colors ${
+                  pitch > 75 
+                    ? "bg-blue-600 text-white font-bold" 
+                    : "bg-white/10 hover:bg-white/20 text-gray-300"
+                }`}
               >
                 <Eye size={12} /> Side View
               </button>
@@ -291,16 +300,16 @@ export const ControlPanel = () => {
             </p>
             <div className="flex bg-black/20 rounded p-1">
               <button
-                onClick={() => setMouseControlMode("camera")}
-                className={`cursor-pointer flex-1 py-1 rounded transition-colors ${mouseControlMode === "camera" ? "bg-blue-500 text-white" : "hover:bg-white/10"}`}
-              >
-                Camera (Left=Rot)
-              </button>
-              <button
                 onClick={() => setMouseControlMode("map")}
                 className={`cursor-pointer flex-1 py-1 rounded transition-colors ${mouseControlMode === "map" ? "bg-blue-500 text-white" : "hover:bg-white/10"}`}
               >
-                Map (Left=Pan)
+                Map Mode (Move)
+              </button>
+              <button
+                onClick={() => setMouseControlMode("camera")}
+                className={`cursor-pointer flex-1 py-1 rounded transition-colors ${mouseControlMode === "camera" ? "bg-blue-500 text-white" : "hover:bg-white/10"}`}
+              >
+                Camera Mode (Rotate)
               </button>
             </div>
           </div>
@@ -339,6 +348,23 @@ export const ControlPanel = () => {
                   className={`w-3 h-3 bg-white rounded-full shadow transition-transform ${showContours ? "translate-x-5" : "translate-x-0"}`}
                 />
               </button>
+            </div>
+
+            {/* Opacity */}
+            <div>
+              <label className="text-xs text-gray-300 mb-1 flex justify-between">
+                <span>Opacity Contours</span>
+                <span>{(opacity * 100).toFixed(0)}%</span>
+              </label>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={1}
+                value={Math.round(opacity * 100)}
+                onChange={(e) => setOpacity(Number(e.target.value) / 100)}
+                className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500"
+              />
             </div>
 
             {/* Contour Interval */}
@@ -398,22 +424,7 @@ export const ControlPanel = () => {
               />
             </div>
 
-            {/* Opacity */}
-            <div>
-              <label className="text-xs text-gray-300 mb-1 flex justify-between">
-                <span>Opacity</span>
-                <span>{(opacity * 100).toFixed(0)}%</span>
-              </label>
-              <input
-                type="range"
-                min={0}
-                max={100}
-                step={1}
-                value={Math.round(opacity * 100)}
-                onChange={(e) => setOpacity(Number(e.target.value) / 100)}
-                className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500"
-              />
-            </div>
+            
           </div>
 
           <div className="pt-6 mt-8 border-t border-white/10 text-[10px] text-center text-gray-500 font-mono">
