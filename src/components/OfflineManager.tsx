@@ -213,7 +213,7 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
                              {selectedUpgradePlan === 'Pro' && <div className="absolute top-2 right-2 w-2 h-2 bg-blue-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>}
                              <div className="text-left">
                                  <div className="text-xs font-bold text-blue-400 mb-1">PRO PLAN</div>
-                                 <div className="text-lg font-bold text-white mb-1">IDR 50.000<span className="text-[10px] text-gray-400 font-normal">/mo</span></div>
+                                 <div className="text-lg font-bold text-white mb-1">$3.5<span className="text-[10px] text-gray-400 font-normal">/mo</span></div>
                                  <div className="text-[10px] text-gray-400">Up to 10 MB / download</div>
                              </div>
                          </button>
@@ -226,7 +226,7 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
                              {selectedUpgradePlan === 'Ultimate' && <div className="absolute top-2 right-2 w-2 h-2 bg-purple-500 rounded-full shadow-[0_0_10px_rgba(168,85,247,0.5)]"></div>}
                              <div className="text-left">
                                  <div className="text-xs font-bold text-purple-400 mb-1">ULTIMATE</div>
-                                 <div className="text-lg font-bold text-white mb-1">IDR 100.000<span className="text-[10px] text-gray-400 font-normal">/mo</span></div>
+                                 <div className="text-lg font-bold text-white mb-1">$7<span className="text-[10px] text-gray-400 font-normal">/mo</span></div>
                                  <div className="text-[10px] text-gray-400">Up to 25 MB / download</div>
                              </div>
                          </button>
@@ -239,7 +239,7 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
 
                 <div className="flex flex-col gap-2 w-full mt-2">
                     <a
-                        href={`mailto:contact@jcdigital.co.id?subject=Request Upgrade to ${selectedUpgradePlan} Plan&body=Hi Admin,%0D%0A%0D%0AI would like to request an upgrade for my account to the ${selectedUpgradePlan} Plan (${selectedUpgradePlan === 'Pro' ? 'IDR 50.000/mo' : 'IDR 100.000/mo'}).%0D%0A%0D%0AMy Account Email: ${user?.email}%0D%0A%0D%0AThank you.`}
+                        href={`mailto:contact@jcdigital.co.id?subject=Request Upgrade to ${selectedUpgradePlan} Plan&body=Hi Admin,%0D%0A%0D%0AI would like to request an upgrade for my account to the ${selectedUpgradePlan} Plan (${selectedUpgradePlan === 'Pro' ? '$3.5/mo' : '$7/mo'}).%0D%0A%0D%0AMy Account Email: ${user?.email}%0D%0A%0D%0AThank you.`}
                         className={`cursor-pointer w-full py-3 text-white rounded-xl text-sm font-bold shadow-lg transition-all flex items-center justify-center gap-2 ${selectedUpgradePlan === 'Ultimate' ? 'bg-purple-600 hover:bg-purple-500 shadow-purple-600/20' : 'bg-blue-600 hover:bg-blue-500 shadow-blue-600/20'}`}
                     >
                         Request {selectedUpgradePlan} Upgrade
