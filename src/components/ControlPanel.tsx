@@ -167,7 +167,7 @@ export const ControlPanel = () => {
                     Landscape 360
                   </h2>
                   <span className="text-[10px] text-blue-300 font-mono tracking-wider">
-                    v1.0 Pro
+                    v1.1.0 Pro
                   </span>
                 </div>
               </div>
@@ -647,7 +647,7 @@ const GetStartedModal = ({
 
         {/* Footer */}
         <div className="p-4 bg-black/40 border-t border-white/5 text-center text-[10px] text-gray-600 font-mono">
-          Landscape 360 v1.0 • 2026
+          Landscape 360 v1.1.0 Pro • 2026
         </div>
       </div>
     </div>

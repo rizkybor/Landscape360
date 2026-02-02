@@ -42,7 +42,7 @@ export const DocsPage = ({ onBack }: Props) => {
             </div>
           </div>
           <span className="text-xs font-mono text-blue-400 border border-blue-500/30 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded bg-blue-500/10">
-            v1.0 Pro
+            v1.1.0 Pro
           </span>
         </div>
       </div>
