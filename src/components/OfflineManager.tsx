@@ -23,16 +23,20 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
     triggerFlyTo
   } = useMapStore();
   const { regions, addRegion, removeRegion, updateRegionProgress } = useOfflineStore();
-  const { user } = useSurveyStore();
+  const { user, subscriptionStatus: storeSubscriptionStatus } = useSurveyStore();
   
   const [downloadName, setDownloadName] = useState('');
   const [isCalculating, setIsCalculating] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string>('Free');
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  const [upgradeReason, setUpgradeReason] = useState<'size' | 'count'>('size');
   const [selectedUpgradePlan, setSelectedUpgradePlan] = useState<'Pro' | 'Ultimate'>('Pro');
 
   useEffect(() => {
-    if (user) {
+    // Prefer store status if available, fallback to local fetch or 'Free'
+    if (storeSubscriptionStatus) {
+        setSubscriptionStatus(storeSubscriptionStatus);
+    } else if (user) {
       supabase.from('profiles').select('status_subscribe').eq('id', user.id).single()
         .then(({ data }) => {
           if (data) {
@@ -40,7 +44,7 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
           }
         });
     }
-  }, [user]);
+  }, [user, storeSubscriptionStatus]);
 
   // Clean up interaction mode when closing
   useEffect(() => {
@@ -105,9 +109,20 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
     const { count, size, minZoom, maxZoom, bounds } = calculateSize();
     if (!bounds || !downloadName || !minZoom || !maxZoom) return;
 
-    // Check subscription limits
-    const limit = subscriptionStatus === 'Ultimate' ? 25 : (subscriptionStatus === 'Pro' ? 10 : 2);
-    if (Number(size) > limit) {
+    // 1. Check Offline Map Count Limit
+    const countLimits: Record<string, number> = { 'Free': 3, 'Pro': 6, 'Ultimate': 10 };
+    const countLimit = countLimits[subscriptionStatus] || 3;
+    
+    if (regions.length >= countLimit) {
+        setUpgradeReason('count');
+        setShowUpgradePrompt(true);
+        return;
+    }
+
+    // 2. Check Size Limit
+    const sizeLimit = subscriptionStatus === 'Ultimate' ? 25 : (subscriptionStatus === 'Pro' ? 10 : 2);
+    if (Number(size) > sizeLimit) {
+        setUpgradeReason('size');
         setShowUpgradePrompt(true);
         return;
     }
@@ -211,9 +226,19 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
                 </div>
                 
                 <div>
-                    <h3 className="text-lg font-bold text-white mb-2">Download Limit Exceeded</h3>
+                    <h3 className="text-lg font-bold text-white mb-2">
+                        {upgradeReason === 'size' ? 'Download Limit Exceeded' : 'Map Limit Exceeded'}
+                    </h3>
                     <p className="text-sm text-gray-400 mb-6">
-                        Your current <strong>{subscriptionStatus} Plan</strong> is limited to <strong>{subscriptionStatus === 'Ultimate' ? '25' : (subscriptionStatus === 'Pro' ? '10' : '2')}MB</strong> per download.
+                        {upgradeReason === 'size' ? (
+                            <>
+                                Your current <strong>{subscriptionStatus} Plan</strong> is limited to <strong>{subscriptionStatus === 'Ultimate' ? '25' : (subscriptionStatus === 'Pro' ? '10' : '2')}MB</strong> per download.
+                            </>
+                        ) : (
+                            <>
+                                Your current <strong>{subscriptionStatus} Plan</strong> is limited to <strong>{subscriptionStatus === 'Ultimate' ? '10' : (subscriptionStatus === 'Pro' ? '6' : '3')}</strong> offline maps.
+                            </>
+                        )}
                     </p>
                     
                     <div className="grid grid-cols-2 gap-3 mb-6">

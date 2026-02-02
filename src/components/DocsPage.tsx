@@ -322,7 +322,7 @@ export const DocsPage = ({ onBack }: Props) => {
                     access.
                   </p>
                   <p className="text-[10px] text-gray-500 italic mt-2">
-                    Includes 2 MB max download size, standard map layers, and
+                    Includes 2 MB max download size, <strong>3 offline maps</strong>, <strong>2 saved surveys</strong>, standard map layers, and
                     community support.
                   </p>
                 </div>
@@ -338,7 +338,7 @@ export const DocsPage = ({ onBack }: Props) => {
                     projects.
                   </p>
                   <p className="text-[10px] text-gray-500 italic mt-2">
-                    Includes 10 MB max download size, high-res export options,
+                    Includes 10 MB max download size, <strong>6 offline maps</strong>, <strong>5 saved surveys</strong>, high-res export options,
                     and priority email support.
                   </p>
                   <a
@@ -360,7 +360,7 @@ export const DocsPage = ({ onBack }: Props) => {
                     and teams.
                   </p>
                   <p className="text-[10px] text-gray-500 italic mt-2">
-                    Includes 25 MB max download size, unlimited layer access,
+                    Includes 25 MB max download size, <strong>10 offline maps</strong>, <strong>10 saved surveys</strong>, unlimited layer access,
                     and 24/7 dedicated support.
                   </p>
                   <a
