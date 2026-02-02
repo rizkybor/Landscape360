@@ -34,8 +34,10 @@ interface SurveyState {
   currentSurveyId: string | null;
   savedSurveys: SavedSurvey[];
   isSyncing: boolean;
+  subscriptionStatus: 'Free' | 'Pro' | 'Ultimate';
   
   setUser: (user: User | null) => void;
+  loadSubscriptionStatus: () => Promise<void>;
   loadSavedSurveys: () => Promise<void>;
   loadSurvey: (id: string) => Promise<void>;
   saveCurrentSurvey: (name?: string) => Promise<void>;
@@ -70,8 +72,29 @@ export const useSurveyStore = create<SurveyState>()(
   currentSurveyId: null,
   savedSurveys: [],
   isSyncing: false,
+  subscriptionStatus: 'Free',
 
-  setUser: (user) => set({ user }),
+  setUser: (user) => {
+    set({ user });
+    if (user) {
+      get().loadSubscriptionStatus();
+    }
+  },
+
+  loadSubscriptionStatus: async () => {
+    const { user } = get();
+    if (!user) return;
+    
+    const { data } = await supabase
+      .from('profiles')
+      .select('status_subscribe')
+      .eq('id', user.id)
+      .single();
+      
+    if (data && data.status_subscribe) {
+      set({ subscriptionStatus: data.status_subscribe as 'Free' | 'Pro' | 'Ultimate' });
+    }
+  },
 
   loadSavedSurveys: async () => {
     const { user } = get();
@@ -162,8 +185,28 @@ export const useSurveyStore = create<SurveyState>()(
   },
 
   saveCurrentSurvey: async (name) => {
-    const { user, groups, currentSurveyId } = get();
+    const { user, groups, currentSurveyId, savedSurveys, subscriptionStatus } = get();
     if (!user) return;
+
+    // Check Limits for NEW surveys (when currentSurveyId is null)
+    if (!currentSurveyId) {
+      const limits = {
+        'Free': 2,
+        'Pro': 5,
+        'Ultimate': 10
+      };
+      
+      const limit = limits[subscriptionStatus] || 2;
+      
+      if (savedSurveys.length >= limit) {
+        // We can't use alert() here easily without blocking or being ugly.
+        // Ideally we should throw an error or set an error state that UI consumes.
+        // For now, let's console error and maybe the UI can check this condition too.
+        console.error(`Survey limit reached for ${subscriptionStatus} plan (${limit}).`);
+        alert(`Survey limit reached! Your ${subscriptionStatus} plan allows max ${limit} saved surveys. Please delete old surveys or upgrade.`);
+        return;
+      }
+    }
 
     set({ isSyncing: true });
 
@@ -331,7 +374,8 @@ export const useSurveyStore = create<SurveyState>()(
         activeGroupId: state.activeGroupId,
         currentSurveyId: state.currentSurveyId,
         savedSurveys: state.savedSurveys,
-        user: state.user // Persist user to keep session alive in store if auth fails
+        user: state.user, // Persist user to keep session alive in store if auth fails
+        subscriptionStatus: state.subscriptionStatus
       }),
     }
   )
