@@ -8,6 +8,7 @@ import {
   Columns,
   WifiOff,
   Instagram,
+  DollarSign,
 } from "lucide-react";
 import geoportalLogo from "../assets/geoportal360.png";
 
@@ -147,31 +148,64 @@ export const DocsPage = ({ onBack }: Props) => {
                 </div>
               </div>
 
-              {/* Offline Maps Docs */}
-              <div className="flex items-center gap-2 text-cyan-400 mb-2 mt-8">
-                <WifiOff size={20} />
-                <h3 className="text-xl font-bold">Offline Capabilities</h3>
-              </div>
-              <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-4">
-                <p className="text-sm text-gray-400">
-                  Work in remote areas without internet connectivity.
-                </p>
-                <ul className="space-y-3 text-sm text-gray-400">
-                  <li className="flex gap-3">
-                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 mt-2 shrink-0"></div>
-                    <span>
-                      <strong className="text-white">Offline Maps:</strong>{" "}
-                      Download specific map regions (Satellite + Terrain) for use without internet.
-                    </span>
-                  </li>
-                  <li className="flex gap-3">
-                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 mt-2 shrink-0"></div>
-                    <span>
-                      <strong className="text-white">Local Survey Data:</strong>{" "}
-                      View and analyze previously saved surveys even when offline. New data is cached locally until connection is restored.
-                    </span>
-                  </li>
-                </ul>
+              {/* Navigator Mode */}
+              <div className="pt-8 space-y-4">
+                <div className="flex items-center gap-2 text-yellow-400 mb-2">
+                  <Activity size={20} />
+                  <h3 className="text-xl font-bold">Navigator Mode</h3>
+                </div>
+                <div className="bg-gradient-to-br from-yellow-500/10 to-transparent border border-yellow-500/20 rounded-xl p-6">
+                  <p className="text-xs text-gray-300 mb-4 leading-relaxed">
+                    Enable{" "}
+                    <strong className="text-yellow-400">Navigator Mode</strong>{" "}
+                    to start plotting survey points and measuring distances.
+                  </p>
+
+                  <div className="space-y-4">
+                    <div className="flex gap-3">
+                      <div className="w-6 h-6 bg-yellow-500/20 rounded-lg flex items-center justify-center text-yellow-400 text-xs font-bold border border-yellow-500/30 shrink-0">
+                        1
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-white">
+                          Plot Points
+                        </h4>
+                        <p className="text-[10px] text-gray-400 mt-1 leading-relaxed">
+                          Click anywhere on the map to drop a survey point. The
+                          system automatically captures elevation data.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="w-6 h-6 bg-yellow-500/20 rounded-lg flex items-center justify-center text-yellow-400 text-xs font-bold border border-yellow-500/30 shrink-0">
+                        2
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-white">
+                          Measure
+                        </h4>
+                        <p className="text-[10px] text-gray-400 mt-1 leading-relaxed">
+                          Real-time distance, azimuth, and slope calculations
+                          are displayed between consecutive points.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="w-6 h-6 bg-yellow-500/20 rounded-lg flex items-center justify-center text-yellow-400 text-xs font-bold border border-yellow-500/30 shrink-0">
+                        3
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-white">
+                          Manage Groups
+                        </h4>
+                        <p className="text-[10px] text-gray-400 mt-1 leading-relaxed">
+                          Organize your navigation into named groups using the
+                          Navigator Panel on the right.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -250,65 +284,92 @@ export const DocsPage = ({ onBack }: Props) => {
                   </li>
                 </ul>
               </div>
-
-              {/* Split Screen View */}
-              <div className="flex items-center gap-2 text-red-400 mb-2">
-                <Columns size={20} />
-                <h3 className="text-xl font-bold">Split Screen View</h3>
-              </div>
-              <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-                <p className="text-sm text-gray-400 leading-relaxed">
-                  Enable dual-screen mode to compare two map perspectives side
-                  by side. You can synchronize camera movements to analyze
-                  terrain changes or layer differences in real time.
-                </p>
-              </div>
             </div>
           </section>
 
-          {/* Navigator Mode */}
           <section className="space-y-6">
-            <div className="flex items-center gap-2 text-yellow-400 mb-2">
-              <Activity size={20} />
-              <h3 className="text-xl font-bold">Navigator Mode</h3>
+            {/* Split Screen View */}
+            <div className="flex items-center gap-2 text-red-400 mb-2">
+              <Columns size={20} />
+              <h3 className="text-xl font-bold">Split Screen View</h3>
             </div>
-            <div className="bg-gradient-to-br from-yellow-500/10 to-transparent border border-yellow-500/20 rounded-xl p-8">
+            <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-4">
+              <p className="text-sm text-gray-400 leading-relaxed">
+                Enable dual-screen mode to compare two map perspectives side by
+                side. You can synchronize camera movements to analyze terrain
+                changes or layer differences in real time.
+              </p>
+            </div>
+          </section>
+
+          {/* Pricing & Plans */}
+          <section className="space-y-6">
+            <div className="flex items-center gap-2 text-cyan-400 mb-2">
+              <DollarSign size={20} />
+              <h3 className="text-xl font-bold">Pricing & Plans</h3>
+            </div>
+            <div className="bg-gradient-to-br from-cyan-500/10 to-transparent border border-cyan-500/20 rounded-xl p-8">
               <p className="text-gray-300 mb-6">
-                Enable{" "}
-                <strong className="text-yellow-400">Navigator Mode</strong> to
-                start plotting survey points and measuring distances.
+                Flexible plans designed to scale with your geospatial needs.
               </p>
 
               <div className="grid md:grid-cols-3 gap-6">
+                {/* Free Plan */}
                 <div className="space-y-2">
-                  <div className="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center text-yellow-400 font-bold border border-yellow-500/30">
-                    1
-                  </div>
-                  <h4 className="font-bold text-white">Plot Points</h4>
+                  <div className="w-1.5 h-1.5 rounded-full bg-gray-500 mb-2 shrink-0"></div>
+                  <h4 className="font-bold text-white">Free</h4>
                   <p className="text-xs text-gray-400">
-                    Click anywhere on the map to drop a survey point. The system
-                    automatically captures elevation data.
+                    Essential tools for casual exploration and basic offline
+                    access.
+                  </p>
+                  <p className="text-[10px] text-gray-500 italic mt-2">
+                    Includes 2 MB max download size, standard map layers, and
+                    community support.
                   </p>
                 </div>
+
+                {/* Pro Plan */}
                 <div className="space-y-2">
-                  <div className="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center text-yellow-400 font-bold border border-yellow-500/30">
-                    2
-                  </div>
-                  <h4 className="font-bold text-white">Measure</h4>
+                  <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 mb-2 shrink-0"></div>
+                  <h4 className="font-bold text-white text-cyan-400">
+                    Pro ($3.5/mo)
+                  </h4>
                   <p className="text-xs text-gray-400">
-                    Real-time distance, azimuth, and slope calculations are
-                    displayed between consecutive points.
+                    Enhanced capacity for field surveyors and dedicated mapping
+                    projects.
                   </p>
+                  <p className="text-[10px] text-gray-500 italic mt-2">
+                    Includes 10 MB max download size, high-res export options,
+                    and priority email support.
+                  </p>
+                  <a
+                    href="mailto:contact@jcdigital.co.id?subject=Request Upgrade to Pro Plan&body=Hi Admin,%0D%0A%0D%0AI would like to request an upgrade for my account to the Pro Plan ($3.5/mo).%0D%0A%0D%0AThank you."
+                    className="inline-block text-[10px] font-bold text-cyan-400 hover:text-cyan-300 uppercase tracking-wider mt-1 border-b border-cyan-400/30 hover:border-cyan-300 transition-colors"
+                  >
+                    Request Upgrade
+                  </a>
                 </div>
+
+                {/* Ultimate Plan */}
                 <div className="space-y-2">
-                  <div className="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center text-yellow-400 font-bold border border-yellow-500/30">
-                    3
-                  </div>
-                  <h4 className="font-bold text-white">Manage Groups</h4>
+                  <div className="w-1.5 h-1.5 rounded-full bg-cyan-600 mb-2 shrink-0"></div>
+                  <h4 className="font-bold text-white text-cyan-500">
+                    Ultimate ($7/mo)
+                  </h4>
                   <p className="text-xs text-gray-400">
-                    Organize your navigation into named groups using the
-                    Navigator Panel on the right.
+                    Maximum power and flexibility for extensive terrain analysis
+                    and teams.
                   </p>
+                  <p className="text-[10px] text-gray-500 italic mt-2">
+                    Includes 25 MB max download size, unlimited layer access,
+                    and 24/7 dedicated support.
+                  </p>
+                  <a
+                    href="mailto:contact@jcdigital.co.id?subject=Request Upgrade to Ultimate Plan&body=Hi Admin,%0D%0A%0D%0AI would like to request an upgrade for my account to the Ultimate Plan ($7/mo).%0D%0A%0D%0AThank you."
+                    className="inline-block text-[10px] font-bold text-cyan-500 hover:text-cyan-400 uppercase tracking-wider mt-1 border-b border-cyan-500/30 hover:border-cyan-400 transition-colors"
+                  >
+                    Request Upgrade
+                  </a>
                 </div>
               </div>
             </div>
