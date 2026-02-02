@@ -81,7 +81,15 @@ export const useSurveyStore = create<SurveyState>()(
       get().loadSubscriptionStatus();
       get().loadSavedSurveys();
     } else {
-      set({ savedSurveys: [], currentSurveyId: null, subscriptionStatus: 'Free' });
+      set({ 
+        savedSurveys: [], 
+        currentSurveyId: null, 
+        subscriptionStatus: 'Free',
+        // Clear survey data on logout
+        groups: [],
+        activeGroupId: null,
+        isPlotMode: false
+      });
     }
   },
 
