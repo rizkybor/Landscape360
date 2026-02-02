@@ -55,5 +55,6 @@ export function getMapboxTileUrl(x: number, y: number, z: number, token: string)
 }
 
 export function getTerrainTileUrl(x: number, y: number, z: number, token: string): string {
-  return `https://api.mapbox.com/raster/v1/mapbox.mapbox-terrain-dem-v1/${z}/${x}/${y}.webp?sku=101XzrMIdw3eL&access_token=${token}`;
+  // Use v4 format to match Mapbox GL JS internal requests for better cache hits
+  return `https://api.mapbox.com/v4/mapbox.mapbox-terrain-dem-v1/${z}/${x}/${y}@2x.webp?access_token=${token}`;
 }

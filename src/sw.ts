@@ -18,10 +18,10 @@ self.addEventListener('install', () => {
 clientsClaim();
 
 // 1. TILES: Intercept Mapbox Tile requests -> Check IDB first
-// Matches: /v4/mapbox.satellite/ or /raster/v1/mapbox.mapbox-terrain-dem-v1/
+// Matches: /v4/mapbox.satellite/ or /mapbox.mapbox-terrain-dem-v1/
 const isMapboxTile = ({ url }: { url: URL }) => {
-  return url.href.includes('/v4/mapbox.satellite/') || 
-         url.href.includes('/raster/v1/mapbox.mapbox-terrain-dem-v1/');
+  return url.href.includes('/mapbox.satellite/') || 
+         url.href.includes('/mapbox.mapbox-terrain-dem-v1/');
 };
 
 registerRoute(
@@ -62,6 +62,7 @@ registerRoute(
     return url.origin === 'https://api.mapbox.com' && 
            (url.pathname.includes('/styles/') || 
             url.pathname.includes('/fonts/') || 
+            url.pathname.includes('.json') || // TileJSON/Source metadata
             url.href.includes('sprite')); 
   },
   new NetworkFirst({
