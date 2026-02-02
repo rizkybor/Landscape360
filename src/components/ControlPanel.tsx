@@ -147,7 +147,7 @@ export const ControlPanel = () => {
         <div className="relative shrink-0 z-20">
           {/* Background Decor - Clipped */}
           <div className="absolute inset-0 rounded-t-2xl md:rounded-t-xl overflow-hidden pointer-events-none border-b border-white/10 bg-white/5 backdrop-blur-md">
-             <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/10 blur-2xl rounded-full -translate-y-1/2 translate-x-1/2"></div>
+            <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/10 blur-2xl rounded-full -translate-y-1/2 translate-x-1/2"></div>
           </div>
 
           {/* Content - Visible Overflow for Dropdowns */}
@@ -200,7 +200,7 @@ export const ControlPanel = () => {
               </button>
             </div>
             <div className="flex justify-center relative z-50">
-               <AuthControl />
+              <AuthControl />
             </div>
           </div>
         </div>
@@ -264,7 +264,7 @@ export const ControlPanel = () => {
                <RotateCw size={32} className="opacity-50 group-hover:opacity-80 transition-opacity" />
                {isJoystickDragging && <div className="absolute inset-0 bg-blue-500/10 flex items-center justify-center text-xs font-bold text-blue-200">Active</div>}
             </div> */}
-
+            <p className="font-semibold text-[10px] pb-1 mb-1">Quick Action</p>
             <div className="flex gap-2">
               <button
                 onClick={() => {
@@ -272,8 +272,8 @@ export const ControlPanel = () => {
                   setBearing(0);
                 }}
                 className={`cursor-pointer flex-1 py-1 text-[10px] rounded flex items-center justify-center gap-1 transition-colors ${
-                  pitch < 1 
-                    ? "bg-blue-600 text-white font-bold" 
+                  pitch < 1
+                    ? "bg-blue-600 text-white font-bold"
                     : "bg-white/10 hover:bg-white/20 text-gray-300"
                 }`}
               >
@@ -284,8 +284,8 @@ export const ControlPanel = () => {
                   setPitch(80);
                 }}
                 className={`cursor-pointer flex-1 py-1 text-[10px] rounded flex items-center justify-center gap-1 transition-colors ${
-                  pitch > 75 
-                    ? "bg-blue-600 text-white font-bold" 
+                  pitch > 75
+                    ? "bg-blue-600 text-white font-bold"
                     : "bg-white/10 hover:bg-white/20 text-gray-300"
                 }`}
               >
@@ -424,8 +424,6 @@ export const ControlPanel = () => {
                 className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500"
               />
             </div>
-
-            
           </div>
 
           <div className="pt-6 mt-8 border-t border-white/10 text-[10px] text-center text-gray-500 font-mono">
