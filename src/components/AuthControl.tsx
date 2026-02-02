@@ -494,10 +494,10 @@ export const AuthControl = () => {
                                                         e.stopPropagation();
                                                         setDeleteConfirmId(survey.id);
                                                     }}
-                                                    className="cursor-pointer p-1.5 hover:bg-red-500/20 text-gray-500 hover:text-red-400 rounded transition-colors opacity-0 group-hover:opacity-100"
+                                                    className="cursor-pointer p-2 md:p-1.5 hover:bg-red-500/20 text-gray-500 hover:text-red-400 rounded transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100 flex-shrink-0"
                                                     title="Delete Survey"
                                                >
-                                                    <Trash2 size={12} />
+                                                    <Trash2 size={14} className="md:w-3 md:h-3" />
                                                </button>
                                            </div>
                                        ))
