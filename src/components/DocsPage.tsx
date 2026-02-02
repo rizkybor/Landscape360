@@ -10,6 +10,7 @@ import {
   DollarSign,
 } from "lucide-react";
 import geoportalLogo from "../assets/geoportal360.png";
+import { SEO } from './SEO';
 
 interface Props {
   onBack?: () => void;
@@ -18,6 +19,10 @@ interface Props {
 export const DocsPage = ({ onBack }: Props) => {
   return (
     <div className="h-screen bg-gray-900 text-white font-sans overflow-hidden flex flex-col">
+      <SEO 
+        title="Dokumentasi & Panduan"
+        description="Pelajari cara menggunakan Landscape 360, navigasi peta 3D, analisis kontur, dan fitur-fitur canggih lainnya."
+      />
       {/* Header */}
       <div className="shrink-0 sticky top-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">

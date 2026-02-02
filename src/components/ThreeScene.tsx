@@ -64,6 +64,11 @@ export const ThreeScene = () => {
     };
 
     const addLayer = () => {
+      if (!map.isStyleLoaded()) {
+        map.once('style.load', addLayer);
+        return;
+      }
+
       if (map.getStyle() && !map.getLayer(customLayerId)) {
         try {
           map.addLayer(customLayer);
@@ -73,8 +78,11 @@ export const ThreeScene = () => {
       }
     };
 
-    if (map.isStyleLoaded()) addLayer();
-    else map.once('style.load', addLayer);
+    if (map.isStyleLoaded()) {
+        addLayer();
+    } else {
+        map.once('style.load', addLayer);
+    }
 
     return () => {
       map.off('style.load', addLayer);

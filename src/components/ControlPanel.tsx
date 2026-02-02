@@ -534,28 +534,20 @@ const GetStartedModal = ({
 
         {/* Header */}
         <div className="p-6 border-b border-white/5 bg-white/[0.02]">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <img
-                src={geoportalLogo}
-                alt="Logo"
-                className="w-10 h-10 object-contain"
-              />
-              <div>
-                <h2 className="text-xl font-bold text-white tracking-tight">
-                  Quick Start Guide
-                </h2>
-                <p className="text-xs text-blue-400 font-mono tracking-widest">
-                  Initialization
-                </p>
-              </div>
+          <div className="flex items-center gap-3">
+            <img
+              src={geoportalLogo}
+              alt="Logo"
+              className="w-10 h-10 object-contain"
+            />
+            <div>
+              <h2 className="text-xl font-bold text-white tracking-tight">
+                Quick Start Guide
+              </h2>
+              <p className="text-xs text-blue-400 font-mono tracking-widest">
+                Initialization
+              </p>
             </div>
-            <button
-              onClick={onClose}
-              className="cursor-pointer p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white"
-            >
-              <ChevronUp className="rotate-180" size={20} />
-            </button>
           </div>
         </div>
 
