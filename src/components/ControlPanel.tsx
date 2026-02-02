@@ -15,6 +15,7 @@ import {
   ArrowUp,
   Download,
   Columns,
+  Wifi,
   X,
 } from "lucide-react";
 import geoportalLogo from "../assets/geoportal360.png";
@@ -568,13 +569,18 @@ const GetStartedModal = ({
             {[
               {
                 icon: <Monitor size={18} />,
-                title: "Navigation",
-                desc: "Use the virtual joystick or Right-Click to orbit and tilt the terrain.",
+                title: "Interaction Modes",
+                desc: "Switch between Map Mode (Left-Click to Pan) and Camera Mode (Left-Click to Rotate) for precise control.",
               },
               {
                 icon: <Activity size={18} />,
                 title: "Terrain Analysis",
                 desc: "Toggle contours and adjust exaggeration to visualize elevation details.",
+              },
+              {
+                icon: <Wifi size={18} />,
+                title: "Offline Maps",
+                desc: "Download map areas for use without internet connection. Perfect for remote field surveys.",
               },
               {
                 icon: <Download size={18} />, // Pastikan icon Download sudah di-import dari library Anda (misal: Lucide)
