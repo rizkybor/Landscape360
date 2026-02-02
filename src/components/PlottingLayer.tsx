@@ -77,22 +77,8 @@ export const PlottingLayer = () => {
   };
 
   // Prepare GeoJSON
-  const pointsGeoJSON: FeatureCollection = {
-    type: 'FeatureCollection',
-    features: groups.flatMap(g => g.points.map((p, idx) => ({
-      type: 'Feature',
-      geometry: { type: 'Point', coordinates: [p.lng, p.lat] },
-      properties: { 
-        id: p.id, 
-        elevation: p.elevation, 
-        groupId: g.id, 
-        color: g.color,
-        isActive: g.id === activeGroupId,
-        label: `P${idx + 1}\n${p.elevation.toFixed(1)}m`
-      }
-    })))
-  };
-
+  // pointsGeoJSON removed as we use Markers for interactivity
+  
   const linesGeoJSON: FeatureCollection = {
     type: 'FeatureCollection',
     features: []
