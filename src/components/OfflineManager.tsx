@@ -9,9 +9,65 @@ import { supabase } from '../lib/supabaseClient';
 import { useSurveyStore } from '../store/useSurveyStore';
 import { createPortal } from 'react-dom';
 
-import { saveTile } from '../utils/offline-db';
+import { saveTile, getTile } from '../utils/offline-db';
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
+
+const TileAvailabilityBadge = ({ region }: { region: OfflineRegion }) => {
+    const [status, setStatus] = useState<'ready' | 'partial' | 'missing'>('missing');
+    const [details, setDetails] = useState<string>('');
+
+    useEffect(() => {
+        const checkTiles = async () => {
+            // Check one tile from the center of the region at minZoom
+            const centerLng = (region.bounds.west + region.bounds.east) / 2;
+            const centerLat = (region.bounds.south + region.bounds.north) / 2;
+            
+            // Simple lat/lng to tile conversion
+            const x = Math.floor((centerLng + 180) / 360 * Math.pow(2, region.minZoom));
+            const y = Math.floor((1 - Math.log(Math.tan(centerLat * Math.PI / 180) + 1 / Math.cos(centerLat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, region.minZoom));
+
+            const satelliteUrl = getMapboxTileUrl(x, y, region.minZoom, MAPBOX_TOKEN);
+            const terrainUrl = getTerrainTileUrl(x, y, Math.min(region.minZoom, 15), MAPBOX_TOKEN);
+
+            const satelliteBlob = await getTile(satelliteUrl);
+            const terrainBlob = await getTile(terrainUrl);
+
+            if (satelliteBlob && terrainBlob) {
+                setStatus('ready');
+                setDetails('2D + 3D + Contours Ready');
+            } else if (satelliteBlob) {
+                setStatus('partial');
+                setDetails('2D Only (No 3D/Contours)');
+            } else {
+                setStatus('missing');
+                setDetails('Cloud Sync Only');
+            }
+        };
+
+        if (region.status === 'completed') {
+            checkTiles();
+        }
+    }, [region]);
+
+    if (region.status !== 'completed') return null;
+
+    if (status === 'ready') {
+        return <span className="text-[8px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded uppercase tracking-wider" title={details}>Ready (3D)</span>;
+    }
+
+    if (status === 'partial') {
+        return <span className="text-[8px] bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded uppercase tracking-wider flex items-center gap-1" title={details}>
+             2D Only
+        </span>;
+    }
+
+    return (
+        <span className="text-[8px] bg-gray-500/20 text-gray-400 px-1.5 py-0.5 rounded uppercase tracking-wider flex items-center gap-1" title={details}>
+            <WifiOff size={8} /> Cloud Sync
+        </span>
+    );
+};
 
 export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
   const { 
@@ -22,7 +78,7 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
     clearRegionPoints,
     triggerFlyTo
   } = useMapStore();
-  const { regions, addRegion, removeRegion, updateRegionProgress } = useOfflineStore();
+  const { regions, addRegion, removeRegion, updateRegionProgress, setRegions } = useOfflineStore();
   const { user, subscriptionStatus: storeSubscriptionStatus } = useSurveyStore();
   
   const [downloadName, setDownloadName] = useState('');
@@ -31,6 +87,57 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const [upgradeReason, setUpgradeReason] = useState<'size' | 'count'>('size');
   const [selectedUpgradePlan, setSelectedUpgradePlan] = useState<'Pro' | 'Ultimate'>('Pro');
+
+  // Sync with Supabase on mount/user change
+  useEffect(() => {
+    const syncWithSupabase = async () => {
+        if (!user) return;
+
+        const { data, error } = await supabase
+            .from('offline_maps')
+            .select('*')
+            .eq('user_id', user.id);
+
+        if (error) {
+            console.error("Error fetching offline maps from Supabase:", error);
+            return;
+        }
+
+        if (data) {
+            const remoteRegions: OfflineRegion[] = data.map(item => ({
+                id: item.id,
+                userId: item.user_id,
+                name: item.name,
+                bounds: item.bounds,
+                minZoom: item.min_zoom,
+                maxZoom: item.max_zoom,
+                tileCount: item.tile_count,
+                sizeEstMB: item.size_est_mb,
+                createdAt: item.created_at,
+                status: 'completed',
+                progress: 100
+            }));
+
+            // Merge: keep local version if it exists (it has current device status)
+            // Filter out regions that don't belong to current user if they were left over
+            const localMap = new Map(regions.filter(r => !r.userId || r.userId === user.id).map(r => [r.id, r]));
+            let hasNew = false;
+
+            remoteRegions.forEach(remote => {
+                if (!localMap.has(remote.id)) {
+                    localMap.set(remote.id, remote);
+                    hasNew = true;
+                }
+            });
+
+            if (hasNew || regions.length !== localMap.size) {
+                setRegions(Array.from(localMap.values()));
+            }
+        }
+    };
+
+    syncWithSupabase();
+  }, [user]); // Only run when user changes (login/logout)
 
   useEffect(() => {
     // Prefer store status if available, fallback to local fetch or 'Free'
@@ -65,6 +172,24 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
         duration: 2000
       });
       onClose(); // Close manager to show map
+    }
+  };
+
+  const handleRemoveRegion = async (id: string) => {
+    // 1. Remove from local store
+    removeRegion(id);
+
+    // 2. Remove from Supabase if logged in
+    if (user) {
+        const { error } = await supabase
+            .from('offline_maps')
+            .delete()
+            .eq('id', id)
+            .eq('user_id', user.id);
+            
+        if (error) {
+            console.error("Error deleting offline map from Supabase:", error);
+        }
     }
   };
 
@@ -133,6 +258,7 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
     
     const newRegion: OfflineRegion = {
       id: regionId,
+      userId: user?.id,
       name: downloadName,
       bounds,
       minZoom,
@@ -179,8 +305,14 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
     // Create list of URLs to fetch
     const urls: string[] = [];
     tiles.forEach(t => {
+      // 1. Satellite Tile (Raster) - Always download for requested zoom
       urls.push(getMapboxTileUrl(t.x, t.y, t.z, MAPBOX_TOKEN));
-      urls.push(getTerrainTileUrl(t.x, t.y, t.z, MAPBOX_TOKEN));
+      
+      // 2. Terrain Tile (DEM) - Only up to zoom 15 (Mapbox limit)
+      // This ensures 3D and Contours work, but saves space/requests for z16+
+      if (t.z <= 15) {
+          urls.push(getTerrainTileUrl(t.x, t.y, t.z, MAPBOX_TOKEN));
+      }
     });
 
     try {
@@ -345,7 +477,7 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
                             
                             <div className="flex justify-between text-[10px] text-gray-400 px-1">
                                 <span>Size: <strong className={isOverLimit ? "text-red-400" : "text-white"}>{stats.size} MB</strong></span>
-                                <span>Tiles: <strong className="text-white">{stats.count}</strong></span>
+                                <span>Includes: <strong className="text-white">2D + 3D Data</strong></span>
                             </div>
 
                             {isOverLimit && (
@@ -462,13 +594,15 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
                     </div>
 
                     <div className="space-y-3">
-                        {regions.length === 0 ? (
+                        {regions.filter(r => !user || r.userId === user.id).length === 0 ? (
                             <div className="text-center py-8 border-2 border-dashed border-white/5 rounded-xl">
                                 <WifiOff size={24} className="mx-auto text-gray-600 mb-2 opacity-50" />
                                 <p className="text-xs text-gray-500">No offline maps downloaded yet.</p>
                             </div>
                         ) : (
-                            regions.map(region => (
+                            regions
+                                .filter(r => !user || r.userId === user.id)
+                                .map(region => (
                                 <div 
                                     key={region.id} 
                                     className="group bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 rounded-xl p-3 transition-colors cursor-pointer"
@@ -478,7 +612,7 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
                                         <div>
                                             <div className="text-sm font-bold text-gray-200 flex items-center gap-2 group-hover:text-blue-400 transition-colors">
                                                 {region.name}
-                                                {region.status === 'completed' && <span className="text-[8px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded uppercase tracking-wider">Ready</span>}
+                                                <TileAvailabilityBadge region={region} />
                                             </div>
                                             <div className="text-[10px] text-gray-500 flex items-center gap-2 mt-0.5">
                                                 <span>{region.sizeEstMB} MB</span>
@@ -490,9 +624,9 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
                                         <button 
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                removeRegion(region.id);
+                                                handleRemoveRegion(region.id);
                                             }}
-                                            className="cursor-pointer p-1.5 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                            className="cursor-pointer p-1.5 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100"
                                             title="Delete Map"
                                         >
                                             <Trash2 size={14} />
