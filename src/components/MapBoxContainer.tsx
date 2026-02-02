@@ -67,6 +67,21 @@ export const MapBoxContainer: React.FC<MapBoxContainerProps> = ({
     bearing: number;
   } | null>(null);
 
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   // Handle flyTo requests
   useEffect(() => {
     const map = mapRef.current?.getMap();
@@ -404,6 +419,15 @@ export const MapBoxContainer: React.FC<MapBoxContainerProps> = ({
 
       {showControls && <ControlPanel />}
       {showControls && <TelemetryOverlay info={telemetry} />}
+      
+      {/* Offline Indicator */}
+      {isOffline && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-red-500/90 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-2 backdrop-blur-md animate-in fade-in slide-in-from-top-4">
+          <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+          OFFLINE MODE
+        </div>
+      )}
+
       <SurveyorPanel />
       <SearchPanel />
     </div>

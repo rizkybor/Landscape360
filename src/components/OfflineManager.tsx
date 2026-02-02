@@ -9,6 +9,8 @@ import { supabase } from '../lib/supabaseClient';
 import { useSurveyStore } from '../store/useSurveyStore';
 import { createPortal } from 'react-dom';
 
+import { saveTile } from '../utils/offline-db';
+
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
 export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
@@ -169,7 +171,17 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
     try {
         for (let i = 0; i < urls.length; i += BATCH_SIZE) {
             const batch = urls.slice(i, i + BATCH_SIZE);
-            await Promise.all(batch.map(url => fetch(url, { mode: 'cors' })));
+            await Promise.all(batch.map(async (url) => {
+                try {
+                    const response = await fetch(url, { mode: 'cors' });
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        await saveTile(url, blob);
+                    }
+                } catch (err) {
+                    console.error('Failed to download/save tile:', url, err);
+                }
+            }));
             
             completed += batch.length;
             const progress = Math.min(100, Math.round((completed / urls.length) * 100));
