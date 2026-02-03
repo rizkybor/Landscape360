@@ -389,6 +389,9 @@ const MapBoxContainerComponent = ({
 
   // Custom Mouse Interaction Handler (Left=Rotate, Right=Pan)
   useEffect(() => {
+    // Disable custom mouse handler on mobile to prevent conflict with touch gestures
+    if (window.innerWidth < 768) return;
+
     const map = mapRef.current?.getMap();
     if (!map) return;
 
@@ -502,13 +505,6 @@ const MapBoxContainerComponent = ({
   }, []);
 
   const isMobile = window.innerWidth < 768;
-
-  // Optimize pixel ratio for mobile to reduce GPU load
-  // High DPI screens (3x) can kill performance on mid-range phones
-  // But react-map-gl doesn't support pixelRatio prop directly, so we just remove the unused variable for now
-  // or use it if we manually instantiated mapboxgl.Map, but here we use the component.
-  // Ideally, this should be handled by the browser or meta tags, but we can't force it easily via props here.
-  // const pixelRatio = isMobile ? Math.min(window.devicePixelRatio, 1.5) : window.devicePixelRatio;
 
   return (
     <div className={`relative w-full h-full ${className || ""}`}>
