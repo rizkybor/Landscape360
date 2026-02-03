@@ -18,7 +18,7 @@
 - **Map Controller**: Intuitive Zoom In/Out buttons and simplified gesture controls for desktop and mobile.
 
 ### 📍 Navigation & Survey
-- **Instant Geolocation**: "Start Here" feature with pre-emptive GPS fetching and zero-delay jump logic.
+- **Instant Geolocation**: "Start Your Journey" feature with pre-emptive GPS fetching and zero-delay jump logic.
 - **Navigator Mode**: Precision plotting tools with real-time **Distance**, **Azimuth**, and **Slope** calculations.
 - **Visual Feedback**: Dynamic marker shapes (Diamond vs Circle) and colors (Indigo vs Yellow) to distinguish edited points.
 - **Optimized Controls**:
