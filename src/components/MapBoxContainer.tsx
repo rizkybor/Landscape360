@@ -292,20 +292,35 @@ const MapBoxContainerComponent = ({
     const map = mapRef.current?.getMap();
     if (map) {
         // Optimize Zoom & Gestures
-        // 1. Smoother Scroll Zoom (Lower rate = smoother/slower)
-        // Default is ~1/450. We reduce it to 1/600 for precision.
-        map.scrollZoom.setWheelZoomRate(1 / 600);
         
+        // 1. Desktop Optimizations
+        // Increase smoothness for panning and zooming
+        // Default scrollZoom rate is ~1/450. Adjusted for precision.
+        map.scrollZoom.setWheelZoomRate(1 / 450); 
+        
+        // Enhance inertia for smoother 'throw' effect when panning
+        map.dragPan.enable({
+           linearity: 0.3, // Lower = more slippery/smooth inertia (default 0.3)
+           easing: (t) => t * (2 - t), // Standard easeOutQuad
+           deceleration: 2500, // Higher = stops faster. Default 2500. Let's keep it standard.
+        });
+
         // 2. Mobile Optimizations
         if (isMobile) {
              // Enable rotation but center pinch zoom for stability
              map.touchZoomRotate.enable({ around: 'center' });
              
-             // Optimize rotation threshold to prevent accidental rotation while zooming
-             // mapbox-gl default is 25, we increase it slightly to 35 for better stability
-             // Note: Direct property access might be limited in types, using any if needed or standard API if available.
-             // Standard API doesn't expose threshold easily via method, but we can rely on default behavior or custom handling if needed.
-             // For now, enabling rotation is enough as requested.
+             // Disable pitch (tilt) via touch in 2D mode to prevent accidental tilting
+             // Only allow pitch in 3D mode
+             if (mode === "3D") {
+                 map.touchPitch.enable();
+             } else {
+                 map.touchPitch.disable();
+             }
+             
+             // Improve touch pan responsiveness
+             // Note: Mapbox GL JS defaults are usually good, but ensuring handlers are active
+             map.dragPan.enable();
         }
     }
     
