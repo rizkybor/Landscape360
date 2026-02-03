@@ -536,10 +536,15 @@ const MapBoxContainerComponent = ({
         antialias={!isMobile} // Disable antialiasing on mobile for performance
         style={{ width: "100%", height: "100%" }}
         mapStyle={mapStyle}
-        terrain={{
-          source: "mapbox-dem",
-          exaggeration: elevationExaggeration > 0 ? elevationExaggeration : 1.5
-        }}
+        terrain={
+          mode === "3D"
+            ? {
+                source: "mapbox-dem",
+                exaggeration:
+                  elevationExaggeration > 0 ? elevationExaggeration : 1.5,
+              }
+            : undefined
+        }
         maxPitch={85}
         fog={
           mode === "3D"
