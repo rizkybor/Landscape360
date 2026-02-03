@@ -190,6 +190,10 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
       const centerLng = (region.bounds.west + region.bounds.east) / 2;
       const centerLat = (region.bounds.south + region.bounds.north) / 2;
       
+      // Switch to Satellite mode as that's what we download
+      useMapStore.getState().setMapStyle("mapbox://styles/mapbox/satellite-streets-v12");
+      useMapStore.getState().setActiveView("3D"); // Best experience
+
       triggerFlyTo({
         center: [centerLng, centerLat],
         zoom: Math.max(region.minZoom, 14),

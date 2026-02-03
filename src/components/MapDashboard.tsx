@@ -57,7 +57,7 @@ export const MapDashboard = ({ initialLocation }: { initialLocation?: [number, n
         onClick={() => setIsSplitScreen(!isSplitScreen)}
         className="
           /* Positioning */
-          cursor-pointer absolute bottom-12 md:bottom-8 left-8 z-30 
+          cursor-pointer absolute bottom-24 md:bottom-8 left-4 md:left-8 z-30 
           
           /* Glassmorphism Core */
           bg-white/10 backdrop-blur-md 
