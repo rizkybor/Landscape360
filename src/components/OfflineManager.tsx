@@ -335,9 +335,15 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
 
     // 1. Check Offline Map Count Limit
     const countLimits: Record<string, number> = { 'Free': 1, 'Pro': 3, 'Enterprise': 10 };
-    const countLimit = countLimits[subscriptionStatus] || 1;
+    // Normalisasi status (jika uppercase/lowercase beda)
+    const normalizedStatus = subscriptionStatus === 'PRO' ? 'Pro' : subscriptionStatus;
+    const countLimit = countLimits[normalizedStatus] || 1;
     
-    if (regions.length >= countLimit) {
+    // Perbaikan logika: 
+    // Jika limit 3, dan user punya 3 map, dia TIDAK BOLEH nambah lagi.
+    // Jadi: jika regions.length >= countLimit -> Block
+    // Tapi jika user punya 2 map, dan limit 3, dia boleh nambah. (2 < 3)
+    if (userRegions.length >= countLimit) {
         setUpgradeReason('count');
         setShowUpgradePrompt(true);
         return;
