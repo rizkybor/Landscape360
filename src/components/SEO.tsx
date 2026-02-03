@@ -11,14 +11,14 @@ interface SEOProps {
 }
 
 export const SEO: React.FC<SEOProps> = ({
-  title = 'Landscape 360 - Jelajahi Indonesia dalam 3D',
-  description = 'Jelajahi keindahan alam Indonesia, gunung, dan lokasi wisata dalam tampilan 3D interaktif. Temukan lokasi favoritmu dengan Landscape 360.',
-  keywords = 'peta 3d, indonesia, wisata indonesia, gunung indonesia, landscape 360, peta interaktif, virtual tour',
+  title = 'Landscape 360 - Precision in Every Dimension',
+  description = 'Explore the beauty of Indonesia, mountains, and tourist destinations in 3D. Find your favorite locations with Landscape 360.',
+  keywords = '3d map, Indonesia, tourist destinations, mountains, landscape 360, interactive map, virtual tour',
   image = '/og-image.jpg', // Ensure you have this image in public folder
   url = 'https://landscape360.app', // Replace with actual domain
   type = 'website',
 }) => {
-  const siteTitle = title === 'Landscape 360 - Jelajahi Indonesia dalam 3D' ? title : `${title} | Landscape 360`;
+  const siteTitle = title === 'Landscape 360 - Precision in Every Dimension' ? title : `${title} | Landscape 360`;
 
   return (
     <Helmet>
