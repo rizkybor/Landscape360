@@ -41,17 +41,13 @@ export function getTilesInBounds(bounds: Bounds, minZoom: number, maxZoom: numbe
 }
 
 export function getMapboxTileUrl(x: number, y: number, z: number, token: string): string {
-  // Use mapbox.mapbox-terrain-v2 or mapbox.satellite or whatever style is used
-  // But wait, standard mapbox-gl uses vector tiles usually.
-  // Ideally we should cache the style's sources.
-  // For simplicity, we might just target the satellite-v9 raster tiles or mapbox-terrain-dem-v1
-  
-  // Actually, usually we need:
   // 1. Satellite Raster (mapbox.satellite)
-  // 2. Terrain DEM (mapbox.mapbox-terrain-dem-v1)
-  
-  // We will cache both for robust offline 3D support.
   return `https://api.mapbox.com/v4/mapbox.satellite/${z}/${x}/${y}@2x.webp?access_token=${token}`;
+}
+
+export function getMapboxVectorTileUrl(x: number, y: number, z: number, token: string): string {
+  // 2. Vector Tiles (mapbox.mapbox-streets-v8) - Shared by Streets, Outdoors, Light, Dark styles
+  return `https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/${z}/${x}/${y}.vector.pbf?access_token=${token}`;
 }
 
 export function getTerrainTileUrl(x: number, y: number, z: number, token: string): string {

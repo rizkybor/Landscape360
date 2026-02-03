@@ -18,10 +18,11 @@ self.addEventListener('install', () => {
 clientsClaim();
 
 // 1. TILES: Intercept Mapbox Tile requests -> Check IDB first
-// Matches: /v4/mapbox.satellite/ or /mapbox.mapbox-terrain-dem-v1/
+// Matches: /v4/mapbox.satellite/, /mapbox.mapbox-terrain-dem-v1/, /mapbox.mapbox-streets-v8/
 const isMapboxTile = ({ url }: { url: URL }) => {
   return url.href.includes('/mapbox.satellite/') || 
-         url.href.includes('/mapbox.mapbox-terrain-dem-v1/');
+         url.href.includes('/mapbox.mapbox-terrain-dem-v1/') ||
+         url.href.includes('/mapbox.mapbox-streets-v8/');
 };
 
 registerRoute(

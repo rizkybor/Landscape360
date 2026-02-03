@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useMapStore } from '../store/useMapStore';
 import { useOfflineStore } from '../store/useOfflineStore';
 import type { OfflineRegion } from '../store/useOfflineStore';
-import { getTilesInBounds, getMapboxTileUrl, getTerrainTileUrl } from '../utils/tileUtils';
+import { getTilesInBounds, getMapboxTileUrl, getMapboxVectorTileUrl, getTerrainTileUrl } from '../utils/tileUtils';
 import type { Bounds } from '../utils/tileUtils';
 import { Download, Trash2, Map as MapIcon, Loader2, WifiOff, PenTool, X } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
@@ -82,6 +82,8 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
   const { user, subscriptionStatus: storeSubscriptionStatus } = useSurveyStore();
   
   const [downloadName, setDownloadName] = useState('');
+  const [includeSatellite, setIncludeSatellite] = useState(true);
+  const [includeVector, setIncludeVector] = useState(true);
   const [isCalculating, setIsCalculating] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string>('Free');
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
@@ -280,8 +282,15 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
     const maxZoom = Math.min(minZoom + 2, 16); // Cap at 16 to prevent massive downloads
     
     const tiles = getTilesInBounds(bounds, minZoom, maxZoom);
-    // Estimate 25KB per tile (webp + dem)
-    const size = (tiles.length * 2 * 0.025).toFixed(2); 
+    
+    // Estimate Size
+    // Satellite + DEM = 2 requests (~25KB each avg)
+    // Vector = 1 request (~15-20KB avg)
+    let sizeFactor = 0;
+    if (includeSatellite) sizeFactor += 0.05; // 50KB (Sat + DEM)
+    if (includeVector) sizeFactor += 0.02; // 20KB (Vector)
+    
+    const size = (tiles.length * sizeFactor).toFixed(2); 
     
     return { count: tiles.length, size, minZoom, maxZoom, bounds };
   };
@@ -386,13 +395,23 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
     setDownloadName('');
     
     // 3. Warm up Cache for Style & Source Definitions
-    // We need to ensure the Satellite Style JSON and Source JSONs are in the SW cache
-    // so the map can load the style definition when offline.
-    const warmupUrls = [
-        `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12?access_token=${MAPBOX_TOKEN}`,
-        `https://api.mapbox.com/v4/mapbox.mapbox-terrain-dem-v1.json?access_token=${MAPBOX_TOKEN}`,
-        `https://api.mapbox.com/v4/mapbox.satellite.json?access_token=${MAPBOX_TOKEN}`
-    ];
+    // We need to ensure the Style JSON and Source JSONs are in the SW cache
+    const warmupUrls: string[] = [];
+    
+    // Always fetch Terrain JSON if any 3D (which we usually assume yes)
+    warmupUrls.push(`https://api.mapbox.com/v4/mapbox.mapbox-terrain-dem-v1.json?access_token=${MAPBOX_TOKEN}`);
+
+    if (includeSatellite) {
+        warmupUrls.push(`https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12?access_token=${MAPBOX_TOKEN}`);
+        warmupUrls.push(`https://api.mapbox.com/v4/mapbox.satellite.json?access_token=${MAPBOX_TOKEN}`);
+    }
+
+    if (includeVector) {
+         // Warm up both Outdoors and Streets styles as they share the same source
+         warmupUrls.push(`https://api.mapbox.com/styles/v1/mapbox/outdoors-v12?access_token=${MAPBOX_TOKEN}`);
+         warmupUrls.push(`https://api.mapbox.com/styles/v1/mapbox/streets-v12?access_token=${MAPBOX_TOKEN}`);
+         warmupUrls.push(`https://api.mapbox.com/v4/mapbox.mapbox-streets-v8.json?access_token=${MAPBOX_TOKEN}`);
+    }
     
     // We don't block download on this, but we fire them off
     warmupUrls.forEach(url => fetch(url, { mode: 'cors' }).catch(e => console.warn("Warmup failed", e)));
@@ -408,11 +427,19 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
     // Create list of URLs to fetch
     const urls: string[] = [];
     tiles.forEach(t => {
-      // 1. Satellite Tile (Raster) - Always download for requested zoom
-      urls.push(getMapboxTileUrl(t.x, t.y, t.z, MAPBOX_TOKEN));
+      // 1. Satellite Tile (Raster)
+      if (includeSatellite) {
+          urls.push(getMapboxTileUrl(t.x, t.y, t.z, MAPBOX_TOKEN));
+      }
       
-      // 2. Terrain Tile (DEM) - Only up to zoom 15 (Mapbox limit)
-      // This ensures 3D and Contours work, but saves space/requests for z16+
+      // 2. Vector Tile (Streets/Outdoors)
+      if (includeVector) {
+          urls.push(getMapboxVectorTileUrl(t.x, t.y, t.z, MAPBOX_TOKEN));
+      }
+
+      // 3. Terrain Tile (DEM) - Only up to zoom 15 (Mapbox limit)
+      // We usually want this if Satellite is on (for 3D), OR if Vector is on (for Contours)
+      // So if EITHER is selected, we get terrain (it's critical for this app)
       if (t.z <= 15) {
           urls.push(getTerrainTileUrl(t.x, t.y, t.z, MAPBOX_TOKEN));
       }
@@ -586,6 +613,29 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
                         </div>
                      ) : (
                         <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2">
+                            {/* Layer Selection */}
+                            <div className="bg-white/5 p-3 rounded-lg border border-white/5 space-y-2">
+                                <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Select Data to Download</p>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={includeSatellite}
+                                        onChange={e => setIncludeSatellite(e.target.checked)}
+                                        className="rounded bg-black/40 border-white/20 text-blue-500 focus:ring-blue-500/50"
+                                    />
+                                    <span className="text-xs text-gray-300">Satellite Imagery (Raster)</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={includeVector}
+                                        onChange={e => setIncludeVector(e.target.checked)}
+                                        className="rounded bg-black/40 border-white/20 text-blue-500 focus:ring-blue-500/50"
+                                    />
+                                    <span className="text-xs text-gray-300">Map Data (Streets/Outdoors)</span>
+                                </label>
+                            </div>
+
                             <input 
                                 type="text" 
                                 placeholder="Region Name (e.g. Site A)" 
