@@ -385,6 +385,18 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
     clearRegionPoints();
     setDownloadName('');
     
+    // 3. Warm up Cache for Style & Source Definitions
+    // We need to ensure the Satellite Style JSON and Source JSONs are in the SW cache
+    // so the map can load the style definition when offline.
+    const warmupUrls = [
+        `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12?access_token=${MAPBOX_TOKEN}`,
+        `https://api.mapbox.com/v4/mapbox.mapbox-terrain-dem-v1.json?access_token=${MAPBOX_TOKEN}`,
+        `https://api.mapbox.com/v4/mapbox.satellite.json?access_token=${MAPBOX_TOKEN}`
+    ];
+    
+    // We don't block download on this, but we fire them off
+    warmupUrls.forEach(url => fetch(url, { mode: 'cors' }).catch(e => console.warn("Warmup failed", e)));
+
     // Start background download
     const tiles = getTilesInBounds(bounds, minZoom, maxZoom);
     let completed = 0;

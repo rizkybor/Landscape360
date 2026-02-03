@@ -16,7 +16,7 @@ export const UserLocationMarker = () => {
             heading: pos.coords.heading
         });
       },
-      (err) => {
+      () => {
           // Silent fail or debug log
           // console.warn("Location watch error:", err);
       },
