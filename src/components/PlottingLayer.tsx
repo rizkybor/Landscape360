@@ -231,7 +231,7 @@ export const PlottingLayer = () => {
             >
                 <div 
                   className={`
-                    bg-white/90 backdrop-blur-md shadow-lg rounded-lg border border-white/40 
+                    ${isMobile ? 'bg-white shadow-md' : 'bg-white/90 backdrop-blur-md shadow-lg'} rounded-lg border border-white/40 
                     flex flex-col items-center transform transition-all duration-200 cursor-default select-none
                     ${isHovered ? 'scale-110 px-3 py-2' : (isMobile ? 'scale-100 px-2 py-1' : 'scale-100 px-2 py-0.5 hover:scale-105')}
                   `}
@@ -296,7 +296,7 @@ export const PlottingLayer = () => {
                     <div 
                       className={`
                         absolute bottom-full mb-2
-                        flex flex-col bg-black/85 backdrop-blur-md rounded-lg shadow-2xl border border-yellow-500/30 
+                        flex flex-col ${isMobile ? 'bg-black/90' : 'bg-black/85 backdrop-blur-md'} rounded-lg shadow-2xl border border-yellow-500/30 
                         overflow-hidden transform transition-all duration-200 select-none
                         ${isHovered || isDragging ? 'scale-105 min-w-[140px] opacity-100' : 'scale-100 min-w-0 opacity-100'}
                         ${!isHovered && !isDragging ? 'pointer-events-none' : ''}

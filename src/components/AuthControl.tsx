@@ -160,7 +160,7 @@ export const AuthControl = () => {
 
         {/* Full Screen Modal for Auth - Rendered via Portal */}
         {showMenu && createPortal(
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm md:backdrop-blur-md animate-in fade-in duration-200">
                 <div 
                     className="relative w-full max-w-md bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden"
                     onClick={(e) => e.stopPropagation()}
@@ -330,7 +330,7 @@ export const AuthControl = () => {
 
        {/* Full Screen Modal for User Menu - Rendered via Portal */}
        {showMenu && createPortal(
-           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm md:backdrop-blur-md animate-in fade-in duration-200">
                <div 
                    className="relative w-full max-w-sm bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden"
                    onClick={(e) => e.stopPropagation()}
@@ -531,7 +531,7 @@ export const AuthControl = () => {
       )}
 
       {showUpgradeModal && createPortal(
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm md:backdrop-blur-md animate-in fade-in duration-300">
             <div 
                 className="relative w-full max-w-2xl bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-[0_0_50px_rgba(59,130,246,0.15)] overflow-hidden flex flex-col max-h-[90vh]"
                 onClick={(e) => e.stopPropagation()}
@@ -619,7 +619,7 @@ export const AuthControl = () => {
 
       {/* Delete Confirmation Modal */}
       {deleteConfirmId && createPortal(
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm md:backdrop-blur-md animate-in fade-in duration-300">
             <div 
                 className="relative w-full max-w-xs bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-[0_0_50px_rgba(239,68,68,0.15)] overflow-hidden p-6 animate-in zoom-in-95 duration-300"
                 onClick={(e) => e.stopPropagation()}
