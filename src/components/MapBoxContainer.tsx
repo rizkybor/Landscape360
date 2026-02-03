@@ -15,6 +15,7 @@ import { RegionSelectionLayer } from "./RegionSelectionLayer";
 import { SurveyorPanel } from "./SurveyorPanel";
 import { SearchPanel } from "./SearchPanel";
 import { NavigationControls } from "./NavigationControls";
+import { UserLocationMarker } from "./UserLocationMarker";
 
 const MAPBOX_TOKEN =
   import.meta.env.VITE_MAPBOX_TOKEN || "YOUR_MAPBOX_TOKEN_HERE";
@@ -165,8 +166,11 @@ const MapBoxContainerComponent = ({
       if (isFlying.current) return;
 
       // Dynamic duration: fast updates (dragging) = immediate, big jumps = smooth
+      // Mode switching (large pitch changes) deserves a longer, more cinematic duration
+      const isModeSwitch = Math.abs(pitchDiff) > 40; 
       const isSmallChange = centerDiff < 0.01 && zoomDiff < 0.1 && pitchDiff < 5 && bearingDiff < 5;
-      const duration = isSmallChange ? 0 : 400;
+      
+      const duration = isModeSwitch ? 1500 : (isSmallChange ? 0 : 400);
 
       map.easeTo({
         center: center,
@@ -174,7 +178,13 @@ const MapBoxContainerComponent = ({
         pitch: mode === "3D" ? pitch : 0, // Ensure pitch is 0 for 2D
         bearing: bearing, // Allow bearing rotation in 2D
         duration: duration,
-        easing: (t) => t * (2 - t) // EaseOutQuad for smoother landing
+        easing: (t) => {
+             // Use standard easeInOutCubic for mode switches (smoother start/end)
+             // Use easeOutQuad for normal navigation (snappy)
+             return isModeSwitch 
+                ? t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
+                : t * (2 - t);
+        }
       });
     }
   }, [center, zoom, pitch, bearing, mode]);
@@ -580,6 +590,9 @@ const MapBoxContainerComponent = ({
         <PlottingLayer />
         <RegionSelectionLayer />
         {mode === "3D" && <ThreeScene />}
+        
+        {/* User Location Indicator */}
+        <UserLocationMarker />
 
         {/* Custom Navigation Controls */}
         <NavigationControls 
