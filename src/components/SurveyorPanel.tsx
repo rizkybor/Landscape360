@@ -30,6 +30,7 @@ export const SurveyorPanel = () => {
     removePoint,
     clearPoints,
     updateGroupName,
+    updatePointName,
     setPlotMode,
     saveCurrentSurvey,
     isSyncing,
@@ -39,6 +40,9 @@ export const SurveyorPanel = () => {
   const [isMinimized, setIsMinimized] = useState(false);
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [tempName, setEditName] = useState("");
+
+  const [editingPointId, setEditingPointId] = useState<string | null>(null);
+  const [tempPointName, setTempPointName] = useState("");
 
   // Close Handler (Exits Plot Mode)
   const handleClose = () => {
@@ -100,6 +104,18 @@ export const SurveyorPanel = () => {
       updateGroupName(editingGroupId, tempName.trim());
     }
     setEditingGroupId(null);
+  };
+
+  const startEditingPoint = (p: SurveyPoint, idx: number) => {
+    setEditingPointId(p.id);
+    setTempPointName(p.name || `Point ${idx + 1}`);
+  };
+
+  const savePointName = (groupId: string, pointId: string) => {
+    if (tempPointName.trim()) {
+      updatePointName(groupId, pointId, tempPointName.trim());
+    }
+    setEditingPointId(null);
   };
 
   if (groups.length === 0 && !isPlotMode) return null;
@@ -263,9 +279,37 @@ export const SurveyorPanel = () => {
                     className="relative pl-4 border-l-2 border-yellow-500/50"
                   >
                     <div className="flex justify-between items-start">
-                      <span className="text-[10px] text-yellow-200/70 font-bold uppercase tracking-tighter">
-                        Point {idx + 1}
-                      </span>
+                      {editingPointId === p.id ? (
+                        <div className="flex gap-1 flex-1 mr-2">
+                           <input
+                              autoFocus
+                              value={tempPointName}
+                              onChange={(e) => setTempPointName(e.target.value)}
+                              onBlur={() => savePointName(activeGroup.id, p.id)}
+                              onKeyDown={(e) => e.key === "Enter" && savePointName(activeGroup.id, p.id)}
+                              className="bg-white/10 border border-yellow-500/50 rounded px-2 py-0.5 text-[10px] w-full text-white outline-none"
+                            />
+                            <button
+                              onClick={() => savePointName(activeGroup.id, p.id)}
+                              className="text-green-400 p-1 hover:bg-white/10 rounded cursor-pointer"
+                            >
+                              <Check size={12} />
+                            </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 group/point-name">
+                          <span className={`text-[10px] font-bold uppercase tracking-tighter truncate max-w-[100px] ${p.name ? 'text-indigo-300' : 'text-yellow-200/70'}`}>
+                             {p.name || `Point ${idx + 1}`}
+                          </span>
+                          <button 
+                            onClick={() => startEditingPoint(p, idx)}
+                            className="text-gray-500 hover:text-white transition-colors"
+                          >
+                            <Edit2 size={10} />
+                          </button>
+                        </div>
+                      )}
+
                       <div className="flex gap-1">
                         <button
                           onClick={() => copyCoords(p)}
