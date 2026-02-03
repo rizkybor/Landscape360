@@ -288,39 +288,6 @@ export const ControlPanel = () => {
           </div>
 
           {/* Search Toggle */}
-          <div>
-            <label className="text-xs text-gray-300 mb-2 block font-semibold border-b border-white/10 pb-1">
-              Map Controller
-            </label>
-            <div className="flex gap-2 bg-white/5 p-1.5 rounded-lg border border-white/5">
-              <button
-                onClick={() => setZoom(Math.max(0, zoom - 1))}
-                className="cursor-pointer flex-1 py-2 bg-black/20 hover:bg-black/40 border border-white/10 rounded text-[10px] font-medium text-gray-200 transition-all active:scale-95 flex items-center justify-center gap-2"
-                title="Zoom Out"
-              >
-                <Minus size={14} className="text-blue-400" />
-                Zoom Out
-              </button>
-              
-              <div className="w-px bg-white/10 my-1"></div>
-
-              <button
-                onClick={() => setZoom(Math.min(22, zoom + 1))}
-                className="cursor-pointer flex-1 py-2 bg-black/20 hover:bg-black/40 border border-white/10 rounded text-[10px] font-medium text-gray-200 transition-all active:scale-95 flex items-center justify-center gap-2"
-                title="Zoom In"
-              >
-                <Plus size={14} className="text-blue-400" />
-                Zoom In
-              </button>
-            </div>
-            {/* Zoom Level Indicator */}
-            <div className="flex justify-between px-1 mt-1">
-               <span className="text-[9px] text-gray-500">Min</span>
-               <span className="text-[9px] text-blue-400 font-mono">Zoom: {zoom.toFixed(1)}</span>
-               <span className="text-[9px] text-gray-500">Max</span>
-            </div>
-          </div>
-
           <button
             onClick={() => setShowSearch(!showSearch)}
             className={`cursor-pointer w-full flex items-center justify-center gap-2 py-3 md:py-2 text-xs font-bold rounded transition-colors ${showSearch ? "bg-blue-500 text-white shadow-lg shadow-blue-500/50" : "bg-white/20 hover:bg-white/30 text-blue-200 border border-blue-500/30"}`}
@@ -338,62 +305,8 @@ export const ControlPanel = () => {
             {isPlotMode ? "Exit Navigator Mode" : "Start Navigator Mode"}
           </button>
 
-          {/* On-Screen Virtual Joystick */}
-          <div
-            ref={joystickRef}
-            className="bg-black/40 p-3 rounded-lg cursor-move select-none active:bg-blue-600/20 transition-colors border border-white/5"
-            onMouseDown={() => {
-              setIsJoystickDragging(true);
-              document.body.style.cursor = "grabbing";
-            }}
-          >
-            {/* <p className="text-[10px] text-gray-400 mb-2 text-center uppercase tracking-wider font-bold pointer-events-none">
-              🖱️ Drag Here to Rotate/Tilt
-            </p> */}
-            {/* <div className="h-24 rounded bg-white/5 flex items-center justify-center relative overflow-hidden group">
-               <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 opacity-20 pointer-events-none">
-                  <div className="border-r border-b border-white/20"></div>
-                  <div className="border-r border-b border-white/20"></div>
-                  <div className="border-b border-white/20"></div>
-                  <div className="border-r border-b border-white/20"></div>
-                  <div className="border-r border-b border-white/20"></div>
-                  <div className="border-b border-white/20"></div>
-               </div>
-               <RotateCw size={32} className="opacity-50 group-hover:opacity-80 transition-opacity" />
-               {isJoystickDragging && <div className="absolute inset-0 bg-blue-500/10 flex items-center justify-center text-xs font-bold text-blue-200">Active</div>}
-            </div> */}
-            <p className="font-semibold text-[10px] pb-1 mb-1">Quick Action</p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  setPitch(0);
-                  setBearing(0);
-                }}
-                className={`cursor-pointer flex-1 py-1 text-[10px] rounded flex items-center justify-center gap-1 transition-colors ${
-                  pitch < 1
-                    ? "bg-blue-600 text-white font-bold"
-                    : "bg-white/10 hover:bg-white/20 text-gray-300"
-                }`}
-              >
-                <ArrowUp size={12} /> Top View
-              </button>
-              <button
-                onClick={() => {
-                  setPitch(80);
-                }}
-                className={`cursor-pointer flex-1 py-1 text-[10px] rounded flex items-center justify-center gap-1 transition-colors ${
-                  pitch > 75
-                    ? "bg-blue-600 text-white font-bold"
-                    : "bg-white/10 hover:bg-white/20 text-gray-300"
-                }`}
-              >
-                <Eye size={12} /> Side View
-              </button>
-            </div>
-          </div>
-
-          {/* Mouse Mode Toggle */}
-          <div className="bg-blue-600/20 p-2 rounded text-[10px] text-blue-100 mb-2 space-y-2">
+          {/* Mouse Mode Toggle - Desktop Only */}
+          <div className="bg-blue-600/20 p-2 rounded text-[10px] text-blue-100 mb-2 space-y-2 hidden md:block">
             <p className="font-semibold border-b border-blue-500/30 pb-1 mb-1">
               Mouse Interaction Mode
             </p>
@@ -422,13 +335,20 @@ export const ControlPanel = () => {
               </label>
               <div className="flex bg-black/30 rounded p-1">
                 <button
-                  onClick={() => setActiveView("2D")}
+                  onClick={() => {
+                      setActiveView("2D");
+                      setPitch(0); // Auto Top View
+                      setBearing(0); // Reset Rotation
+                  }}
                   className={`flex-1 py-1 text-xs rounded transition-colors cursor-pointer ${activeView === "2D" ? "bg-blue-600 text-white shadow-sm" : "text-gray-400 hover:text-white"}`}
                 >
                   2D Topo
                 </button>
                 <button
-                  onClick={() => setActiveView("3D")}
+                  onClick={() => {
+                      setActiveView("3D");
+                      setPitch(75); // Auto Side View (Optimized Angle)
+                  }}
                   className={`flex-1 py-1 text-xs rounded transition-colors cursor-pointer ${activeView === "3D" ? "bg-blue-600 text-white shadow-sm" : "text-gray-400 hover:text-white"}`}
                 >
                   3D Terrain
