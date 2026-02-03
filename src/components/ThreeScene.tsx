@@ -87,7 +87,7 @@ export const ThreeScene = () => {
     return () => {
       map.off('style.load', addLayer);
       try {
-        if (map.getStyle() && map.getLayer(customLayerId)) {
+        if (map.isStyleLoaded() && map.getLayer(customLayerId)) {
           map.removeLayer(customLayerId);
         }
       } catch (e) { console.warn(e); }
