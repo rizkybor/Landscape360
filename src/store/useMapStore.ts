@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import type { Bounds } from '../utils/tileUtils';
 
 interface MapState {
@@ -16,6 +17,7 @@ interface MapState {
   regionPoints: [number, number][];
   showContours: boolean;
   showSearch: boolean;
+  mapStyle: string;
   flyToDestination: { center: [number, number]; zoom: number; duration?: number } | null;
   
   setCenter: (center: [number, number]) => void;
@@ -28,6 +30,7 @@ interface MapState {
   setOpacity: (opacity: number) => void;
   setShowContours: (show: boolean) => void;
   setShowSearch: (show: boolean) => void;
+  setMapStyle: (style: string) => void;
   setActiveView: (view: '2D' | '3D') => void;
   setMouseControlMode: (mode: 'camera' | 'map') => void;
   setInteractionMode: (mode: 'default' | 'draw_region') => void;
@@ -38,39 +41,61 @@ interface MapState {
   triggerFlyTo: (destination: { center: [number, number]; zoom: number; duration?: number } | null) => void;
 }
 
-export const useMapStore = create<MapState>((set) => ({
-  center: [-122.4194, 37.7749], // San Francisco default
-  zoom: 14,
-  pitch: 60, // Start with a tilted 3D view
-  bearing: 0,
-  bounds: null,
-  contourInterval: 50,
-  activeView: '3D', // Default to 3D mode
-  elevationExaggeration: 1.5, // Slightly exaggerate terrain for better effect
-  opacity: 0.8,
-  mouseControlMode: 'map', // Default to Map Mode (Left=Pan)
-  interactionMode: 'default',
-  regionPoints: [],
-  showContours: true,
-  showSearch: false,
-  flyToDestination: null,
+export const useMapStore = create<MapState>()(
+  persist(
+    (set) => ({
+      center: [-122.4194, 37.7749], // San Francisco default
+      zoom: 14,
+      pitch: 60, // Start with a tilted 3D view
+      bearing: 0,
+      bounds: null,
+      contourInterval: 50,
+      activeView: '3D', // Default to 3D mode
+      elevationExaggeration: 1.5, // Slightly exaggerate terrain for better effect
+      opacity: 0.8,
+      mouseControlMode: 'map', // Default to Map Mode (Left=Pan)
+      interactionMode: 'default',
+      regionPoints: [],
+      showContours: true,
+      showSearch: false,
+      mapStyle: 'mapbox://styles/mapbox/satellite-streets-v12',
+      flyToDestination: null,
 
-  setCenter: (center) => set({ center }),
-  setZoom: (zoom) => set({ zoom }),
-  setPitch: (pitch) => set({ pitch }),
-  setBearing: (bearing) => set({ bearing }),
-  setBounds: (bounds) => set({ bounds }),
-  setContourInterval: (contourInterval) => set({ contourInterval }),
-  setElevationExaggeration: (elevationExaggeration) => set({ elevationExaggeration }),
-  setOpacity: (opacity) => set({ opacity }),
-  setShowContours: (showContours) => set({ showContours }),
-  setShowSearch: (showSearch) => set({ showSearch }),
-  setActiveView: (activeView) => set({ activeView }),
-  setMouseControlMode: (mouseControlMode) => set({ mouseControlMode }),
-  setInteractionMode: (interactionMode) => set({ interactionMode }),
-  setRegionPoints: (regionPoints) => set({ regionPoints }),
-  addRegionPoint: (point) => set((state) => ({ regionPoints: [...state.regionPoints, point] })),
-  clearRegionPoints: () => set({ regionPoints: [] }),
-  setMapState: (newState) => set((state) => ({ ...state, ...newState })),
-  triggerFlyTo: (flyToDestination) => set({ flyToDestination }),
-}));
+      setCenter: (center) => set({ center }),
+      setZoom: (zoom) => set({ zoom }),
+      setPitch: (pitch) => set({ pitch }),
+      setBearing: (bearing) => set({ bearing }),
+      setBounds: (bounds) => set({ bounds }),
+      setContourInterval: (contourInterval) => set({ contourInterval }),
+      setElevationExaggeration: (elevationExaggeration) => set({ elevationExaggeration }),
+      setOpacity: (opacity) => set({ opacity }),
+      setShowContours: (showContours) => set({ showContours }),
+      setShowSearch: (showSearch) => set({ showSearch }),
+      setMapStyle: (mapStyle) => set({ mapStyle }),
+      setActiveView: (activeView) => set({ activeView }),
+      setMouseControlMode: (mouseControlMode) => set({ mouseControlMode }),
+      setInteractionMode: (interactionMode) => set({ interactionMode }),
+      setRegionPoints: (regionPoints) => set({ regionPoints }),
+      addRegionPoint: (point) => set((state) => ({ regionPoints: [...state.regionPoints, point] })),
+      clearRegionPoints: () => set({ regionPoints: [] }),
+      setMapState: (newState) => set((state) => ({ ...state, ...newState })),
+      triggerFlyTo: (flyToDestination) => set({ flyToDestination }),
+    }),
+    {
+      name: 'map-storage', // unique name
+      partialize: (state) => ({
+        center: state.center,
+        zoom: state.zoom,
+        pitch: state.pitch,
+        bearing: state.bearing,
+        mapStyle: state.mapStyle,
+        activeView: state.activeView,
+        showContours: state.showContours,
+        contourInterval: state.contourInterval,
+        elevationExaggeration: state.elevationExaggeration,
+        opacity: state.opacity,
+        // Don't persist transient state like flyToDestination or temporary measurement points (unless desired)
+      }),
+    }
+  )
+);

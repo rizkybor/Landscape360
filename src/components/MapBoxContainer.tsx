@@ -49,6 +49,7 @@ const MapBoxContainerComponent = ({
     interactionMode,
     addRegionPoint,
     showContours,
+    mapStyle,
     setCenter,
     setZoom,
     setPitch,
@@ -497,7 +498,7 @@ const MapBoxContainerComponent = ({
         boxZoom={false}
         antialias={!isMobile} // Disable antialiasing on mobile for performance
         style={{ width: "100%", height: "100%" }}
-        mapStyle="mapbox://styles/mapbox/satellite-streets-v12"
+        mapStyle={mapStyle}
         terrain={
           mode === "3D"
             ? { source: "mapbox-dem", exaggeration: elevationExaggeration }

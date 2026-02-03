@@ -55,7 +55,7 @@ interface SurveyState {
 
   // Point actions (affects active group)
   addPoint: (point: Omit<SurveyPoint, 'id'>) => void;
-  updatePointPosition: (groupId: string, pointId: string, lat: number, lng: number) => void;
+  updatePointPosition: (groupId: string, pointId: string, lat: number, lng: number, elevation?: number) => void;
   removePoint: (groupId: string, pointId: string) => void;
   clearPoints: (groupId: string) => void;
 }
@@ -392,14 +392,19 @@ export const useSurveyStore = create<SurveyState>()(
     get().saveCurrentSurvey();
   },
 
-  updatePointPosition: (groupId, pointId, lat, lng) => {
+  updatePointPosition: (groupId, pointId, lat, lng, elevation) => {
     set((state) => ({
       groups: state.groups.map(g => 
         g.id === groupId 
           ? { 
               ...g, 
               points: g.points.map(p => 
-                p.id === pointId ? { ...p, lat, lng } : p
+                p.id === pointId ? { 
+                  ...p, 
+                  lat, 
+                  lng,
+                  elevation: elevation !== undefined ? elevation : p.elevation 
+                } : p
               ) 
             } 
           : g

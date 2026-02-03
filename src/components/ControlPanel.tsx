@@ -19,6 +19,9 @@ import {
   X,
 } from "lucide-react";
 import geoportalLogo from "../assets/geoportal360.png";
+import streetsView from "../assets/Street-View.png";
+import outdoorsView from "../assets/Outdoors-View.png";
+import satelliteView from "../assets/Satellite-View.png";
 
 export const ControlPanel = () => {
   const navigate = useNavigate();
@@ -41,6 +44,8 @@ export const ControlPanel = () => {
     setShowContours,
     showSearch,
     setShowSearch,
+    mapStyle,
+    setMapStyle,
   } = useMapStore();
 
   const { isPlotMode, togglePlotMode } = useSurveyStore();
@@ -49,6 +54,30 @@ export const ControlPanel = () => {
   const joystickRef = useRef<HTMLDivElement>(null);
   const [isJoystickDragging, setIsJoystickDragging] = useState(false);
   const [isOpen, setIsOpen] = useState(true); // Default open but will be manageable on mobile
+
+  const mapStyles = [
+    {
+      name: "Streets",
+      style: "mapbox://styles/mapbox/streets-v12",
+      image: streetsView,
+      gradient: "from-blue-100/50 to-gray-100/50", // Light/Blueish
+      textColor: "text-gray-800"
+    },
+    {
+      name: "Outdoors",
+      style: "mapbox://styles/mapbox/outdoors-v12",
+      image: outdoorsView,
+      gradient: "from-green-100/50 to-emerald-200/50", // Greenish
+      textColor: "text-green-900"
+    },
+    {
+      name: "Satellite",
+      style: "mapbox://styles/mapbox/satellite-streets-v12",
+      image: satelliteView,
+      gradient: "from-gray-800/50 to-black/50", // Dark
+      textColor: "text-white"
+    }
+  ];
 
   // Virtual Joystick Logic
   useEffect(() => {
@@ -222,6 +251,38 @@ export const ControlPanel = () => {
         </div>
 
         <div className="p-4 space-y-4 overflow-y-auto custom-scrollbar">
+          {/* Map Style Selector */}
+          <div>
+            <label className="text-xs text-gray-300 mb-2 block font-semibold border-b border-white/10 pb-1">
+              Map Style
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {mapStyles.map((style) => (
+                <button
+                  key={style.name}
+                  onClick={() => setMapStyle(style.style)}
+                  className={`
+                    cursor-pointer relative rounded-lg overflow-hidden h-16 flex flex-col justify-end p-1 transition-all duration-200 group
+                    ${mapStyle === style.style ? "ring-2 ring-blue-500 scale-105 shadow-lg" : "opacity-80 hover:opacity-100 hover:scale-105"}
+                  `}
+                >
+                  <div className={`absolute inset-0 bg-gradient-to-br ${style.gradient} z-10`}></div>
+                  
+                  {/* Image Background */}
+                  <img 
+                    src={style.image} 
+                    alt={style.name}
+                    className="absolute inset-0 w-full h-full object-cover z-0 transition-transform duration-500 group-hover:scale-110"
+                  />
+                  
+                  <span className={`relative z-20 text-[9px] font-bold ${style.textColor} text-center w-full leading-tight drop-shadow-md`}>
+                    {style.name}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Search Toggle */}
           <button
             onClick={() => setShowSearch(!showSearch)}
