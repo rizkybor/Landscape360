@@ -49,7 +49,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         await new Promise(resolve => setTimeout(resolve, 100));
 
         // Gather Survey Data
-        let surveyTableHTML = '';
+        // let surveyTableHTML = '';
         const allPoints = groups.flatMap(g => g.points);
         const hasData = allPoints.length > 0;
 
@@ -59,8 +59,8 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         const scale = Math.max(1, baseWidth / 1920); 
         
         // Estimate table height if data exists
-        const tableHeight = hasData ? (allPoints.length * 30 * scale) + (100 * scale) : 0;
-        const totalHeight = canvas.height + (format === 'pdf' ? tableHeight : 0); // Only extend height for PDF usually, but let's do it for all for completeness
+        // const tableHeight = hasData ? (allPoints.length * 30 * scale) + (100 * scale) : 0;
+        // const totalHeight = canvas.height + (format === 'pdf' ? tableHeight : 0);
 
         // Create a temporary container for the watermark composition
         const container = document.createElement('div');
