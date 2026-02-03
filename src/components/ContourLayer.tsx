@@ -42,12 +42,22 @@ export const ContourLayer = () => {
         map.once('load', updateContours);
     }
     
-    // Also update when idle (terrain might load late)
+    // Listen for source data loading (specifically DEM)
+    const handleSourceData = (e: any) => {
+        if (e.sourceId === 'mapbox-dem' && e.isSourceLoaded) {
+            updateContours();
+        }
+    };
+
     map.on('idle', updateContours);
+    map.on('styledata', updateContours); // Re-generate when style changes
+    map.on('sourcedata', handleSourceData);
 
     return () => {
       map.off('moveend', updateContours);
       map.off('idle', updateContours);
+      map.off('styledata', updateContours);
+      map.off('sourcedata', handleSourceData);
     };
   }, [mapRef, contourInterval]);
 
