@@ -5,7 +5,7 @@ import { ScreenshotControl } from "./ScreenshotControl";
 import { SEO } from "./SEO";
 import type { MapRef } from "react-map-gl/mapbox";
 
-export const MapDashboard = () => {
+export const MapDashboard = ({ initialLocation }: { initialLocation?: [number, number] | null }) => {
   const [isSplitScreen, setIsSplitScreen] = useState(false);
 
   const mainMapRef = useRef<MapRef | null>(null);
@@ -25,6 +25,7 @@ export const MapDashboard = () => {
               overrideViewMode="2D"
               showControls={false}
               mapRef={leftMapRef}
+              initialLocation={initialLocation}
             />
           </div>
           <div className="w-1/2 h-full relative">
@@ -35,11 +36,15 @@ export const MapDashboard = () => {
               overrideViewMode="3D"
               showControls={true}
               mapRef={rightMapRef}
+              initialLocation={initialLocation}
             />
           </div>
         </div>
       ) : (
-        <MapBoxContainer mapRef={mainMapRef} />
+        <MapBoxContainer 
+          mapRef={mainMapRef} 
+          initialLocation={initialLocation}
+        />
       )}
 
       {/* ScreenshotControl */}

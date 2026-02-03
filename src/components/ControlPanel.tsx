@@ -190,7 +190,7 @@ export const ControlPanel = () => {
                 onClick={() => setShowGetStarted(true)}
                 className="cursor-pointer flex-1 py-1.5 bg-gradient-to-r from-yellow-500/10 to-yellow-600/10 border border-yellow-500/30 rounded text-[10px] font-medium text-yellow-200 hover:bg-yellow-500/20 transition-colors flex items-center justify-center gap-1"
               >
-                Get Started
+                Quick Guide
               </button>
               <button
                 onClick={() => navigate("/docs")}
@@ -427,9 +427,9 @@ export const ControlPanel = () => {
           </div>
 
           <div className="pt-6 mt-8 border-t border-white/10 text-[10px] text-center text-gray-500 font-mono">
-            <p className="uppercase tracking-[0.2em] mb-1 text-[9px] text-gray-600">
+            <div className="uppercase tracking-[0.2em] mb-1 text-[9px] text-gray-600">
               In Collaboration With
-            </p>
+            </div>
 
             <div className="flex flex-col gap-1">
               {/* Kolaborasi 1: JC Digital */}
@@ -454,7 +454,7 @@ export const ControlPanel = () => {
                 </a>
               </div>
 
-              <p className="opacity-50">@2026</p>
+              <div className="opacity-50">@2026</div>
             </div>
           </div>
         </div>
@@ -621,9 +621,9 @@ const GetStartedModal = ({
                   <h4 className="text-sm font-semibold text-gray-200">
                     {item.title}
                   </h4>
-                  <p className="text-xs text-gray-400 leading-relaxed">
+                  <div className="text-xs text-gray-400 leading-relaxed">
                     {item.desc}
-                  </p>
+                  </div>
                 </div>
               </div>
             ))}

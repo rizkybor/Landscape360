@@ -265,7 +265,7 @@ export const AuthControl = () => {
                         {/* Footer Links */}
                         <div className="mt-8 pt-6 border-t border-white/5 flex flex-col items-center gap-4 text-sm">
                             {!isForgotPassword && (
-                                <p className="text-gray-400">
+                                <div className="text-gray-400">
                                     {isLoginView ? "Don't have an account?" : "Already have an account? "}{" "}
                                     <button
                                         onClick={() => { setIsLoginView(!isLoginView); setMessage(null); }}
@@ -273,7 +273,7 @@ export const AuthControl = () => {
                                     >
                                         {isLoginView ? "Request Account" : "Sign In"}
                                     </button>
-                                </p>
+                                </div>
                             )}
                             
                             <button
@@ -478,7 +478,7 @@ export const AuthControl = () => {
                                            <span className="text-[10px] text-gray-500">Loading surveys...</span>
                                        </div>
                                    ) : savedSurveys.length === 0 ? (
-                                       <p className="text-[10px] text-gray-600 italic">No saved surveys found</p>
+                                       <div className="text-[10px] text-gray-600 italic">No saved surveys found</div>
                                    ) : (
                                        savedSurveys.map(survey => (
                                            <div
@@ -544,7 +544,7 @@ export const AuthControl = () => {
                         </div>
                         <div>
                             <h2 className="text-xl font-bold text-white tracking-tight">Upgrade Plan</h2>
-                            <p className="text-xs text-gray-400">Unlock more features and limits</p>
+                            <div className="text-xs text-gray-400">Unlock more features and limits</div>
                         </div>
                     </div>
                     <button 
