@@ -43,4 +43,17 @@ export default defineConfig({
       }
     })
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'mapbox-gl': ['mapbox-gl', 'react-map-gl'],
+          'three': ['three'],
+          'turf': ['@turf/turf'],
+          'react-vendor': ['react', 'react-dom', 'react-router-dom', 'zustand'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000,
+  },
 })

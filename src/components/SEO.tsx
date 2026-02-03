@@ -11,14 +11,38 @@ interface SEOProps {
 }
 
 export const SEO: React.FC<SEOProps> = ({
-  title = 'Landscape 360 - Precision in Every Dimension',
-  description = 'Explore the beauty of Indonesia, mountains, and tourist destinations in 3D. Find your favorite locations with Landscape 360.',
-  keywords = '3d map, Indonesia, tourist destinations, mountains, landscape 360, interactive map, virtual tour',
-  image = '/og-image.jpg', // Ensure you have this image in public folder
-  url = 'https://landscape360.app', // Replace with actual domain
+  title = 'Landscape 360 | Precision 3D Terrain & Navigation Platform',
+  description = 'Professional web-based geospatial platform for high-fidelity 3D terrain visualization, real-time contour generation, and precise digital plotting.',
+  keywords = 'geoportal, 3d terrain, plotting, contour lines, digital elevation model, gis, topographic map, mapping tool, webgl, makopala, indonesia',
+  image = 'https://landscape360.jcdigital.co.id/og-image.jpg',
+  url = 'https://landscape360.jcdigital.co.id/',
   type = 'website',
 }) => {
-  const siteTitle = title === 'Landscape 360 - Precision in Every Dimension' ? title : `${title} | Landscape 360`;
+  const siteTitle = title === 'Landscape 360 | Precision 3D Terrain & Navigation Platform' ? title : `${title} | Landscape 360`;
+
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Landscape 360",
+    "operatingSystem": "Web",
+    "applicationCategory": "GeospatialApplication",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "description": description,
+    "image": image,
+    "url": url,
+    "author": {
+      "@type": "Organization",
+      "name": "Makopala Universitas Budi Luhur"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Jendela Cakra Digital"
+    }
+  };
 
   return (
     <Helmet>
@@ -27,13 +51,17 @@ export const SEO: React.FC<SEOProps> = ({
       <meta name="description" content={description} />
       <meta name="keywords" content={keywords} />
       <link rel="canonical" href={url} />
+      <meta name="author" content="Makopala Universitas Budi Luhur" />
+      <meta name="theme-color" content="#0f172a" />
 
       {/* Open Graph / Facebook */}
       <meta property="og:type" content={type} />
       <meta property="og:url" content={url} />
+      <meta property="og:site_name" content="Landscape 360" />
       <meta property="og:title" content={siteTitle} />
       <meta property="og:description" content={description} />
       <meta property="og:image" content={image} />
+      <meta property="og:locale" content="en_US" />
 
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
@@ -41,6 +69,12 @@ export const SEO: React.FC<SEOProps> = ({
       <meta name="twitter:title" content={siteTitle} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={image} />
+      <meta name="twitter:creator" content="@jcdigital" />
+
+      {/* JSON-LD Structured Data */}
+      <script type="application/ld+json">
+        {JSON.stringify(structuredData)}
+      </script>
     </Helmet>
   );
 };

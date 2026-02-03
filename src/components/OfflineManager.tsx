@@ -86,7 +86,7 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
   const [subscriptionStatus, setSubscriptionStatus] = useState<string>('Free');
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const [upgradeReason, setUpgradeReason] = useState<'size' | 'count'>('size');
-  const [selectedUpgradePlan, setSelectedUpgradePlan] = useState<'Pro' | 'Ultimate'>('Pro');
+  const [selectedUpgradePlan, setSelectedUpgradePlan] = useState<'Pro' | 'Enterprise'>('Pro');
 
   // Sync with Supabase on mount/user change
   useEffect(() => {
@@ -321,8 +321,8 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
     if (!bounds || !downloadName || !minZoom || !maxZoom) return;
 
     // 1. Check Offline Map Count Limit
-    const countLimits: Record<string, number> = { 'Free': 3, 'Pro': 6, 'Ultimate': 10 };
-    const countLimit = countLimits[subscriptionStatus] || 3;
+    const countLimits: Record<string, number> = { 'Free': 1, 'Pro': 3, 'Enterprise': 10 };
+    const countLimit = countLimits[subscriptionStatus] || 1;
     
     if (regions.length >= countLimit) {
         setUpgradeReason('count');
@@ -331,7 +331,7 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
     }
 
     // 2. Check Size Limit
-    const sizeLimit = subscriptionStatus === 'Ultimate' ? 25 : (subscriptionStatus === 'Pro' ? 10 : 2);
+    const sizeLimit = subscriptionStatus === 'Enterprise' ? 25 : (subscriptionStatus === 'Pro' ? 10 : 1);
     if (Number(size) > sizeLimit) {
         setUpgradeReason('size');
         setShowUpgradePrompt(true);
@@ -432,13 +432,6 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
         // Check if too many failures occurred
         if (failed > urls.length * 0.1) { // If > 10% failed
              console.warn(`Download finished with ${failed} failures out of ${urls.length} tiles.`);
-             updateRegionProgress(regionId, 100, 'error'); // Mark as error or partial? 
-             // Let's mark as completed but maybe show warning? For now just completed.
-             // Actually, if critical tiles are missing, it's bad.
-             // But 'error' status might block usage. Let's stick to 'completed' but log it.
-             // Wait, user complained it "doesn't work well". 
-             // If we mark as 'completed' they can try to use it.
-             // Let's keep 'completed' for now, as 'error' usually means "failed completely".
              updateRegionProgress(regionId, 100, 'completed');
         } else {
              updateRegionProgress(regionId, 100, 'completed');
@@ -472,11 +465,11 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
                     <p className="text-sm text-gray-400 mb-6">
                         {upgradeReason === 'size' ? (
                             <>
-                                Your current <strong>{subscriptionStatus} Plan</strong> is limited to <strong>{subscriptionStatus === 'Ultimate' ? '25' : (subscriptionStatus === 'Pro' ? '10' : '2')}MB</strong> per download.
+                                Your current <strong>{subscriptionStatus} Plan</strong> is limited to <strong>{subscriptionStatus === 'Enterprise' ? '25' : (subscriptionStatus === 'Pro' ? '10' : '1')}MB</strong> per download.
                             </>
                         ) : (
                             <>
-                                Your current <strong>{subscriptionStatus} Plan</strong> is limited to <strong>{subscriptionStatus === 'Ultimate' ? '10' : (subscriptionStatus === 'Pro' ? '6' : '3')}</strong> offline maps.
+                                Your current <strong>{subscriptionStatus} Plan</strong> is limited to <strong>{subscriptionStatus === 'Enterprise' ? '10' : (subscriptionStatus === 'Pro' ? '3' : '1')}</strong> offline maps.
                             </>
                         )}
                     </p>
@@ -495,14 +488,14 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
                              </div>
                          </button>
 
-                         {/* Ultimate Plan Card */}
+                         {/* Enterprise Plan Card */}
                          <button
-                            onClick={() => setSelectedUpgradePlan('Ultimate')}
-                            className={`cursor-pointer relative p-3 rounded-xl border transition-all ${selectedUpgradePlan === 'Ultimate' ? 'bg-purple-600/20 border-purple-500 ring-1 ring-purple-500' : 'bg-white/5 border-white/10 hover:border-white/20'}`}
+                            onClick={() => setSelectedUpgradePlan('Enterprise')}
+                            className={`cursor-pointer relative p-3 rounded-xl border transition-all ${selectedUpgradePlan === 'Enterprise' ? 'bg-purple-600/20 border-purple-500 ring-1 ring-purple-500' : 'bg-white/5 border-white/10 hover:border-white/20'}`}
                          >
-                             {selectedUpgradePlan === 'Ultimate' && <div className="absolute top-2 right-2 w-2 h-2 bg-purple-500 rounded-full shadow-[0_0_10px_rgba(168,85,247,0.5)]"></div>}
+                             {selectedUpgradePlan === 'Enterprise' && <div className="absolute top-2 right-2 w-2 h-2 bg-purple-500 rounded-full shadow-[0_0_10px_rgba(168,85,247,0.5)]"></div>}
                              <div className="text-left">
-                                 <div className="text-xs font-bold text-purple-400 mb-1">ULTIMATE</div>
+                                 <div className="text-xs font-bold text-purple-400 mb-1">ENTERPRISE</div>
                                  <div className="text-lg font-bold text-white mb-1">$7<span className="text-[10px] text-gray-400 font-normal">/mo</span></div>
                                  <div className="text-[10px] text-gray-400">Up to 25 MB / download</div>
                              </div>
@@ -517,7 +510,7 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
                 <div className="flex flex-col gap-2 w-full mt-2">
                     <a
                         href={`mailto:contact@jcdigital.co.id?subject=Request Upgrade to ${selectedUpgradePlan} Plan&body=Hi Admin,%0D%0A%0D%0AI would like to request an upgrade for my account to the ${selectedUpgradePlan} Plan (${selectedUpgradePlan === 'Pro' ? '$3.5/mo' : '$7/mo'}).%0D%0A%0D%0AMy Account Email: ${user?.email}%0D%0A%0D%0AThank you.`}
-                        className={`cursor-pointer w-full py-3 text-white rounded-xl text-sm font-bold shadow-lg transition-all flex items-center justify-center gap-2 ${selectedUpgradePlan === 'Ultimate' ? 'bg-purple-600 hover:bg-purple-500 shadow-purple-600/20' : 'bg-blue-600 hover:bg-blue-500 shadow-blue-600/20'}`}
+                        className={`cursor-pointer w-full py-3 text-white rounded-xl text-sm font-bold shadow-lg transition-all flex items-center justify-center gap-2 ${selectedUpgradePlan === 'Enterprise' ? 'bg-purple-600 hover:bg-purple-500 shadow-purple-600/20' : 'bg-blue-600 hover:bg-blue-500 shadow-blue-600/20'}`}
                     >
                         Request {selectedUpgradePlan} Upgrade
                     </a>
@@ -539,7 +532,7 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
   // If in drawing mode, render a minimal UI overlay instead of the full modal
   if (interactionMode === 'draw_region') {
     const stats = calculateSize();
-    const limit = subscriptionStatus === 'Ultimate' ? 25 : (subscriptionStatus === 'Pro' ? 10 : 2);
+    const limit = subscriptionStatus === 'Enterprise' ? 25 : (subscriptionStatus === 'Pro' ? 10 : 1);
     const isOverLimit = Number(stats.size) > limit;
 
     return (

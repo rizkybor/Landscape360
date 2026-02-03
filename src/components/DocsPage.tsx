@@ -5,9 +5,7 @@ import {
   MousePointer,
   Activity,
   Camera,
-  Columns,
   Instagram,
-  DollarSign,
   Map,
   Zap,
   Smartphone,
@@ -384,10 +382,10 @@ export const DocsPage = ({ onBack }: Props) => {
                   
                   <ul className="space-y-3 mb-8 flex-1">
                       <li className="flex items-center gap-2 text-xs text-gray-300">
-                          <span className="w-1.5 h-1.5 rounded-full bg-gray-500"></span> 2 MB Max Download
+                          <span className="w-1.5 h-1.5 rounded-full bg-gray-500"></span> 1 MB Max Download
                       </li>
                       <li className="flex items-center gap-2 text-xs text-gray-300">
-                          <span className="w-1.5 h-1.5 rounded-full bg-gray-500"></span> 3 Offline Maps
+                          <span className="w-1.5 h-1.5 rounded-full bg-gray-500"></span> 1 Offline Maps
                       </li>
                       <li className="flex items-center gap-2 text-xs text-gray-300">
                           <span className="w-1.5 h-1.5 rounded-full bg-gray-500"></span> 2 Saved Surveys
@@ -409,10 +407,10 @@ export const DocsPage = ({ onBack }: Props) => {
                           <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> 10 MB Max Download
                       </li>
                       <li className="flex items-center gap-2 text-xs text-gray-200">
-                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> 6 Offline Maps
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> 3 Offline Maps
                       </li>
                       <li className="flex items-center gap-2 text-xs text-gray-200">
-                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> 5 Saved Surveys
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> 4 Saved Surveys
                       </li>
                        <li className="flex items-center gap-2 text-xs text-gray-200">
                           <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> High-Res Export
@@ -424,7 +422,7 @@ export const DocsPage = ({ onBack }: Props) => {
                   </a>
                 </div>
 
-                {/* Ultimate Plan */}
+                {/* Enterprise Plan */}
                 <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-6 flex flex-col hover:border-cyan-500/30 transition-all duration-300">
                   <div className="mb-4">
                      <span className="text-xs font-bold px-2 py-1 bg-cyan-900/30 text-cyan-400 rounded uppercase tracking-wider border border-cyan-500/20">Enterprise</span>
@@ -440,14 +438,14 @@ export const DocsPage = ({ onBack }: Props) => {
                           <span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span> 10 Offline Maps
                       </li>
                       <li className="flex items-center gap-2 text-xs text-gray-300">
-                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span> Unlimited Layers
+                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span> 10 Saved Surveys
                       </li>
                       <li className="flex items-center gap-2 text-xs text-gray-300">
                           <span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span> 24/7 Priority Support
                       </li>
                   </ul>
 
-                   <a href="mailto:contact@jcdigital.co.id?subject=Request Upgrade to Ultimate Plan" className="block w-full py-2 text-center rounded-lg bg-white/5 hover:bg-white/10 text-xs font-bold text-white border border-white/10 transition-colors">
+                   <a href="mailto:contact@jcdigital.co.id?subject=Request Upgrade to Enterprise Plan" className="block w-full py-2 text-center rounded-lg bg-white/5 hover:bg-white/10 text-xs font-bold text-white border border-white/10 transition-colors">
                       Contact Sales
                   </a>
                 </div>
