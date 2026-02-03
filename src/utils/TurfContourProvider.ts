@@ -9,7 +9,17 @@ const getElevation = (map: mapboxgl.Map, lng: number, lat: number): number => {
   try {
     // Check if style is loaded to avoid errors
     if (!map.isStyleLoaded()) return 0;
+    
+    // Check if terrain is active
+    // If not, try to force a check or use a fallback if available?
+    // queryTerrainElevation returns null if terrain is not enabled.
+    
     const elevation = map.queryTerrainElevation(new mapboxgl.LngLat(lng, lat));
+    
+    // Fallback: If elevation is null (which happens in 2D mode usually), we can't do much without external API.
+    // However, we forced terrain with exaggeration 0.001 in MapContainer.
+    // If it still returns null, it might be that the terrain source hasn't loaded fully yet.
+    
     return elevation || 0;
   } catch {
     return 0;

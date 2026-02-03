@@ -171,8 +171,8 @@ const MapBoxContainerComponent = ({
       map.easeTo({
         center: center,
         zoom: zoom,
-        pitch: mode === "3D" ? pitch : 0,
-        bearing: bearing,
+        pitch: mode === "3D" ? pitch : 0, // Ensure pitch is 0 for 2D
+        bearing: bearing, // Allow bearing rotation in 2D
         duration: duration,
         easing: (t) => t * (2 - t) // EaseOutQuad for smoother landing
       });
@@ -527,7 +527,7 @@ const MapBoxContainerComponent = ({
         mapStyle={mapStyle}
         terrain={{
           source: "mapbox-dem",
-          exaggeration: mode === "3D" ? elevationExaggeration : 0
+          exaggeration: elevationExaggeration > 0 ? elevationExaggeration : 1.5
         }}
         maxPitch={85}
         fog={
