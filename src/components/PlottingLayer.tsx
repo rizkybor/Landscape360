@@ -67,7 +67,15 @@ export const PlottingLayer = () => {
       // Find which group this point belongs to
       const group = groups.find(g => g.points.some(p => p.id === id));
       if (group) {
-          updatePointPosition(group.id, id, event.lngLat.lat, event.lngLat.lng);
+          // Query new elevation during drag
+          let elevation = undefined;
+          if (mapRef) {
+             const map = mapRef.getMap();
+             if (map.isStyleLoaded()) {
+                elevation = map.queryTerrainElevation(event.lngLat) || 0;
+             }
+          }
+          updatePointPosition(group.id, id, event.lngLat.lat, event.lngLat.lng, elevation);
       }
   };
 
@@ -145,7 +153,7 @@ export const PlottingLayer = () => {
                       lng: midLng,
                       lat: midLat,
                       text: formatDistance(data.horizontalDistance),
-                      subText: formatDegrees(data.forwardAzimuth),
+                      subText: `${formatDegrees(data.forwardAzimuth)} • ${data.slope.toFixed(1)}%`,
                       totalDist: `Total: ${formatDistance(accumulatedDistance)}`,
                       color: g.color
                   });
@@ -191,7 +199,7 @@ export const PlottingLayer = () => {
           lng: midLng,
           lat: midLat,
           text: formatDistance(data.horizontalDistance),
-          subText: formatDegrees(data.forwardAzimuth),
+          subText: `${formatDegrees(data.forwardAzimuth)} • ${data.slope.toFixed(1)}%`,
           totalDist: `Total: ${formatDistance(previewTotal)}`,
           color: activeGroup.color
       });
