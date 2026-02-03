@@ -23,6 +23,7 @@ export const ThreeScene = () => {
     if (!mapRef) return;
     const map = mapRef.getMap();
     const customLayerId = 'three-layer';
+    const isMobile = window.innerWidth < 768;
 
     const customLayer: ThreeCustomLayer = {
       id: customLayerId,
@@ -42,7 +43,9 @@ export const ThreeScene = () => {
         this.renderer = new THREE.WebGLRenderer({
           canvas: map.getCanvas(),
           context: gl,
-          antialias: true,
+          antialias: !isMobile, // Disable AA on mobile
+          powerPreference: 'high-performance',
+          precision: isMobile ? 'mediump' : 'highp', // Lower precision on mobile
         });
         this.renderer.autoClear = false;
 
@@ -115,11 +118,17 @@ export const ThreeScene = () => {
           return;
       }
 
-      const geometry = new THREE.CylinderGeometry(2, 2, 200, 16); // Taller beam
+      const isMobile = window.innerWidth < 768;
+      const segments = isMobile ? 8 : 16; // Reduce polygon count on mobile
+      const geometry = new THREE.CylinderGeometry(2, 2, 200, segments); // Taller beam
       geometry.translate(0, 100, 0); // Pivot at bottom
 
       allPoints.forEach(p => {
-          const material = new THREE.MeshPhongMaterial({ color: p.color, transparent: true, opacity: 0.6 });
+          // Use basic material on mobile to save fragment shader cost, Phong on desktop for lighting
+          const material = isMobile 
+            ? new THREE.MeshBasicMaterial({ color: p.color, transparent: true, opacity: 0.6 })
+            : new THREE.MeshPhongMaterial({ color: p.color, transparent: true, opacity: 0.6 });
+            
           const modelOrigin = mapboxgl.MercatorCoordinate.fromLngLat(
               { lng: p.lng, lat: p.lat },
               p.elevation

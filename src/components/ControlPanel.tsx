@@ -107,7 +107,7 @@ export const ControlPanel = () => {
     rounded-full
 
     bg-white/10
-    backdrop-blur-xl backdrop-saturate-150
+    backdrop-blur-md md:backdrop-blur-xl backdrop-saturate-150
 
     border border-white/20
     shadow-lg shadow-black/30
@@ -139,14 +139,14 @@ export const ControlPanel = () => {
         bottom-0 left-0 right-0 max-h-[70vh] rounded-t-2xl
         /* Desktop: Floating style */
         md:top-4 md:left-4 md:bottom-auto md:right-auto md:w-64 md:rounded-xl
-        bg-black/60 backdrop-blur-xl border-t md:border border-white/20 text-white shadow-2xl flex flex-col
+        bg-black/80 md:bg-black/60 backdrop-blur-md md:backdrop-blur-xl border-t md:border border-white/20 text-white shadow-2xl flex flex-col
         ${!isOpen ? "translate-y-full md:translate-y-0 md:opacity-0 md:pointer-events-none" : "translate-y-0"}
       `}
       >
         {/* Branding Header (Glassmorphism) - FIXED POSITIONING */}
         <div className="relative shrink-0 z-20">
           {/* Background Decor - Clipped */}
-          <div className="absolute inset-0 rounded-t-2xl md:rounded-t-xl overflow-hidden pointer-events-none border-b border-white/10 bg-white/5 backdrop-blur-md">
+          <div className="absolute inset-0 rounded-t-2xl md:rounded-t-xl overflow-hidden pointer-events-none border-b border-white/10 bg-white/5 backdrop-blur-sm md:backdrop-blur-md">
             <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/10 blur-2xl rounded-full -translate-y-1/2 translate-x-1/2"></div>
           </div>
 
@@ -483,7 +483,7 @@ export const TelemetryOverlay = ({
   if (!info) return null;
 
   return (
-    <div className="fixed bottom-6 right-4 md:absolute md:bottom-8 md:right-8 z-30 md:z-10 bg-black/60 md:bg-white/5 backdrop-blur-xl border border-white/10 p-3 md:p-4 rounded-xl text-white text-xs font-mono pointer-events-none shadow-2xl overflow-hidden group max-w-[180px] md:max-w-none">
+    <div className="fixed bottom-6 right-4 md:absolute md:bottom-8 md:right-8 z-30 md:z-10 bg-black/80 md:bg-white/5 backdrop-blur-md md:backdrop-blur-xl border border-white/10 p-3 md:p-4 rounded-xl text-white text-xs font-mono pointer-events-none shadow-2xl overflow-hidden group max-w-[180px] md:max-w-none">
       {/* Glass reflection effect */}
       <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none"></div>
 
@@ -536,7 +536,7 @@ const GetStartedModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm md:backdrop-blur-md">
       {/* Container Modal */}
       <div className="relative w-full max-w-lg bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)]">
         {/* Glow Decor */}

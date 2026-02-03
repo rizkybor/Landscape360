@@ -436,12 +436,16 @@ const MapBoxContainerComponent = ({
 
   const isMobile = window.innerWidth < 768;
 
+  // Optimize pixel ratio for mobile to reduce GPU load
+  // High DPI screens (3x) can kill performance on mid-range phones
+  const pixelRatio = isMobile ? Math.min(window.devicePixelRatio, 1.5) : window.devicePixelRatio;
+
   return (
     <div className={`relative w-full h-full ${className || ""}`}>
       <Map
         ref={mapRef}
         mapboxAccessToken={MAPBOX_TOKEN}
-        preserveDrawingBuffer={true}
+        preserveDrawingBuffer={!isMobile} // Disable on mobile to improve performance (unless screenshot needed)
         initialViewState={{
           longitude: center[0],
           latitude: center[1],
