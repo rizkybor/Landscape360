@@ -9,6 +9,7 @@ export interface SurveyPoint {
   lng: number;
   lat: number;
   elevation: number; // Surface elevation
+  name?: string;
 }
 
 export interface SurveyGroup {
@@ -52,6 +53,7 @@ interface SurveyState {
   deleteGroup: (id: string) => void;
   setActiveGroup: (id: string) => void;
   updateGroupName: (id: string, name: string) => void;
+  updatePointName: (groupId: string, pointId: string, name: string) => void;
 
   // Point actions (affects active group)
   addPoint: (point: Omit<SurveyPoint, 'id'>) => void;
@@ -361,6 +363,22 @@ export const useSurveyStore = create<SurveyState>()(
   updateGroupName: (id, name) => {
     set((state) => ({
       groups: state.groups.map(g => g.id === id ? { ...g, name } : g)
+    }));
+    get().saveCurrentSurvey();
+  },
+
+  updatePointName: (groupId, pointId, name) => {
+    set((state) => ({
+      groups: state.groups.map(g => 
+        g.id === groupId 
+          ? { 
+              ...g, 
+              points: g.points.map(p => 
+                p.id === pointId ? { ...p, name } : p
+              ) 
+            } 
+          : g
+      )
     }));
     get().saveCurrentSurvey();
   },

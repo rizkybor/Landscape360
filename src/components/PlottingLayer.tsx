@@ -96,15 +96,20 @@ export const PlottingLayer = () => {
 
   // Calculate labels for Points (Lat, Lng, Elev)
   const pointLabels = useMemo(() => {
-    return groups.flatMap(g => g.points.map((p, idx) => ({
-      id: p.id,
-      lng: p.lng,
-      lat: p.lat,
-      elev: p.elevation,
-      name: `Point ${idx + 1}`,
-      color: g.color,
-      isActive: g.id === activeGroupId
-    })));
+    return groups.flatMap(g => g.points.map((p, idx) => {
+      const pointName = p.name || `Point ${idx + 1}`;
+      return {
+        id: p.id,
+        groupId: g.id,
+        lng: p.lng,
+        lat: p.lat,
+        elev: p.elevation,
+        name: pointName,
+        hasCustomName: !!p.name,
+        color: g.color,
+        isActive: g.id === activeGroupId
+      };
+    }));
   }, [groups, activeGroupId]);
 
   // Calculate measurement labels for Markers
@@ -290,33 +295,36 @@ export const PlottingLayer = () => {
                         }
                     }}
                 >
-                    {/* The Dot Visual (Replaces the Circle Layer) */}
+                    {/* The Dot/Square Visual */}
                     <div 
                         className={`
-                            rounded-full border-2 border-black shadow-sm transition-all duration-200
+                            border-2 border-black shadow-sm transition-all duration-200
+                            ${label.hasCustomName ? 'rounded-[1px] rotate-45' : 'rounded-full'}
                             ${label.isActive ? (isMobile ? 'w-6 h-6' : 'w-4 h-4') : (isMobile ? 'w-4 h-4' : 'w-3 h-3')} 
                             ${isHovered || isDragging ? 'scale-125' : 'scale-100'}
                         `}
-                        style={{ backgroundColor: label.color }}
+                        style={{ backgroundColor: label.hasCustomName ? '#6366f1' : label.color }}
                     ></div>
 
                     {/* The Label (Positioned Above) */}
                     <div 
                       className={`
                         absolute bottom-full mb-2
-                        flex flex-col ${isMobile ? 'bg-black/90' : 'bg-black/85 backdrop-blur-md'} rounded-lg shadow-2xl border border-yellow-500/30 
-                        overflow-hidden transform transition-all duration-200 select-none
+                        flex flex-col ${isMobile ? 'bg-black/90' : 'bg-black/85 backdrop-blur-md'} rounded-lg shadow-2xl 
+                        ${label.hasCustomName ? 'border-indigo-500/50' : 'border-yellow-500/30'} 
+                        border overflow-hidden transform transition-all duration-200 select-none
                         ${isHovered || isDragging ? 'scale-105 min-w-[140px] opacity-100' : 'scale-100 min-w-0 opacity-100'}
                         ${!isHovered && !isDragging ? 'pointer-events-none' : ''}
                       `}
                     >
                         {/* Header */}
                         <div className={`
-                            bg-yellow-500/10 flex justify-between items-center border-yellow-500/20
+                            ${label.hasCustomName ? 'bg-indigo-500/20 border-indigo-500/30' : 'bg-yellow-500/10 border-yellow-500/20'} 
+                            flex justify-between items-center
                             ${isHovered || isDragging ? 'px-2.5 py-1.5 border-b' : 'px-2 py-1 gap-2'}
                         `}>
-                            <span className="text-[10px] font-bold text-yellow-400 uppercase tracking-wider whitespace-nowrap">{label.name}</span>
-                            <span className="text-[9px] font-mono text-yellow-200 font-bold whitespace-nowrap">{label.elev.toFixed(1)}m</span>
+                            <span className={`text-[10px] font-bold ${label.hasCustomName ? 'text-indigo-300' : 'text-yellow-400'} uppercase tracking-wider whitespace-nowrap`}>{label.name}</span>
+                            <span className={`text-[9px] font-mono ${label.hasCustomName ? 'text-indigo-200' : 'text-yellow-200'} font-bold whitespace-nowrap`}>{label.elev.toFixed(1)}m</span>
                         </div>
                         
                         {/* Body - Only visible on Hover/Drag */}
