@@ -437,10 +437,11 @@ export const ControlPanel = () => {
             </div>
 
             {/* Contour Toggle */}
-            <div className="flex items-center justify-between">
+            <div className={`flex items-center justify-between transition-opacity duration-300 ${activeView === "2D" ? "opacity-50 pointer-events-none grayscale" : ""}`}>
               <label className="text-xs text-gray-300">Show Contours</label>
               <button
                 onClick={() => setShowContours(!showContours)}
+                disabled={activeView === "2D"}
                 className={`cursor-pointer w-10 h-5 rounded-full p-1 transition-colors ${showContours ? "bg-blue-600" : "bg-white/10"}`}
               >
                 <div
@@ -450,7 +451,7 @@ export const ControlPanel = () => {
             </div>
 
             {/* Opacity */}
-            <div>
+            <div className={`transition-opacity duration-300 ${activeView === "2D" || !showContours ? "opacity-50 pointer-events-none grayscale" : ""}`}>
               <label className="text-xs text-gray-300 mb-1 flex justify-between">
                 <span>Opacity Contours</span>
                 <span>{(opacity * 100).toFixed(0)}%</span>
@@ -462,17 +463,17 @@ export const ControlPanel = () => {
                 step={1}
                 value={Math.round(opacity * 100)}
                 onChange={(e) => setOpacity(Number(e.target.value) / 100)}
+                disabled={activeView === "2D" || !showContours}
                 className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500"
               />
             </div>
 
             {/* Contour Interval */}
             <div
-              className={
-                showContours
-                  ? "opacity-100 transition-opacity"
-                  : "opacity-50 pointer-events-none transition-opacity"
-              }
+              className={`
+                transition-opacity duration-300
+                ${!showContours || activeView === "2D" ? "opacity-50 pointer-events-none grayscale" : "opacity-100"}
+              `}
             >
               <label className="text-xs text-gray-300 mb-1 flex justify-between">
                 <span>Contour Interval</span>
@@ -485,6 +486,7 @@ export const ControlPanel = () => {
                 step="2.5"
                 value={contourInterval}
                 onChange={(e) => setContourInterval(Number(e.target.value))}
+                disabled={activeView === "2D"}
                 className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500"
               />
               <div className="flex justify-between mt-2 gap-1">
@@ -492,6 +494,7 @@ export const ControlPanel = () => {
                   <button
                     key={val}
                     onClick={() => setContourInterval(val)}
+                    disabled={activeView === "2D"}
                     className={`cursor-pointer flex-1 text-[10px] py-1 rounded border transition-colors ${
                       contourInterval === val
                         ? "bg-blue-600 border-blue-500 text-white font-bold"
@@ -505,7 +508,7 @@ export const ControlPanel = () => {
             </div>
 
             {/* Elevation Exaggeration */}
-            <div>
+            <div className={`transition-opacity duration-300 ${activeView === "2D" || !showContours ? "opacity-50 pointer-events-none grayscale" : ""}`}>
               <label className="text-xs text-gray-300 mb-1 flex justify-between">
                 <span>Exaggeration (Height)</span>
                 <span>{elevationExaggeration.toFixed(1)}x</span>
@@ -519,6 +522,7 @@ export const ControlPanel = () => {
                 onChange={(e) =>
                   setElevationExaggeration(Number(e.target.value))
                 }
+                disabled={activeView === "2D" || !showContours}
                 className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500"
               />
             </div>

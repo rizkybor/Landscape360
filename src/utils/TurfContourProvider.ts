@@ -77,16 +77,23 @@ export const generateContours = (
 
   // 4. Generate breaks
   const breaks: number[] = [];
+  // Adjust start to be a multiple of interval
   const start = Math.floor(minElev / interval) * interval;
-  for (let i = start; i <= maxElev; i += interval) {
+  // Ensure we cover the full range
+  // NOTE: If using strict floating point intervals like 12.5, we must be careful with precision
+  // but turf.isolines handles it reasonably well.
+  for (let i = start; i <= maxElev + interval; i += interval) {
     breaks.push(i);
   }
 
-  if (breaks.length === 0) return null;
+  // Ensure breaks are valid numbers and sorted
+  const validBreaks = breaks.filter(b => !isNaN(b)).sort((a, b) => a - b);
+
+  if (validBreaks.length === 0) return null;
 
   // 5. Create isolines
   try {
-    const lines = turf.isolines(grid, breaks, { zProperty: 'elevation' });
+    const lines = turf.isolines(grid, validBreaks, { zProperty: 'elevation' });
 
     // 6. Post-process to add "steepness" color property (simulated)
     // Real slope calculation on vector lines is complex. 
