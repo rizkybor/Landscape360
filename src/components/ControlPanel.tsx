@@ -1,24 +1,30 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMapStore } from "../store/useMapStore";
 import { useSurveyStore } from "../store/useSurveyStore";
 import { AuthControl } from "./AuthControl";
 import {
   Activity,
-  Eye,
+  // Eye,
   Monitor,
   Ruler,
   ChevronDown,
   ChevronUp,
   Search,
   BookOpen,
-  ArrowUp,
+  // ArrowUp,
   Download,
   Columns,
   Wifi,
   X,
-  Plus,
-  Minus,
+  // Plus,
+  // Minus,
+  // Map as MapIcon,
+  // MousePointer2,
+  // RotateCw,
+  // Settings,
+  // Layers,
+  // MoreVertical,
 } from "lucide-react";
 import geoportalLogo from "../assets/geoportal360.png";
 import streetsView from "../assets/Street-View.png";
@@ -28,8 +34,8 @@ import satelliteView from "../assets/Satellite-View.png";
 export const ControlPanel = () => {
   const navigate = useNavigate();
   const {
-    zoom,
-    setZoom,
+    // zoom,
+    // setZoom,
     contourInterval,
     setContourInterval,
     elevationExaggeration,
@@ -55,7 +61,7 @@ export const ControlPanel = () => {
   const { isPlotMode, togglePlotMode } = useSurveyStore();
   const [showGetStarted, setShowGetStarted] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const joystickRef = useRef<HTMLDivElement>(null);
+  // const joystickRef = useRef<HTMLDivElement>(null);
   const [isJoystickDragging, setIsJoystickDragging] = useState(false);
   const [isOpen, setIsOpen] = useState(true); // Default open but will be manageable on mobile
 
