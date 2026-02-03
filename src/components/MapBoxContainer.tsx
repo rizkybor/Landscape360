@@ -164,12 +164,17 @@ const MapBoxContainerComponent = ({
       // Don't interrupt programmatic animations
       if (isFlying.current) return;
 
+      // Dynamic duration: fast updates (dragging) = immediate, big jumps = smooth
+      const isSmallChange = centerDiff < 0.01 && zoomDiff < 0.1 && pitchDiff < 5 && bearingDiff < 5;
+      const duration = isSmallChange ? 0 : 400;
+
       map.easeTo({
         center: center,
         zoom: zoom,
         pitch: mode === "3D" ? pitch : 0,
         bearing: bearing,
-        duration: 400,
+        duration: duration,
+        easing: (t) => t * (2 - t) // EaseOutQuad for smoother landing
       });
     }
   }, [center, zoom, pitch, bearing, mode]);
@@ -256,6 +261,22 @@ const MapBoxContainerComponent = ({
   const handleMapLoad = useCallback(() => {
     console.log("Map loaded successfully");
     setMapError(null);
+
+    const map = mapRef.current?.getMap();
+    if (map) {
+        // Optimize Zoom & Gestures
+        // 1. Smoother Scroll Zoom (Lower rate = smoother/slower)
+        // Default is ~1/450. We reduce it to 1/600 for precision.
+        map.scrollZoom.setWheelZoomRate(1 / 600);
+        
+        // 2. Mobile Optimizations
+        if (isMobile) {
+             // Disable rotation gesture to focus on zoom (Pinch to Zoom only)
+             map.touchZoomRotate.disableRotation();
+             // Center pinch zoom for stability
+             map.touchZoomRotate.enable({ around: 'center' });
+        }
+    }
     
     // If we already have an initial location from App.tsx, use it immediately
     if (initialLocation) {
@@ -369,9 +390,9 @@ const MapBoxContainerComponent = ({
         const bearing = map.getBearing();
         const pitch = map.getPitch();
 
-        // Sensitivity factors
-        const bearingDelta = dx * 0.8;
-        const pitchDelta = dy * 0.5;
+        // Sensitivity factors (Optimized for smoother control)
+        const bearingDelta = dx * 0.4; // Reduced from 0.8
+        const pitchDelta = dy * 0.25; // Reduced from 0.5
 
         // Perform mutation directly on map without waiting for react render
         map.setBearing(bearing + bearingDelta);
@@ -456,6 +477,8 @@ const MapBoxContainerComponent = ({
           pitch: mode === "3D" ? pitch : 0,
           bearing: bearing,
         }}
+        minZoom={2}
+        maxZoom={20}
         onMove={handleMove}
         onMouseMove={handleMouseMove}
         onClick={handleMapClick}
@@ -463,7 +486,8 @@ const MapBoxContainerComponent = ({
         onError={handleMapError}
         scrollZoom={true}
         dragPan={true}
-        dragRotate={true}
+        dragRotate={!isMobile} // Disable rotation on mobile to avoid accidental rotation while zooming
+        touchZoomRotate={true} // Enable touch gestures but rotation component is disabled in onLoad
         doubleClickZoom={true}
         boxZoom={false}
         antialias={!isMobile} // Disable antialiasing on mobile for performance
