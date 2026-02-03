@@ -42,7 +42,7 @@ export const LoadingOverlay = ({ onComplete }: { onComplete?: () => void }) => {
           }}
           className="cursor-pointer mt-12 px-8 py-3 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/30 rounded-full text-sm font-medium tracking-wider uppercase transition-all duration-300 animate-fade-in-up-delay-2 group"
         >
-          <span className="group-hover:text-blue-300 transition-colors">Start Here</span>
+          <span className="group-hover:text-blue-300 transition-colors">Start Your Journey</span>
         </button>
       </div>
     </div>
