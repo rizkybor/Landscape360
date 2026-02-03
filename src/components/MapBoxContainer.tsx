@@ -541,6 +541,8 @@ const MapBoxContainerComponent = ({
         dragRotate={true} // Enable rotation on mobile
         touchZoomRotate={true} // Enable touch rotation
         touchPitch={mode === "3D"} // Only allow pitch (tilt) in 3D mode to keep 2D view stable
+        bearingSnap={0} // Disable snapping to North to allow 180/360 degree free rotation
+        pitchWithRotate={true} // Allow pitching while rotating
         doubleClickZoom={true}
         boxZoom={false}
         antialias={!isMobile} // Disable antialiasing on mobile for performance
