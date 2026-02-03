@@ -55,7 +55,7 @@ export const ControlPanel = () => {
     if (!isJoystickDragging) return;
 
     const handleMove = (e: MouseEvent) => {
-      const sensitivity = 0.5;
+      const sensitivity = 0.2; // Reduced from 0.5 for smoother joystick control
       setBearing(bearing + e.movementX * sensitivity);
       setPitch(Math.min(85, Math.max(0, pitch + e.movementY * sensitivity)));
     };
