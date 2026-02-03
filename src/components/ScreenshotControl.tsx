@@ -74,7 +74,7 @@ export const ScreenshotControl: React.FC<ScreenshotControlProps> = ({
   };
 
   return (
-    <div className="fixed bottom-24 left-8 z-30">
+    <div className="absolute bottom-40 md:bottom-24 left-4 md:left-8 z-30">
       {!isOpen ? (
         <button
           onClick={() => setIsOpen(true)}

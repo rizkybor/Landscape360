@@ -3,8 +3,6 @@ import React, { useRef, useState, useCallback, useEffect } from "react";
 import Map, {
   Source,
   Layer,
-  NavigationControl,
-  GeolocateControl,
 } from "react-map-gl/mapbox";
 import type { MapRef } from "react-map-gl/mapbox";
 import mapboxgl from "mapbox-gl";
@@ -16,6 +14,7 @@ import { PlottingLayer } from "./PlottingLayer";
 import { RegionSelectionLayer } from "./RegionSelectionLayer";
 import { SurveyorPanel } from "./SurveyorPanel";
 import { SearchPanel } from "./SearchPanel";
+import { NavigationControls } from "./NavigationControls";
 
 const MAPBOX_TOKEN =
   import.meta.env.VITE_MAPBOX_TOKEN || "YOUR_MAPBOX_TOKEN_HERE";
@@ -258,6 +257,33 @@ const MapBoxContainerComponent = ({
         }
     }
   }, [initialLocation, setCenter, setZoom]);
+
+  const handleGeolocate = useCallback(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { longitude, latitude } = position.coords;
+          const map = mapRef.current?.getMap();
+          if (map) {
+            map.flyTo({
+              center: [longitude, latitude],
+              zoom: 16,
+              essential: true,
+            });
+          }
+          setCenter([longitude, latitude]);
+          setZoom(16);
+        },
+        (error) => {
+          console.warn("Geolocation error:", error);
+          alert("Could not find your location. Please check your permissions.");
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    } else {
+      alert("Geolocation is not supported by your browser.");
+    }
+  }, [setCenter, setZoom]);
 
   const handleMapLoad = useCallback(() => {
     console.log("Map loaded successfully");
@@ -545,15 +571,12 @@ const MapBoxContainerComponent = ({
         <RegionSelectionLayer />
         {mode === "3D" && <ThreeScene />}
 
-        <GeolocateControl
-          position="top-right"
-          trackUserLocation={true}
-          showUserHeading={true}
-          onGeolocate={(e) => {
-            setCenter([e.coords.longitude, e.coords.latitude]);
-          }}
+        {/* Custom Navigation Controls */}
+        <NavigationControls 
+          mapRef={mapRef} 
+          onGeolocate={handleGeolocate} 
+          bearing={bearing} 
         />
-        <NavigationControl position="top-right" />
       </Map>
 
       {showControls && <ControlPanel />}
