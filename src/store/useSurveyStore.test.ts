@@ -54,7 +54,7 @@ describe('useSurveyStore', () => {
     await useSurveyStore.getState().saveCurrentSurvey('New Survey');
 
     // Assertions
-    expect(alertMock).toHaveBeenCalledWith(expect.stringContaining('Survey limit reached'));
+    expect(consoleMock).toHaveBeenCalledWith(expect.stringContaining('Survey limit reached'));
     expect(supabase.from).not.toHaveBeenCalled(); // Should not hit DB
 
     alertMock.mockRestore();
@@ -118,10 +118,10 @@ describe('useSurveyStore', () => {
     expect(updateMock).toHaveBeenCalled();
   });
 
-  it('should enforce Pro limit (5)', async () => {
+  it('should enforce Pro limit (4)', async () => {
     useSurveyStore.setState({
       subscriptionStatus: 'Pro',
-      savedSurveys: Array(5).fill({ id: 'x', name: 'x', updated_at: 'x' }),
+      savedSurveys: Array(4).fill({ id: 'x', name: 'x', updated_at: 'x' }),
       currentSurveyId: null
     });
 
@@ -130,7 +130,7 @@ describe('useSurveyStore', () => {
 
     await useSurveyStore.getState().saveCurrentSurvey('New');
 
-    expect(alertMock).toHaveBeenCalledWith(expect.stringContaining('Pro plan allows max 5'));
+    expect(consoleMock).toHaveBeenCalledWith(expect.stringContaining('Survey limit reached'));
     
     alertMock.mockRestore();
     consoleMock.mockRestore();

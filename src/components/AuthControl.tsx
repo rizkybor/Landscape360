@@ -428,7 +428,7 @@ export const AuthControl = () => {
                                       <button 
                                         onClick={() => setShowUpgradeModal(true)}
                                         className={`cursor-pointer text-[10px] px-2 py-0.5 rounded-full border hover:brightness-110 transition-all ${
-                                        subscriptionStatus === 'Ultimate' 
+                                        subscriptionStatus === 'Enterprise' 
                                             ? 'bg-purple-500/20 text-purple-300 border-purple-500/20' 
                                             : (subscriptionStatus === 'Pro' ? 'bg-blue-500/20 text-blue-300 border-blue-500/20' : 'bg-gray-500/20 text-gray-300 border-gray-500/20')
                                       }`}>
@@ -563,8 +563,8 @@ export const AuthControl = () => {
                             <h3 className="font-bold text-white mb-1">Free</h3>
                             <p className="text-2xl font-bold text-gray-400 mb-4">$0<span className="text-xs font-normal text-gray-500">/mo</span></p>
                             <ul className="space-y-2 text-xs text-gray-400 mb-4">
-                                <li className="flex gap-2"><span>✓</span> 2 MB max download</li>
-                                <li className="flex gap-2"><span>✓</span> 3 offline maps</li>
+                                <li className="flex gap-2"><span>✓</span> 1 MB max download</li>
+                                <li className="flex gap-2"><span>✓</span> 1 offline maps</li>
                                 <li className="flex gap-2"><span>✓</span> 2 saved surveys</li>
                             </ul>
                         </div>
@@ -576,8 +576,9 @@ export const AuthControl = () => {
                             <p className="text-2xl font-bold text-white mb-4">$3.5<span className="text-xs font-normal text-gray-400">/mo</span></p>
                             <ul className="space-y-2 text-xs text-gray-300 mb-6">
                                 <li className="flex gap-2"><span>✓</span> 10 MB max download</li>
-                                <li className="flex gap-2"><span>✓</span> 6 offline maps</li>
-                                <li className="flex gap-2"><span>✓</span> 5 saved surveys</li>
+                                <li className="flex gap-2"><span>✓</span> 3 offline maps</li>
+                                <li className="flex gap-2"><span>✓</span> 4 saved surveys</li>
+                                <li className="flex gap-2"><span>✓</span> High-Res Export</li>
                                 <li className="flex gap-2"><span>✓</span> Priority Support</li>
                             </ul>
                             {subscriptionStatus !== 'Pro' && (
@@ -590,23 +591,24 @@ export const AuthControl = () => {
                             )}
                         </div>
 
-                        {/* Ultimate Plan */}
-                        <div className={`p-4 rounded-xl border ${subscriptionStatus === 'Ultimate' ? 'bg-purple-500/10 border-purple-500' : 'bg-transparent border-white/10 hover:border-purple-500/50'} relative transition-colors`}>
-                             {subscriptionStatus === 'Ultimate' && <div className="absolute top-2 right-2 text-[10px] bg-purple-500 text-white px-2 py-0.5 rounded-full font-bold">CURRENT</div>}
-                            <h3 className="font-bold text-white mb-1 text-purple-400">Ultimate</h3>
+                        {/* Enterprise Plan */}
+                        <div className={`p-4 rounded-xl border ${subscriptionStatus === 'Enterprise' ? 'bg-purple-500/10 border-purple-500' : 'bg-transparent border-white/10 hover:border-purple-500/50'} relative transition-colors`}>
+                             {subscriptionStatus === 'Enterprise' && <div className="absolute top-2 right-2 text-[10px] bg-purple-500 text-white px-2 py-0.5 rounded-full font-bold">CURRENT</div>}
+                            <h3 className="font-bold text-white mb-1 text-purple-400">Enterprise</h3>
                             <p className="text-2xl font-bold text-white mb-4">$7<span className="text-xs font-normal text-gray-400">/mo</span></p>
                             <ul className="space-y-2 text-xs text-gray-300 mb-6">
                                 <li className="flex gap-2"><span>✓</span> 25 MB max download</li>
                                 <li className="flex gap-2"><span>✓</span> 10 offline maps</li>
                                 <li className="flex gap-2"><span>✓</span> 10 saved surveys</li>
+                                <li className="flex gap-2"><span>✓</span> High-Res Export</li>
                                 <li className="flex gap-2"><span>✓</span> 24/7 Dedicated Support</li>
                             </ul>
-                            {subscriptionStatus !== 'Ultimate' && (
+                            {subscriptionStatus !== 'Enterprise' && (
                                 <a
-                                    href="mailto:contact@jcdigital.co.id?subject=Request Upgrade to Ultimate Plan&body=Hi Admin,%0D%0A%0D%0AI would like to request an upgrade for my account to the Ultimate Plan ($7/mo).%0D%0A%0D%0AThank you."
+                                    href="mailto:contact@jcdigital.co.id?subject=Request Upgrade to Enterprise Plan&body=Hi Admin,%0D%0A%0D%0AI would like to request an upgrade for my account to the Enterprise Plan ($7/mo).%0D%0A%0D%0AThank you."
                                     className="block w-full py-2 bg-purple-600 hover:bg-purple-500 text-white text-center rounded-lg text-xs font-bold transition-colors"
                                 >
-                                    Upgrade to Ultimate
+                                    Upgrade to Enterprise
                                 </a>
                             )}
                         </div>

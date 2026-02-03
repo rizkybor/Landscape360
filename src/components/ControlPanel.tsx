@@ -17,6 +17,8 @@ import {
   Columns,
   Wifi,
   X,
+  Plus,
+  Minus,
 } from "lucide-react";
 import geoportalLogo from "../assets/geoportal360.png";
 import streetsView from "../assets/Street-View.png";
@@ -26,6 +28,8 @@ import satelliteView from "../assets/Satellite-View.png";
 export const ControlPanel = () => {
   const navigate = useNavigate();
   const {
+    zoom,
+    setZoom,
     contourInterval,
     setContourInterval,
     elevationExaggeration,
@@ -284,6 +288,39 @@ export const ControlPanel = () => {
           </div>
 
           {/* Search Toggle */}
+          <div>
+            <label className="text-xs text-gray-300 mb-2 block font-semibold border-b border-white/10 pb-1">
+              Map Controller
+            </label>
+            <div className="flex gap-2 bg-white/5 p-1.5 rounded-lg border border-white/5">
+              <button
+                onClick={() => setZoom(Math.max(0, zoom - 1))}
+                className="cursor-pointer flex-1 py-2 bg-black/20 hover:bg-black/40 border border-white/10 rounded text-[10px] font-medium text-gray-200 transition-all active:scale-95 flex items-center justify-center gap-2"
+                title="Zoom Out"
+              >
+                <Minus size={14} className="text-blue-400" />
+                Zoom Out
+              </button>
+              
+              <div className="w-px bg-white/10 my-1"></div>
+
+              <button
+                onClick={() => setZoom(Math.min(22, zoom + 1))}
+                className="cursor-pointer flex-1 py-2 bg-black/20 hover:bg-black/40 border border-white/10 rounded text-[10px] font-medium text-gray-200 transition-all active:scale-95 flex items-center justify-center gap-2"
+                title="Zoom In"
+              >
+                <Plus size={14} className="text-blue-400" />
+                Zoom In
+              </button>
+            </div>
+            {/* Zoom Level Indicator */}
+            <div className="flex justify-between px-1 mt-1">
+               <span className="text-[9px] text-gray-500">Min</span>
+               <span className="text-[9px] text-blue-400 font-mono">Zoom: {zoom.toFixed(1)}</span>
+               <span className="text-[9px] text-gray-500">Max</span>
+            </div>
+          </div>
+
           <button
             onClick={() => setShowSearch(!showSearch)}
             className={`cursor-pointer w-full flex items-center justify-center gap-2 py-3 md:py-2 text-xs font-bold rounded transition-colors ${showSearch ? "bg-blue-500 text-white shadow-lg shadow-blue-500/50" : "bg-white/20 hover:bg-white/30 text-blue-200 border border-blue-500/30"}`}
@@ -629,7 +666,7 @@ const GetStartedModal = ({
               {
                 icon: <Monitor size={18} />,
                 title: "Interaction Modes",
-                desc: "Switch between Map Mode (Left-Click to Pan) and Camera Mode (Left-Click to Rotate) for precise control.",
+                desc: "Switch between Map Mode (Left-Click to Pan) and Camera Mode (Left-Click to Rotate). Use the new on-screen Zoom buttons for precise navigation.",
               },
               {
                 icon: <Activity size={18} />,

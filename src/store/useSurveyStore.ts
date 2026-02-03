@@ -35,7 +35,7 @@ interface SurveyState {
   currentSurveyId: string | null;
   savedSurveys: SavedSurvey[];
   isSyncing: boolean;
-  subscriptionStatus: 'Free' | 'Pro' | 'Ultimate';
+  subscriptionStatus: 'Free' | 'Pro' | 'Enterprise';
   
   setUser: (user: User | null) => void;
   loadSubscriptionStatus: () => Promise<void>;
@@ -106,7 +106,7 @@ export const useSurveyStore = create<SurveyState>()(
       .single();
       
     if (data && data.status_subscribe) {
-      set({ subscriptionStatus: data.status_subscribe as 'Free' | 'Pro' | 'Ultimate' });
+      set({ subscriptionStatus: data.status_subscribe as 'Free' | 'Pro' | 'Enterprise' });
     }
   },
 
@@ -221,8 +221,8 @@ export const useSurveyStore = create<SurveyState>()(
     if (!currentSurveyId) {
       const limits = {
         'Free': 2,
-        'Pro': 5,
-        'Ultimate': 10
+        'Pro': 4,
+        'Enterprise': 10
       };
       
       const limit = limits[subscriptionStatus] || 2;
