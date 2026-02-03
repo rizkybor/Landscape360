@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { MapBoxContainer } from "./MapBoxContainer";
 import { Split, Maximize } from "lucide-react";
-import { ScreenshotControl } from "./ScreenshotControl";
+// import { ScreenshotControl } from "./ScreenshotControl";
 import { SEO } from "./SEO";
 import type { MapRef } from "react-map-gl/mapbox";
 
@@ -48,27 +48,20 @@ export const MapDashboard = ({ initialLocation }: { initialLocation?: [number, n
       )}
 
       {/* ScreenshotControl */}
-      <ScreenshotControl
+      {/* <ScreenshotControl
         mapRefs={isSplitScreen ? [leftMapRef, rightMapRef] : [mainMapRef]}
-      />
+      /> */}
 
       {/* Split Screen Toggle */}
       <button
         onClick={() => setIsSplitScreen(!isSplitScreen)}
         className="
-          /* Positioning */
           cursor-pointer absolute bottom-24 md:bottom-8 left-4 md:left-8 z-30 
-          
-          /* Glassmorphism Core */
           bg-white/10 backdrop-blur-md 
           border border-white/20 
-          
-          /* Styling & Effects */
           p-3 rounded-full shadow-lg 
           text-white 
           transition-all duration-300
-          
-          /* Hover State */
           hover:bg-white/20 hover:scale-105 hover:border-white/40
           active:scale-95
         "
