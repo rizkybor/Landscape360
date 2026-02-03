@@ -47,7 +47,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'mapbox-gl': ['mapbox-gl', 'react-map-gl'],
+          'mapbox-gl': ['mapbox-gl'],
           'three': ['three'],
           'turf': ['@turf/turf'],
           'react-vendor': ['react', 'react-dom', 'react-router-dom', 'zustand'],
