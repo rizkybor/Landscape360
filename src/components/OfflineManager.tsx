@@ -509,9 +509,9 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
                          </button>
                     </div>
 
-                    <p className="text-xs text-gray-500">
+                    <div className="text-xs text-gray-500">
                         Upgrade to <strong>{selectedUpgradePlan} Plan</strong> via email request:
-                    </p>
+                    </div>
                 </div>
 
                 <div className="flex flex-col gap-2 w-full mt-2">

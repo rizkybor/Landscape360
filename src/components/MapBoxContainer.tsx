@@ -25,17 +25,19 @@ interface MapBoxContainerProps {
   className?: string;
   showControls?: boolean;
   mapRef?: React.RefObject<MapRef | null>;
+  initialLocation?: [number, number] | null;
 }
 
-export const MapBoxContainer: React.FC<MapBoxContainerProps> = ({
+const MapBoxContainerComponent = ({
   overrideViewMode,
   className,
   showControls = true,
   mapRef: externalRef,
-}) => {
+  initialLocation,
+}: MapBoxContainerProps) => {
   const internalRef = useRef<MapRef>(null);
   const mapRef = externalRef || internalRef;
-
+  
   const {
     center,
     zoom,
@@ -58,6 +60,9 @@ export const MapBoxContainer: React.FC<MapBoxContainerProps> = ({
 
   const mode = overrideViewMode || activeView;
 
+  // Use ref for telemetry data to avoid frequent re-renders of the map container
+  // But TelemetryOverlay needs state to update.
+  // Solution: Separate TelemetryOverlay state from MapContainer state or throttle it.
   const [telemetry, setTelemetry] = useState<{
     lng: number;
     lat: number;
@@ -82,16 +87,26 @@ export const MapBoxContainer: React.FC<MapBoxContainerProps> = ({
     };
   }, []);
 
+  // Ref to track if we are currently performing a programmatic flyTo
+  // This prevents the sync effect from interfering with smooth animations
+  const isFlying = useRef(false);
+
   // Handle flyTo requests
   useEffect(() => {
     const map = mapRef.current?.getMap();
     if (map && flyToDestination) {
+        isFlying.current = true;
         map.flyTo({
             center: flyToDestination.center,
             zoom: flyToDestination.zoom,
             duration: flyToDestination.duration || 2000,
             essential: true
         });
+        
+        map.once('moveend', () => {
+            isFlying.current = false;
+        });
+
         // Clear destination after triggering
         triggerFlyTo(null);
     }
@@ -99,6 +114,8 @@ export const MapBoxContainer: React.FC<MapBoxContainerProps> = ({
 
   const handleMove = useCallback(
     (evt: any) => {
+      // Throttle store updates or use debouncing if needed, but for smooth camera sync we need updates.
+      // However, for React rendering, we can optimize.
       if (evt.originalEvent) {
         setCenter([evt.viewState.longitude, evt.viewState.latitude]);
         setZoom(evt.viewState.zoom);
@@ -143,6 +160,9 @@ export const MapBoxContainer: React.FC<MapBoxContainerProps> = ({
       bearingDiff > EPS
     ) {
       if (!map.isStyleLoaded()) return;
+      
+      // Don't interrupt programmatic animations
+      if (isFlying.current) return;
 
       map.easeTo({
         center: center,
@@ -164,8 +184,16 @@ export const MapBoxContainer: React.FC<MapBoxContainerProps> = ({
     [interactionMode, addRegionPoint]
   );
 
+  // Throttled Telemetry Update
+  const lastTelemetryUpdate = useRef(0);
+  
   const handleMouseMove = useCallback(
     (evt: mapboxgl.MapMouseEvent) => {
+      const now = Date.now();
+      // Throttle to 60fps (approx 16ms) or even less (30ms) to save CPU
+      if (now - lastTelemetryUpdate.current < 50) return; // 20fps cap for telemetry UI
+      lastTelemetryUpdate.current = now;
+
       const map = mapRef.current?.getMap();
       if (!map) return;
 
@@ -205,21 +233,92 @@ export const MapBoxContainer: React.FC<MapBoxContainerProps> = ({
     [mapRef],
   );
 
-  // Auto-geolocate on mount
+  // Auto-geolocate on mount (moved to onLoad for reliability)
+  // useEffect(() => { ... }, []); removed
+  
+  const [mapError, setMapError] = useState<string | null>(null);
+
+  // Handle late-arriving initialLocation (e.g. from App.tsx geolocation)
   useEffect(() => {
+    if (initialLocation) {
+        const map = mapRef.current?.getMap();
+        if (map && map.isStyleLoaded()) {
+            map.jumpTo({
+                center: initialLocation,
+                zoom: 16
+            });
+            setCenter(initialLocation);
+            setZoom(16);
+        }
+    }
+  }, [initialLocation, setCenter, setZoom]);
+
+  const handleMapLoad = useCallback(() => {
+    console.log("Map loaded successfully");
+    setMapError(null);
+    
+    // If we already have an initial location from App.tsx, use it immediately
+    if (initialLocation) {
+        const map = mapRef.current?.getMap();
+        if (map) {
+            map.jumpTo({
+                center: initialLocation,
+                zoom: 16
+            });
+        }
+        setCenter(initialLocation);
+        setZoom(16);
+        return;
+    }
+
+    // Otherwise fallback to normal geolocation
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setCenter([position.coords.longitude, position.coords.latitude]);
-          setZoom(14);
+          const { longitude, latitude } = position.coords;
+          
+          // Use jumpTo for instant transition
+          const map = mapRef.current?.getMap();
+          if (map) {
+             map.jumpTo({
+                 center: [longitude, latitude],
+                 zoom: 16
+             });
+          }
+          
+          setCenter([longitude, latitude]);
+          setZoom(16);
         },
         (error) => {
-          console.error("Error getting location:", error);
+          let errorMessage = "Unknown error";
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = "Location permission denied. Please enable location services.";
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = "Location information is unavailable.";
+              break;
+            case error.TIMEOUT:
+              errorMessage = "The request to get user location timed out.";
+              break;
+          }
+          console.warn("Geolocation error:", errorMessage, error);
         },
-        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
+    } else {
+        console.warn("Geolocation is not supported by this browser.");
     }
   }, [setCenter, setZoom]);
+
+  const handleMapError = useCallback((e: any) => {
+      console.error("MapBox Error:", e);
+      if (e?.error?.status === 401 || e?.error?.message?.includes("forbidden")) {
+          setMapError("Invalid Mapbox Token. Please check your configuration.");
+      } else if (e?.error?.status === 404) {
+          setMapError("Map style not found. Using fallback.");
+      }
+  }, []);
 
   // Custom Mouse Interaction Handler (Left=Rotate, Right=Pan)
   useEffect(() => {
@@ -335,6 +434,8 @@ export const MapBoxContainer: React.FC<MapBoxContainerProps> = ({
     };
   }, []);
 
+  const isMobile = window.innerWidth < 768;
+
   return (
     <div className={`relative w-full h-full ${className || ""}`}>
       <Map
@@ -351,13 +452,14 @@ export const MapBoxContainer: React.FC<MapBoxContainerProps> = ({
         onMove={handleMove}
         onMouseMove={handleMouseMove}
         onClick={handleMapClick}
-        onLoad={() => console.log("Map loaded")}
-        onError={(e) => console.error("Map error:", e)}
+        onLoad={handleMapLoad}
+        onError={handleMapError}
         scrollZoom={true}
         dragPan={true}
         dragRotate={true}
         doubleClickZoom={true}
         boxZoom={false}
+        antialias={!isMobile} // Disable antialiasing on mobile for performance
         style={{ width: "100%", height: "100%" }}
         mapStyle="mapbox://styles/mapbox/satellite-streets-v12"
         terrain={
@@ -420,6 +522,19 @@ export const MapBoxContainer: React.FC<MapBoxContainerProps> = ({
       {showControls && <ControlPanel />}
       {showControls && <TelemetryOverlay info={telemetry} />}
       
+      {/* Map Error Indicator */}
+      {mapError && (
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-red-900/90 text-white px-6 py-4 rounded-xl border border-red-500/50 shadow-2xl backdrop-blur-md max-w-sm text-center">
+          <div className="text-red-200 mb-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h3 className="font-bold text-lg mb-1">Map Error</h3>
+          <p className="text-sm opacity-90">{mapError}</p>
+        </div>
+      )}
+
       {/* Offline Indicator */}
       {isOffline && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-red-500/90 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-2 backdrop-blur-md animate-in fade-in slide-in-from-top-4">
@@ -433,3 +548,6 @@ export const MapBoxContainer: React.FC<MapBoxContainerProps> = ({
     </div>
   );
 };
+
+export const MapBoxContainer = React.memo(MapBoxContainerComponent);
+export default MapBoxContainer;

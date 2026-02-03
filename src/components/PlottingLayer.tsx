@@ -76,6 +76,8 @@ export const PlottingLayer = () => {
       setTimeout(() => setDraggedPointId(null), 100);
   };
 
+  const isMobile = window.innerWidth < 768;
+
   // Prepare GeoJSON
   // pointsGeoJSON removed as we use Markers for interactivity
   
@@ -231,12 +233,13 @@ export const PlottingLayer = () => {
                   className={`
                     bg-white/90 backdrop-blur-md shadow-lg rounded-lg border border-white/40 
                     flex flex-col items-center transform transition-all duration-200 cursor-default select-none
-                    ${isHovered ? 'scale-110 px-3 py-2' : 'scale-100 px-2 py-0.5 hover:scale-105'}
+                    ${isHovered ? 'scale-110 px-3 py-2' : (isMobile ? 'scale-100 px-2 py-1' : 'scale-100 px-2 py-0.5 hover:scale-105')}
                   `}
                   onMouseEnter={() => setHoveredLabelId(label.id)}
                   onMouseLeave={() => setHoveredLabelId(null)}
+                  onClick={() => isMobile && setHoveredLabelId(isHovered ? null : label.id)} // Toggle on mobile tap
                 >
-                    <span className="text-[10px] font-extrabold text-gray-800 leading-tight drop-shadow-sm whitespace-nowrap">{label.text}</span>
+                    <span className={`${isMobile ? 'text-[11px]' : 'text-[10px]'} font-extrabold text-gray-800 leading-tight drop-shadow-sm whitespace-nowrap`}>{label.text}</span>
                     
                     {isHovered && (
                         <>
@@ -272,12 +275,18 @@ export const PlottingLayer = () => {
                     className="relative flex flex-col items-center group cursor-grab active:cursor-grabbing"
                     onMouseEnter={() => setHoveredLabelId(label.id)}
                     onMouseLeave={() => setHoveredLabelId(null)}
+                    onClick={(e) => {
+                        if (isMobile) {
+                            e.stopPropagation();
+                            setHoveredLabelId(isHovered ? null : label.id);
+                        }
+                    }}
                 >
                     {/* The Dot Visual (Replaces the Circle Layer) */}
                     <div 
                         className={`
                             rounded-full border-2 border-black shadow-sm transition-all duration-200
-                            ${label.isActive ? 'w-4 h-4' : 'w-3 h-3'}
+                            ${label.isActive ? (isMobile ? 'w-6 h-6' : 'w-4 h-4') : (isMobile ? 'w-4 h-4' : 'w-3 h-3')} 
                             ${isHovered || isDragging ? 'scale-125' : 'scale-100'}
                         `}
                         style={{ backgroundColor: label.color }}
@@ -290,6 +299,7 @@ export const PlottingLayer = () => {
                         flex flex-col bg-black/85 backdrop-blur-md rounded-lg shadow-2xl border border-yellow-500/30 
                         overflow-hidden transform transition-all duration-200 select-none
                         ${isHovered || isDragging ? 'scale-105 min-w-[140px] opacity-100' : 'scale-100 min-w-0 opacity-100'}
+                        ${!isHovered && !isDragging ? 'pointer-events-none' : ''}
                       `}
                     >
                         {/* Header */}
