@@ -36,6 +36,9 @@ interface SurveyState {
   savedSurveys: SavedSurvey[];
   isSyncing: boolean;
   subscriptionStatus: 'Free' | 'Pro' | 'Enterprise';
+
+  errorMessage: string | null;
+  clearError: () =>  Promise<void>;
   
   setUser: (user: User | null) => void;
   loadSubscriptionStatus: () => Promise<void>;
@@ -76,6 +79,11 @@ export const useSurveyStore = create<SurveyState>()(
   savedSurveys: [],
   isSyncing: false,
   subscriptionStatus: 'Free',
+
+  errorMessage: null,
+  clearError: async () => {
+    set({ errorMessage: null });
+  },
 
   setUser: (user) => {
     set({ user });
@@ -232,13 +240,9 @@ export const useSurveyStore = create<SurveyState>()(
       // Wait, savedSurveys in store is already user-specific from loadSavedSurveys.
       
       if (savedSurveys.length >= limit) {
-        // We can't use alert() here easily without blocking or being ugly.
-        // Ideally we should throw an error or set an error state that UI consumes.
-        // For now, let's console error and maybe the UI can check this condition too.
-        console.error(`Survey limit reached for ${subscriptionStatus} plan (${limit}).`);
-        
-        // Prevent saving if limit reached
-        // We allow editing current in-memory group, but NOT persisting to DB as a new entry
+        // console.error(`Survey limit reached for ${subscriptionStatus} plan (${limit}).`);
+        // return;
+        set({ errorMessage: `Survey limit reached for "${subscriptionStatus} plan" (max : ${limit}).` });
         return;
       }
     }

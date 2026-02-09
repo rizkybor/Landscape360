@@ -16,7 +16,7 @@ import {
   Edit2,
   Check,
   Save,
-  Loader2
+  Loader2,
 } from "lucide-react";
 
 export const SurveyorPanel = () => {
@@ -34,7 +34,9 @@ export const SurveyorPanel = () => {
     setPlotMode,
     saveCurrentSurvey,
     isSyncing,
-    user
+    user,
+    errorMessage,
+    clearError,
   } = useSurveyStore();
 
   const [isMinimized, setIsMinimized] = useState(false);
@@ -167,6 +169,8 @@ export const SurveyorPanel = () => {
         </h3>
 
         <div className="flex gap-1 md:gap-2 items-center">
+        
+
           {user && (
             <button
               onClick={() => saveCurrentSurvey()}
@@ -174,7 +178,11 @@ export const SurveyorPanel = () => {
               className="cursor-pointer text-green-400 hover:text-green-300 px-2 flex items-center gap-1 text-[10px] md:text-xs"
               title="Save Survey"
             >
-              {isSyncing ? <Loader2 size={12} className="animate-spin" /> : <Save size={14} />}
+              {isSyncing ? (
+                <Loader2 size={12} className="animate-spin" />
+              ) : (
+                <Save size={14} />
+              )}
               <span className="hidden md:inline">Save</span>
             </button>
           )}
@@ -196,6 +204,18 @@ export const SurveyorPanel = () => {
           </button>
         </div>
       </div>
+
+      {errorMessage && (
+        <div className="mx-3 my-2 bg-red-500/10 border border-red-500/30 text-red-300 text-[10px] p-2 rounded flex justify-between items-center">
+          <span>{errorMessage}</span>
+          <button
+            onClick={clearError}
+            className="text-red-400 hover:text-white"
+          >
+            <X size={12} />
+          </button>
+        </div>
+      )}
 
       {!isMinimized && (
         <div className="flex-1 flex flex-col min-h-0">
@@ -281,27 +301,32 @@ export const SurveyorPanel = () => {
                     <div className="flex justify-between items-start">
                       {editingPointId === p.id ? (
                         <div className="flex gap-1 flex-1 mr-2">
-                           <input
-                              autoFocus
-                              value={tempPointName}
-                              onChange={(e) => setTempPointName(e.target.value)}
-                              onBlur={() => savePointName(activeGroup.id, p.id)}
-                              onKeyDown={(e) => e.key === "Enter" && savePointName(activeGroup.id, p.id)}
-                              className="bg-white/10 border border-yellow-500/50 rounded px-2 py-0.5 text-[10px] w-full text-white outline-none"
-                            />
-                            <button
-                              onClick={() => savePointName(activeGroup.id, p.id)}
-                              className="text-green-400 p-1 hover:bg-white/10 rounded cursor-pointer"
-                            >
-                              <Check size={12} />
-                            </button>
+                          <input
+                            autoFocus
+                            value={tempPointName}
+                            onChange={(e) => setTempPointName(e.target.value)}
+                            onBlur={() => savePointName(activeGroup.id, p.id)}
+                            onKeyDown={(e) =>
+                              e.key === "Enter" &&
+                              savePointName(activeGroup.id, p.id)
+                            }
+                            className="bg-white/10 border border-yellow-500/50 rounded px-2 py-0.5 text-[10px] w-full text-white outline-none"
+                          />
+                          <button
+                            onClick={() => savePointName(activeGroup.id, p.id)}
+                            className="text-green-400 p-1 hover:bg-white/10 rounded cursor-pointer"
+                          >
+                            <Check size={12} />
+                          </button>
                         </div>
                       ) : (
                         <div className="flex items-center gap-2 group/point-name">
-                          <span className={`text-[10px] font-bold uppercase tracking-tighter truncate max-w-[100px] ${p.name ? 'text-indigo-300' : 'text-yellow-200/70'}`}>
-                             {p.name || `Point ${idx + 1}`}
+                          <span
+                            className={`text-[10px] font-bold uppercase tracking-tighter truncate max-w-[100px] ${p.name ? "text-indigo-300" : "text-yellow-200/70"}`}
+                          >
+                            {p.name || `Point ${idx + 1}`}
                           </span>
-                          <button 
+                          <button
                             onClick={() => startEditingPoint(p, idx)}
                             className="text-gray-500 hover:text-white transition-colors"
                           >

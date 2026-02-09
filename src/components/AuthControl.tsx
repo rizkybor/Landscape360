@@ -469,7 +469,7 @@ export const AuthControl = () => {
                        <div className="space-y-1 mb-6">
                            <div className="p-3">
                                <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                   <FolderOpen size={12} /> Recent Surveys
+                                   <FolderOpen size={12} />Survey Lists
                                </div>
                                <div className="space-y-1 max-h-32 overflow-y-auto custom-scrollbar">
                                    {isSyncing && savedSurveys.length === 0 ? (

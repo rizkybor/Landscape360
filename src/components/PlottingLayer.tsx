@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { Source, Layer, useMap, Marker } from 'react-map-gl/mapbox';
 import { useSurveyStore } from '../store/useSurveyStore';
 import { getAzimuthData, formatDegrees, formatDistance, toDMS } from '../utils/surveyUtils';
+import { getElevationAtPoint } from '../utils/elevationUtils';
 import type { MapMouseEvent } from 'mapbox-gl';
 import type { FeatureCollection } from 'geojson';
 
@@ -19,7 +20,7 @@ export const PlottingLayer = () => {
     if (!mapRef || !isPlotMode) return;
     const map = mapRef.getMap();
 
-    const handleClick = (e: MapMouseEvent) => {
+    const handleClick = async (e: MapMouseEvent) => {
       // Prevent adding point if we just finished dragging
       if (draggedPointId) {
           setDraggedPointId(null);
@@ -28,15 +29,8 @@ export const PlottingLayer = () => {
       
       const { lng, lat } = e.lngLat;
       
-      // Query elevation
-      let elevation = 0;
-      try {
-        if (map.isStyleLoaded()) {
-            elevation = map.queryTerrainElevation(e.lngLat) || 0;
-        }
-      } catch (err) {
-        console.warn("Elevation query failed", err);
-      }
+      // Query elevation using robust utility
+      const elevation = await getElevationAtPoint(map, lng, lat);
 
       addPoint({ lng, lat, elevation });
     };
@@ -67,7 +61,7 @@ export const PlottingLayer = () => {
       // Find which group this point belongs to
       const group = groups.find(g => g.points.some(p => p.id === id));
       if (group) {
-          // Query new elevation during drag
+          // Fast local query for realtime feedback (might be 0, but that's ok during drag)
           let elevation = undefined;
           if (mapRef) {
              const map = mapRef.getMap();
@@ -79,7 +73,19 @@ export const PlottingLayer = () => {
       }
   };
 
-  const onMarkerDragEnd = () => {
+  const onMarkerDragEnd = async (id: string, event: { lngLat: { lng: number; lat: number } }) => {
+      // Final robust elevation check after drag ends
+      const group = groups.find(g => g.points.some(p => p.id === id));
+      if (group && mapRef) {
+          const { lng, lat } = event.lngLat;
+          const map = mapRef.getMap();
+          
+          // Use robust async query to ensure accuracy at final position
+          const elevation = await getElevationAtPoint(map, lng, lat);
+          
+          updatePointPosition(group.id, id, lat, lng, elevation);
+      }
+
       // Small timeout to prevent click event from firing immediately after drag
       setTimeout(() => setDraggedPointId(null), 100);
   };
@@ -281,7 +287,7 @@ export const PlottingLayer = () => {
                 draggable={true}
                 onDragStart={() => onMarkerDragStart(label.id)}
                 onDrag={(e) => onMarkerDrag(label.id, e)}
-                onDragEnd={onMarkerDragEnd}
+                onDragEnd={(e) => onMarkerDragEnd(label.id, e)}
                 style={{ zIndex: isDragging ? 100 : (isHovered ? 60 : 2) }}
             >
                 <div 
