@@ -44,7 +44,7 @@ interface MapState {
 export const useMapStore = create<MapState>()(
   persist(
     (set) => ({
-      center: [-122.4194, 37.7749], // San Francisco default
+      center: [106.8456, -6.2088], // JAKARTA
       zoom: 14,
       pitch: 60, // Start with a tilted 3D view
       bearing: 0,
