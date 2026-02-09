@@ -75,11 +75,11 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         // If canvas.width is huge (e.g. 3000px on retina mobile), we should scale it down for export.
         const isMobile = window.innerWidth < 768;
         let exportWidth = baseWidth;
-        let exportScale = 1;
+        // let exportScale = 1; // Removed unused variable
         
         if (isMobile && baseWidth > 1200) {
             exportWidth = 1200; // Cap width to safe limit for mobile
-            exportScale = exportWidth / baseWidth;
+            // exportScale = exportWidth / baseWidth; // Removed unused assignment
         }
 
         // Calculate dynamic scale based on resolution (High DPI screens need bigger text)
