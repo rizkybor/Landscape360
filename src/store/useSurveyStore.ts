@@ -463,7 +463,8 @@ export const useSurveyStore = create<SurveyState>()(
         groups: state.groups, 
         activeGroupId: state.activeGroupId,
         currentSurveyId: state.currentSurveyId,
-        subscriptionStatus: state.subscriptionStatus
+        subscriptionStatus: state.subscriptionStatus,
+        user: state.user // Persist user for instant auth state on reload
       }),
     }
   )

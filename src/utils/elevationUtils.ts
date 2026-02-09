@@ -1,4 +1,4 @@
-import mapboxgl from "mapbox-gl";
+import { Map } from "mapbox-gl";
 import { MAPBOX_TOKEN } from "../config";
 
 /**
@@ -11,7 +11,7 @@ import { MAPBOX_TOKEN } from "../config";
  * 4. API Fallback: Fetches directly from Mapbox Tilequery API (ultimate source of truth).
  */
 export async function getElevationAtPoint(
-    map: mapboxgl.Map, 
+    map: Map, 
     lng: number, 
     lat: number
 ): Promise<number> {
