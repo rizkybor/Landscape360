@@ -330,7 +330,7 @@ export const PlottingLayer = () => {
                             ${isHovered || isDragging ? 'px-2.5 py-1.5 border-b' : 'px-2 py-1 gap-2'}
                         `}>
                             <span className={`text-[10px] font-bold ${label.hasCustomName ? 'text-indigo-300' : 'text-yellow-400'} uppercase tracking-wider whitespace-nowrap`}>{label.name}</span>
-                            <span className={`text-[9px] font-mono ${label.hasCustomName ? 'text-indigo-200' : 'text-yellow-200'} font-bold whitespace-nowrap`}>{label.elev.toFixed(1)}m</span>
+                            <span className={`text-[9px] font-mono ${label.hasCustomName ? 'text-indigo-200' : 'text-yellow-200'} font-bold whitespace-nowrap`}>{label.elev.toFixed(1)} mdpl</span>
                         </div>
                         
                         {/* Body - Only visible on Hover/Drag */}

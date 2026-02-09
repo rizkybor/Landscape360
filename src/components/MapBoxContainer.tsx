@@ -215,20 +215,28 @@ const MapBoxContainerComponent = ({
       const { lng, lat } = evt.lngLat;
       if (!map.isStyleLoaded()) return;
 
-      const elevation = map.queryTerrainElevation
+      const terrain = map.getTerrain();
+      const exaggeration = (terrain && typeof terrain.exaggeration === 'number') ? terrain.exaggeration : 1;
+      
+      const rawElevation = map.queryTerrainElevation
         ? map.queryTerrainElevation(evt.lngLat) || 0
         : 0;
+      
+      const elevation = rawElevation / exaggeration;
 
       // Simple slope approximation
       const offset = 0.0001;
-      const e1 = map.queryTerrainElevation
+      const e1Raw = map.queryTerrainElevation
         ? map.queryTerrainElevation(new mapboxgl.LngLat(lng + offset, lat)) ||
-          elevation
-        : elevation;
-      const e2 = map.queryTerrainElevation
+          rawElevation
+        : rawElevation;
+      const e2Raw = map.queryTerrainElevation
         ? map.queryTerrainElevation(new mapboxgl.LngLat(lng, lat + offset)) ||
-          elevation
-        : elevation;
+          rawElevation
+        : rawElevation;
+        
+      const e1 = e1Raw / exaggeration;
+      const e2 = e2Raw / exaggeration;
 
       const dist = 11.132;
       const slope1 = Math.atan((e1 - elevation) / dist);

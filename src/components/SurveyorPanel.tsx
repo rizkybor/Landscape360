@@ -123,7 +123,7 @@ export const SurveyorPanel = () => {
   if (groups.length === 0 && !isPlotMode) return null;
 
   const copyCoords = (p: SurveyPoint) => {
-    const text = `Lat: ${p.lat.toFixed(6)} (${toDMS(p.lat, true)})\nLng: ${p.lng.toFixed(6)} (${toDMS(p.lng, false)})\nElev: ${p.elevation.toFixed(1)}m`;
+    const text = `Lat: ${p.lat.toFixed(6)} (${toDMS(p.lat, true)})\nLng: ${p.lng.toFixed(6)} (${toDMS(p.lng, false)})\nElev: ${p.elevation.toFixed(1)} mdpl`;
     navigator.clipboard.writeText(text);
   };
 
@@ -368,7 +368,7 @@ export const SurveyorPanel = () => {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-500">Elev:</span>
-                        <span>{p.elevation.toFixed(1)}m</span>
+                        <span>{p.elevation.toFixed(1)} mdpl</span>
                       </div>
                     </div>
 

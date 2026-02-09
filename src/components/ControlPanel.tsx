@@ -527,7 +527,7 @@ export const TelemetryOverlay = ({
         <div className="flex justify-between items-center">
           <span className="text-blue-300/70">Elev</span>
           <span className="font-bold text-yellow-300">
-            {info.elev.toFixed(1)}m
+            {info.elev.toFixed(1)} mdpl
           </span>
         </div>
         <div className="flex justify-between items-center">

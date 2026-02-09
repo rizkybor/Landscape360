@@ -19,14 +19,27 @@ export async function getElevationAtPoint(
     const queryLocal = () => {
         if (!map.isStyleLoaded()) return null;
         
+        // Get current terrain exaggeration to normalize the result
+        // map.queryTerrainElevation returns the *exaggerated* height (e.g. 100m * 1.5 = 150m)
+        // We must divide by exaggeration to get the real world elevation.
+        const terrain = map.getTerrain();
+        const exaggeration = (terrain && typeof terrain.exaggeration === 'number') ? terrain.exaggeration : 1;
+        
+        // Helper to query and normalize
+        const getRealElev = (lng: number, lat: number) => {
+            const raw = map.queryTerrainElevation({ lng, lat });
+            if (raw === null || raw === undefined) return null;
+            return raw / exaggeration;
+        }
+
         // Direct
-        let elev = map.queryTerrainElevation({ lng, lat });
+        let elev = getRealElev(lng, lat);
         
         // Offset (if 0 or null)
-        if (elev === null || elev === undefined || elev === 0) {
+        if (elev === null || elev === 0) {
              const offset = 0.00001;
-             const elevOffset = map.queryTerrainElevation({ lng: lng + offset, lat: lat + offset });
-             if (elevOffset !== null && elevOffset !== undefined && elevOffset !== 0) {
+             const elevOffset = getRealElev(lng + offset, lat + offset);
+             if (elevOffset !== null && elevOffset !== 0) {
                  elev = elevOffset;
              }
         }
