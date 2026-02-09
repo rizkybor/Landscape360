@@ -106,12 +106,22 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         // mapContainer.style.height = `${canvas.height * exportScale}px`;
         
         const mapImage = new Image();
-        mapImage.src = canvas.toDataURL('image/png', 0.8); // Use 0.8 quality to save memory on mobile
+        // Mobile Fix: Set preserveDrawingBuffer=true in mapbox config OR
+        // Use simpler image loading for mapbox canvas
+        mapImage.src = canvas.toDataURL('image/png', 0.85); 
         mapImage.style.width = '100%';
         mapImage.style.height = 'auto'; // Let it maintain aspect ratio
         mapImage.style.display = 'block'; // Remove inline spacing
-        // mapImage.style.objectFit = 'cover';
-        await new Promise(resolve => mapImage.onload = resolve);
+        
+        // IMPORTANT: Handle Cross-Origin Taint for Mobile WebGL
+        mapImage.crossOrigin = "anonymous";
+        
+        await new Promise((resolve, reject) => {
+            mapImage.onload = resolve;
+            mapImage.onerror = reject;
+            // Fallback timeout
+            setTimeout(resolve, 2000);
+        });
         
         mapContainer.appendChild(mapImage);
         
@@ -340,7 +350,9 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         // 3. Render Composition to Image using html2canvas
         // Mobile Fix: Use lower scale for high-DPI devices to prevent crash
         const dpr = window.devicePixelRatio || 1;
-        const captureScale = isMobile && dpr > 2 ? 2/dpr : 1; // Normalize to max 2x density effectively
+        // Use consistent high quality scale even on mobile, but rely on exportWidth capping (1200px) to manage memory
+        // This ensures the layout looks "Professional" and sharp like desktop, just slightly smaller resolution
+        const captureScale = isMobile ? (dpr > 2 ? 2 : dpr) : (dpr > 2 ? 2/dpr : 1); 
         
         const compositionCanvas = await html2canvas(container, {
             useCORS: true,
@@ -348,6 +360,8 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
             scale: captureScale, // Adjust scale for mobile
             backgroundColor: '#111827',
             logging: false,
+            // width: exportWidth, // Let it auto-detect from container to avoid cutting off
+            // height: container.offsetHeight, 
             // ignoreElements: (element) => element.tagName === 'IFRAME' // Ignore mapbox iframes if any
         });
 
@@ -358,23 +372,47 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                 unit: 'px',
                 format: [compositionCanvas.width, compositionCanvas.height]
             });
-            pdf.addImage(compositionCanvas.toDataURL('image/jpeg', 0.8), 'JPEG', 0, 0, compositionCanvas.width, compositionCanvas.height);
-            pdf.save(`Landscape360_Report_${Date.now()}.pdf`);
+            pdf.addImage(compositionCanvas.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, compositionCanvas.width, compositionCanvas.height);
+            
+            // Mobile PDF Fix: Save logic
+            if (isMobile) {
+                 // Try standard save first, it works on modern Android
+                 try {
+                     pdf.save(`Landscape360_Report_${Date.now()}.pdf`);
+                 } catch (e) {
+                     const pdfBlob = pdf.output('blob');
+                     const pdfUrl = URL.createObjectURL(pdfBlob);
+                     window.open(pdfUrl, '_blank');
+                 }
+            } else {
+                 pdf.save(`Landscape360_Report_${Date.now()}.pdf`);
+            }
         } else {
             // Mobile Fix: Direct link click often fails in PWA/WebView. 
             // Try to open in new tab if download fails or use specific mobile handling
-            const dataUrl = compositionCanvas.toDataURL(format === 'png' ? 'image/png' : 'image/jpeg', 0.85);
+            const dataUrl = compositionCanvas.toDataURL(format === 'png' ? 'image/png' : 'image/jpeg', 0.9);
             
-            try {
+            if (isMobile) {
+                // Try standard download first (works on Chrome Android)
                 const link = document.createElement('a');
                 link.download = `Landscape360_Survey_${Date.now()}.${format}`;
                 link.href = dataUrl;
-                document.body.appendChild(link); // Required for Firefox/Mobile
+                document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-            } catch (e) {
-                // Fallback: Open image directly so user can long-press save
-                window.open(dataUrl, '_blank');
+                
+                // No fallback needed immediately, user will see if it fails
+            } else {
+                try {
+                    const link = document.createElement('a');
+                    link.download = `Landscape360_Survey_${Date.now()}.${format}`;
+                    link.href = dataUrl;
+                    document.body.appendChild(link); // Required for Firefox/Mobile
+                    link.click();
+                    document.body.removeChild(link);
+                } catch (e) {
+                    window.open(dataUrl, '_blank');
+                }
             }
         }
 

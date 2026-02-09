@@ -521,7 +521,7 @@ const MapBoxContainerComponent = ({
       <Map
         ref={mapRef}
         mapboxAccessToken={MAPBOX_TOKEN}
-        preserveDrawingBuffer={!isMobile} // Disable on mobile to improve performance (unless screenshot needed)
+        preserveDrawingBuffer={true} // CRITICAL: Required for html2canvas/export to capture map image
         initialViewState={{
           longitude: center[0],
           latitude: center[1],
