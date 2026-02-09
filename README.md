@@ -116,5 +116,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 <p align="center">
-  Developed by <strong>Rizky Ajie Kurniawan</strong> • Jakarta, Indonesia
+  Developed by <strong>Rizky Ajie Kurniawan</strong> • Jakarta, Indonesia - 2026
 </p>
