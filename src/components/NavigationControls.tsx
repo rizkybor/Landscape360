@@ -159,7 +159,13 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                     <div style="font-weight: bold;">${toDMS(map.getCenter().lat, true)}, ${toDMS(map.getCenter().lng, false)}</div>
                     
                     <div style="color: #9ca3af;">Avg Elevation</div>
-                    <div style="font-weight: bold; color: #fde047;">${(map.queryTerrainElevation ? map.queryTerrainElevation(map.getCenter()) : 0)?.toFixed(1)}m</div>
+                    <div style="font-weight: bold; color: #fde047;">${(() => {
+                        const raw = map.queryTerrainElevation ? map.queryTerrainElevation(map.getCenter()) : 0;
+                        // Normalize exaggerated elevation
+                        const terrain = map.getTerrain();
+                        const exaggeration = (terrain && typeof terrain.exaggeration === 'number') ? terrain.exaggeration : 1;
+                        return ((raw || 0) / exaggeration).toFixed(1);
+                    })()} mdpl</div>
                     
                     <div style="color: #9ca3af;">Heading/Pitch</div>
                     <div style="font-weight: bold;">${map.getBearing().toFixed(1)}° / ${map.getPitch().toFixed(1)}°</div>
@@ -279,12 +285,12 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                          <div style="display: flex; gap: ${24 * scale}px; font-size: ${12 * scale}px; font-family: monospace; color: #9ca3af; background: rgba(0,0,0,0.2); padding: ${8 * scale}px ${16 * scale}px; border-radius: 8px;">
                             <div style="display: flex; align-items: center; gap: ${8 * scale}px;">
                                 <span style="color: #6b7280;">MIN</span>
-                                <span style="color: white; font-weight: bold;">${minElev.toFixed(1)}m</span>
+                                <span style="color: white; font-weight: bold;">${minElev.toFixed(1)} mdpl</span>
                             </div>
                             <div style="width: 1px; background: #4b5563;"></div>
                             <div style="display: flex; align-items: center; gap: ${8 * scale}px;">
                                 <span style="color: #6b7280;">MAX</span>
-                                <span style="color: white; font-weight: bold;">${maxElev.toFixed(1)}m</span>
+                                <span style="color: white; font-weight: bold;">${maxElev.toFixed(1)} mdpl</span>
                             </div>
                             <div style="width: 1px; background: #4b5563;"></div>
                             <div style="display: flex; align-items: center; gap: ${8 * scale}px;">
@@ -309,7 +315,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                                 const labelValue = yMax - (yRange * t);
                                 return `
                                     <line x1="${chartPadding.left}" y1="${y}" x2="${chartWidth - chartPadding.right}" y2="${y}" stroke="#374151" stroke-dasharray="4" stroke-width="1" />
-                                    <text x="${chartPadding.left - (12 * scale)}" y="${y + (4 * scale)}" text-anchor="end" fill="#6b7280" font-size="${11 * scale}px" font-family="monospace" font-weight="500">${labelValue.toFixed(0)}m</text>
+                                    <text x="${chartPadding.left - (12 * scale)}" y="${y + (4 * scale)}" text-anchor="end" fill="#6b7280" font-size="${11 * scale}px" font-family="monospace" font-weight="500">${labelValue.toFixed(0)}</text>
                                 `;
                              }).join('')}
 
