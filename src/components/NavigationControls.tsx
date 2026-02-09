@@ -69,16 +69,30 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
 
         // Determine if we need to resize the container to fit the table
         const baseWidth = canvas.width;
+        
+        // Mobile Fix: Detect if on mobile (screen width < 768px) and cap the width/scale
+        // Mobile browsers often have high DPR but low memory. 
+        // If canvas.width is huge (e.g. 3000px on retina mobile), we should scale it down for export.
+        const isMobile = window.innerWidth < 768;
+        let exportWidth = baseWidth;
+        let exportScale = 1;
+        
+        if (isMobile && baseWidth > 1200) {
+            exportWidth = 1200; // Cap width to safe limit for mobile
+            exportScale = exportWidth / baseWidth;
+        }
+
         // Calculate dynamic scale based on resolution (High DPI screens need bigger text)
-        const scale = Math.max(1, baseWidth / 1920); 
+        // But for mobile export, we want readable text relative to the exported image size
+        const scale = Math.max(1, exportWidth / 1920); 
         
         // Create a temporary container for the watermark composition
         const container = document.createElement('div');
         container.style.position = 'fixed';
         container.style.left = '-9999px';
         container.style.top = '0';
-        container.style.width = `${baseWidth}px`;
-        container.style.minHeight = `${canvas.height}px`;
+        container.style.width = `${exportWidth}px`;
+        // container.style.minHeight = `${canvas.height * exportScale}px`; // Scale height proportionally
         container.style.background = '#111827'; // Dark background for the report container
         container.style.display = 'flex';
         container.style.flexDirection = 'column';
@@ -89,13 +103,14 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         const mapContainer = document.createElement('div');
         mapContainer.style.position = 'relative';
         mapContainer.style.width = '100%';
-        mapContainer.style.height = `${canvas.height}px`;
+        // mapContainer.style.height = `${canvas.height * exportScale}px`;
         
         const mapImage = new Image();
-        mapImage.src = canvas.toDataURL('image/png', 1.0);
+        mapImage.src = canvas.toDataURL('image/png', 0.8); // Use 0.8 quality to save memory on mobile
         mapImage.style.width = '100%';
-        mapImage.style.height = '100%';
-        mapImage.style.objectFit = 'cover';
+        mapImage.style.height = 'auto'; // Let it maintain aspect ratio
+        mapImage.style.display = 'block'; // Remove inline spacing
+        // mapImage.style.objectFit = 'cover';
         await new Promise(resolve => mapImage.onload = resolve);
         
         mapContainer.appendChild(mapImage);
@@ -323,11 +338,17 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         }
 
         // 3. Render Composition to Image using html2canvas
+        // Mobile Fix: Use lower scale for high-DPI devices to prevent crash
+        const dpr = window.devicePixelRatio || 1;
+        const captureScale = isMobile && dpr > 2 ? 2/dpr : 1; // Normalize to max 2x density effectively
+        
         const compositionCanvas = await html2canvas(container, {
             useCORS: true,
-            scale: 1, // Already handled by element sizing
+            allowTaint: true, // Allow cross-origin images if any
+            scale: captureScale, // Adjust scale for mobile
             backgroundColor: '#111827',
-            logging: false
+            logging: false,
+            // ignoreElements: (element) => element.tagName === 'IFRAME' // Ignore mapbox iframes if any
         });
 
         // 4. Export based on format
@@ -337,13 +358,24 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                 unit: 'px',
                 format: [compositionCanvas.width, compositionCanvas.height]
             });
-            pdf.addImage(compositionCanvas.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, compositionCanvas.width, compositionCanvas.height);
+            pdf.addImage(compositionCanvas.toDataURL('image/jpeg', 0.8), 'JPEG', 0, 0, compositionCanvas.width, compositionCanvas.height);
             pdf.save(`Landscape360_Report_${Date.now()}.pdf`);
         } else {
-            const link = document.createElement('a');
-            link.download = `Landscape360_Survey_${Date.now()}.${format}`;
-            link.href = compositionCanvas.toDataURL(format === 'png' ? 'image/png' : 'image/jpeg', 0.9);
-            link.click();
+            // Mobile Fix: Direct link click often fails in PWA/WebView. 
+            // Try to open in new tab if download fails or use specific mobile handling
+            const dataUrl = compositionCanvas.toDataURL(format === 'png' ? 'image/png' : 'image/jpeg', 0.85);
+            
+            try {
+                const link = document.createElement('a');
+                link.download = `Landscape360_Survey_${Date.now()}.${format}`;
+                link.href = dataUrl;
+                document.body.appendChild(link); // Required for Firefox/Mobile
+                link.click();
+                document.body.removeChild(link);
+            } catch (e) {
+                // Fallback: Open image directly so user can long-press save
+                window.open(dataUrl, '_blank');
+            }
         }
 
         // Cleanup
