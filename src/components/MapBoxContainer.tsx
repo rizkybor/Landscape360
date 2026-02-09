@@ -550,7 +550,7 @@ const MapBoxContainerComponent = ({
         mapStyle={mapStyle}
         terrain={{
           source: "mapbox-dem",
-          exaggeration: mode === "3D" ? elevationExaggeration : 0 // Flatten in 2D but keep source active for queries
+          exaggeration: mode === "3D" ? elevationExaggeration : 0.0001 // Keep a tiny value in 2D to enable elevation queries
         }}
         maxPitch={85}
         fog={
