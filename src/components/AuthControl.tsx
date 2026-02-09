@@ -56,8 +56,8 @@ export const AuthControl = () => {
 
   const [isLoginView, setIsLoginView] = useState(true);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
-  const [email, setEmail] = useState('demo@landscape360.app');
-  const [password, setPassword] = useState('Demo12345!');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
@@ -208,15 +208,16 @@ export const AuthControl = () => {
                                         className="w-full bg-white/[0.03] border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-gray-600 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 focus:bg-black/40 transition-all outline-none"
                                         required
                                         pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
-                                        title="Please enter a valid email address (e.g. name@company.com)"
+                                        title="Please enter a valid email address"
+                                        placeholder={isLoginView ? "name@company.com" : ""}
                                     />
                                 </div>
                             </div>
                             
-                            {!isForgotPassword && (
+                            {!isForgotPassword && isLoginView && (
                                 <div className="space-y-1">
                                     <label className="text-[10px] uppercase font-bold text-gray-500 tracking-wider ml-1">
-                                        {isLoginView ? 'Password' : 'Password (Not Required)'}
+                                        Password
                                     </label>
                                     <div className="relative group">
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500 group-focus-within:text-blue-400 transition-colors">
@@ -226,22 +227,17 @@ export const AuthControl = () => {
                                              type={showPassword ? 'text' : 'password'}
                                              value={password}
                                              onChange={(e) => setPassword(e.target.value)}
-                                             className={`w-full bg-white/[0.03] border border-white/10 rounded-xl py-3 pl-10 pr-12 text-sm text-white placeholder-gray-600 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 focus:bg-black/40 transition-all outline-none ${!isLoginView ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                             required={isLoginView}
-                                             disabled={!isLoginView}
+                                             className="w-full bg-white/[0.03] border border-white/10 rounded-xl py-3 pl-10 pr-12 text-sm text-white placeholder-gray-600 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 focus:bg-black/40 transition-all outline-none"
+                                             required
                                              minLength={8}
-                                             pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}"
-                                             title="Must contain at least one number, one uppercase, one lowercase letter, one special symbol, and at least 8 or more characters"
                                          />
-                                        {isLoginView && (
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowPassword(!showPassword)}
-                                                className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-blue-400 transition-colors cursor-pointer"
-                                            >
-                                                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                                            </button>
-                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-blue-400 transition-colors cursor-pointer"
+                                        >
+                                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                        </button>
                                     </div>
                                 </div>
                             )}
