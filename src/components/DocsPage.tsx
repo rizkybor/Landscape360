@@ -283,6 +283,41 @@ export const DocsPage = ({ onBack }: Props) => {
                   </div>
                 </div>
               </section>
+
+              {/* Split Screen Feature */}
+              <section>
+                <div className="flex items-center gap-3 text-white mb-6">
+                  <div className="p-2 bg-indigo-500/10 rounded-lg border border-indigo-500/20">
+                     <Activity className="w-5 h-5 text-indigo-400" />
+                  </div>
+                  <h3 className="text-2xl font-bold">Split Screen</h3>
+                </div>
+                
+                <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-6 relative overflow-hidden group hover:border-indigo-500/30 transition-all duration-300">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                    
+                    <div className="grid grid-cols-2 gap-4 relative z-10 mb-4">
+                        <div className="aspect-video bg-gray-900 rounded-lg border border-white/10 flex items-center justify-center relative overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-black opacity-50"></div>
+                            <span className="relative text-[10px] font-bold text-gray-500 uppercase tracking-widest">2D Topo</span>
+                        </div>
+                        <div className="aspect-video bg-indigo-900/20 rounded-lg border border-indigo-500/20 flex items-center justify-center relative overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/40 to-black opacity-50"></div>
+                            <span className="relative text-[10px] font-bold text-indigo-400 uppercase tracking-widest">3D Sat</span>
+                        </div>
+                    </div>
+                    
+                    <h4 className="text-lg font-bold text-white mb-2">Synchronized Dual-View</h4>
+                    <p className="text-xs text-gray-400 leading-relaxed mb-4">
+                        Compare different map styles side-by-side in real-time. Camera movements (pan, zoom, rotate) are instantly synchronized between both viewports.
+                    </p>
+                    
+                    <div className="flex flex-wrap gap-2">
+                        <span className="px-2 py-1 rounded bg-indigo-500/10 border border-indigo-500/20 text-[10px] text-indigo-300 font-bold uppercase">Multi-Spectral Analysis</span>
+                        <span className="px-2 py-1 rounded bg-indigo-500/10 border border-indigo-500/20 text-[10px] text-indigo-300 font-bold uppercase">Cross-Reference</span>
+                    </div>
+                </div>
+              </section>
             </div>
 
             <div className="space-y-8">
@@ -296,6 +331,25 @@ export const DocsPage = ({ onBack }: Props) => {
                 </div>
                 
                 <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-6 space-y-6">
+                  {/* Data Source Info */}
+                  <div className="p-4 bg-blue-500/5 rounded-lg border border-blue-500/10 mb-6">
+                     <h4 className="text-sm font-bold text-blue-300 mb-2 flex items-center gap-2">
+                        <Activity size={14} className="text-blue-400"/> Data Sources
+                     </h4>
+                     <p className="text-xs text-gray-300 leading-relaxed">
+                        Topographic data and contours are generated in real-time from the <strong>Mapbox Terrain-RGB v1</strong> tile set. 
+                        This global Digital Elevation Model (DEM) aggregates data from multiple sources:
+                     </p>
+                     <ul className="mt-2 space-y-1 ml-4 list-disc text-[11px] text-gray-400">
+                        <li><strong>SRTM 30m</strong> (Shuttle Radar Topography Mission) for global coverage.</li>
+                        <li><strong>ASTER GDEM</strong> (Advanced Spaceborne Thermal Emission and Reflection Radiometer).</li>
+                        <li>High-resolution local government data (LiDAR/Sonar) where available (e.g., USGS, EEA).</li>
+                     </ul>
+                     <p className="text-[10px] text-gray-500 mt-2 italic">
+                        *Vertical accuracy varies by location (typically ±5m to ±10m RMSE globally, sub-meter in high-res zones).
+                     </p>
+                  </div>
+
                   <div className="p-4 bg-white/5 rounded-lg border border-white/5">
                     <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
                         <span className="w-2 h-2 bg-green-500 rounded-full"></span>
@@ -312,22 +366,15 @@ export const DocsPage = ({ onBack }: Props) => {
                         </div>
                     </div>
                   </div>
-
-                  <div className="space-y-4">
-                     <div className="flex items-start gap-3">
-                        <div className="mt-1 w-1.5 h-1.5 rounded-full bg-green-500 shrink-0"></div>
-                        <p className="text-xs text-gray-400">
-                           <strong className="text-white block mb-0.5">Opacity Control</strong>
-                           Fine-tune the transparency of contour layers to blend with satellite imagery.
-                        </p>
-                     </div>
-                     <div className="flex items-start gap-3">
-                        <div className="mt-1 w-1.5 h-1.5 rounded-full bg-green-500 shrink-0"></div>
-                        <p className="text-xs text-gray-400">
-                           <strong className="text-white block mb-0.5">Split Screen</strong>
-                           Compare 2D topography and 3D terrain side-by-side with synchronized camera movement.
-                        </p>
-                     </div>
+                  
+                  <div className="p-4 bg-white/5 rounded-lg border border-white/5">
+                     <h4 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
+                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                        Opacity Control
+                     </h4>
+                     <p className="text-xs text-gray-400">
+                        Fine-tune the transparency of contour layers to blend seamlessly with satellite imagery or street maps.
+                     </p>
                   </div>
                 </div>
               </section>
@@ -342,7 +389,7 @@ export const DocsPage = ({ onBack }: Props) => {
                 </div>
                 
                 <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-6">
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-3 gap-3 mb-6">
                         <div className="text-center p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors border border-white/5">
                             <span className="block text-xs font-bold text-white mb-1">PNG</span>
                             <span className="text-[10px] text-gray-500">High Res</span>
@@ -356,8 +403,36 @@ export const DocsPage = ({ onBack }: Props) => {
                             <span className="text-[10px] text-gray-500">Document</span>
                         </div>
                     </div>
-                    <p className="text-[10px] text-gray-500 mt-4 text-center italic">
-                        *Exports include current view, scale, and attribution. UI overlays are automatically hidden.
+
+                    <div className="space-y-4">
+                        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Included Metadata</h4>
+                        <div className="space-y-3">
+                             <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg border border-white/5">
+                                <div className="mt-0.5 text-pink-400 font-bold text-[10px]">01</div>
+                                <div>
+                                    <strong className="text-white text-xs block">Geospatial Telemetry</strong>
+                                    <p className="text-[10px] text-gray-400">Exact Center Point coordinates (Lat/Lng), Average Elevation (mdpl), and Heading/Pitch angles.</p>
+                                </div>
+                             </div>
+                             <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg border border-white/5">
+                                <div className="mt-0.5 text-pink-400 font-bold text-[10px]">02</div>
+                                <div>
+                                    <strong className="text-white text-xs block">Survey Data Table</strong>
+                                    <p className="text-[10px] text-gray-400">Comprehensive list of all plotted points including individual coordinates, elevation, and segment distances.</p>
+                                </div>
+                             </div>
+                             <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg border border-white/5">
+                                <div className="mt-0.5 text-pink-400 font-bold text-[10px]">03</div>
+                                <div>
+                                    <strong className="text-white text-xs block">Elevation Profile</strong>
+                                    <p className="text-[10px] text-gray-400">Visual chart showing Min, Max, and Elevation Gain along the survey path.</p>
+                                </div>
+                             </div>
+                        </div>
+                    </div>
+
+                    <p className="text-[10px] text-gray-500 mt-4 text-center italic border-t border-white/5 pt-4">
+                        *Exports automatically hide UI controls for a clean, presentation-ready output.
                     </p>
                 </div>
               </section>
