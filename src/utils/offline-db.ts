@@ -55,6 +55,26 @@ export const saveTile = async (url: string, blob: Blob) => {
   }
 };
 
+export const saveTilesBulk = async (items: { url: string; blob: Blob }[]) => {
+  try {
+    const db = await initDB();
+    const tx = db.transaction('tiles', 'readwrite');
+    const store = tx.objectStore('tiles');
+    
+    await Promise.all([
+      ...items.map(item => store.put({
+        key: normalizeKey(item.url),
+        url: item.url,
+        blob: item.blob,
+        timestamp: Date.now()
+      })),
+      tx.done
+    ]);
+  } catch (error) {
+    console.error('Failed to bulk save tiles:', error);
+  }
+};
+
 export const getTile = async (url: string): Promise<Blob | undefined> => {
   try {
     const db = await initDB();
@@ -68,6 +88,17 @@ export const getTile = async (url: string): Promise<Blob | undefined> => {
   }
 };
 
+export const hasTile = async (url: string): Promise<boolean> => {
+  try {
+    const db = await initDB();
+    const key = normalizeKey(url);
+    const keyCount = await db.count('tiles', key);
+    return keyCount > 0;
+  } catch {
+    return false;
+  }
+};
+
 export const deleteTile = async (url: string) => {
   try {
     const db = await initDB();
@@ -75,6 +106,21 @@ export const deleteTile = async (url: string) => {
     await db.delete('tiles', key);
   } catch (error) {
     console.error('Failed to delete tile from IndexedDB:', error);
+  }
+};
+
+export const deleteTilesBulk = async (urls: string[]) => {
+  try {
+    const db = await initDB();
+    const tx = db.transaction('tiles', 'readwrite');
+    const store = tx.objectStore('tiles');
+    
+    await Promise.all([
+      ...urls.map(url => store.delete(normalizeKey(url))),
+      tx.done
+    ]);
+  } catch (error) {
+    console.error('Failed to bulk delete tiles:', error);
   }
 };
 
