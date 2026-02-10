@@ -43,7 +43,7 @@ export const ContourLayer = () => {
     map.on('moveend', updateContours);
     
     map.on('idle', updateContours);
-    map.on('styledata', updateContours); // Re-generate when style changes
+    map.on('styledata', updateContours);
     map.on('sourcedata', handleSourceData);
 
     // Initial check
@@ -83,10 +83,6 @@ export const ContourLayer = () => {
         id="contour-intermediate"
         type="line"
         minzoom={12}
-        // Filter: Show all lines that are NOT Index Contours
-        // We assume 'contours' geojson contains lines at 'contourInterval' spacing.
-        // So any line where (elevation % indexInterval) != 0 is intermediate.
-        // Also ensure it matches the base contourInterval to avoid noise if data has higher resolution
         filter={[
             'all',
             ['!=', ['%', ['get', 'elevation'], indexInterval], 0],
@@ -94,8 +90,8 @@ export const ContourLayer = () => {
         ]}
         paint={{
           'line-color': '#FFBF00',
-          'line-width': 0.8, // Slightly thicker for visibility
-          'line-opacity': opacity * 0.6 // Slightly more transparent than index
+          'line-width': 0.8,
+          'line-opacity': opacity * 0.6
         }}
       />
 
@@ -106,8 +102,8 @@ export const ContourLayer = () => {
         minzoom={10} // Index contours visible earlier
         filter={['==', ['%', ['get', 'elevation'], indexInterval], 0]}
         paint={{
-          'line-color': '#FFBF00', // Same color or slightly darker? Keeping same for consistency
-          'line-width': 2.0, // Significantly thicker (was 1.5)
+          'line-color': '#FFBF00',
+          'line-width': 2.0,
           'line-opacity': opacity
         }}
       />

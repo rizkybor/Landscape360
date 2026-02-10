@@ -14,13 +14,17 @@ const getElevation = (map: mapboxgl.Map, lng: number, lat: number): number => {
     // If not, try to force a check or use a fallback if available?
     // queryTerrainElevation returns null if terrain is not enabled.
     
-    const elevation = map.queryTerrainElevation(new mapboxgl.LngLat(lng, lat));
+    const elevationRaw = map.queryTerrainElevation(new mapboxgl.LngLat(lng, lat));
+    
+    // Normalize: Remove exaggeration
+    const terrain = map.getTerrain();
+    const exaggeration = (terrain && typeof terrain.exaggeration === 'number') ? terrain.exaggeration : 1;
     
     // Fallback: If elevation is null (which happens in 2D mode usually), we can't do much without external API.
     // However, we forced terrain with exaggeration 0.001 in MapContainer.
     // If it still returns null, it might be that the terrain source hasn't loaded fully yet.
     
-    return elevation || 0;
+    return (elevationRaw || 0) / exaggeration;
   } catch {
     return 0;
   }
