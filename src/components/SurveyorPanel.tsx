@@ -419,7 +419,7 @@ const DataCard = ({ p1, p2 }: { p1: SurveyPoint; p2: SurveyPoint }) => {
     <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[10px]">
       <div>
         <div className="text-[8px] uppercase text-gray-500 font-bold">
-          Fwd Azimuth
+          Azimuth
         </div>
         <div className="text-yellow-400 font-bold">
           {formatDegrees(data.forwardAzimuth)}

@@ -9,7 +9,7 @@ import { supabase } from '../lib/supabaseClient';
 import { useSurveyStore } from '../store/useSurveyStore';
 import { createPortal } from 'react-dom';
 
-import { saveTile, getTile, deleteTile } from '../utils/offline-db';
+import { saveTilesBulk, getTile, deleteTilesBulk, hasTile } from '../utils/offline-db';
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -244,7 +244,7 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
         const cleanup = async () => {
             for (let i = 0; i < urls.length; i += BATCH_SIZE) {
                 const batch = urls.slice(i, i + BATCH_SIZE);
-                await Promise.all(batch.map(url => deleteTile(url)));
+                await deleteTilesBulk(batch);
             }
         };
         cleanup();
@@ -454,12 +454,19 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
     try {
         for (let i = 0; i < urls.length; i += BATCH_SIZE) {
             const batch = urls.slice(i, i + BATCH_SIZE);
+            const tilesToSave: { url: string, blob: Blob }[] = [];
+
             await Promise.all(batch.map(async (url) => {
                 try {
+                    // Smart Resume: Skip if already exists
+                    if (await hasTile(url)) {
+                        return;
+                    }
+
                     const response = await fetchWithRetry(url);
                     if (response.ok) {
                         const blob = await response.blob();
-                        await saveTile(url, blob);
+                        tilesToSave.push({ url, blob });
                     } else {
                         console.error(`Failed to download tile: ${response.status} ${response.statusText}`);
                         failed++;
@@ -469,6 +476,11 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
                     failed++;
                 }
             }));
+            
+            // Bulk save the batch
+            if (tilesToSave.length > 0) {
+                await saveTilesBulk(tilesToSave);
+            }
             
             completed += batch.length;
             const progress = Math.min(100, Math.round((completed / urls.length) * 100));
