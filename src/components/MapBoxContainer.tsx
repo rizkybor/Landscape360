@@ -281,27 +281,35 @@ const MapBoxContainerComponent = ({
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { longitude, latitude } = position.coords;
-          const map = mapRef.current?.getMap();
-          if (map) {
-            map.flyTo({
-              center: [longitude, latitude],
-              zoom: 16,
-              essential: true,
-            });
-          }
-          setCenter([longitude, latitude]);
-          setZoom(16);
+          // Use triggerFlyTo to avoid conflict with state synchronization
+          triggerFlyTo({
+             center: [longitude, latitude],
+             zoom: 16,
+             duration: 2000
+          });
         },
         (error) => {
-          console.warn("Geolocation error:", error);
-          alert("Could not find your location. Please check your permissions.");
+          let errorMessage = "Unknown error";
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = "Location permission denied. Please enable location services.";
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = "Location information is unavailable.";
+              break;
+            case error.TIMEOUT:
+              errorMessage = "The request to get user location timed out.";
+              break;
+          }
+          console.warn("Geolocation error:", errorMessage, error);
+          alert(errorMessage);
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     } else {
       alert("Geolocation is not supported by your browser.");
     }
-  }, [setCenter, setZoom]);
+  }, [triggerFlyTo]);
 
   const handleMapLoad = useCallback(() => {
     console.log("Map loaded successfully");
