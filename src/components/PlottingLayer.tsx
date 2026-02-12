@@ -3,6 +3,7 @@ import { Source, Layer, useMap, Marker } from 'react-map-gl/mapbox';
 import { useSurveyStore } from '../store/useSurveyStore';
 import { getAzimuthData, formatDegrees, formatDistance, toDMS } from '../utils/surveyUtils';
 import { getElevationAtPoint } from '../utils/elevationUtils';
+import * as turf from '@turf/turf';
 import type { MapMouseEvent } from 'mapbox-gl';
 import type { FeatureCollection } from 'geojson';
 
@@ -134,9 +135,27 @@ export const PlottingLayer = () => {
           if (g.points.length >= 2) {
               // Continuous line for visual
               const coordinates = g.points.map(p => [p.lng, p.lat]);
+              
+              // Create curved line using Bezier Spline
+              let geometry: any = { type: 'LineString', coordinates };
+              
+              try {
+                  if (coordinates.length >= 2) {
+                      const line = turf.lineString(coordinates);
+                      // sharpness: 0.85 is default. Lower is curvier, higher is straighter.
+                      const curved = turf.bezierSpline(line, {
+                          resolution: 10000,
+                          sharpness: 0.85 
+                      });
+                      geometry = curved.geometry;
+                  }
+              } catch (e) {
+                  console.warn("Failed to generate curve, falling back to straight line", e);
+              }
+
               linesGeoJSON.features.push({
                   type: 'Feature',
-                  geometry: { type: 'LineString', coordinates },
+                  geometry: geometry,
                   properties: { 
                       groupId: g.id, 
                       color: g.color,
