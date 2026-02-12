@@ -17,13 +17,13 @@ export const AuthControl = () => {
     createGroup,
     deleteSurvey,
     currentSurveyId,
-    isSyncing
+    isSyncing,
+    subscriptionStatus
   } = useSurveyStore();
   
   const [showMenu, setShowMenu] = useState(false);
   const [showOfflineManager, setShowOfflineManager] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-  const [subscriptionStatus, setSubscriptionStatus] = useState<string>('Free');
 
   useEffect(() => {
     // Check active session
@@ -31,11 +31,6 @@ export const AuthControl = () => {
       setUser(session?.user ?? null);
       if (session?.user) {
         loadSavedSurveys();
-        // Fetch profile
-        supabase.from('profiles').select('status_subscribe').eq('id', session.user.id).single()
-          .then(({ data }) => {
-             if (data) setSubscriptionStatus(data.status_subscribe || 'Free');
-          });
       }
     });
 
@@ -43,11 +38,6 @@ export const AuthControl = () => {
       setUser(session?.user ?? null);
       if (session?.user) {
         loadSavedSurveys();
-        // Fetch profile
-        supabase.from('profiles').select('status_subscribe').eq('id', session.user.id).single()
-          .then(({ data }) => {
-             if (data) setSubscriptionStatus(data.status_subscribe || 'Free');
-          });
       }
     });
 
