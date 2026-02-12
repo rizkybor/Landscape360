@@ -279,6 +279,8 @@ export const PlottingLayer = () => {
                 >
                     <span className={`${isMobile ? 'text-[11px]' : 'text-[10px]'} font-extrabold text-gray-800 leading-tight drop-shadow-sm whitespace-nowrap`}>{label.text}</span>
                     
+                    {/* Always show subtext (Azimuth) if requested, or keep it hover only? User asked for "reactive azimuth near + icon" */}
+                    {/* But this is for existing lines. Let's keep hover logic here but maybe enhance style? */}
                     {isHovered && (
                         <>
                             <div className="h-px w-full bg-gray-200 my-1"></div>
@@ -291,6 +293,34 @@ export const PlottingLayer = () => {
             </Marker>
           );
       })}
+
+      {/* Reactive Cursor Preview Label (Near + Icon / Mouse Cursor) */}
+      {isPlotMode && cursorLocation && activeGroup && activeGroup.points.length > 0 && (
+          <Marker
+              longitude={cursorLocation[0]}
+              latitude={cursorLocation[1]}
+              anchor="left"
+              offset={[15, 0]} // Offset to right of cursor
+              style={{ pointerEvents: 'none', zIndex: 1000 }}
+          >
+             <div className="bg-white/20 backdrop-blur-md text-white text-[10px] rounded px-2 py-1.5 shadow-xl border border-white/20 flex flex-col gap-0.5">
+                {(() => {
+                    const lastPoint = activeGroup.points[activeGroup.points.length - 1];
+                    const tempPoint = { ...lastPoint, lng: cursorLocation[0], lat: cursorLocation[1], elevation: lastPoint.elevation }; 
+                    const data = getAzimuthData(lastPoint, tempPoint);
+                    
+                    return (
+                        <>
+                            <div className="flex items-center justify-between gap-3">
+                                <span className="text-white/80 font-bold uppercase text-[8px]">Azim</span>
+                                <span className="font-bold font-mono text-white">{formatDegrees(data.forwardAzimuth)}</span>
+                            </div>
+                        </>
+                    );
+                })()}
+             </div>
+          </Marker>
+      )}
 
       {/* Point Markers (Draggable) */}
       {pointLabels.map((label) => {
