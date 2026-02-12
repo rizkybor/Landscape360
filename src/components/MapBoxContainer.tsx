@@ -16,6 +16,7 @@ import { SurveyorPanel } from "./SurveyorPanel";
 import { SearchPanel } from "./SearchPanel";
 import { NavigationControls } from "./NavigationControls";
 import { UserLocationMarker } from "./UserLocationMarker";
+import { WeatherWidget } from "./WeatherWidget";
 
 const MAPBOX_TOKEN =
   import.meta.env.VITE_MAPBOX_TOKEN || "YOUR_MAPBOX_TOKEN_HERE";
@@ -646,6 +647,7 @@ const MapBoxContainerComponent = ({
 
       <SurveyorPanel />
       <SearchPanel />
+      <WeatherWidget />
     </div>
   );
 };

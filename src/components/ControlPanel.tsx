@@ -17,6 +17,7 @@ import {
   Columns,
   Wifi,
   X,
+  CloudSun,
   // Plus,
   // Minus,
   // Map as MapIcon,
@@ -54,6 +55,8 @@ export const ControlPanel = () => {
     setShowContours,
     showSearch,
     setShowSearch,
+    showWeather,
+    setShowWeather,
     mapStyle,
     setMapStyle,
   } = useMapStore();
@@ -261,6 +264,24 @@ export const ControlPanel = () => {
         </div>
 
         <div className="p-4 space-y-4 overflow-y-auto custom-scrollbar">
+          {/* Weather Toggle */}
+          <button
+            onClick={() => setShowWeather(!showWeather)}
+            className={`cursor-pointer w-full flex items-center justify-center gap-2 py-3 md:py-2 text-xs font-bold rounded transition-colors ${showWeather ? "bg-cyan-600 text-white shadow-lg" : "bg-white/20 hover:bg-white/30 text-cyan-200 border border-cyan-500/30"}`}
+          >
+            <CloudSun size={14} />
+            {showWeather ? "Hide Weather Info" : "Show Weather Info"}
+          </button>
+
+          {/* Search Toggle */}
+          <button
+            onClick={() => setShowSearch(!showSearch)}
+            className={`cursor-pointer w-full flex items-center justify-center gap-2 py-3 md:py-2 text-xs font-bold rounded transition-colors ${showSearch ? "bg-blue-500 text-white shadow-lg shadow-blue-500/50" : "bg-white/20 hover:bg-white/30 text-blue-200 border border-blue-500/30"}`}
+          >
+            <Search size={14} />
+            {showSearch ? "Hide Search" : "Search Location"}
+          </button>
+
           {/* Map Style Selector */}
           <div>
             <label className="text-xs text-gray-300 mb-2 block font-semibold border-b border-white/10 pb-1">
@@ -293,14 +314,6 @@ export const ControlPanel = () => {
             </div>
           </div>
 
-          {/* Search Toggle */}
-          <button
-            onClick={() => setShowSearch(!showSearch)}
-            className={`cursor-pointer w-full flex items-center justify-center gap-2 py-3 md:py-2 text-xs font-bold rounded transition-colors ${showSearch ? "bg-blue-500 text-white shadow-lg shadow-blue-500/50" : "bg-white/20 hover:bg-white/30 text-blue-200 border border-blue-500/30"}`}
-          >
-            <Search size={14} />
-            {showSearch ? "Hide Search" : "Show Search"}
-          </button>
 
           {/* Surveyor Toggle */}
           <button
