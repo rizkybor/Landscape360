@@ -105,13 +105,25 @@ export const useSurveyStore = create<SurveyState>()(
 
   loadSubscriptionStatus: async () => {
     const { user } = get();
-    if (!user) return;
+    // If no user, status is Free
+    if (!user) {
+        // DO NOT reset to Free here if we are offline and have a persisted user!
+        // The setUser function handles the initial "logged out" state reset.
+        // Here we only want to fetch updates.
+        return;
+    }
     
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .select('status_subscribe')
       .eq('id', user.id)
       .single();
+      
+    if (error) {
+        // Offline or error: keep existing status
+        console.warn("Could not fetch subscription status (offline?), using cached:", get().subscriptionStatus);
+        return;
+    }
       
     if (data && data.status_subscribe) {
       set({ subscriptionStatus: data.status_subscribe as 'Free' | 'Pro' | 'Enterprise' });
@@ -121,14 +133,20 @@ export const useSurveyStore = create<SurveyState>()(
   loadSavedSurveys: async () => {
     // Always get fresh user from supabase session to ensure we are not using stale state
     const { data: { session } } = await supabase.auth.getSession();
-    const user = session?.user;
+    let user = session?.user;
 
-    // Update user state if needed
-    if (user && get().user?.id !== user.id) {
-        set({ user });
+    // Fallback: If no session (e.g. offline), try to use persisted user
+    if (!user) {
+        user = get().user || undefined;
+    }
+
+    // Update user state if needed (and we have a valid session user)
+    if (session?.user && get().user?.id !== session.user.id) {
+        set({ user: session.user });
     }
 
     if (!user) {
+        // Only clear if we absolutely have no user identity
         set({ savedSurveys: [] });
         return;
     }
@@ -142,6 +160,7 @@ export const useSurveyStore = create<SurveyState>()(
 
     if (error) {
       console.error('Error loading surveys:', error);
+      // If offline/error, KEEP existing savedSurveys instead of clearing them
       set({ isSyncing: false });
       return;
     }
