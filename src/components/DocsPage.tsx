@@ -10,6 +10,7 @@ import {
   Zap,
   Smartphone,
   Globe,
+  CloudSun,
 } from "lucide-react";
 import streetsView from "../assets/Street-View.png";
 import outdoorsView from "../assets/Outdoors-View.png";
@@ -318,6 +319,52 @@ export const DocsPage = ({ onBack }: Props) => {
                     </div>
                 </div>
               </section>
+              {/* Weather Info */}
+              <section>
+                <div className="flex items-center gap-3 text-white mb-6">
+                  <div className="p-2 bg-cyan-500/10 rounded-lg border border-cyan-500/20">
+                     <CloudSun className="w-5 h-5 text-cyan-400" />
+                  </div>
+                  <h3 className="text-2xl font-bold">Weather Intelligence</h3>
+                </div>
+                
+                <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-6 relative overflow-hidden group hover:border-cyan-500/30 transition-all duration-300">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                    
+                    <div className="grid grid-cols-2 gap-4 relative z-10 mb-4">
+                        <div className="aspect-video bg-gray-900 rounded-lg border border-white/10 flex items-center justify-center relative overflow-hidden p-4">
+                            <div className="text-center">
+                                <span className="text-3xl font-bold text-white block">28°<span className="text-cyan-400 text-lg">C</span></span>
+                                <span className="text-[10px] text-gray-400 uppercase tracking-wider">Current</span>
+                            </div>
+                        </div>
+                        <div className="aspect-video bg-cyan-900/10 rounded-lg border border-cyan-500/20 flex flex-col justify-center px-4 relative overflow-hidden">
+                            <div className="flex justify-between items-center text-xs text-cyan-200 mb-1">
+                                <span>Humidity</span>
+                                <span className="font-bold">81%</span>
+                            </div>
+                            <div className="w-full bg-cyan-900/30 h-1.5 rounded-full overflow-hidden">
+                                <div className="bg-cyan-400 h-full w-[81%]"></div>
+                            </div>
+                            <div className="mt-2 flex justify-between items-center text-xs text-emerald-200">
+                                <span>Wind</span>
+                                <span className="font-bold">10 km/h</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h4 className="text-lg font-bold text-white mb-2">Real-time Atmospheric Data</h4>
+                    <p className="text-xs text-gray-400 leading-relaxed mb-4">
+                        Integrated live weather feed from BMKG (Badan Meteorologi, Klimatologi, dan Geofisika). 
+                        Provides essential environmental context for field surveys, including 3-day forecasting.
+                    </p>
+                    
+                    <div className="flex flex-wrap gap-2">
+                        <span className="px-2 py-1 rounded bg-cyan-500/10 border border-cyan-500/20 text-[10px] text-cyan-300 font-bold uppercase">Live Updates</span>
+                        <span className="px-2 py-1 rounded bg-cyan-500/10 border border-cyan-500/20 text-[10px] text-cyan-300 font-bold uppercase">Field Safety</span>
+                    </div>
+                </div>
+              </section>
             </div>
 
             <div className="space-y-8">
@@ -436,8 +483,74 @@ export const DocsPage = ({ onBack }: Props) => {
                     </p>
                 </div>
               </section>
+
             </div>
           </div>
+
+          {/* Video Tutorial */}
+          {/* <section className="space-y-8 pt-8 border-t border-white/5">
+            <div className="flex items-center gap-3 text-white mb-6">
+              <div className="p-2 bg-red-600/10 rounded-lg border border-red-600/20">
+                 <svg 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    className="w-5 h-5 text-red-500"
+                 >
+                    <path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17" />
+                    <path d="m10 15 5-3-5-3z" />
+                 </svg>
+              </div>
+              <h3 className="text-2xl font-bold">Video Tutorials</h3>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6"> */}
+                {/* Video 1 */}
+                {/* <div className="group bg-[#0A0A0A] border border-white/10 rounded-xl overflow-hidden hover:border-red-500/30 transition-all duration-300">
+                    <div className="aspect-video relative bg-black">
+                        <iframe 
+                            className="w-full h-full absolute inset-0"
+                            src="https://www.youtube.com/embed/dQw4w9WgXcQ?si=DummyVideoID" 
+                            title="Landscape 360 - Quick Start Guide"
+                            frameBorder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                            referrerPolicy="strict-origin-when-cross-origin" 
+                            allowFullScreen
+                        ></iframe>
+                    </div>
+                    <div className="p-4">
+                        <h4 className="font-bold text-white mb-1 group-hover:text-red-400 transition-colors">Quick Start Guide</h4>
+                        <p className="text-xs text-gray-400">
+                            Learn the basics of navigation, map styles, and essential tools in under 5 minutes.
+                        </p>
+                    </div>
+                </div> */}
+
+                {/* Video 2 */}
+                {/* <div className="group bg-[#0A0A0A] border border-white/10 rounded-xl overflow-hidden hover:border-red-500/30 transition-all duration-300">
+                     <div className="aspect-video relative bg-black">
+                        <iframe 
+                            className="w-full h-full absolute inset-0"
+                            src="https://www.youtube.com/embed/ScMzIvxBSi4?si=DummyVideoID2" 
+                            title="Advanced Terrain Analysis"
+                            frameBorder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                            referrerPolicy="strict-origin-when-cross-origin" 
+                            allowFullScreen
+                        ></iframe>
+                    </div>
+                    <div className="p-4">
+                        <h4 className="font-bold text-white mb-1 group-hover:text-red-400 transition-colors">Advanced Analysis</h4>
+                        <p className="text-xs text-gray-400">
+                            Deep dive into contour configuration, slope measurement, and exporting professional reports.
+                        </p>
+                    </div>
+                </div>
+            </div>
+          </section> */}
 
           {/* Pricing & Plans */}
           <section className="space-y-8 pt-8 border-t border-white/5">
