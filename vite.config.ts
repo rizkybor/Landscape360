@@ -17,7 +17,7 @@ export default defineConfig({
       injectManifest: {
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
       },
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg', 'sitemap.xml', 'robots.txt'],
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg', 'sitemap.xml', 'robots.txt', '*.png', '*.jpg', '*.jpeg', '*.svg'],
       manifest: {
         name: 'Landscape 360',
         short_name: 'Landscape360',
