@@ -426,6 +426,64 @@ export const DocsPage = ({ onBack }: Props) => {
                 </div>
               </section>
 
+              {/* Geospatial Grid System */}
+              <section>
+                <div className="flex items-center gap-3 text-white mb-6">
+                  <div className="p-2 bg-blue-600/10 rounded-lg border border-blue-600/20">
+                     <Globe className="w-5 h-5 text-blue-400" />
+                  </div>
+                  <h3 className="text-2xl font-bold">Geospatial Grid System</h3>
+                </div>
+                
+                <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-6 space-y-6">
+                  <div className="p-4 bg-blue-900/10 rounded-lg border border-blue-500/10 mb-2">
+                     <h4 className="text-sm font-bold text-blue-300 mb-2 flex items-center gap-2">
+                        <Activity size={14} className="text-blue-400"/> Dynamic DMS Grid
+                     </h4>
+                     <p className="text-xs text-gray-300 leading-relaxed">
+                        A high-precision coordinate grid overlay that automatically adjusts based on your zoom level. 
+                        Displays Latitude/Longitude in <strong>DMS (Degrees, Minutes, Seconds)</strong> format for professional cartography.
+                     </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="p-4 bg-white/5 rounded-lg border border-white/5">
+                        <h4 className="text-sm font-bold text-white mb-3">Scale-based Intervals</h4>
+                        <ul className="space-y-2 text-xs text-gray-400">
+                            <li className="flex justify-between border-b border-white/5 pb-1">
+                                <span>1:10.000</span>
+                                <span className="text-blue-300 font-mono">15" (~450m)</span>
+                            </li>
+                            <li className="flex justify-between border-b border-white/5 pb-1">
+                                <span>1:25.000</span>
+                                <span className="text-blue-300 font-mono">30" (~900m)</span>
+                            </li>
+                            <li className="flex justify-between border-b border-white/5 pb-1">
+                                <span>1:50.000</span>
+                                <span className="text-blue-300 font-mono">1' (~1.8km)</span>
+                            </li>
+                            <li className="flex justify-between pb-1">
+                                <span>1:250.000</span>
+                                <span className="text-blue-300 font-mono">5' (~9km)</span>
+                            </li>
+                        </ul>
+                      </div>
+
+                      <div className="p-4 bg-white/5 rounded-lg border border-white/5 flex flex-col justify-center">
+                         <h4 className="text-sm font-bold text-white mb-2">Visual Customization</h4>
+                         <p className="text-xs text-gray-400 mb-3">
+                            Full control over grid visibility to ensure it complements your map without obstructing critical data.
+                         </p>
+                         <div className="flex flex-wrap gap-2">
+                            <span className="px-2 py-1 rounded bg-blue-500/10 border border-blue-500/20 text-[10px] text-blue-300 font-bold uppercase">Adjustable Opacity</span>
+                            <span className="px-2 py-1 rounded bg-blue-500/10 border border-blue-500/20 text-[10px] text-blue-300 font-bold uppercase">Auto-Scaling</span>
+                            <span className="px-2 py-1 rounded bg-blue-500/10 border border-blue-500/20 text-[10px] text-blue-300 font-bold uppercase">Client-Side Rendering</span>
+                         </div>
+                      </div>
+                  </div>
+                </div>
+              </section>
+
               {/* Export & Capture */}
               <section>
                 <div className="flex items-center gap-3 text-white mb-6">

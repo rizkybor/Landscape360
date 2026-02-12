@@ -53,6 +53,12 @@ export const ControlPanel = () => {
     setMouseControlMode,
     showContours,
     setShowContours,
+    showGridDMS,
+    setShowGridDMS,
+    gridOpacity,
+    setGridOpacity,
+    gridStep,
+    setGridStep,
     showSearch,
     setShowSearch,
     showWeather,
@@ -74,27 +80,27 @@ export const ControlPanel = () => {
       style: "mapbox://styles/mapbox/streets-v12",
       image: streetsView,
       gradient: "from-blue-100/50 to-gray-100/50", // Light/Blueish
-      textColor: "text-gray-800"
+      textColor: "text-gray-800",
     },
     {
       name: "Outdoors",
       style: "mapbox://styles/mapbox/outdoors-v12",
       image: outdoorsView,
       gradient: "from-green-100/50 to-emerald-200/50", // Greenish
-      textColor: "text-green-900"
+      textColor: "text-green-900",
     },
     {
       name: "Satellite",
       style: "mapbox://styles/mapbox/satellite-streets-v12",
       image: satelliteView,
       gradient: "from-gray-800/50 to-black/50", // Dark
-      textColor: "text-white"
-    }
+      textColor: "text-white",
+    },
   ];
 
   // Preload images for offline support
   useEffect(() => {
-    mapStyles.forEach(style => {
+    mapStyles.forEach((style) => {
       const img = new Image();
       img.src = style.image;
     });
@@ -305,23 +311,26 @@ export const ControlPanel = () => {
                     ${mapStyle === style.style ? "ring-2 ring-blue-500 scale-105 shadow-lg" : "opacity-80 hover:opacity-100 hover:scale-105"}
                   `}
                 >
-                  <div className={`absolute inset-0 bg-gradient-to-br ${style.gradient} z-10`}></div>
-                  
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-br ${style.gradient} z-10`}
+                  ></div>
+
                   {/* Image Background */}
-                  <img 
-                    src={style.image} 
+                  <img
+                    src={style.image}
                     alt={style.name}
                     className="absolute inset-0 w-full h-full object-cover z-0 transition-transform duration-500 group-hover:scale-110"
                   />
-                  
-                  <span className={`relative z-20 text-[9px] font-bold ${style.textColor} text-center w-full leading-tight drop-shadow-md`}>
+
+                  <span
+                    className={`relative z-20 text-[9px] font-bold ${style.textColor} text-center w-full leading-tight drop-shadow-md`}
+                  >
                     {style.name}
                   </span>
                 </button>
               ))}
             </div>
           </div>
-
 
           {/* Surveyor Toggle */}
           <button
@@ -363,9 +372,9 @@ export const ControlPanel = () => {
               <div className="flex bg-black/30 rounded p-1">
                 <button
                   onClick={() => {
-                      setActiveView("2D");
-                      setPitch(0); // Auto Top View
-                      setBearing(0); // Reset Rotation
+                    setActiveView("2D");
+                    setPitch(0); // Auto Top View
+                    setBearing(0); // Reset Rotation
                   }}
                   className={`flex-1 py-1 text-xs rounded transition-colors cursor-pointer ${activeView === "2D" ? "bg-blue-600 text-white shadow-sm" : "text-gray-400 hover:text-white"}`}
                 >
@@ -373,8 +382,8 @@ export const ControlPanel = () => {
                 </button>
                 <button
                   onClick={() => {
-                      setActiveView("3D");
-                      setPitch(75); // Auto Side View (Optimized Angle)
+                    setActiveView("3D");
+                    setPitch(75); // Auto Side View (Optimized Angle)
                   }}
                   className={`flex-1 py-1 text-xs rounded transition-colors cursor-pointer ${activeView === "3D" ? "bg-blue-600 text-white shadow-sm" : "text-gray-400 hover:text-white"}`}
                 >
@@ -383,8 +392,13 @@ export const ControlPanel = () => {
               </div>
             </div>
 
+            <label className="text-xs text-gray-300 block font-semibold border-b border-white/10 pb-1">
+              Contours Config
+            </label>
             {/* Contour Toggle */}
-            <div className={`flex items-center justify-between transition-opacity duration-300 ${activeView === "2D" ? "opacity-50 pointer-events-none grayscale" : ""}`}>
+            <div
+              className={`flex items-center justify-between transition-opacity duration-300 ${activeView === "2D" ? "opacity-50 pointer-events-none grayscale" : ""}`}
+            >
               <label className="text-xs text-gray-300">Show Contours</label>
               <button
                 onClick={() => setShowContours(!showContours)}
@@ -398,7 +412,9 @@ export const ControlPanel = () => {
             </div>
 
             {/* Opacity */}
-            <div className={`transition-opacity duration-300 ${activeView === "2D" || !showContours ? "opacity-50 pointer-events-none grayscale" : ""}`}>
+            <div
+              className={`transition-opacity duration-300 ${activeView === "2D" || !showContours ? "opacity-50 pointer-events-none grayscale" : ""}`}
+            >
               <label className="text-xs text-gray-300 mb-1 flex justify-between">
                 <span>Opacity Contours</span>
                 <span>{(opacity * 100).toFixed(0)}%</span>
@@ -455,7 +471,9 @@ export const ControlPanel = () => {
             </div>
 
             {/* Elevation Exaggeration */}
-            <div className={`transition-opacity duration-300 ${activeView === "2D" || !showContours ? "opacity-50 pointer-events-none grayscale" : ""}`}>
+            <div
+              className={`transition-opacity duration-300 ${activeView === "2D" || !showContours ? "opacity-50 pointer-events-none grayscale" : ""}`}
+            >
               <label className="text-xs text-gray-300 mb-1 flex justify-between">
                 <span>Exaggeration (Height)</span>
                 <span>{elevationExaggeration.toFixed(1)}x</span>
@@ -472,6 +490,115 @@ export const ControlPanel = () => {
                 disabled={activeView === "2D" || !showContours}
                 className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500"
               />
+            </div>
+
+            <label className="text-xs text-gray-300 block font-semibold border-b border-white/10 pb-1">
+              Grid Config
+            </label>
+            {/* Grid DMS Toggle */}
+            <div className="flex flex-col gap-2 transition-opacity duration-300">
+              <div className="flex items-center justify-between">
+                <label className="text-xs text-gray-300">Show Grid DMS</label>
+                <button
+                  onClick={() => setShowGridDMS(!showGridDMS)}
+                  className={`cursor-pointer w-10 h-5 rounded-full p-1 transition-colors ${showGridDMS ? "bg-blue-600" : "bg-white/10"}`}
+                >
+                  <div
+                    className={`w-3 h-3 bg-white rounded-full shadow transition-transform ${showGridDMS ? "translate-x-5" : "translate-x-0"}`}
+                  />
+                </button>
+              </div>
+
+              {/* Grid Opacity Slider (Only visible when Grid is ON) */}
+              {showGridDMS && (
+                <div className="animate-in fade-in slide-in-from-top-2 space-y-3">
+                  {/* Opacity */}
+                  <div>
+                    <label className="text-[10px] text-gray-400 mb-1 flex justify-between">
+                      <span>Grid Opacity</span>
+                      <span>{(gridOpacity * 100).toFixed(0)}%</span>
+                    </label>
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      step={5}
+                      value={Math.round(gridOpacity * 100)}
+                      onChange={(e) =>
+                        setGridOpacity(Number(e.target.value) / 100)
+                      }
+                      className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                    />
+                  </div>
+
+                  {/* Grid Interval Selection */}
+                  <div>
+                    <label className="text-[10px] text-gray-400 mb-1 block">
+                      Grid Interval
+                    </label>
+                    <div className="grid grid-cols-2 gap-1">
+                      <button
+                        onClick={() => setGridStep("auto")}
+                        className={`cursor-pointer px-2 py-1 text-[10px] rounded border transition-colors col-span-2 ${
+                          gridStep === "auto"
+                            ? "bg-blue-600 border-blue-500 text-white font-bold"
+                            : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10"
+                        }`}
+                      >
+                        Auto (Dynamic)
+                      </button>
+
+                      <button
+                        onClick={() => setGridStep(15 / 3600)}
+                        className={`cursor-pointer px-2 py-1 text-[10px] rounded border transition-colors ${
+                          gridStep === 15 / 3600
+                            ? "bg-blue-600 border-blue-500 text-white font-bold"
+                            : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10"
+                        }`}
+                        title="~15 Detik (Skala 1:10.000)"
+                      >
+                        15" (~450m)
+                      </button>
+
+                      <button
+                        onClick={() => setGridStep(30 / 3600)}
+                        className={`cursor-pointer px-2 py-1 text-[10px] rounded border transition-colors ${
+                          gridStep === 30 / 3600
+                            ? "bg-blue-600 border-blue-500 text-white font-bold"
+                            : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10"
+                        }`}
+                        title="~30 Detik (Skala 1:25.000)"
+                      >
+                        30" (~900m)
+                      </button>
+
+                      <button
+                        onClick={() => setGridStep(1 / 60)}
+                        className={`cursor-pointer px-2 py-1 text-[10px] rounded border transition-colors ${
+                          gridStep === 1 / 60
+                            ? "bg-blue-600 border-blue-500 text-white font-bold"
+                            : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10"
+                        }`}
+                        title="~1 Menit (Skala 1:50.000)"
+                      >
+                        1' (~1.8km)
+                      </button>
+
+                      <button
+                        onClick={() => setGridStep(5 / 60)}
+                        className={`cursor-pointer px-2 py-1 text-[10px] rounded border transition-colors ${
+                          Math.abs(Number(gridStep) - 5 / 60) < 0.0000001
+                            ? "bg-blue-600 border-blue-500 text-white font-bold"
+                            : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10"
+                        }`}
+                        title="~5 Menit (Skala 1:250.000)"
+                      >
+                        5' (~9km)
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

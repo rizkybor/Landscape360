@@ -16,6 +16,9 @@ interface MapState {
   interactionMode: 'default' | 'draw_region';
   regionPoints: [number, number][];
   showContours: boolean;
+  showGridDMS: boolean;
+  gridOpacity: number;
+  gridStep: number | 'auto';
   showSearch: boolean;
   showWeather: boolean;
   mapStyle: string;
@@ -29,7 +32,10 @@ interface MapState {
   setContourInterval: (interval: number) => void;
   setElevationExaggeration: (factor: number) => void;
   setOpacity: (opacity: number) => void;
+  setGridOpacity: (opacity: number) => void;
+  setGridStep: (step: number | 'auto') => void;
   setShowContours: (show: boolean) => void;
+  setShowGridDMS: (show: boolean) => void;
   setShowSearch: (show: boolean) => void;
   setShowWeather: (show: boolean) => void;
   setMapStyle: (style: string) => void;
@@ -59,6 +65,9 @@ export const useMapStore = create<MapState>()(
       interactionMode: 'default',
       regionPoints: [],
       showContours: true,
+      showGridDMS: false,
+      gridOpacity: 0.5,
+      gridStep: 'auto',
       showSearch: false,
       showWeather: false,
       mapStyle: 'mapbox://styles/mapbox/satellite-streets-v12',
@@ -72,7 +81,10 @@ export const useMapStore = create<MapState>()(
       setContourInterval: (contourInterval) => set({ contourInterval }),
       setElevationExaggeration: (elevationExaggeration) => set({ elevationExaggeration }),
       setOpacity: (opacity) => set({ opacity }),
+      setGridOpacity: (gridOpacity) => set({ gridOpacity }),
+      setGridStep: (gridStep) => set({ gridStep }),
       setShowContours: (showContours) => set({ showContours }),
+      setShowGridDMS: (showGridDMS) => set({ showGridDMS }),
       setShowSearch: (showSearch) => set({ showSearch }),
       setShowWeather: (showWeather) => set({ showWeather }),
       setMapStyle: (mapStyle) => set({ mapStyle }),
@@ -95,6 +107,9 @@ export const useMapStore = create<MapState>()(
         mapStyle: state.mapStyle,
         activeView: state.activeView,
         showContours: state.showContours,
+        showGridDMS: state.showGridDMS,
+        gridOpacity: state.gridOpacity,
+        gridStep: state.gridStep,
         showWeather: state.showWeather,
         contourInterval: state.contourInterval,
         elevationExaggeration: state.elevationExaggeration,
