@@ -9,6 +9,7 @@ import mapboxgl from "mapbox-gl";
 import { useMapStore } from "../store/useMapStore";
 import { ThreeScene } from "./ThreeScene";
 import { ContourLayer } from "./ContourLayer";
+import { GridDMSLayer } from "./GridDMSLayer";
 import { ControlPanel, TelemetryOverlay } from "./ControlPanel";
 import { PlottingLayer } from "./PlottingLayer";
 import { RegionSelectionLayer } from "./RegionSelectionLayer";
@@ -606,6 +607,7 @@ const MapBoxContainerComponent = ({
         )}
 
         {showContours && <ContourLayer />}
+        <GridDMSLayer />
         <PlottingLayer />
         <RegionSelectionLayer />
         {mode === "3D" && <ThreeScene />}

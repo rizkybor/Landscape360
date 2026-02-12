@@ -451,6 +451,14 @@ export const OfflineManager = ({ onClose }: { onClose: () => void }) => {
       }
     });
 
+    // 4. Grid DMS Data - Store Grid Step Preference
+    // Since Grid DMS is client-side computed, we don't download tiles for it.
+    // However, we should save the user's preferred grid step for this region so it auto-loads correctly.
+    // We can store this metadata in the region object itself or local storage.
+    // For now, let's assume the client logic (GridDMSLayer) handles "auto" or specific steps purely mathematically
+    // without needing external assets. So no extra download needed for Grid DMS.
+    // The "grid data" is just math, so it works offline by default as long as the base map (context) is there.
+
     try {
         for (let i = 0; i < urls.length; i += BATCH_SIZE) {
             const batch = urls.slice(i, i + BATCH_SIZE);
