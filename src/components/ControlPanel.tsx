@@ -209,7 +209,7 @@ export const ControlPanel = () => {
                   </div> */}
                 <img
                   src={geoportalLogo}
-                  alt="Landscape 360"
+                  alt="360"
                   className="w-12 h-12 object-contain"
                 />
 
