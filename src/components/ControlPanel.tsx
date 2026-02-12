@@ -92,6 +92,14 @@ export const ControlPanel = () => {
     }
   ];
 
+  // Preload images for offline support
+  useEffect(() => {
+    mapStyles.forEach(style => {
+      const img = new Image();
+      img.src = style.image;
+    });
+  }, []);
+
   // Virtual Joystick Logic
   useEffect(() => {
     if (!isJoystickDragging) return;
