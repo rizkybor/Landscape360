@@ -552,6 +552,138 @@ export const DocsPage = ({ onBack }: Props) => {
             </div>
           </section> */}
 
+          {/* Real-time Telemetry & Tooltips */}
+          <section className="space-y-8 pt-8 border-t border-white/5">
+            <div className="flex items-center gap-3 text-white mb-6">
+              <div className="p-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+                 <Activity className="w-5 h-5 text-yellow-400" />
+              </div>
+              <h3 className="text-2xl font-bold">Real-time Telemetry</h3>
+            </div>
+
+            <div className="space-y-12">
+                {/* Navigator Tooltip */}
+                <div className="space-y-4">
+                    <h4 className="text-lg font-bold text-white">Navigator Tooltip</h4>
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                        When using Navigator Mode (Plotting), a reactive tooltip appears next to your cursor to provide instant feedback before you place a point.
+                    </p>
+                    
+                    <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-6 flex flex-col items-center justify-center relative overflow-hidden group">
+                        {/* Mock Map Background */}
+                        <div className="absolute inset-0 bg-green-900/20 blur-sm opacity-50"></div>
+                        
+                        {/* The Tooltip UI */}
+                        <div className="relative z-10 bg-white/20 backdrop-blur-md text-white text-[10px] rounded px-3 py-2 shadow-xl border border-white/20 flex flex-col gap-1 min-w-[140px] transform group-hover:scale-105 transition-transform duration-300">
+                            <div className="flex items-center justify-between gap-3">
+                                <span className="text-white/80 font-bold uppercase text-[8px]">Azim</span>
+                                <span className="font-bold font-mono text-white">120.0°</span>
+                            </div>
+                        </div>
+
+                        {/* Caption */}
+                        <div className="absolute bottom-2 left-0 right-0 text-center">
+                            <span className="text-[9px] text-gray-500 font-mono uppercase tracking-widest">Reactive Feedback</span>
+                        </div>
+                    </div>
+
+                    <div className="grid gap-3 mt-4">
+                        <div className="bg-white/5 p-3 rounded-lg border border-white/5">
+                            <span className="text-[10px] font-bold text-gray-400 block mb-1">AZIM (Azimuth)</span>
+                            <p className="text-[10px] text-gray-300">
+                                The compass bearing (0-360°) from your last point to the cursor location. Essential for orienteering.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Telemetry Overlay */}
+                <div className="space-y-4">
+                    <h4 className="text-lg font-bold text-white">Survey Data Panel</h4>
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                        Comprehensive metrics for the currently viewed area or active survey segment.
+                    </p>
+
+                    <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 relative overflow-hidden">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <div className="flex justify-between border-b border-white/10 pb-1">
+                                    <span className="text-[10px] text-blue-300">Lat</span>
+                                    <span className="text-[10px] font-mono text-white">-6.68397 <span className="text-gray-500 text-[9px]">(6°41'2.30" S)</span></span>
+                                </div>
+                                <div className="flex justify-between border-b border-white/10 pb-1">
+                                    <span className="text-[10px] text-blue-300">Lng</span>
+                                    <span className="text-[10px] font-mono text-white">106.97216 <span className="text-gray-500 text-[9px]">(106°58'19.76" E)</span></span>
+                                </div>
+                                <div className="flex justify-between border-b border-white/10 pb-1">
+                                    <span className="text-[10px] text-blue-300">Elev</span>
+                                    <span className="text-[10px] font-mono text-yellow-300">1214.3 mdpl</span>
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <div className="flex justify-between border-b border-white/10 pb-1">
+                                    <span className="text-[10px] text-blue-300">Pitch</span>
+                                    <span className="text-[10px] font-mono text-white">0.0°</span>
+                                </div>
+                                <div className="flex justify-between border-b border-white/10 pb-1">
+                                    <span className="text-[10px] text-blue-300">Bearing</span>
+                                    <span className="text-[10px] font-mono text-white">0.0°</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-4 bg-white/5 rounded-lg p-3 border border-white/10">
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                                <div>
+                                    <span className="text-[9px] text-gray-500 font-bold block">AZIMUTH</span>
+                                    <span className="text-xs font-mono text-yellow-400 font-bold">120.0°</span>
+                                </div>
+                                <div>
+                                    <span className="text-[9px] text-gray-500 font-bold block">BACK AZIMUTH</span>
+                                    <span className="text-xs font-mono text-yellow-400 font-bold">300.0°</span>
+                                </div>
+                                <div>
+                                    <span className="text-[9px] text-gray-500 font-bold block">HORIZ DIST</span>
+                                    <span className="text-xs font-mono text-blue-300 font-bold">110.8 m</span>
+                                </div>
+                                <div>
+                                    <span className="text-[9px] text-gray-500 font-bold block">SLOPE</span>
+                                    <span className="text-xs font-mono text-red-400 font-bold">18.7% <span className="text-gray-500 font-normal text-[9px]">(10.6°)</span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3 mt-4">
+                        <div className="bg-white/5 p-3 rounded-lg border border-white/5">
+                            <span className="text-[10px] font-bold text-gray-400 block mb-1">Back Azimuth</span>
+                            <p className="text-[10px] text-gray-300">
+                                The reverse bearing (opposite direction) of the current line. Useful for verifying return paths.
+                            </p>
+                        </div>
+                        <div className="bg-white/5 p-3 rounded-lg border border-white/5">
+                            <span className="text-[10px] font-bold text-gray-400 block mb-1">Slope % (Deg)</span>
+                            <p className="text-[10px] text-gray-300">
+                                Gradient steepness. Shown in percentage for grade and degrees (°) for angle. Red values indicate &gt;15% steepness.
+                            </p>
+                        </div>
+                        <div className="bg-white/5 p-3 rounded-lg border border-white/5">
+                            <span className="text-[10px] font-bold text-gray-400 block mb-1">Pitch</span>
+                            <p className="text-[10px] text-gray-300">
+                                Camera tilt angle (0-60°). 0° is top-down view, while higher values provide a 3D perspective view.
+                            </p>
+                        </div>
+                        <div className="bg-white/5 p-3 rounded-lg border border-white/5">
+                            <span className="text-[10px] font-bold text-gray-400 block mb-1">Bearing</span>
+                            <p className="text-[10px] text-gray-300">
+                                Current camera heading/direction relative to North (0°). Rotates as you orbit the map.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+          </section>
+
           {/* Pricing & Plans */}
           <section className="space-y-8 pt-8 border-t border-white/5">
             <div className="text-center max-w-2xl mx-auto space-y-3">
