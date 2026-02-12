@@ -110,7 +110,7 @@ export const AuthControl = () => {
         const body = encodeURIComponent(
             `Dear Admin,\n\nI forgot my password and would like to request a password reset.\n\nMy Email: ${email.trim()}\n\nThank you.`
         );
-        window.location.href = `mailto:contact@jcidigital.co.id?subject=${subject}&body=${body}`;
+        window.location.href = `mailto:contact@jcdigital.co.id?subject=${subject}&body=${body}`;
 
         setMessage({ type: 'success', text: 'Opening email client to send reset request...' });
       } else if (isLoginView) {
@@ -122,7 +122,7 @@ export const AuthControl = () => {
         const body = encodeURIComponent(
             `Dear Admin,\n\nI would like to request an account for the Landscape360 application.\n\nMy Email: ${email.trim()}\n\nThank you.`
         );
-        window.location.href = `mailto:contact@jcidigital.co.id?subject=${subject}&body=${body}`;
+        window.location.href = `mailto:contact@jcdigital.co.id?subject=${subject}&body=${body}`;
         
         setMessage({ type: 'success', text: 'Opening email client to send request...' });
         // Optional: Switch back to login view or keep as is
