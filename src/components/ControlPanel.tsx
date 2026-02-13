@@ -99,7 +99,7 @@ export const ControlPanel = () => {
     }
   };
 
-  const handleTouchEnd = (e: React.TouchEvent) => {
+  const handleTouchEnd = () => {
     if (!isMobile || touchStart.current === null) return;
     
     // Threshold to close: > 100px or fast swipe
