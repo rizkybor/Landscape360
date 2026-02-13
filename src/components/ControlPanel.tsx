@@ -76,6 +76,26 @@ export const ControlPanel = () => {
   const [isJoystickDragging, setIsJoystickDragging] = useState(false);
   const [isOpen, setIsOpen] = useState(true); // Default open but will be manageable on mobile
 
+  // Swipe Down to Close Logic (Mobile)
+  const touchStart = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!isMobile) return;
+    touchStart.current = e.targetTouches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!isMobile || touchStart.current === null) return;
+    const touchEnd = e.changedTouches[0].clientY;
+    const distance = touchEnd - touchStart.current;
+    
+    // Swipe down threshold > 50px
+    if (distance > 50) {
+      setIsOpen(false);
+    }
+    touchStart.current = null;
+  };
+
   const mapStyles = [
     {
       name: "Streets",
@@ -201,8 +221,21 @@ export const ControlPanel = () => {
         ${!isOpen ? "translate-y-full md:translate-y-0 md:opacity-0 md:pointer-events-none" : "translate-y-0"}
       `}
       >
+        {/* Mobile Drag Handle Indicator */}
+        <div 
+          className="md:hidden w-full flex items-center justify-center pt-3 pb-1 shrink-0 z-30 cursor-grab active:cursor-grabbing"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          <div className="w-12 h-1.5 bg-white/20 rounded-full shadow-sm"></div>
+        </div>
+
         {/* Branding Header (Glassmorphism) - FIXED POSITIONING */}
-        <div className="relative shrink-0 z-20">
+        <div 
+          className="relative shrink-0 z-20"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
           {/* Background Decor - Clipped */}
           <div className="absolute inset-0 rounded-t-2xl md:rounded-t-xl overflow-hidden pointer-events-none border-b border-white/10 bg-white/5 backdrop-blur-sm md:backdrop-blur-md">
             <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/10 blur-2xl rounded-full -translate-y-1/2 translate-x-1/2"></div>
@@ -269,6 +302,8 @@ export const ControlPanel = () => {
           onClick={() => {
             if (isMobile) setIsOpen(false);
           }}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
         >
           <h3 className="font-bold flex items-center gap-2 text-xs text-gray-400 uppercase tracking-wider">
             <Activity size={14} className="text-blue-400" />
