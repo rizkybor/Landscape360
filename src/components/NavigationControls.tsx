@@ -1,16 +1,18 @@
-import React, { useState } from "react";
-import { Plus, Minus, Compass, Crosshair, Camera, Loader2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Plus, Minus, Compass, Crosshair, Camera, Loader2, X } from "lucide-react";
 import type { MapRef } from "react-map-gl/mapbox";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import geoportalLogo from "../assets/geoportal360.png";
 import { useSurveyStore } from "../store/useSurveyStore";
+import { useMapStore } from "../store/useMapStore";
 import { distance, point } from "@turf/turf";
 
 interface NavigationControlsProps {
   mapRef: React.RefObject<MapRef | null>;
   onGeolocate: () => void;
   bearing: number;
+  pitch: number;
 }
 
 const toDMS = (deg: number, isLat: boolean): string => {
@@ -31,10 +33,66 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
   mapRef,
   onGeolocate,
   bearing,
+  pitch,
 }) => {
   const [isCapturing, setIsCapturing] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [showCompassMenu, setShowCompassMenu] = useState(false);
   const { groups } = useSurveyStore();
+  const { setPitch, setBearing } = useMapStore();
+  
+  // Local state for smooth slider interaction without re-rendering the whole map store on every pixel
+  const [localPitch, setLocalPitch] = useState(pitch);
+  const [localBearing, setLocalBearing] = useState(bearing);
+  const [isDraggingSlider, setIsDraggingSlider] = useState(false);
+
+  // Sync local state with props when NOT dragging
+  useEffect(() => {
+    if (!isDraggingSlider) {
+        setLocalPitch(pitch);
+        setLocalBearing(bearing);
+    }
+  }, [pitch, bearing, isDraggingSlider]);
+
+  const handlePitchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const val = Number(e.target.value);
+      setLocalPitch(val);
+      
+      // Direct map manipulation for 60fps performance
+      if (mapRef.current) {
+          const map = mapRef.current.getMap();
+          map.setPitch(val);
+      }
+  };
+
+  const handleBearingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const val = Number(e.target.value);
+      setLocalBearing(val);
+      
+      // Direct map manipulation
+      if (mapRef.current) {
+          const map = mapRef.current.getMap();
+          map.setBearing(val);
+      }
+  };
+
+  const handleSliderCommit = () => {
+      // Sync to store only when interaction ends
+      setIsDraggingSlider(false);
+      setPitch(localPitch);
+      setBearing(localBearing);
+  };
+
+  // Close menus when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showCompassMenu && !(event.target as Element).closest('.compass-menu-container')) {
+        setShowCompassMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showCompassMenu]);
 
   const handleZoomIn = () => {
     mapRef.current?.getMap().zoomIn();
@@ -45,7 +103,9 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
   };
 
   const handleResetNorth = () => {
-    mapRef.current?.getMap().resetNorthPitch();
+    setBearing(0);
+    setPitch(0);
+    // mapRef.current?.getMap().resetNorthPitch(); // Store update will trigger map sync
   };
 
   const handleCapture = async (format: 'png' | 'jpg' | 'pdf') => {
@@ -489,11 +549,11 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
       </button>
 
       {/* Navigation Stack */}
-      <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 flex flex-col overflow-hidden">
+      <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 flex flex-col">
         {/* Zoom In */}
         <button
           onClick={handleZoomIn}
-          className="p-2.5 hover:bg-gray-100 transition-colors active:bg-gray-200 border-b border-gray-200/50 cursor-pointer group"
+          className="p-2.5 hover:bg-gray-100 transition-colors active:bg-gray-200 border-b border-gray-200/50 cursor-pointer group first:rounded-t-xl"
           title="Zoom In"
         >
           <Plus size={20} className="text-gray-700 group-hover:text-black transition-colors" />
@@ -508,27 +568,92 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
           <Minus size={20} className="text-gray-700 group-hover:text-black transition-colors" />
         </button>
 
-        {/* Reset Bearing */}
-        <button
-          onClick={handleResetNorth}
-          className="p-2.5 hover:bg-gray-100 transition-colors active:bg-gray-200 group cursor-pointer relative"
-          title="Reset Bearing to North"
-        >
-          <div
-            className="transition-transform duration-300 ease-out relative"
-            style={{ transform: `rotate(${-bearing}deg)` }}
-          >
-            <Compass
-              size={20}
-              className={`text-gray-700 group-hover:text-blue-600 transition-colors ${bearing !== 0 ? "text-blue-600" : ""}`}
-              style={{ transform: "rotate(-45deg)" }}
-            />
-            {/* North Indicator "N" - Always stays at top of compass icon relative to rotation */}
-            <span className="absolute -top-1 left-1/2 -translate-x-1/2 text-[8px] font-bold text-red-500 bg-white/80 rounded-full px-0.5 leading-none shadow-sm">
-              N
-            </span>
-          </div>
-        </button>
+        {/* Reset Bearing / Compass Menu */}
+        <div className="relative compass-menu-container">
+            <button
+            onClick={() => setShowCompassMenu(!showCompassMenu)}
+            className="p-2.5 hover:bg-gray-100 transition-colors active:bg-gray-200 group cursor-pointer relative w-full last:rounded-b-xl"
+            title="Compass Control"
+            >
+            <div
+                className="transition-transform duration-300 ease-out relative flex items-center justify-center"
+                style={{ transform: `rotate(${-bearing}deg)` }}
+            >
+                <Compass
+                size={20}
+                className={`text-gray-700 group-hover:text-blue-600 transition-colors ${bearing !== 0 ? "text-blue-600" : ""}`}
+                style={{ transform: "rotate(-45deg)" }}
+                />
+                {/* North Indicator "N" */}
+                <span className="absolute -top-1 left-1/2 -translate-x-1/2 text-[8px] font-bold text-red-500 bg-white/80 rounded-full px-0.5 leading-none shadow-sm z-10">
+                N
+                </span>
+            </div>
+            </button>
+
+            {/* Compass Popover Menu */}
+            {showCompassMenu && (
+                <div className="absolute top-0 right-12 bg-[#1f2937] border border-gray-700 rounded-xl shadow-2xl p-4 w-[240px] animate-in fade-in slide-in-from-right-4 z-50 text-white">
+                    <div className="flex justify-between items-center mb-4">
+                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">View Settings</span>
+                        <button 
+                            onClick={() => setShowCompassMenu(false)}
+                            className="text-gray-400 hover:text-white transition-colors"
+                        >
+                            <X size={16} />
+                        </button>
+                    </div>
+
+                    {/* Tilt Slider */}
+                    <div className="mb-4">
+                        <div className="flex justify-between text-xs font-medium mb-1.5">
+                            <span>Tilt</span>
+                            <span className="text-gray-400">{localPitch.toFixed(0)}°</span>
+                        </div>
+                        <input
+                            type="range"
+                            min="0"
+                            max="85" // Max pitch usually 85 to prevent under-map view
+                            value={localPitch}
+                            onChange={handlePitchChange}
+                            onMouseDown={() => setIsDraggingSlider(true)}
+                            onMouseUp={handleSliderCommit}
+                            onTouchStart={() => setIsDraggingSlider(true)}
+                            onTouchEnd={handleSliderCommit}
+                            className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                        />
+                    </div>
+
+                    {/* Heading Slider */}
+                    <div className="mb-6">
+                        <div className="flex justify-between text-xs font-medium mb-1.5">
+                            <span>Heading</span>
+                            <span className="text-gray-400">{localBearing.toFixed(0)}°</span>
+                        </div>
+                        <input
+                            type="range"
+                            min="0"
+                            max="360"
+                            value={((localBearing % 360) + 360) % 360} // Normalize to 0-360
+                            onChange={handleBearingChange}
+                            onMouseDown={() => setIsDraggingSlider(true)}
+                            onMouseUp={handleSliderCommit}
+                            onTouchStart={() => setIsDraggingSlider(true)}
+                            onTouchEnd={handleSliderCommit}
+                            className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                        />
+                    </div>
+
+                    {/* Reset Button */}
+                    <button
+                        onClick={handleResetNorth}
+                        className="w-full py-2 text-xs font-bold text-blue-400 hover:text-blue-300 hover:bg-white/5 rounded-lg transition-colors text-right"
+                    >
+                        Reset to north
+                    </button>
+                </div>
+            )}
+        </div>
       </div>
     </div>
   );

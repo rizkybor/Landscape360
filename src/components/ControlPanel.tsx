@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMapStore } from "../store/useMapStore";
 import { useSurveyStore } from "../store/useSurveyStore";
 import { AuthControl } from "./AuthControl";
+import mapboxgl from "mapbox-gl";
+import type { MapRef } from "react-map-gl/mapbox";
 import {
   Activity,
   // Eye,
@@ -645,17 +647,102 @@ export const ControlPanel = () => {
 };
 
 export const TelemetryOverlay = ({
-  info,
+  mapRef,
 }: {
-  info: {
+  mapRef: React.RefObject<MapRef | null>;
+}) => {
+  const [info, setInfo] = useState<{
     lng: number;
     lat: number;
     elev: number;
     slope: number;
     pitch: number;
     bearing: number;
-  } | null;
-}) => {
+  } | null>(null);
+
+  const { activeView: mode } = useMapStore();
+  const lastUpdate = useRef(0);
+  const rafId = useRef<number | null>(null);
+
+  useEffect(() => {
+    const map = mapRef.current?.getMap();
+    if (!map) return;
+
+    const onMouseMove = (evt: mapboxgl.MapMouseEvent) => {
+      const now = Date.now();
+      // Adaptive throttle: 100ms for 3D, 50ms for 2D
+      const throttleLimit = mode === '3D' ? 100 : 50;
+      
+      if (now - lastUpdate.current < throttleLimit) return;
+      lastUpdate.current = now;
+
+      if (rafId.current) cancelAnimationFrame(rafId.current);
+
+      rafId.current = requestAnimationFrame(() => {
+          if (!map.isStyleLoaded()) return;
+          
+          const { lng, lat } = evt.lngLat;
+          const terrain = map.getTerrain();
+          const exaggeration = (terrain && typeof terrain.exaggeration === 'number') ? terrain.exaggeration : 1;
+          
+          const rawElevation = map.queryTerrainElevation
+            ? map.queryTerrainElevation(evt.lngLat) || 0
+            : 0;
+          
+          const elevation = rawElevation / exaggeration;
+
+          // Simple slope approximation
+          const offset = 0.0001;
+          const e1Raw = map.queryTerrainElevation
+            ? map.queryTerrainElevation(new mapboxgl.LngLat(lng + offset, lat)) || rawElevation
+            : rawElevation;
+          const e2Raw = map.queryTerrainElevation
+            ? map.queryTerrainElevation(new mapboxgl.LngLat(lng, lat + offset)) || rawElevation
+            : rawElevation;
+            
+          const e1 = e1Raw / exaggeration;
+          const e2 = e2Raw / exaggeration;
+
+          const dist = 11.132;
+          const slope1 = Math.atan((e1 - elevation) / dist);
+          const slope2 = Math.atan((e2 - elevation) / dist);
+          const slope = Math.max(Math.abs(slope1), Math.abs(slope2)) * (180 / Math.PI);
+
+          setInfo({
+            lng,
+            lat,
+            elev: elevation,
+            slope,
+            pitch: map.getPitch(),
+            bearing: map.getBearing(),
+          });
+      });
+    };
+
+    // Also update on move/rotate to keep pitch/bearing sync if mouse doesn't move but map does
+    const onMove = () => {
+        // Only update camera props if we already have info (mouse is on map)
+        if (rafId.current) cancelAnimationFrame(rafId.current);
+        rafId.current = requestAnimationFrame(() => {
+            setInfo(prev => prev ? ({
+                ...prev,
+                pitch: map.getPitch(),
+                bearing: map.getBearing()
+            }) : null);
+        });
+    };
+    
+    // We attach to the map instance directly
+    map.on('mousemove', onMouseMove);
+    map.on('move', onMove); // Optional: sync bearing/pitch during auto-flight
+
+    return () => {
+      map.off('mousemove', onMouseMove);
+      map.off('move', onMove);
+      if (rafId.current) cancelAnimationFrame(rafId.current);
+    };
+  }, [mapRef, mode]); // Re-bind if mode changes (for throttle limit)
+
   if (!info) return null;
 
   return (

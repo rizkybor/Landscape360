@@ -57,7 +57,12 @@ export const generateContours = (
   // For a typical view, we want a grid of maybe 50x50 or 100x100 points
   const width = bounds.getEast() - bounds.getWest();
   const height = bounds.getNorth() - bounds.getSouth();
-  const resolution = Math.max(width, height) / 80; // Rough dynamic resolution
+  
+  // Mobile optimization: Use lower resolution
+  const isMobile = window.innerWidth < 768;
+  const gridDensity = isMobile ? 40 : 80; 
+  
+  const resolution = Math.max(width, height) / gridDensity; // Rough dynamic resolution
   
   // Use degrees for cellSide if units are degrees, but turf.pointGrid uses units
   // Let's use 'degrees' to avoid projection issues

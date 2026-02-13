@@ -4,8 +4,7 @@ import Map, {
   Source,
   Layer,
 } from "react-map-gl/mapbox";
-import type { MapRef } from "react-map-gl/mapbox";
-import mapboxgl from "mapbox-gl";
+import type { MapRef, MapMouseEvent } from "react-map-gl/mapbox";
 import { useMapStore } from "../store/useMapStore";
 import { ThreeScene } from "./ThreeScene";
 import { ContourLayer } from "./ContourLayer";
@@ -62,19 +61,6 @@ const MapBoxContainerComponent = ({
   } = useMapStore();
 
   const mode = overrideViewMode || activeView;
-
-  // Use ref for telemetry data to avoid frequent re-renders of the map container
-  // But TelemetryOverlay needs state to update.
-  // Solution: Separate TelemetryOverlay state from MapContainer state or throttle it.
-  const [telemetry, setTelemetry] = useState<{
-    lng: number;
-    lat: number;
-    elev: number;
-    slope: number;
-    pitch: number;
-    bearing: number;
-  } | null>(null);
-
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
   useEffect(() => {
@@ -91,8 +77,10 @@ const MapBoxContainerComponent = ({
   }, []);
 
   // Ref to track if we are currently performing a programmatic flyTo
-  // This prevents the sync effect from interfering with smooth animations
   const isFlying = useRef(false);
+  
+  // Ref to track user interaction to decouple gesture from store updates
+  const isInteracting = useRef(false);
 
   // Handle flyTo requests
   useEffect(() => {
@@ -115,28 +103,56 @@ const MapBoxContainerComponent = ({
     }
   }, [flyToDestination, triggerFlyTo]);
 
+  const handleMoveStart = useCallback(() => {
+    isInteracting.current = true;
+  }, []);
+
+  const handleMoveEnd = useCallback(() => {
+    // Add a small delay to ensure we don't snap back immediately after a fling
+    setTimeout(() => {
+        isInteracting.current = false;
+    }, 100);
+  }, []);
+
+  const [isMobile] = useState(window.innerWidth < 768);
+
+  // Throttle store updates to prevent UI lag on mobile
+  const lastStoreUpdate = useRef(0);
+
   const handleMove = useCallback(
     (evt: any) => {
-      // Throttle store updates or use debouncing if needed, but for smooth camera sync we need updates.
-      // However, for React rendering, we can optimize.
+      // If originalEvent is present, it's a user interaction
       if (evt.originalEvent) {
-        setCenter([evt.viewState.longitude, evt.viewState.latitude]);
-        setZoom(evt.viewState.zoom);
-        setPitch(evt.viewState.pitch);
-        setBearing(evt.viewState.bearing);
+          isInteracting.current = true;
       }
+
+      // Throttle store updates
+      // On mobile 3D, we limit state sync to 30fps (approx 33ms) to save CPU for the map renderer
+      const now = Date.now();
+      const throttleLimit = (isMobile && mode === '3D') ? 33 : 0; // 0 = sync every frame on desktop
       
-      const bounds = evt.target.getBounds();
-      if (bounds) {
-        setBounds({
-          north: bounds.getNorth(),
-          south: bounds.getSouth(),
-          east: bounds.getEast(),
-          west: bounds.getWest(),
-        });
+      if (now - lastStoreUpdate.current >= throttleLimit) {
+          lastStoreUpdate.current = now;
+          
+          if (evt.originalEvent) {
+            setCenter([evt.viewState.longitude, evt.viewState.latitude]);
+            setZoom(evt.viewState.zoom);
+            setPitch(evt.viewState.pitch);
+            setBearing(evt.viewState.bearing);
+          }
+          
+          const bounds = evt.target.getBounds();
+          if (bounds) {
+            setBounds({
+              north: bounds.getNorth(),
+              south: bounds.getSouth(),
+              east: bounds.getEast(),
+              west: bounds.getWest(),
+            });
+          }
       }
     },
-    [setCenter, setZoom, setPitch, setBearing, setBounds],
+    [setCenter, setZoom, setPitch, setBearing, setBounds, isMobile, mode],
   );
 
   useEffect(() => {
@@ -164,8 +180,8 @@ const MapBoxContainerComponent = ({
     ) {
       if (!map.isStyleLoaded()) return;
       
-      // Don't interrupt programmatic animations
-      if (isFlying.current) return;
+      // Don't interrupt programmatic animations or user interactions
+      if (isFlying.current || isInteracting.current) return;
 
       // Dynamic duration: fast updates (dragging) = immediate, big jumps = smooth
       // Mode switching (large pitch changes) deserves a longer, more cinematic duration
@@ -192,7 +208,7 @@ const MapBoxContainerComponent = ({
   }, [center, zoom, pitch, bearing, mode]);
 
   const handleMapClick = useCallback(
-    (evt: mapboxgl.MapMouseEvent) => {
+    (evt: MapMouseEvent) => {
       if (interactionMode === "draw_region") {
         const { lng, lat } = evt.lngLat;
         addRegionPoint([lng, lat]);
@@ -200,64 +216,7 @@ const MapBoxContainerComponent = ({
     },
     [interactionMode, addRegionPoint]
   );
-
-  // Throttled Telemetry Update
-  const lastTelemetryUpdate = useRef(0);
   
-  const handleMouseMove = useCallback(
-    (evt: mapboxgl.MapMouseEvent) => {
-      const now = Date.now();
-      // Throttle to 60fps (approx 16ms) or even less (30ms) to save CPU
-      if (now - lastTelemetryUpdate.current < 50) return; // 20fps cap for telemetry UI
-      lastTelemetryUpdate.current = now;
-
-      const map = mapRef.current?.getMap();
-      if (!map) return;
-
-      const { lng, lat } = evt.lngLat;
-      if (!map.isStyleLoaded()) return;
-
-      const terrain = map.getTerrain();
-      const exaggeration = (terrain && typeof terrain.exaggeration === 'number') ? terrain.exaggeration : 1;
-      
-      const rawElevation = map.queryTerrainElevation
-        ? map.queryTerrainElevation(evt.lngLat) || 0
-        : 0;
-      
-      const elevation = rawElevation / exaggeration;
-
-      // Simple slope approximation
-      const offset = 0.0001;
-      const e1Raw = map.queryTerrainElevation
-        ? map.queryTerrainElevation(new mapboxgl.LngLat(lng + offset, lat)) ||
-          rawElevation
-        : rawElevation;
-      const e2Raw = map.queryTerrainElevation
-        ? map.queryTerrainElevation(new mapboxgl.LngLat(lng, lat + offset)) ||
-          rawElevation
-        : rawElevation;
-        
-      const e1 = e1Raw / exaggeration;
-      const e2 = e2Raw / exaggeration;
-
-      const dist = 11.132;
-      const slope1 = Math.atan((e1 - elevation) / dist);
-      const slope2 = Math.atan((e2 - elevation) / dist);
-      const slope =
-        Math.max(Math.abs(slope1), Math.abs(slope2)) * (180 / Math.PI);
-
-      setTelemetry({
-        lng,
-        lat,
-        elev: elevation,
-        slope,
-        pitch: map.getPitch(),
-        bearing: map.getBearing(),
-      });
-    },
-    [mapRef],
-  );
-
   // Auto-geolocate on mount (moved to onLoad for reliability)
   // useEffect(() => { ... }, []); removed
   
@@ -328,9 +287,9 @@ const MapBoxContainerComponent = ({
         
         // Enhance inertia for smoother 'throw' effect when panning
         map.dragPan.enable({
-           linearity: 0.3, // Lower = more slippery/smooth inertia (default 0.3)
+           linearity: mode === '3D' ? 0.5 : 0.3, // Higher linearity in 3D for tighter control
            easing: (t) => t * (2 - t), // Standard easeOutQuad
-           deceleration: 2500, // Higher = stops faster. Default 2500. Let's keep it standard.
+           deceleration: mode === '3D' ? 2000 : 2500, // Slightly faster stop in 3D
         });
 
         // 2. Mobile Optimizations
@@ -468,8 +427,10 @@ const MapBoxContainerComponent = ({
         const pitch = map.getPitch();
 
         // Sensitivity factors (Optimized for smoother control)
-        const bearingDelta = dx * 0.4; // Reduced from 0.8
-        const pitchDelta = dy * 0.25; // Reduced from 0.5
+        // Adaptive sensitivity for 3D mode
+        const sensitivity = mode === '3D' ? 0.6 : 0.4;
+        const bearingDelta = dx * sensitivity; 
+        const pitchDelta = dy * (sensitivity * 0.6); // Pitch usually needs less sensitivity
 
         // Perform mutation directly on map without waiting for react render
         map.setBearing(bearing + bearingDelta);
@@ -532,8 +493,6 @@ const MapBoxContainerComponent = ({
     };
   }, []);
 
-  const isMobile = window.innerWidth < 768;
-
   return (
     <div className={`relative w-full h-full ${className || ""}`}>
       <Map
@@ -549,8 +508,9 @@ const MapBoxContainerComponent = ({
         }}
         minZoom={2}
         maxZoom={20}
+        onMoveStart={handleMoveStart}
+        onMoveEnd={handleMoveEnd}
         onMove={handleMove}
-        onMouseMove={handleMouseMove}
         onClick={handleMapClick}
         onLoad={handleMapLoad}
         onError={handleMapError}
@@ -620,11 +580,12 @@ const MapBoxContainerComponent = ({
           mapRef={mapRef} 
           onGeolocate={handleGeolocate} 
           bearing={bearing} 
+          pitch={pitch}
         />
       </Map>
 
       {showControls && <ControlPanel />}
-      {showControls && <TelemetryOverlay info={telemetry} />}
+      {showControls && <TelemetryOverlay mapRef={mapRef} />}
       
       {/* Map Error Indicator */}
       {mapError && (
