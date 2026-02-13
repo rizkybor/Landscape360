@@ -56,7 +56,7 @@ export const MapDashboard = ({ initialLocation }: { initialLocation?: [number, n
       <button
         onClick={() => setIsSplitScreen(!isSplitScreen)}
         className="
-          cursor-pointer absolute bottom-10 md:bottom-8 left-4 md:left-8 z-30 
+          cursor-pointer absolute bottom-15 md:bottom-8 left-4 md:left-8 z-30 
           bg-white/10 backdrop-blur-md 
           border border-white/20 
           p-3 rounded-full shadow-lg 
