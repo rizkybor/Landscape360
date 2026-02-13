@@ -8,18 +8,35 @@ const formatDMS = (val: number, isLat: boolean): string => {
   const absVal = Math.abs(val);
   const d = Math.floor(absVal);
   const m = Math.floor((absVal - d) * 60);
-  const s = ((absVal - d - m / 60) * 3600).toFixed(1);
+  // Round seconds to integer to avoid decimals like "60.0"
+  const s = Math.round(((absVal - d - m / 60) * 3600));
+  
+  // Handle case where seconds round up to 60
+  let finalS = s;
+  let finalM = m;
+  let finalD = d;
+
+  if (finalS === 60) {
+      finalS = 0;
+      finalM += 1;
+  }
+  if (finalM === 60) {
+      finalM = 0;
+      finalD += 1;
+  }
   
   const dir = isLat 
     ? (val >= 0 ? 'N' : 'S') 
     : (val >= 0 ? 'E' : 'W');
 
-  // Simplify display based on precision
-  if (s === "0.0") {
-      if (m === 0) return `${d}° ${dir}`;
-      return `${d}° ${m}' ${dir}`;
-  }
-  return `${d}° ${m}' ${s}" ${dir}`;
+  // Always show seconds as 00" if 0, and ensure 2 digits padding if needed?
+  // User asked to "add 00" if vertical" and "don't use 60 but 00" for horizontal".
+  // User also said "no decimals".
+  // Let's standardise: always show D° M' S" format with integer seconds.
+  
+  const sStr = finalS < 10 ? `0${finalS}` : `${finalS}`;
+  
+  return `${finalD}° ${finalM}' ${sStr}" ${dir}`;
 };
 
 export const GridDMSLayer = React.memo(() => {
@@ -183,26 +200,53 @@ export const GridDMSLayer = React.memo(() => {
         }}
       />
       
-      {/* Grid Labels (Halo for readability) */}
+      {/* Grid Labels - Latitude (Horizontal) */}
       <Layer
-        id="dms-grid-labels"
+        id="dms-grid-labels-lat"
         type="symbol"
         layout={{
           'text-field': ['get', 'text'],
           'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-          'text-size': 11,
+          'text-size': 13,
           'text-justify': 'center',
           'text-anchor': 'center',
-          // Offset labels slightly based on axis? No, center is fine for now.
-          'symbol-placement': 'point'
+          'symbol-placement': 'point',
+          'text-allow-overlap': true,
+          'text-ignore-placement': true
         }}
         paint={{
-          'text-color': '#ffffff',
-          'text-halo-color': '#000000',
-          'text-halo-width': 2,
-          'text-opacity': Math.min(1, gridOpacity + 0.3) // Labels slightly more visible than lines
+          'text-color': '#3b82f6', // Blue color (blue-500 equivalent)
+          'text-halo-color': '#ffffff', // White halo for contrast
+          'text-halo-width': 1,
+          'text-halo-blur': 0.5,
+          'text-opacity': gridOpacity // Direct sync with grid opacity
         }}
-        filter={['==', 'type', 'grid-label']}
+        filter={['all', ['==', 'type', 'grid-label'], ['==', 'axis', 'lat']]}
+      />
+
+      {/* Grid Labels - Longitude (Vertical) */}
+      <Layer
+        id="dms-grid-labels-lng"
+        type="symbol"
+        layout={{
+          'text-field': ['get', 'text'],
+          'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+          'text-size': 13,
+          'text-justify': 'center',
+          'text-anchor': 'center',
+          'symbol-placement': 'point',
+          'text-rotate': -90, // Vertical text
+          'text-allow-overlap': true,
+          'text-ignore-placement': true
+        }}
+        paint={{
+          'text-color': '#3b82f6', // Blue color
+          'text-halo-color': '#ffffff', // White halo
+          'text-halo-width': 1,
+          'text-halo-blur': 0.5,
+          'text-opacity': gridOpacity // Direct sync with grid opacity
+        }}
+        filter={['all', ['==', 'type', 'grid-label'], ['==', 'axis', 'lng']]}
       />
     </Source>
   );
