@@ -24,11 +24,13 @@ export const ContourLayer = () => {
       const bounds = map.getBounds();
       if (bounds) {
         // Run in a timeout to avoid blocking UI too much, or ideally use a worker
-        // For now, simple execution
-        setTimeout(() => {
+        // Debounce: Clear previous timeout
+        if ((window as any)._contourTimeout) clearTimeout((window as any)._contourTimeout);
+        
+        (window as any)._contourTimeout = setTimeout(() => {
             const data = generateContours(map, bounds, contourInterval);
             if (data) setContours(data);
-        }, 50); // Reduced timeout for faster updates
+        }, 200); // Increased debounce to 200ms to prevent lag during rapid movement
       }
     };
 
