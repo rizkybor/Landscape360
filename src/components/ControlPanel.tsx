@@ -78,21 +78,38 @@ export const ControlPanel = () => {
 
   // Swipe Down to Close Logic (Mobile)
   const touchStart = useRef<number | null>(null);
+  const [touchOffset, setTouchOffset] = useState(0); // For reactive transform
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (!isMobile) return;
     touchStart.current = e.targetTouches[0].clientY;
+    setIsDragging(true);
+  };
+  
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isMobile || touchStart.current === null || !isDragging) return;
+    const currentY = e.targetTouches[0].clientY;
+    const diff = currentY - touchStart.current;
+    
+    // Only allow dragging downwards (positive values)
+    if (diff > 0) {
+      setTouchOffset(diff);
+      e.preventDefault(); // Prevent scroll while dragging panel
+    }
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (!isMobile || touchStart.current === null) return;
-    const touchEnd = e.changedTouches[0].clientY;
-    const distance = touchEnd - touchStart.current;
     
-    // Swipe down threshold > 50px
-    if (distance > 50) {
+    // Threshold to close: > 100px or fast swipe
+    if (touchOffset > 100) {
       setIsOpen(false);
-    }
+    } 
+    
+    // Reset state with animation
+    setTouchOffset(0);
+    setIsDragging(false);
     touchStart.current = null;
   };
 
@@ -211,20 +228,29 @@ export const ControlPanel = () => {
       )}
 
       <div
+        style={{
+          transform: isMobile && isOpen && isDragging 
+            ? `translateY(${touchOffset}px)` // Follow finger
+            : isOpen 
+              ? 'translateY(0)' 
+              : 'translateY(100%)', // Fully closed
+          transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)', // Smooth snap
+        }}
         className={`
-        fixed z-50 transition-all duration-300 ease-in-out
+        fixed z-50 
         /* Mobile: Bottom Sheet style */
         bottom-0 left-0 right-0 max-h-[70vh] rounded-t-2xl
         /* Desktop: Floating style */
         md:top-4 md:left-4 md:bottom-auto md:right-auto md:w-64 md:rounded-xl
         bg-black/80 md:bg-black/60 backdrop-blur-md md:backdrop-blur-xl border-t md:border border-white/20 text-white shadow-2xl flex flex-col
-        ${!isOpen ? "translate-y-full md:translate-y-0 md:opacity-0 md:pointer-events-none" : "translate-y-0"}
+        ${!isOpen ? "md:opacity-0 md:pointer-events-none" : ""}
       `}
       >
         {/* Mobile Drag Handle Indicator */}
         <div 
-          className="md:hidden w-full flex items-center justify-center pt-3 pb-1 shrink-0 z-30 cursor-grab active:cursor-grabbing"
+          className="md:hidden w-full flex items-center justify-center pt-3 pb-1 shrink-0 z-30 cursor-grab active:cursor-grabbing touch-none"
           onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
           <div className="w-12 h-1.5 bg-white/20 rounded-full shadow-sm"></div>
@@ -232,8 +258,9 @@ export const ControlPanel = () => {
 
         {/* Branding Header (Glassmorphism) - FIXED POSITIONING */}
         <div 
-          className="relative shrink-0 z-20"
+          className="relative shrink-0 z-20 touch-none"
           onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
           {/* Background Decor - Clipped */}
@@ -298,11 +325,12 @@ export const ControlPanel = () => {
 
         {/* Header / Drag Handle for Mobile - NOW JUST A SUB-HEADER FOR CONTROLS */}
         <div
-          className="p-3 flex justify-between items-center border-b border-white/10 cursor-pointer md:cursor-default bg-black/20"
+          className="p-3 flex justify-between items-center border-b border-white/10 cursor-pointer md:cursor-default bg-black/20 touch-none"
           onClick={() => {
             if (isMobile) setIsOpen(false);
           }}
           onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
           <h3 className="font-bold flex items-center gap-2 text-xs text-gray-400 uppercase tracking-wider">
