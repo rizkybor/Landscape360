@@ -3,6 +3,7 @@ import { Plus, Minus, Compass, Crosshair, Camera, Loader2, X } from "lucide-reac
 import type { MapRef } from "react-map-gl/mapbox";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import JSZip from "jszip";
 import geoportalLogo from "../assets/geoportal360.png";
 import { useSurveyStore } from "../store/useSurveyStore";
 import { useMapStore } from "../store/useMapStore";
@@ -131,61 +132,212 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         const baseWidth = canvas.width;
         
         // Mobile Fix: Detect if on mobile (screen width < 768px) and cap the width/scale
-        // Mobile browsers often have high DPR but low memory. 
-        // If canvas.width is huge (e.g. 3000px on retina mobile), we should scale it down for export.
         const isMobile = window.innerWidth < 768;
-        let exportWidth = baseWidth;
-        // let exportScale = 1; // Removed unused variable
         
-        if (isMobile && baseWidth > 1200) {
-            exportWidth = 1200; // Cap width to safe limit for mobile
-            // exportScale = exportWidth / baseWidth; // Removed unused assignment
-        }
+        // Professional Output: Always use a high-resolution "Desktop-like" width for export
+        const exportWidth = isMobile ? 1280 : Math.max(baseWidth, 1280);
 
-        // Calculate dynamic scale based on resolution (High DPI screens need bigger text)
-        // But for mobile export, we want readable text relative to the exported image size
+        // Calculate dynamic scale based on resolution
         const scale = Math.max(1, exportWidth / 1920); 
         
-        // Create a temporary container for the watermark composition
-        const container = document.createElement('div');
-        container.style.position = 'fixed';
-        container.style.left = '-9999px';
-        container.style.top = '0';
-        container.style.width = `${exportWidth}px`;
-        // container.style.minHeight = `${canvas.height * exportScale}px`; // Scale height proportionally
-        container.style.background = '#111827'; // Dark background for the report container
-        container.style.display = 'flex';
-        container.style.flexDirection = 'column';
+        // --- PROFESSIONAL GENERATION (MULTI-PAGE / ZIP) ---
         
-        document.body.appendChild(container);
+        // Define Layout Constants (A4 Aspect Ratio: 1 : 1.414)
+        const PAGE_WIDTH = exportWidth;
+        const PAGE_HEIGHT = Math.floor(exportWidth * 1.414);
+        const MARGIN = 40 * scale;
+        
+        const captureScale = 2; // High quality export
 
+        // Helper to capture a specific DOM element as a page
+        const capturePage = async (pageContent: HTMLElement) => {
+            return await html2canvas(pageContent, {
+                useCORS: true,
+                allowTaint: true,
+                scale: captureScale, // High res capture
+                backgroundColor: '#111827',
+                logging: false,
+                width: PAGE_WIDTH,
+                height: PAGE_HEIGHT,
+                windowWidth: PAGE_WIDTH,
+                windowHeight: PAGE_HEIGHT
+            });
+        };
+
+        // Container for building pages
+        const pageContainer = document.createElement('div');
+        pageContainer.style.position = 'fixed';
+        pageContainer.style.left = '-9999px';
+        pageContainer.style.top = '0';
+        pageContainer.style.width = `${PAGE_WIDTH}px`;
+        pageContainer.style.height = `${PAGE_HEIGHT}px`;
+        pageContainer.style.backgroundColor = '#111827';
+        pageContainer.style.color = 'white';
+        pageContainer.style.fontFamily = "'Inter', sans-serif";
+        pageContainer.style.overflow = 'hidden'; // Clip content
+        pageContainer.style.display = 'flex';
+        pageContainer.style.flexDirection = 'column';
+        document.body.appendChild(pageContainer);
+
+        // Store captured canvases
+        const pageCanvases: HTMLCanvasElement[] = [];
+
+        // --- PAGE 1: HEADER + MAP + TABLE START ---
+        
+        // 1. Add Header
+        const headerHeight = 100 * scale;
+        const renderHeader = (isFirstPage: boolean, pageNum: number) => `
+            <div style="height: ${headerHeight}px; padding: ${MARGIN}px ${MARGIN}px 0 ${MARGIN}px; display: flex; justify-content: space-between; align-items: start; margin-bottom: ${20 * scale}px;">
+                <div style="display: flex; align-items: center; gap: ${16 * scale}px;">
+                    <img src="${geoportalLogo}" style="width: ${40 * scale}px; height: ${40 * scale}px; object-fit: contain;" />
+                    <div>
+                        <h1 style="color: white; font-family: 'Inter', sans-serif; font-weight: 800; font-size: ${20 * scale}px; line-height: 1; margin: 0; letter-spacing: -0.02em;">Landscape 360</h1>
+                        <p style="color: #60a5fa; font-family: 'Inter', monospace; font-size: ${10 * scale}px; margin: ${4 * scale}px 0 0 0; letter-spacing: 0.1em; text-transform: uppercase;">${isFirstPage ? 'Professional Survey Report' : 'Survey Report Continuation'}</p>
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="color: white; font-family: 'Inter', monospace; font-size: ${12 * scale}px; font-weight: bold;">${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                    <div style="color: #9ca3af; font-family: 'Inter', monospace; font-size: ${10 * scale}px;">Page ${pageNum}</div>
+                </div>
+            </div>
+            <div style="height: 1px; background: #374151; margin: 0 ${MARGIN}px;"></div>
+        `;
+
+        // Table Constants
+        const tableHeaderHeight = 50 * scale;
+        const rowHeight = 45 * scale;
+        const footerHeight = 60 * scale;
+        
+        // Footer Render Function
+        const renderPageFooter = (pageNum: number) => `
+            <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: ${footerHeight}px; padding: 0 ${MARGIN}px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #374151; background-color: #111827;">
+                <div style="display: flex; gap: ${16 * scale}px; align-items: center;">
+                    <span style="color: #6b7280; font-size: ${10 * scale}px;">© ${new Date().getFullYear()} Landscape 360</span>
+                    <span style="color: #4b5563; font-size: ${10 * scale}px;">|</span>
+                    <span style="color: #6b7280; font-size: ${10 * scale}px;">Professional Survey Report</span>
+                </div>
+                <div style="color: #9ca3af; font-size: ${10 * scale}px; font-weight: 500;">
+                    Page ${pageNum}
+                </div>
+            </div>
+        `;
+        
+        // Helper to add footer to current page container
+        const addFooter = (pageNum: number) => {
+            const f = document.createElement('div');
+            f.innerHTML = renderPageFooter(pageNum);
+            pageContainer.appendChild(f.firstElementChild as Node);
+        };
+        
+        // Initialize Page 1
+        let currentPageNum = 1;
+        pageContainer.innerHTML = renderHeader(true, currentPageNum);
+        
+        // 2. Add Map (Only on Page 1)
+        const mapSection = document.createElement('div');
+        mapSection.style.padding = `${20 * scale}px ${MARGIN}px`;
+        
         // 1. Map Image Container
         const mapContainer = document.createElement('div');
         mapContainer.style.position = 'relative';
         mapContainer.style.width = '100%';
-        // mapContainer.style.height = `${canvas.height * exportScale}px`;
         
         const mapImage = new Image();
-        // Mobile Fix: Set preserveDrawingBuffer=true in mapbox config OR
-        // Use simpler image loading for mapbox canvas
-        mapImage.src = canvas.toDataURL('image/png', 0.85); 
-        mapImage.style.width = '100%';
-        mapImage.style.height = 'auto'; // Let it maintain aspect ratio
-        mapImage.style.display = 'block'; // Remove inline spacing
-        
-        // IMPORTANT: Handle Cross-Origin Taint for Mobile WebGL
+        mapImage.src = canvas.toDataURL('image/png', 0.9); 
         mapImage.crossOrigin = "anonymous";
         
-        await new Promise((resolve, reject) => {
+        await new Promise((resolve) => {
             mapImage.onload = resolve;
-            mapImage.onerror = reject;
-            // Fallback timeout
-            setTimeout(resolve, 2000);
+            mapImage.onerror = resolve; 
+            setTimeout(resolve, 1000);
         });
         
         mapContainer.appendChild(mapImage);
+
+        // --- Add Survey Points Overlay (Prisma Markers) ---
+        if (hasData) {
+            const mapContainerEl = map.getContainer();
+            const containerWidth = mapContainerEl.clientWidth;
+            const containerHeight = mapContainerEl.clientHeight;
+            
+            allPoints.forEach((p) => {
+                if (!p.name) return;
+
+                const pos = map.project([p.lng, p.lat]);
+                
+                if (pos.x >= -100 && pos.x <= containerWidth + 100 && 
+                    pos.y >= -100 && pos.y <= containerHeight + 100) {
+                    
+                    const leftPct = (pos.x / containerWidth) * 100;
+                    const topPct = (pos.y / containerHeight) * 100;
+                    
+                    const markerWrapper = document.createElement('div');
+                    markerWrapper.style.position = 'absolute';
+                    markerWrapper.style.left = `${leftPct}%`;
+                    markerWrapper.style.top = `${topPct}%`;
+                    markerWrapper.style.width = '0';
+                    markerWrapper.style.height = '0';
+                    markerWrapper.style.overflow = 'visible';
+                    markerWrapper.style.zIndex = '10'; 
+                    
+                    // 1. The Diamond Marker
+                    const markerSize = 12 * scale;
+                    const markerEl = document.createElement('div');
+                    markerEl.style.position = 'absolute';
+                    markerEl.style.width = `${markerSize}px`;
+                    markerEl.style.height = `${markerSize}px`;
+                    markerEl.style.backgroundColor = '#6366f1'; 
+                    markerEl.style.border = `${2 * scale}px solid black`;
+                    markerEl.style.left = `-${markerSize/2}px`;
+                    markerEl.style.top = `-${markerSize/2}px`;
+                    markerEl.style.transform = 'rotate(45deg)';
+                    markerWrapper.appendChild(markerEl);
+
+                    // 2. The Label (Professional Pill Style)
+                    const labelEl = document.createElement('div');
+                    labelEl.style.position = 'absolute';
+                    labelEl.style.bottom = `${markerSize + (8 * scale)}px`;
+                    labelEl.style.left = '50%';
+                    labelEl.style.transform = 'translateX(-50%)';
+                    labelEl.style.backgroundColor = '#17193b'; 
+                    labelEl.style.opacity = '1';
+                    labelEl.style.border = `${3 * scale}px solid #4338ca`;
+                    labelEl.style.borderRadius = `${24 * scale}px`;
+                    labelEl.style.padding = `${5 * scale}px ${20 * scale}px ${20 * scale}px`;
+                    labelEl.style.display = 'flex';
+                    labelEl.style.alignItems = 'center';
+                    labelEl.style.justifyContent = 'center'; 
+                    labelEl.style.gap = `${16 * scale}px`;
+                    labelEl.style.whiteSpace = 'nowrap';
+                    labelEl.style.boxShadow = '0 8px 16px -4px rgba(0, 0, 0, 0.6)';
+                    labelEl.style.fontFamily = "'Inter', sans-serif";
+
+                    const nameSpan = document.createElement('span');
+                    nameSpan.textContent = p.name;
+                    nameSpan.style.color = '#c7d2fe';
+                    nameSpan.style.fontWeight = '800';
+                    nameSpan.style.fontSize = `${16 * scale}px`;
+                    nameSpan.style.letterSpacing = '0.05em';
+                    nameSpan.style.textTransform = 'uppercase';
+                    nameSpan.style.lineHeight = '1';
+                    labelEl.appendChild(nameSpan);
+
+                    const elevSpan = document.createElement('span');
+                    elevSpan.textContent = `${p.elevation.toFixed(1)} mdpl`;
+                    elevSpan.style.color = '#c7d2fe';
+                    elevSpan.style.fontWeight = '700';
+                    elevSpan.style.fontSize = `${16 * scale}px`;
+                    elevSpan.style.letterSpacing = '0.05em';
+                    elevSpan.style.lineHeight = '1';
+                    labelEl.appendChild(elevSpan);
+
+                    markerWrapper.appendChild(labelEl);
+                    mapContainer.appendChild(markerWrapper);
+                }
+            });
+        }
         
-        // Add Overlay to Map Image (Header/Footer Watermark)
+        // Add Overlay to Map Image
         const overlay = document.createElement('div');
         overlay.style.position = 'absolute';
         overlay.style.inset = '0';
@@ -212,7 +364,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                 </div>
             </div>
 
-            <!-- Bottom Footer (Map Info) -->
+            <!-- Bottom Footer -->
             <div style="display: flex; justify-content: space-between; align-items: end;">
                 <div style="background: rgba(0,0,0,0.6); padding: ${16 * scale}px; border-radius: ${16 * scale}px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.15); display: grid; grid-template-columns: auto auto; gap: ${8 * scale}px ${24 * scale}px; color: white; font-family: 'Inter', monospace; font-size: ${12 * scale}px;">
                     <div style="color: #9ca3af;">Center Point</div>
@@ -221,7 +373,6 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                     <div style="color: #9ca3af;">Avg Elevation</div>
                     <div style="font-weight: bold; color: #fde047;">${(() => {
                         const raw = map.queryTerrainElevation ? map.queryTerrainElevation(map.getCenter()) : 0;
-                        // Normalize exaggerated elevation
                         const terrain = map.getTerrain();
                         const exaggeration = (terrain && typeof terrain.exaggeration === 'number') ? terrain.exaggeration : 1;
                         return ((raw || 0) / exaggeration).toFixed(1);
@@ -238,61 +389,137 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
             </div>
         `;
         mapContainer.appendChild(overlay);
-        container.appendChild(mapContainer);
 
-        // 2. Data Table & Graph Section (If points exist)
-        if (hasData) {
-            const contentSection = document.createElement('div');
-            contentSection.style.padding = `${40 * scale}px`;
-            contentSection.style.backgroundColor = '#111827';
-            contentSection.style.color = 'white';
-            contentSection.style.fontFamily = "'Inter', sans-serif";
+        // Calculate Map Height based on Aspect Ratio
+        const mapAspectRatio = canvas.height / canvas.width;
+        const mapDisplayWidth = PAGE_WIDTH - (MARGIN * 2);
+        const mapDisplayHeight = mapDisplayWidth * mapAspectRatio;
+
+        mapContainer.style.height = `${mapDisplayHeight}px`; 
+        mapContainer.style.overflow = 'hidden';
+        mapContainer.style.borderRadius = `${16 * scale}px`;
+        mapContainer.style.border = `1px solid #374151`;
+        
+        mapImage.style.width = '100%';
+        mapImage.style.height = '100%';
+        mapImage.style.objectFit = 'contain'; 
+        
+        mapSection.appendChild(mapContainer);
+        pageContainer.appendChild(mapSection);
+
+        // 3. Table Header & Content
+        let currentY = headerHeight + (20 * scale) + mapDisplayHeight + (40 * scale); // Header + Map Section + Padding
+        
+        // Data Processing
+        let cumulativeDist = 0;
+        const processedPoints = hasData ? allPoints.map((p, idx) => {
+            let dist = 0;
+            if (idx > 0) {
+                const prev = allPoints[idx - 1];
+                const from = point([prev.lng, prev.lat]);
+                const to = point([p.lng, p.lat]);
+                dist = distance(from, to, { units: 'meters' });
+                cumulativeDist += dist;
+            }
+            return { ...p, dist, totalDist: cumulativeDist };
+        }) : [];
+
+        // Create Table Wrapper
+        const createTableWrapper = () => {
+            const w = document.createElement('div');
+            w.style.padding = `0 ${MARGIN}px`;
+            w.innerHTML = `
+                <div style="display: flex; align-items: center; gap: ${12 * scale}px; margin-bottom: ${16 * scale}px;">
+                    <div style="width: ${4 * scale}px; height: ${24 * scale}px; background-color: #3b82f6; border-radius: 4px;"></div>
+                    <h2 style="font-size: ${18 * scale}px; font-weight: bold; margin: 0; color: white;">Survey Data Points</h2>
+                </div>
+                <table style="width: 100%; border-collapse: collapse; font-size: ${12 * scale}px; text-align: left;">
+                    <thead>
+                        <tr style="background-color: #1f2937; color: #9ca3af; text-transform: uppercase; font-size: ${10 * scale}px; letter-spacing: 0.05em; border-bottom: 2px solid #374151;">
+                            <th style="padding: ${10 * scale}px;">#</th>
+                            <th style="padding: ${10 * scale}px;">Point Name</th>
+                            <th style="padding: ${10 * scale}px;">Coordinates</th>
+                            <th style="padding: ${10 * scale}px;">Elevation</th>
+                            <th style="padding: ${10 * scale}px;">Dist.</th>
+                            <th style="padding: ${10 * scale}px;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pdf-table-body"></tbody>
+                </table>
+            `;
+            return w;
+        };
+
+        let currentTableWrapper = createTableWrapper();
+        pageContainer.appendChild(currentTableWrapper);
+        addFooter(currentPageNum); // Add footer to first page
+        
+        let tbody = currentTableWrapper.querySelector('#pdf-table-body')!;
+        
+        // Render Rows
+        for (let i = 0; i < processedPoints.length; i++) {
+            const p = processedPoints[i];
             
-            // Calculate distances and prepare data
-            let cumulativeDist = 0;
-            const processedPoints = allPoints.map((p, idx) => {
-                let dist = 0;
-                if (idx > 0) {
-                    const prev = allPoints[idx - 1];
-                    const from = point([prev.lng, prev.lat]);
-                    const to = point([p.lng, p.lat]);
-                    dist = distance(from, to, { units: 'meters' });
-                    cumulativeDist += dist;
-                }
-                return {
-                    ...p,
-                    dist,
-                    totalDist: cumulativeDist
-                };
-            });
+            // Check overflow
+            if (currentY + rowHeight > PAGE_HEIGHT - footerHeight - (20 * scale)) {
+                // Capture Current Page
+                pageCanvases.push(await capturePage(pageContainer));
+                currentPageNum++;
+                
+                // Reset Container for New Page
+                pageContainer.innerHTML = renderHeader(false, currentPageNum);
+                addFooter(currentPageNum);
+                
+                // New Table Wrapper
+                currentTableWrapper = createTableWrapper();
+                pageContainer.appendChild(currentTableWrapper);
+                tbody = currentTableWrapper.querySelector('#pdf-table-body')!;
+                
+                currentY = headerHeight + (20 * scale) + tableHeaderHeight + (40 * scale); // Reset Y
+            }
+            
+            // Add Row
+            const tr = document.createElement('tr');
+            tr.style.borderBottom = '1px solid #374151';
+            tr.innerHTML = `
+                <td style="padding: ${10 * scale}px; color: #3b82f6; font-weight: bold;">${i + 1}</td>
+                <td style="padding: ${10 * scale}px; font-weight: 500; color: white;">${p.name || '-'}</td>
+                <td style="padding: ${10 * scale}px; font-family: monospace; color: #d1d5db;">${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}</td>
+                <td style="padding: ${10 * scale}px; font-family: monospace; color: #fde047;">${p.elevation.toFixed(1)} m</td>
+                <td style="padding: ${10 * scale}px; font-family: monospace; color: #d1d5db;">${i === 0 ? '-' : p.dist.toFixed(1)} m</td>
+                <td style="padding: ${10 * scale}px; font-family: monospace; color: #9ca3af;">${p.totalDist.toFixed(1)} m</td>
+            `;
+            tbody.appendChild(tr);
+            currentY += rowHeight;
+        }
 
-            // Generate Table Rows
-            const rows = processedPoints.map((p, idx) => `
-                <tr style="border-bottom: 1px solid #374151;">
-                    <td style="padding: ${12 * scale}px; color: #3b82f6; font-weight: bold;">${idx + 1}</td>
-                    <td style="padding: ${12 * scale}px; font-weight: 500;">${p.name || `Point ${idx + 1}`}</td>
-                    <td style="padding: ${12 * scale}px; font-family: monospace;">${toDMS(p.lat, true)} <br/> ${toDMS(p.lng, false)}</td>
-                    <td style="padding: ${12 * scale}px; font-family: monospace;">${idx === 0 ? '-' : p.dist.toFixed(1) + ' m'}</td>
-                    <td style="padding: ${12 * scale}px; font-family: monospace; color: #fde047;">${p.totalDist.toFixed(1)} m</td>
-                </tr>
-            `).join('');
-
-            // Generate Elevation Chart (SVG) - Professional Styling
-            const chartHeight = 300 * scale;
-            const chartWidth = baseWidth - (80 * scale); // padding
+        // 4. Chart Section (Check if fits on last page, else new page)
+        const chartHeight = 350 * scale;
+        if (currentY + chartHeight > PAGE_HEIGHT - footerHeight - (20 * scale)) {
+            pageCanvases.push(await capturePage(pageContainer));
+            currentPageNum++;
+            
+            pageContainer.innerHTML = renderHeader(false, currentPageNum);
+            addFooter(currentPageNum);
+            currentY = headerHeight + (20 * scale);
+        }
+        
+        // Add Chart
+        if (hasData) {
+            // Generate Chart Data
+            const chartWidth = exportWidth - (80 * scale);
             const chartPadding = { top: 40 * scale, right: 40 * scale, bottom: 60 * scale, left: 60 * scale };
             const graphWidth = chartWidth - chartPadding.left - chartPadding.right;
             const graphHeight = chartHeight - chartPadding.top - chartPadding.bottom;
 
             const maxElev = Math.max(...processedPoints.map(p => p.elevation));
             const minElev = Math.min(...processedPoints.map(p => p.elevation));
-            const elevBuffer = (maxElev - minElev) * 0.1 || 5; // 10% buffer
+            const elevBuffer = (maxElev - minElev) * 0.1 || 5; 
             const yMax = maxElev + elevBuffer;
             const yMin = minElev - elevBuffer;
             const yRange = yMax - yMin || 1;
             const maxDist = cumulativeDist || 1;
 
-            // Generate Point Coordinates
             const pointsCoords = processedPoints.map(p => ({
                 x: chartPadding.left + (p.totalDist / maxDist) * graphWidth,
                 y: chartPadding.top + graphHeight - ((p.elevation - yMin) / yRange) * graphHeight,
@@ -301,65 +528,22 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                 label: (p.name || '').substring(0, 3)
             }));
 
-            // SVG Path Commands
             const linePath = pointsCoords.map((p, i) => `${i===0?'M':'L'} ${p.x},${p.y}`).join(' ');
             const areaPath = `${linePath} L ${pointsCoords[pointsCoords.length-1].x},${chartPadding.top + graphHeight} L ${pointsCoords[0].x},${chartPadding.top + graphHeight} Z`;
-            
-            // Unique ID for gradient
             const gradientId = `elevGradient-${Date.now()}`;
 
-            contentSection.innerHTML = `
-                <div style="display: flex; gap: ${40 * scale}px; align-items: flex-start;">
-                    <!-- Table Column -->
-                    <div style="flex: 1;">
-                        <div style="display: flex; align-items: center; gap: ${12 * scale}px; margin-bottom: ${24 * scale}px; border-bottom: 1px solid #374151; padding-bottom: ${16 * scale}px;">
-                            <div style="width: ${4 * scale}px; height: ${24 * scale}px; background-color: #3b82f6; border-radius: 4px;"></div>
-                            <h2 style="font-size: ${20 * scale}px; font-weight: bold; margin: 0;">Survey Data Points</h2>
-                            <span style="background-color: #1f2937; color: #9ca3af; padding: ${4 * scale}px ${12 * scale}px; border-radius: 99px; font-size: ${12 * scale}px; font-weight: 500;">${allPoints.length} Points</span>
-                        </div>
-                        
-                        <table style="width: 100%; border-collapse: collapse; font-size: ${14 * scale}px; text-align: left;">
-                            <thead>
-                                <tr style="background-color: #1f2937; color: #9ca3af; text-transform: uppercase; font-size: ${11 * scale}px; letter-spacing: 0.05em;">
-                                    <th style="padding: ${12 * scale}px; border-radius: 8px 0 0 8px;">#</th>
-                                    <th style="padding: ${12 * scale}px;">Point Name</th>
-                                    <th style="padding: ${12 * scale}px;">Coordinates (DMS)</th>
-                                    <th style="padding: ${12 * scale}px;">Distance</th>
-                                    <th style="padding: ${12 * scale}px; border-radius: 0 8px 8px 0;">Total Dist.</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${rows}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Elevation Profile Chart -->
-                <div style="margin-top: ${40 * scale}px; padding: ${32 * scale}px; background: #1f2937; border-radius: ${16 * scale}px; border: 1px solid #374151; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
+             const chartContainer = document.createElement('div');
+             chartContainer.style.padding = `0 ${MARGIN}px`;
+             chartContainer.style.marginTop = `${40 * scale}px`;
+             
+             chartContainer.innerHTML = `
+                <div style="padding: ${32 * scale}px; background: #1f2937; border-radius: ${16 * scale}px; border: 1px solid #374151; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: ${24 * scale}px;">
                          <div style="display: flex; align-items: center; gap: ${12 * scale}px;">
                             <div style="width: ${4 * scale}px; height: ${20 * scale}px; background-color: #fde047; border-radius: 4px;"></div>
                             <h3 style="font-size: ${18 * scale}px; font-weight: bold; color: white; margin: 0;">Elevation Profile Analysis</h3>
                          </div>
-                         <div style="display: flex; gap: ${24 * scale}px; font-size: ${12 * scale}px; font-family: monospace; color: #9ca3af; background: rgba(0,0,0,0.2); padding: ${8 * scale}px ${16 * scale}px; border-radius: 8px;">
-                            <div style="display: flex; align-items: center; gap: ${8 * scale}px;">
-                                <span style="color: #6b7280;">MIN</span>
-                                <span style="color: white; font-weight: bold;">${minElev.toFixed(1)} mdpl</span>
-                            </div>
-                            <div style="width: 1px; background: #4b5563;"></div>
-                            <div style="display: flex; align-items: center; gap: ${8 * scale}px;">
-                                <span style="color: #6b7280;">MAX</span>
-                                <span style="color: white; font-weight: bold;">${maxElev.toFixed(1)} mdpl</span>
-                            </div>
-                            <div style="width: 1px; background: #4b5563;"></div>
-                            <div style="display: flex; align-items: center; gap: ${8 * scale}px;">
-                                <span style="color: #6b7280;">GAIN</span>
-                                <span style="color: #fde047; font-weight: bold;">+${(maxElev - minElev).toFixed(1)}m</span>
-                            </div>
-                         </div>
                     </div>
-
                     <div style="position: relative; width: 100%; height: ${chartHeight}px;">
                         <svg width="100%" height="100%" viewBox="0 0 ${chartWidth} ${chartHeight}" preserveAspectRatio="none" style="overflow: visible;">
                              <defs>
@@ -368,81 +552,50 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                                     <stop offset="100%" stop-color="#fde047" stop-opacity="0.05"/>
                                 </linearGradient>
                              </defs>
-
-                             <!-- Grid System -->
                              ${[0, 0.2, 0.4, 0.6, 0.8, 1].map(t => {
                                 const y = chartPadding.top + (graphHeight * t);
                                 const labelValue = yMax - (yRange * t);
-                                return `
-                                    <line x1="${chartPadding.left}" y1="${y}" x2="${chartWidth - chartPadding.right}" y2="${y}" stroke="#374151" stroke-dasharray="4" stroke-width="1" />
-                                    <text x="${chartPadding.left - (12 * scale)}" y="${y + (4 * scale)}" text-anchor="end" fill="#6b7280" font-size="${11 * scale}px" font-family="monospace" font-weight="500">${labelValue.toFixed(0)}</text>
-                                `;
+                                return `<line x1="${chartPadding.left}" y1="${y}" x2="${chartWidth - chartPadding.right}" y2="${y}" stroke="#374151" stroke-dasharray="4" stroke-width="1" />
+                                    <text x="${chartPadding.left - (12 * scale)}" y="${y + (4 * scale)}" text-anchor="end" fill="#6b7280" font-size="${11 * scale}px" font-family="monospace" font-weight="500">${labelValue.toFixed(0)}</text>`;
                              }).join('')}
-
-                            <!-- Area & Line -->
                             <path d="${areaPath}" fill="url(#${gradientId})" />
                             <path d="${linePath}" fill="none" stroke="#fde047" stroke-width="${3 * scale}" stroke-linejoin="round" stroke-linecap="round" />
-                            
-                            <!-- Points & Labels -->
                             ${pointsCoords.map((p, i) => `
                                 <g>
-                                    <!-- Vertical Guide Line (Subtle) -->
                                     <line x1="${p.x}" y1="${p.y}" x2="${p.x}" y2="${chartPadding.top + graphHeight}" stroke="#374151" stroke-width="1" stroke-dasharray="2" opacity="0.5" />
-                                    
-                                    <!-- Point Marker -->
                                     <circle cx="${p.x}" cy="${p.y}" r="${5 * scale}" fill="#1f2937" stroke="#fde047" stroke-width="${2 * scale}" />
-                                    
-                                    <!-- Elevation Label -->
                                     <rect x="${p.x - (18 * scale)}" y="${p.y - (26 * scale)}" width="${36 * scale}" height="${18 * scale}" rx="${4 * scale}" fill="#fde047" />
                                     <text x="${p.x}" y="${p.y - (14 * scale)}" text-anchor="middle" fill="#000" font-size="${10 * scale}px" font-weight="bold" font-family="monospace">${p.val.toFixed(0)}</text>
-                                    
-                                    <!-- X-Axis Label (Point Index) -->
                                     <text x="${p.x}" y="${chartPadding.top + graphHeight + (20 * scale)}" text-anchor="middle" fill="#9ca3af" font-size="${11 * scale}px" font-weight="bold" font-family="monospace">${i + 1}</text>
-                                    
-                                    <!-- X-Axis Dist Label -->
-                                    <text x="${p.x}" y="${chartPadding.top + graphHeight + (36 * scale)}" text-anchor="middle" fill="#4b5563" font-size="${9 * scale}px" font-family="monospace">${p.dist.toFixed(0)}m</text>
                                 </g>
                             `).join('')}
-                            
-                            <!-- X-Axis Line -->
                             <line x1="${chartPadding.left}" y1="${chartPadding.top + graphHeight}" x2="${chartWidth - chartPadding.right}" y2="${chartPadding.top + graphHeight}" stroke="#4b5563" stroke-width="2" />
                         </svg>
                     </div>
                 </div>
-            `;
-            container.appendChild(contentSection);
+             `;
+             
+             pageContainer.appendChild(chartContainer);
         }
 
-        // 3. Render Composition to Image using html2canvas
-        // Mobile Fix: Use lower scale for high-DPI devices to prevent crash
-        const dpr = window.devicePixelRatio || 1;
-        // Use consistent high quality scale even on mobile, but rely on exportWidth capping (1200px) to manage memory
-        // This ensures the layout looks "Professional" and sharp like desktop, just slightly smaller resolution
-        const captureScale = isMobile ? (dpr > 2 ? 2 : dpr) : (dpr > 2 ? 2/dpr : 1); 
+        // Capture Final Page
+        pageCanvases.push(await capturePage(pageContainer));
         
-        const compositionCanvas = await html2canvas(container, {
-            useCORS: true,
-            allowTaint: true, // Allow cross-origin images if any
-            scale: captureScale, // Adjust scale for mobile
-            backgroundColor: '#111827',
-            logging: false,
-            // width: exportWidth, // Let it auto-detect from container to avoid cutting off
-            // height: container.offsetHeight, 
-            // ignoreElements: (element) => element.tagName === 'IFRAME' // Ignore mapbox iframes if any
-        });
+        // Cleanup
+        document.body.removeChild(pageContainer);
 
-        // 4. Export based on format
+        // --- EXPORT BASED ON FORMAT ---
         if (format === 'pdf') {
-            const pdf = new jsPDF({
-                orientation: compositionCanvas.width > compositionCanvas.height ? 'landscape' : 'portrait',
-                unit: 'px',
-                format: [compositionCanvas.width, compositionCanvas.height]
+            const pdf = new jsPDF('p', 'pt', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+
+            pageCanvases.forEach((canvas, index) => {
+                if (index > 0) pdf.addPage();
+                pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pdfWidth, pdfHeight);
             });
-            pdf.addImage(compositionCanvas.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, compositionCanvas.width, compositionCanvas.height);
             
-            // Mobile PDF Fix: Save logic
             if (isMobile) {
-                 // Try standard save first, it works on modern Android
                  try {
                      pdf.save(`Landscape360_Report_${Date.now()}.pdf`);
                  } catch (e) {
@@ -453,37 +606,57 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
             } else {
                  pdf.save(`Landscape360_Report_${Date.now()}.pdf`);
             }
+
         } else {
-            // Mobile Fix: Direct link click often fails in PWA/WebView. 
-            // Try to open in new tab if download fails or use specific mobile handling
-            const dataUrl = compositionCanvas.toDataURL(format === 'png' ? 'image/png' : 'image/jpeg', 0.9);
-            
-            if (isMobile) {
-                // Try standard download first (works on Chrome Android)
+            // PNG / JPG Export Logic (Unified Mobile/Desktop Handler)
+            const downloadBlob = (blob: Blob, fileName: string) => {
+                const url = URL.createObjectURL(blob);
                 const link = document.createElement('a');
-                link.download = `Landscape360_Survey_${Date.now()}.${format}`;
-                link.href = dataUrl;
+                link.href = url;
+                link.download = fileName;
                 document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
                 
-                // No fallback needed immediately, user will see if it fails
-            } else {
-                try {
-                    const link = document.createElement('a');
-                    link.download = `Landscape360_Survey_${Date.now()}.${format}`;
-                    link.href = dataUrl;
-                    document.body.appendChild(link); // Required for Firefox/Mobile
+                if (isMobile) {
+                    // Mobile: Try click, fallback to open in new tab if blocked
+                    try {
+                        link.click();
+                    } catch (e) {
+                        window.open(url, '_blank');
+                    }
+                } else {
+                    // Desktop: Standard click
                     link.click();
-                    document.body.removeChild(link);
-                } catch (e) {
-                    window.open(dataUrl, '_blank');
                 }
+                
+                // Cleanup
+                setTimeout(() => {
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                }, 100);
+            };
+
+            if (pageCanvases.length === 1) {
+                // 1. Single Page -> Standard Download
+                const canvas = pageCanvases[0];
+                canvas.toBlob((blob) => {
+                    if (blob) downloadBlob(blob, `Landscape360_Survey_${Date.now()}.${format}`);
+                }, format === 'png' ? 'image/png' : 'image/jpeg', 0.9);
+            } else {
+                // 2. Multi Page -> ZIP Download
+                const zip = new JSZip();
+                const folder = zip.folder("Survey_Report_Images");
+                
+                // Add all pages to zip
+                pageCanvases.forEach((canvas, index) => {
+                    const dataUrl = canvas.toDataURL(format === 'png' ? 'image/png' : 'image/jpeg', 0.9);
+                    const base64Data = dataUrl.split(',')[1];
+                    folder?.file(`Page_${index + 1}.${format}`, base64Data, { base64: true });
+                });
+                
+                const content = await zip.generateAsync({ type: "blob" });
+                downloadBlob(content, `Landscape360_Report_${Date.now()}.zip`);
             }
         }
-
-        // Cleanup
-        document.body.removeChild(container);
 
     } catch (err) {
         console.error("Screenshot failed:", err);
