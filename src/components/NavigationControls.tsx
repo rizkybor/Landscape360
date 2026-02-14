@@ -308,41 +308,47 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                     markerEl.style.transform = 'rotate(45deg)';
                     markerWrapper.appendChild(markerEl);
 
-                    // 2. The Label (Professional Pill Style)
+                    // 2. The Label (Glassmorphism Pill Style)
                     const labelEl = document.createElement('div');
                     labelEl.style.position = 'absolute';
                     labelEl.style.bottom = `${markerSize + (8 * scale)}px`;
                     labelEl.style.left = '50%';
                     labelEl.style.transform = 'translateX(-50%)';
-                    labelEl.style.backgroundColor = '#17193b'; 
-                    labelEl.style.opacity = '1';
-                    labelEl.style.border = `${3 * scale}px solid #4338ca`;
+                    
+                    // Glassmorphism Styles
+                    labelEl.style.backgroundColor = 'rgba(23, 25, 59, 0.65)'; // Semi-transparent dark blue
+                    labelEl.style.backdropFilter = 'blur(4px)'; // Blur effect
+                    // @ts-ignore
+                    labelEl.style.webkitBackdropFilter = 'blur(4px)';
+                    labelEl.style.border = `${1.5 * scale}px solid rgba(99, 102, 241, 0.6)`; // Semi-transparent Indigo border
+                    
                     labelEl.style.borderRadius = `${24 * scale}px`;
+                    // labelEl.style.padding = `${6 * scale}px ${16 * scale}px`;
                     labelEl.style.padding = `${5 * scale}px ${20 * scale}px ${20 * scale}px`;
                     labelEl.style.display = 'flex';
                     labelEl.style.alignItems = 'center';
                     labelEl.style.justifyContent = 'center'; 
-                    labelEl.style.gap = `${16 * scale}px`;
+                    labelEl.style.gap = `${12 * scale}px`;
                     labelEl.style.whiteSpace = 'nowrap';
-                    labelEl.style.boxShadow = '0 8px 16px -4px rgba(0, 0, 0, 0.6)';
+                    labelEl.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'; // Softer shadow
                     labelEl.style.fontFamily = "'Inter', sans-serif";
 
                     const nameSpan = document.createElement('span');
                     nameSpan.textContent = p.name;
-                    nameSpan.style.color = '#c7d2fe';
-                    nameSpan.style.fontWeight = '800';
-                    nameSpan.style.fontSize = `${16 * scale}px`;
-                    nameSpan.style.letterSpacing = '0.05em';
+                    nameSpan.style.color = 'white'; // White text for better contrast
+                    nameSpan.style.fontWeight = '700';
+                    nameSpan.style.fontSize = `${14 * scale}px`;
+                    nameSpan.style.letterSpacing = '0.02em';
                     nameSpan.style.textTransform = 'uppercase';
                     nameSpan.style.lineHeight = '1';
                     labelEl.appendChild(nameSpan);
 
                     const elevSpan = document.createElement('span');
                     elevSpan.textContent = `${p.elevation.toFixed(1)} mdpl`;
-                    elevSpan.style.color = '#c7d2fe';
-                    elevSpan.style.fontWeight = '700';
-                    elevSpan.style.fontSize = `${16 * scale}px`;
-                    elevSpan.style.letterSpacing = '0.05em';
+                    elevSpan.style.color = '#bfdbfe'; // Light blue text
+                    elevSpan.style.fontWeight = '500';
+                    elevSpan.style.fontSize = `${14 * scale}px`;
+                    elevSpan.style.letterSpacing = '0.02em';
                     elevSpan.style.lineHeight = '1';
                     labelEl.appendChild(elevSpan);
 
