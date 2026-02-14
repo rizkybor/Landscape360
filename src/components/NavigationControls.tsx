@@ -792,14 +792,14 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                 <div className="text-[10px] font-bold text-gray-400 px-2 py-1 uppercase tracking-wider">Export As</div>
                 <button 
                     onClick={() => handleCapture('png')}
-                    className="flex items-center justify-between px-3 py-2 text-xs font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors text-left"
+                    className="cursor-pointer flex items-center justify-between px-3 py-2 text-xs font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors text-left"
                 >
                     <span>High-Res PNG</span>
                     <span className="text-[9px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded">HD</span>
                 </button>
                 <button 
                     onClick={() => handleCapture('jpg')}
-                    className="flex items-center justify-between px-3 py-2 text-xs font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors text-left"
+                    className="cursor-pointer flex items-center justify-between px-3 py-2 text-xs font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors text-left"
                 >
                     <span>Compact JPG</span>
                     <span className="text-[9px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">Light</span>
@@ -807,7 +807,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                 <div className="h-px bg-gray-200 my-0.5"></div>
                 <button 
                     onClick={() => handleCapture('pdf')}
-                    className="flex items-center justify-between px-3 py-2 text-xs font-medium text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors text-left"
+                    className="cursor-pointer flex items-center justify-between px-3 py-2 text-xs font-medium text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors text-left"
                 >
                     <span>Report PDF</span>
                     <span className="text-[9px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded">Doc</span>

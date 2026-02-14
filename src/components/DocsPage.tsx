@@ -746,7 +746,7 @@ export const DocsPage = ({ onBack }: Props) => {
           <section className="space-y-8 pt-8 border-t border-white/5">
             <div className="text-center max-w-2xl mx-auto space-y-3">
                  <h3 className="text-2xl font-bold text-white">Pricing & Plans</h3>
-                 <p className="text-sm text-gray-400">Flexible options for individual surveyors and professional teams.</p>
+                 <p className="text-sm text-gray-400">Flexible options for individual users and professional teams.</p>
             </div>
             
             <div className="grid md:grid-cols-3 gap-6">
