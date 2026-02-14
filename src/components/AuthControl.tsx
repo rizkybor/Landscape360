@@ -171,7 +171,7 @@ export const AuthControl = () => {
                             <p className="text-sm text-gray-400 font-mono tracking-wide">
                                 {isForgotPassword 
                                     ? 'REQUEST RESET VIA EMAIL' 
-                                    : (isLoginView ? 'AUTHENTICATION REQUIRED' : 'SURVEYOR REGISTRATION')}
+                                    : (isLoginView ? 'AUTHENTICATION REQUIRED' : 'USER REGISTRATION')}
                             </p>
                         </div>
 
@@ -396,7 +396,7 @@ export const AuthControl = () => {
                                )}
                                <div className="flex-1">
                                    <div className="flex items-center justify-between">
-                                       <h3 className="font-bold text-lg text-white">{currentUser.user_metadata?.full_name || 'Surveyor'}</h3>
+                                       <h3 className="font-bold text-lg text-white">{currentUser.user_metadata?.full_name || 'Use L360'}</h3>
                                        <button 
                                            onClick={() => {
                                                setEditName(currentUser.user_metadata?.full_name || '');
