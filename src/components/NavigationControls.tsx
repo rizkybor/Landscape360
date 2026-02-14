@@ -508,7 +508,9 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                 tr.innerHTML = `
                     <td style="padding: ${10 * scale}px; color: #3b82f6; font-weight: bold;">${i + 1}</td>
                     <td style="padding: ${10 * scale}px; font-weight: 500; color: white;">${displayName}</td>
-                    <td style="padding: ${10 * scale}px; font-family: monospace; color: #d1d5db;">${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}</td>
+                    <td style="padding: ${10 * scale}px; font-family: monospace; color: #d1d5db; line-height: 1.4;">
+                        ${toDMS(p.lat, true)}<br/>${toDMS(p.lng, false)}
+                    </td>
                     <td style="padding: ${10 * scale}px; font-family: monospace; color: #fde047;">${p.elevation.toFixed(1)} m</td>
                     <td style="padding: ${10 * scale}px; font-family: monospace; color: #d1d5db;">${i === 0 ? '-' : p.dist.toFixed(1)} m</td>
                     <td style="padding: ${10 * scale}px; font-family: monospace; color: #9ca3af;">${p.totalDist.toFixed(1)} m</td>
