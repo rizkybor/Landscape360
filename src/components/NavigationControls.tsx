@@ -186,7 +186,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         
         // 1. Add Header
         const headerHeight = 100 * scale;
-        const renderHeader = (isFirstPage: boolean, pageNum: number) => `
+        const renderHeader = (isFirstPage: boolean) => `
             <div style="height: ${headerHeight}px; padding: ${MARGIN}px ${MARGIN}px 0 ${MARGIN}px; display: flex; justify-content: space-between; align-items: start; margin-bottom: ${20 * scale}px;">
                 <div style="display: flex; align-items: center; gap: ${16 * scale}px;">
                     <img src="${geoportalLogo}" style="width: ${40 * scale}px; height: ${40 * scale}px; object-fit: contain;" />
@@ -230,7 +230,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         
         // Initialize Page 1
         let currentPageNum = 1;
-        pageContainer.innerHTML = renderHeader(true, currentPageNum);
+        pageContainer.innerHTML = renderHeader(true);
         
         // 2. Add Map (Only on Page 1)
         const mapSection = document.createElement('div');
@@ -487,7 +487,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                     currentPageNum++;
                     
                     // Reset Container for New Page
-                    pageContainer.innerHTML = renderHeader(false, currentPageNum);
+                    pageContainer.innerHTML = renderHeader(false);
                     addFooter(currentPageNum);
                     
                     // New Table Wrapper
@@ -525,7 +525,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
             pageCanvases.push(await capturePage(pageContainer));
             currentPageNum++;
             
-            pageContainer.innerHTML = renderHeader(false, currentPageNum);
+            pageContainer.innerHTML = renderHeader(false);
             addFooter(currentPageNum);
             currentY = headerHeight + (20 * scale);
         }
