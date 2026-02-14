@@ -197,7 +197,6 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                 </div>
                 <div style="text-align: right;">
                     <div style="color: white; font-family: 'Inter', monospace; font-size: ${12 * scale}px; font-weight: bold;">${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
-                    <div style="color: #9ca3af; font-family: 'Inter', monospace; font-size: ${10 * scale}px;">Page ${pageNum}</div>
                 </div>
             </div>
             <div style="height: 1px; background: #374151; margin: 0 ${MARGIN}px;"></div>
@@ -216,7 +215,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                     <span style="color: #4b5563; font-size: ${10 * scale}px;">|</span>
                     <span style="color: #6b7280; font-size: ${10 * scale}px;">Professional Survey Report</span>
                 </div>
-                <div style="color: #9ca3af; font-size: ${10 * scale}px; font-weight: 500;">
+                <div style="color: #9ca3af; font-size: ${10 * scale}px; font-weight: 500; text-align: right;">
                     Page ${pageNum}
                 </div>
             </div>
