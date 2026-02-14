@@ -556,24 +556,34 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         if (hasData) {
             // Generate Chart Data
             const chartWidth = exportWidth - (80 * scale);
-            const chartPadding = { top: 40 * scale, right: 40 * scale, bottom: 60 * scale, left: 60 * scale };
+            // Increased padding for professional axis labels
+            const chartPadding = { top: 60 * scale, right: 60 * scale, bottom: 80 * scale, left: 100 * scale };
             const graphWidth = chartWidth - chartPadding.left - chartPadding.right;
             const graphHeight = chartHeight - chartPadding.top - chartPadding.bottom;
 
-            const maxElev = Math.max(...processedPoints.map(p => p.elevation));
-            const minElev = Math.min(...processedPoints.map(p => p.elevation));
+            const elevations = processedPoints.map(p => p.elevation);
+            const maxElev = Math.max(...elevations);
+            const minElev = Math.min(...elevations);
+            const totalDist = cumulativeDist;
+            
+            // Calculate Elevation Gain
+            let gain = 0;
+            for(let i=1; i<processedPoints.length; i++) {
+                const diff = processedPoints[i].elevation - processedPoints[i-1].elevation;
+                if(diff > 0) gain += diff;
+            }
+
             const elevBuffer = (maxElev - minElev) * 0.1 || 5; 
             const yMax = maxElev + elevBuffer;
             const yMin = minElev - elevBuffer;
             const yRange = yMax - yMin || 1;
-            const maxDist = cumulativeDist || 1;
-
-            const pointsCoords = processedPoints.map(p => ({
-                x: chartPadding.left + (p.totalDist / maxDist) * graphWidth,
+            
+            const pointsCoords = processedPoints.map((p, i) => ({
+                x: chartPadding.left + (p.totalDist / (totalDist || 1)) * graphWidth,
                 y: chartPadding.top + graphHeight - ((p.elevation - yMin) / yRange) * graphHeight,
                 val: p.elevation,
                 dist: p.totalDist,
-                label: (p.name || '').substring(0, 3)
+                label: `${i + 1}`
             }));
 
             const linePath = pointsCoords.map((p, i) => `${i===0?'M':'L'} ${p.x},${p.y}`).join(' ');
@@ -584,40 +594,89 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
              chartContainer.style.padding = `0 ${MARGIN}px`;
              chartContainer.style.marginTop = `${40 * scale}px`;
              
+             // Professional Stats Header
+             const statsHtml = `
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: ${16 * scale}px; margin-bottom: ${32 * scale}px;">
+                    <div style="background: rgba(31, 41, 55, 0.4); border: 1px solid #374151; padding: ${20 * scale}px; border-radius: ${12 * scale}px;">
+                        <div style="color: #9ca3af; font-size: ${12 * scale}px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: ${8 * scale}px; font-weight: 600;">Min Elevation</div>
+                        <div style="color: white; font-size: ${24 * scale}px; font-weight: 800; font-family: monospace;">${minElev.toFixed(1)} <span style="font-size: ${14 * scale}px; color: #6b7280; font-weight: 600;">m</span></div>
+                    </div>
+                    <div style="background: rgba(31, 41, 55, 0.4); border: 1px solid #374151; padding: ${20 * scale}px; border-radius: ${12 * scale}px;">
+                        <div style="color: #9ca3af; font-size: ${12 * scale}px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: ${8 * scale}px; font-weight: 600;">Max Elevation</div>
+                        <div style="color: white; font-size: ${24 * scale}px; font-weight: 800; font-family: monospace;">${maxElev.toFixed(1)} <span style="font-size: ${14 * scale}px; color: #6b7280; font-weight: 600;">m</span></div>
+                    </div>
+                    <div style="background: rgba(31, 41, 55, 0.4); border: 1px solid #374151; padding: ${20 * scale}px; border-radius: ${12 * scale}px;">
+                        <div style="color: #9ca3af; font-size: ${12 * scale}px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: ${8 * scale}px; font-weight: 600;">Total Distance</div>
+                        <div style="color: white; font-size: ${24 * scale}px; font-weight: 800; font-family: monospace;">${totalDist.toFixed(1)} <span style="font-size: ${14 * scale}px; color: #6b7280; font-weight: 600;">m</span></div>
+                    </div>
+                     <div style="background: rgba(31, 41, 55, 0.4); border: 1px solid #374151; padding: ${20 * scale}px; border-radius: ${12 * scale}px;">
+                        <div style="color: #9ca3af; font-size: ${12 * scale}px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: ${8 * scale}px; font-weight: 600;">Elev. Gain</div>
+                        <div style="color: #34d399; font-size: ${24 * scale}px; font-weight: 800; font-family: monospace;">+${gain.toFixed(1)} <span style="font-size: ${14 * scale}px; color: #6b7280; font-weight: 600;">m</span></div>
+                    </div>
+                </div>
+             `;
+
              chartContainer.innerHTML = `
-                <div style="padding: ${32 * scale}px; background: #1f2937; border-radius: ${16 * scale}px; border: 1px solid #374151; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: ${24 * scale}px;">
-                         <div style="display: flex; align-items: center; gap: ${12 * scale}px;">
-                            <div style="width: ${4 * scale}px; height: ${20 * scale}px; background-color: #fde047; border-radius: 4px;"></div>
-                            <h3 style="font-size: ${18 * scale}px; font-weight: bold; color: white; margin: 0;">Elevation Profile Analysis</h3>
+                <div style="padding: ${40 * scale}px; background: #111827; border-radius: ${24 * scale}px; border: 1px solid #374151; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: ${32 * scale}px;">
+                         <div style="display: flex; align-items: center; gap: ${16 * scale}px;">
+                            <div style="width: ${6 * scale}px; height: ${32 * scale}px; background-color: #fde047; border-radius: 4px;"></div>
+                            <div>
+                                <h3 style="font-size: ${24 * scale}px; font-weight: 800; color: white; margin: 0; letter-spacing: -0.02em; line-height: 1.2;">Elevation Profile Analysis</h3>
+                                <p style="font-size: ${12 * scale}px; color: #9ca3af; margin: 0; font-weight: 500;">Terrain cross-section and gradient analysis</p>
+                            </div>
                          </div>
                     </div>
-                    <div style="position: relative; width: 100%; height: ${chartHeight}px;">
+                    
+                    ${statsHtml}
+
+                    <div style="position: relative; width: 100%; height: ${chartHeight}px; border: 1px solid #1f2937; border-radius: ${16 * scale}px; padding: ${20 * scale}px; background: rgba(17, 24, 39, 0.5);">
                         <svg width="100%" height="100%" viewBox="0 0 ${chartWidth} ${chartHeight}" preserveAspectRatio="none" style="overflow: visible;">
                              <defs>
                                 <linearGradient id="${gradientId}" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stop-color="#fde047" stop-opacity="0.3"/>
-                                    <stop offset="100%" stop-color="#fde047" stop-opacity="0.05"/>
+                                    <stop offset="0%" stop-color="#fde047" stop-opacity="0.2"/>
+                                    <stop offset="100%" stop-color="#fde047" stop-opacity="0.0"/>
                                 </linearGradient>
                              </defs>
-                             ${[0, 0.2, 0.4, 0.6, 0.8, 1].map(t => {
+                             
+                             <!-- Grid Lines (Y-Axis) -->
+                             ${[0, 0.25, 0.5, 0.75, 1].map(t => {
                                 const y = chartPadding.top + (graphHeight * t);
                                 const labelValue = yMax - (yRange * t);
-                                return `<line x1="${chartPadding.left}" y1="${y}" x2="${chartWidth - chartPadding.right}" y2="${y}" stroke="#374151" stroke-dasharray="4" stroke-width="1" />
-                                    <text x="${chartPadding.left - (12 * scale)}" y="${y + (4 * scale)}" text-anchor="end" fill="#6b7280" font-size="${11 * scale}px" font-family="monospace" font-weight="500">${labelValue.toFixed(0)}</text>`;
+                                return `
+                                    <line x1="${chartPadding.left}" y1="${y}" x2="${chartWidth - chartPadding.right}" y2="${y}" stroke="#374151" stroke-dasharray="4" stroke-width="1" opacity="0.3" />
+                                    <text x="${chartPadding.left - (16 * scale)}" y="${y + (4 * scale)}" text-anchor="end" fill="#9ca3af" font-size="${11 * scale}px" font-family="monospace" font-weight="500">${labelValue.toFixed(0)}</text>
+                                `;
                              }).join('')}
+
+                             <!-- Y-Axis Label -->
+                             <text x="${30 * scale}" y="${chartHeight / 2}" transform="rotate(-90, ${30 * scale}, ${chartHeight / 2})" text-anchor="middle" fill="#6b7280" font-size="${12 * scale}px" font-weight="bold" font-family="'Inter', sans-serif" letter-spacing="0.1em">ELEVATION (m)</text>
+
+                             <!-- Chart Area -->
                             <path d="${areaPath}" fill="url(#${gradientId})" />
                             <path d="${linePath}" fill="none" stroke="#fde047" stroke-width="${3 * scale}" stroke-linejoin="round" stroke-linecap="round" />
-                            ${pointsCoords.map((p, i) => `
+                            
+                            <!-- Data Points -->
+                            ${pointsCoords.map((p) => `
                                 <g>
-                                    <line x1="${p.x}" y1="${p.y}" x2="${p.x}" y2="${chartPadding.top + graphHeight}" stroke="#374151" stroke-width="1" stroke-dasharray="2" opacity="0.5" />
-                                    <circle cx="${p.x}" cy="${p.y}" r="${5 * scale}" fill="#1f2937" stroke="#fde047" stroke-width="${2 * scale}" />
-                                    <rect x="${p.x - (18 * scale)}" y="${p.y - (26 * scale)}" width="${36 * scale}" height="${18 * scale}" rx="${4 * scale}" fill="#fde047" />
-                                    <text x="${p.x}" y="${p.y - (14 * scale)}" text-anchor="middle" fill="#000" font-size="${10 * scale}px" font-weight="bold" font-family="monospace">${p.val.toFixed(0)}</text>
-                                    <text x="${p.x}" y="${chartPadding.top + graphHeight + (20 * scale)}" text-anchor="middle" fill="#9ca3af" font-size="${11 * scale}px" font-weight="bold" font-family="monospace">${i + 1}</text>
+                                    <line x1="${p.x}" y1="${p.y}" x2="${p.x}" y2="${chartPadding.top + graphHeight}" stroke="#374151" stroke-width="1" stroke-dasharray="2" opacity="0.2" />
+                                    <circle cx="${p.x}" cy="${p.y}" r="${4 * scale}" fill="#111827" stroke="#fde047" stroke-width="${2 * scale}" />
+                                    
+                                    <!-- Point Label Group (Staggered or simplified based on density) -->
+                                    <g transform="translate(${p.x}, ${p.y - (12 * scale)})">
+                                        <!-- Only show every Nth label if too dense, or use smarter logic. For now, we keep all but ensure clean rendering -->
+                                        <rect x="${-(18 * scale)}" y="${-(22 * scale)}" width="${36 * scale}" height="${18 * scale}" rx="${4 * scale}" fill="#fde047" stroke="#111827" stroke-width="1" />
+                                        <text x="0" y="${-(10 * scale)}" text-anchor="middle" fill="#000" font-size="${10 * scale}px" font-weight="bold" font-family="monospace">${p.val.toFixed(0)}</text>
+                                    </g>
+                                    
+                                    <!-- Point Name Label (Only Numbers) -->
+                                    <text x="${p.x}" y="${chartPadding.top + graphHeight + (20 * scale)}" text-anchor="middle" fill="#9ca3af" font-size="${11 * scale}px" font-weight="600" font-family="monospace">${p.label}</text>
                                 </g>
                             `).join('')}
+
+                            <!-- Axes Lines -->
                             <line x1="${chartPadding.left}" y1="${chartPadding.top + graphHeight}" x2="${chartWidth - chartPadding.right}" y2="${chartPadding.top + graphHeight}" stroke="#4b5563" stroke-width="2" />
+                            <line x1="${chartPadding.left}" y1="${chartPadding.top}" x2="${chartPadding.left}" y2="${chartPadding.top + graphHeight}" stroke="#4b5563" stroke-width="2" />
                         </svg>
                     </div>
                 </div>
