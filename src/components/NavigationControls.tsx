@@ -502,9 +502,12 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                 // Add Row
                 const tr = document.createElement('tr');
                 tr.style.borderBottom = '1px solid #374151';
+                // Show "Point X" in table even if it's default name, unlike map overlay
+                const displayName = p.name || `Point ${i + 1}`;
+                
                 tr.innerHTML = `
                     <td style="padding: ${10 * scale}px; color: #3b82f6; font-weight: bold;">${i + 1}</td>
-                    <td style="padding: ${10 * scale}px; font-weight: 500; color: white;">${p.name || '-'}</td>
+                    <td style="padding: ${10 * scale}px; font-weight: 500; color: white;">${displayName}</td>
                     <td style="padding: ${10 * scale}px; font-family: monospace; color: #d1d5db;">${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}</td>
                     <td style="padding: ${10 * scale}px; font-family: monospace; color: #fde047;">${p.elevation.toFixed(1)} m</td>
                     <td style="padding: ${10 * scale}px; font-family: monospace; color: #d1d5db;">${i === 0 ? '-' : p.dist.toFixed(1)} m</td>
