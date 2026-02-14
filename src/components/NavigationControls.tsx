@@ -457,40 +457,62 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         let tbody = currentTableWrapper.querySelector('#pdf-table-body')!;
         
         // Render Rows
-        for (let i = 0; i < processedPoints.length; i++) {
-            const p = processedPoints[i];
-            
-            // Check overflow
-            if (currentY + rowHeight > PAGE_HEIGHT - footerHeight - (20 * scale)) {
-                // Capture Current Page
-                pageCanvases.push(await capturePage(pageContainer));
-                currentPageNum++;
-                
-                // Reset Container for New Page
-                pageContainer.innerHTML = renderHeader(false, currentPageNum);
-                addFooter(currentPageNum);
-                
-                // New Table Wrapper
-                currentTableWrapper = createTableWrapper();
-                pageContainer.appendChild(currentTableWrapper);
-                tbody = currentTableWrapper.querySelector('#pdf-table-body')!;
-                
-                currentY = headerHeight + (20 * scale) + tableHeaderHeight + (40 * scale); // Reset Y
-            }
-            
-            // Add Row
+        if (processedPoints.length === 0) {
             const tr = document.createElement('tr');
             tr.style.borderBottom = '1px solid #374151';
             tr.innerHTML = `
-                <td style="padding: ${10 * scale}px; color: #3b82f6; font-weight: bold;">${i + 1}</td>
-                <td style="padding: ${10 * scale}px; font-weight: 500; color: white;">${p.name || '-'}</td>
-                <td style="padding: ${10 * scale}px; font-family: monospace; color: #d1d5db;">${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}</td>
-                <td style="padding: ${10 * scale}px; font-family: monospace; color: #fde047;">${p.elevation.toFixed(1)} m</td>
-                <td style="padding: ${10 * scale}px; font-family: monospace; color: #d1d5db;">${i === 0 ? '-' : p.dist.toFixed(1)} m</td>
-                <td style="padding: ${10 * scale}px; font-family: monospace; color: #9ca3af;">${p.totalDist.toFixed(1)} m</td>
+                <td colspan="6" style="padding: ${60 * scale}px; text-align: center; color: #9ca3af;">
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: ${16 * scale}px; opacity: 0.8;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="${48 * scale}" height="${48 * scale}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: #6b7280;">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="8" x2="12" y2="12"/>
+                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                        <div style="display: flex; flex-direction: column; gap: ${4 * scale}px;">
+                            <span style="font-size: ${16 * scale}px; font-weight: 600; letter-spacing: 0.01em; color: white;">No Survey Data Available</span>
+                            <span style="font-size: ${13 * scale}px; color: #6b7280;">Start adding points to generate a professional report</span>
+                        </div>
+                    </div>
+                </td>
             `;
             tbody.appendChild(tr);
-            currentY += rowHeight;
+            currentY += 200 * scale;
+        } else {
+            for (let i = 0; i < processedPoints.length; i++) {
+                const p = processedPoints[i];
+                
+                // Check overflow
+                if (currentY + rowHeight > PAGE_HEIGHT - footerHeight - (20 * scale)) {
+                    // Capture Current Page
+                    pageCanvases.push(await capturePage(pageContainer));
+                    currentPageNum++;
+                    
+                    // Reset Container for New Page
+                    pageContainer.innerHTML = renderHeader(false, currentPageNum);
+                    addFooter(currentPageNum);
+                    
+                    // New Table Wrapper
+                    currentTableWrapper = createTableWrapper();
+                    pageContainer.appendChild(currentTableWrapper);
+                    tbody = currentTableWrapper.querySelector('#pdf-table-body')!;
+                    
+                    currentY = headerHeight + (20 * scale) + tableHeaderHeight + (40 * scale); // Reset Y
+                }
+                
+                // Add Row
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid #374151';
+                tr.innerHTML = `
+                    <td style="padding: ${10 * scale}px; color: #3b82f6; font-weight: bold;">${i + 1}</td>
+                    <td style="padding: ${10 * scale}px; font-weight: 500; color: white;">${p.name || '-'}</td>
+                    <td style="padding: ${10 * scale}px; font-family: monospace; color: #d1d5db;">${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}</td>
+                    <td style="padding: ${10 * scale}px; font-family: monospace; color: #fde047;">${p.elevation.toFixed(1)} m</td>
+                    <td style="padding: ${10 * scale}px; font-family: monospace; color: #d1d5db;">${i === 0 ? '-' : p.dist.toFixed(1)} m</td>
+                    <td style="padding: ${10 * scale}px; font-family: monospace; color: #9ca3af;">${p.totalDist.toFixed(1)} m</td>
+                `;
+                tbody.appendChild(tr);
+                currentY += rowHeight;
+            }
         }
 
         // 4. Chart Section (Check if fits on last page, else new page)
