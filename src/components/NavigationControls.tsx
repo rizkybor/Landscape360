@@ -119,26 +119,31 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         const canvas = map.getCanvas();
         
         // Force a render to ensure everything is sharp
-        map.triggerRepaint();
+        await new Promise<void>((resolve) => {
+             map.once('render', () => resolve());
+             map.triggerRepaint();
+        });
 
-        // Wait a frame
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Wait for fonts to load
+        await document.fonts.ready;
 
         // Gather Survey Data
         const allPoints = groups.flatMap(g => g.points);
         const hasData = allPoints.length > 0;
 
         // Determine if we need to resize the container to fit the table
-        const baseWidth = canvas.width;
+        // const baseWidth = canvas.width;
         
         // Mobile Fix: Detect if on mobile (screen width < 768px) and cap the width/scale
         const isMobile = window.innerWidth < 768;
         
-        // Professional Output: Always use a high-resolution "Desktop-like" width for export
-        const exportWidth = isMobile ? 1280 : Math.max(baseWidth, 1280);
+        // Professional Output: Standardize width for consistency across devices
+        // Use 1600px as standard high-quality width for both desktop and mobile exports
+        const exportWidth = 1600;
 
-        // Calculate dynamic scale based on resolution
-        const scale = Math.max(1, exportWidth / 1920); 
+        // Calculate dynamic scale based on reference width (1600px)
+        // This ensures relative proportions are identical regardless of actual screen size
+        const scale = exportWidth / 1600; 
         
         // --- PROFESSIONAL GENERATION (MULTI-PAGE / ZIP) ---
         
@@ -151,6 +156,9 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
 
         // Helper to capture a specific DOM element as a page
         const capturePage = async (pageContent: HTMLElement) => {
+            // Ensure no scrollbars
+            pageContent.style.overflow = 'hidden';
+            
             return await html2canvas(pageContent, {
                 useCORS: true,
                 allowTaint: true,
@@ -160,12 +168,18 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                 width: PAGE_WIDTH,
                 height: PAGE_HEIGHT,
                 windowWidth: PAGE_WIDTH,
-                windowHeight: PAGE_HEIGHT
+                windowHeight: PAGE_HEIGHT,
+                onclone: (doc) => {
+                    // Safety: Ensure fonts in cloned doc are ready (usually inherits, but good practice)
+                    const el = doc.getElementById('page-container-clone');
+                    if (el) el.style.fontFamily = "'Inter', sans-serif";
+                }
             });
         };
 
         // Container for building pages
         const pageContainer = document.createElement('div');
+        pageContainer.id = 'page-container-clone'; // ID for reference
         pageContainer.style.position = 'fixed';
         pageContainer.style.left = '-9999px';
         pageContainer.style.top = '0';
@@ -209,13 +223,13 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         
         // Footer Render Function
         const renderPageFooter = (pageNum: number) => `
-            <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: ${footerHeight}px; padding: 0 ${MARGIN}px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #374151; background-color: #111827;">
+            <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: ${footerHeight}px; padding: 0 ${MARGIN}px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #374151; background-color: #111827; z-index: 50;">
                 <div style="display: flex; gap: ${16 * scale}px; align-items: center;">
                     <span style="color: #6b7280; font-size: ${10 * scale}px;">© ${new Date().getFullYear()} Landscape 360</span>
                     <span style="color: #4b5563; font-size: ${10 * scale}px;">|</span>
                     <span style="color: #6b7280; font-size: ${10 * scale}px;">Professional Survey Report</span>
                 </div>
-                <div style="color: #9ca3af; font-size: ${10 * scale}px; font-weight: 500; text-align: right;">
+                <div style="color: #f3f4f6; font-size: ${10 * scale}px; font-weight: 500; text-align: right;">
                     Page ${pageNum}
                 </div>
             </div>
@@ -224,8 +238,10 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         // Helper to add footer to current page container
         const addFooter = (pageNum: number) => {
             const f = document.createElement('div');
-            f.innerHTML = renderPageFooter(pageNum);
-            pageContainer.appendChild(f.firstElementChild as Node);
+            f.innerHTML = renderPageFooter(pageNum).trim();
+            if (f.firstElementChild) {
+                pageContainer.appendChild(f.firstElementChild);
+            }
         };
         
         // Initialize Page 1
