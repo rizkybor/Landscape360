@@ -2,32 +2,24 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMapStore } from "../store/useMapStore";
 import { useSurveyStore } from "../store/useSurveyStore";
+import { useTrackerStore } from "../store/useTrackerStore"; // Import Tracker Store
 import { AuthControl } from "./AuthControl";
 import mapboxgl from "mapbox-gl";
 import type { MapRef } from "react-map-gl/mapbox";
 import {
   Activity,
-  // Eye,
   Monitor,
   Ruler,
   ChevronDown,
   ChevronUp,
   Search,
   BookOpen,
-  // ArrowUp,
   Download,
   Columns,
   Wifi,
   X,
   CloudSun,
-  // Plus,
-  // Minus,
-  // Map as MapIcon,
-  // MousePointer2,
-  // RotateCw,
-  // Settings,
-  // Layers,
-  // MoreVertical,
+  Navigation,
 } from "lucide-react";
 import geoportalLogo from "../assets/geoportal360.png";
 import streetsView from "../assets/Street-View.png";
@@ -37,8 +29,6 @@ import satelliteView from "../assets/Satellite-View.png";
 export const ControlPanel = () => {
   const navigate = useNavigate();
   const {
-    // zoom,
-    // setZoom,
     contourInterval,
     setContourInterval,
     elevationExaggeration,
@@ -70,15 +60,16 @@ export const ControlPanel = () => {
   } = useMapStore();
 
   const { isPlotMode, togglePlotMode } = useSurveyStore();
+  const { isLiveTrackingEnabled, toggleLiveTracking, isSimulationEnabled, toggleSimulation } = useTrackerStore(); // Use Tracker Store
+
   const [showGetStarted, setShowGetStarted] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  // const joystickRef = useRef<HTMLDivElement>(null);
   const [isJoystickDragging, setIsJoystickDragging] = useState(false);
-  const [isOpen, setIsOpen] = useState(true); // Default open but will be manageable on mobile
+  const [isOpen, setIsOpen] = useState(true);
 
   // Swipe Down to Close Logic (Mobile)
   const touchStart = useRef<number | null>(null);
-  const [touchOffset, setTouchOffset] = useState(0); // For reactive transform
+  const [touchOffset, setTouchOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -92,22 +83,19 @@ export const ControlPanel = () => {
     const currentY = e.targetTouches[0].clientY;
     const diff = currentY - touchStart.current;
     
-    // Only allow dragging downwards (positive values)
     if (diff > 0) {
       setTouchOffset(diff);
-      e.preventDefault(); // Prevent scroll while dragging panel
+      e.preventDefault();
     }
   };
 
   const handleTouchEnd = () => {
     if (!isMobile || touchStart.current === null) return;
     
-    // Threshold to close: > 100px or fast swipe
     if (touchOffset > 100) {
       setIsOpen(false);
     } 
     
-    // Reset state with animation
     setTouchOffset(0);
     setIsDragging(false);
     touchStart.current = null;
@@ -118,26 +106,25 @@ export const ControlPanel = () => {
       name: "Streets",
       style: "mapbox://styles/mapbox/streets-v12",
       image: streetsView,
-      gradient: "from-blue-100/50 to-gray-100/50", // Light/Blueish
+      gradient: "from-blue-100/50 to-gray-100/50",
       textColor: "text-gray-800",
     },
     {
       name: "Outdoors",
       style: "mapbox://styles/mapbox/outdoors-v12",
       image: outdoorsView,
-      gradient: "from-green-100/50 to-emerald-200/50", // Greenish
+      gradient: "from-green-100/50 to-emerald-200/50",
       textColor: "text-green-900",
     },
     {
       name: "Satellite",
       style: "mapbox://styles/mapbox/satellite-streets-v12",
       image: satelliteView,
-      gradient: "from-gray-800/50 to-black/50", // Dark
+      gradient: "from-gray-800/50 to-black/50",
       textColor: "text-white",
     },
   ];
 
-  // Preload images for offline support
   useEffect(() => {
     mapStyles.forEach((style) => {
       const img = new Image();
@@ -145,12 +132,11 @@ export const ControlPanel = () => {
     });
   }, []);
 
-  // Virtual Joystick Logic
   useEffect(() => {
     if (!isJoystickDragging) return;
 
     const handleMove = (e: MouseEvent) => {
-      const sensitivity = 0.2; // Reduced from 0.5 for smoother joystick control
+      const sensitivity = 0.2;
       setBearing(bearing + e.movementX * sensitivity);
       setPitch(Math.min(85, Math.max(0, pitch + e.movementY * sensitivity)));
     };
@@ -177,21 +163,7 @@ export const ControlPanel = () => {
 
   return (
     <>
-      {/* FAB for Mobile/Desktop when closed */}
       {!isOpen && (
-        // <button
-        //   onClick={() => setIsOpen(true)}
-        //   className="fixed top-4 left-6 z-30 p-4 bg-black/60 md:bg-white/5 backdrop-blur-xl text-white rounded-full shadow-2xl border-2 border-white/20 active:scale-95 transition-transform hover:bg-blue-900"
-        //   title="Open Controls"
-        // >
-        //   <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none"></div>
-        //   {/* <Activity size={18} /> */}
-        //   <img
-        //           src={geoportalLogo}
-        //           alt="Landscape 360"
-        //           className="w-8 h-8 object-contain"
-        //         />
-        // </button>
         <button
           onClick={() => setIsOpen(true)}
           title="Open Controls"
@@ -200,25 +172,18 @@ export const ControlPanel = () => {
     w-14 h-14
     flex items-center justify-center
     rounded-full
-
     bg-white/10
     backdrop-blur-md md:backdrop-blur-xl backdrop-saturate-150
-
     border border-white/20
     shadow-lg shadow-black/30
-
     hover:bg-white/20
     hover:shadow-blue-500/30
-
-        cursor-pointer
+    cursor-pointer
     active:scale-95
     transition-all duration-300
   "
         >
-          {/* glass highlight */}
           <span className="absolute inset-0 rounded-full bg-gradient-to-br from-white/30 via-transparent to-transparent opacity-60 pointer-events-none" />
-
-          {/* logo */}
           <img
             src={geoportalLogo}
             alt="Landscape 360"
@@ -230,23 +195,20 @@ export const ControlPanel = () => {
       <div
         style={{
           transform: isMobile && isOpen && isDragging 
-            ? `translateY(${touchOffset}px)` // Follow finger
+            ? `translateY(${touchOffset}px)`
             : isOpen 
               ? 'translateY(0)' 
-              : 'translateY(100%)', // Fully closed
-          transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)', // Smooth snap
+              : 'translateY(100%)',
+          transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
         className={`
         fixed z-50 
-        /* Mobile: Bottom Sheet style */
         bottom-0 left-0 right-0 max-h-[70vh] rounded-t-2xl
-        /* Desktop: Floating style */
         md:top-4 md:left-4 md:bottom-auto md:right-auto md:w-64 md:rounded-xl
         bg-black/80 md:bg-black/60 backdrop-blur-md md:backdrop-blur-xl border-t md:border border-white/20 text-white shadow-2xl flex flex-col
         ${!isOpen ? "md:opacity-0 md:pointer-events-none" : ""}
       `}
       >
-        {/* Mobile Drag Handle Indicator */}
         <div 
           className="md:hidden w-full flex items-center justify-center pt-3 pb-1 shrink-0 z-30 cursor-grab active:cursor-grabbing touch-none"
           onTouchStart={handleTouchStart}
@@ -256,25 +218,19 @@ export const ControlPanel = () => {
           <div className="w-12 h-1.5 bg-white/20 rounded-full shadow-sm"></div>
         </div>
 
-        {/* Branding Header (Glassmorphism) - FIXED POSITIONING */}
         <div 
           className="relative shrink-0 z-20 touch-none"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          {/* Background Decor - Clipped */}
           <div className="absolute inset-0 rounded-t-2xl md:rounded-t-xl overflow-hidden pointer-events-none border-b border-white/10 bg-white/5 backdrop-blur-sm md:backdrop-blur-md">
             <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/10 blur-2xl rounded-full -translate-y-1/2 translate-x-1/2"></div>
           </div>
 
-          {/* Content - Visible Overflow for Dropdowns */}
           <div className="relative p-4">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                {/* <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                  <Activity size={14} />
-                  </div> */}
                 <img
                   src={geoportalLogo}
                   alt="360"
@@ -291,7 +247,6 @@ export const ControlPanel = () => {
                 </div>
               </div>
 
-              {/* Desktop Close/Minimize Button moved here for better layout */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -323,7 +278,6 @@ export const ControlPanel = () => {
           </div>
         </div>
 
-        {/* Header / Drag Handle for Mobile - NOW JUST A SUB-HEADER FOR CONTROLS */}
         <div
           className="p-3 flex justify-between items-center border-b border-white/10 cursor-pointer md:cursor-default bg-black/20 touch-none"
           onClick={() => {
@@ -343,6 +297,31 @@ export const ControlPanel = () => {
         </div>
 
         <div className="p-4 space-y-4 overflow-y-auto custom-scrollbar">
+          {/* Live Tracking Toggle (Enabled only if Env Var is set) */}
+          {import.meta.env.VITE_ENABLE_GPS_TRACKER === 'true' && (
+            <div className="space-y-2">
+              <button
+                onClick={toggleLiveTracking}
+                className={`cursor-pointer w-full flex items-center justify-center gap-2 py-3 md:py-2 text-xs font-bold rounded transition-colors ${isLiveTrackingEnabled ? "bg-green-600 text-white shadow-lg shadow-green-500/30 animate-pulse" : "bg-white/20 hover:bg-white/30 text-green-200 border border-green-500/30"}`}
+              >
+                <Navigation size={14} className={isLiveTrackingEnabled ? "animate-spin" : ""} />
+                {isLiveTrackingEnabled ? "Stop GPS Tracking" : "Start GPS Tracking"}
+              </button>
+              
+              {isLiveTrackingEnabled && (
+                <div className="flex items-center justify-between px-2 py-1 bg-white/5 rounded border border-white/10">
+                  <label className="text-[10px] text-gray-400">Simulation Data</label>
+                  <div 
+                    onClick={toggleSimulation}
+                    className={`cursor-pointer w-8 h-4 rounded-full p-0.5 transition-colors ${isSimulationEnabled ? "bg-blue-500" : "bg-gray-600"}`}
+                  >
+                    <div className={`w-3 h-3 bg-white rounded-full shadow-sm transition-transform ${isSimulationEnabled ? "translate-x-4" : ""}`} />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Weather Toggle */}
           <button
             onClick={() => setShowWeather(!showWeather)}
@@ -380,7 +359,6 @@ export const ControlPanel = () => {
                     className={`absolute inset-0 bg-gradient-to-br ${style.gradient} z-10`}
                   ></div>
 
-                  {/* Image Background */}
                   <img
                     src={style.image}
                     alt={style.name}
@@ -438,8 +416,8 @@ export const ControlPanel = () => {
                 <button
                   onClick={() => {
                     setActiveView("2D");
-                    setPitch(0); // Auto Top View
-                    setBearing(0); // Reset Rotation
+                    setPitch(0);
+                    setBearing(0);
                   }}
                   className={`flex-1 py-1 text-xs rounded transition-colors cursor-pointer ${activeView === "2D" ? "bg-blue-600 text-white shadow-sm" : "text-gray-400 hover:text-white"}`}
                 >
@@ -448,7 +426,7 @@ export const ControlPanel = () => {
                 <button
                   onClick={() => {
                     setActiveView("3D");
-                    setPitch(75); // Auto Side View (Optimized Angle)
+                    setPitch(75);
                   }}
                   className={`flex-1 py-1 text-xs rounded transition-colors cursor-pointer ${activeView === "3D" ? "bg-blue-600 text-white shadow-sm" : "text-gray-400 hover:text-white"}`}
                 >
@@ -673,7 +651,6 @@ export const ControlPanel = () => {
             </div>
 
             <div className="flex flex-col gap-1">
-              {/* Kolaborasi 1: JC Digital */}
               <div>
                 <a
                   href="https://instagram.com/jendelacakradigital"
@@ -684,7 +661,6 @@ export const ControlPanel = () => {
                 </a>
               </div>
 
-              {/* Kolaborasi 2: Makopala */}
               <div className="flex flex-col gap-1">
                 <a
                   href="https://instagram.com/makopala_ubl"
@@ -733,7 +709,6 @@ export const TelemetryOverlay = ({
 
     const onMouseMove = (evt: mapboxgl.MapMouseEvent) => {
       const now = Date.now();
-      // Adaptive throttle: 100ms for 3D, 50ms for 2D
       const throttleLimit = mode === '3D' ? 100 : 50;
       
       if (now - lastUpdate.current < throttleLimit) return;
@@ -754,7 +729,6 @@ export const TelemetryOverlay = ({
           
           const elevation = rawElevation / exaggeration;
 
-          // Simple slope approximation
           const offset = 0.0001;
           const e1Raw = map.queryTerrainElevation
             ? map.queryTerrainElevation(new mapboxgl.LngLat(lng + offset, lat)) || rawElevation
@@ -782,9 +756,7 @@ export const TelemetryOverlay = ({
       });
     };
 
-    // Also update on move/rotate to keep pitch/bearing sync if mouse doesn't move but map does
     const onMove = () => {
-        // Only update camera props if we already have info (mouse is on map)
         if (rafId.current) cancelAnimationFrame(rafId.current);
         rafId.current = requestAnimationFrame(() => {
             setInfo(prev => prev ? ({
@@ -795,22 +767,20 @@ export const TelemetryOverlay = ({
         });
     };
     
-    // We attach to the map instance directly
     map.on('mousemove', onMouseMove);
-    map.on('move', onMove); // Optional: sync bearing/pitch during auto-flight
+    map.on('move', onMove);
 
     return () => {
       map.off('mousemove', onMouseMove);
       map.off('move', onMove);
       if (rafId.current) cancelAnimationFrame(rafId.current);
     };
-  }, [mapRef, mode]); // Re-bind if mode changes (for throttle limit)
+  }, [mapRef, mode]);
 
   if (!info) return null;
 
   return (
     <div className="fixed bottom-6 right-4 md:absolute md:bottom-8 md:right-8 z-30 md:z-10 bg-black/80 md:bg-white/5 backdrop-blur-md md:backdrop-blur-xl border border-white/10 p-3 md:p-4 rounded-xl text-white text-xs font-mono pointer-events-none shadow-2xl overflow-hidden group max-w-[180px] md:max-w-none">
-      {/* Glass reflection effect */}
       <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none"></div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1 md:gap-y-2 relative z-10">
@@ -863,12 +833,9 @@ const GetStartedModal = ({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm md:backdrop-blur-md">
-      {/* Container Modal */}
       <div className="relative w-full max-w-lg bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)]">
-        {/* Glow Decor */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
 
-        {/* Header */}
         <div className="p-6 border-b border-white/5 bg-white/[0.02]">
           <div className="flex items-center gap-3">
             <img
@@ -887,7 +854,6 @@ const GetStartedModal = ({
           </div>
         </div>
 
-        {/* Content */}
         <div className="p-6 flex flex-col h-[calc(80vh-88px-60px)]">
           <div className="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar">
             {[
@@ -907,7 +873,7 @@ const GetStartedModal = ({
                 desc: "Download map areas for use without internet connection. Perfect for remote field surveys.",
               },
               {
-                icon: <Download size={18} />, // Pastikan icon Download sudah di-import dari library Anda (misal: Lucide)
+                icon: <Download size={18} />, 
                 title: "Export & Capture",
                 desc: (
                   <>
@@ -929,7 +895,7 @@ const GetStartedModal = ({
                 ),
               },
               {
-                icon: <Columns size={18} />, // Atau gunakan icon Layout/Square
+                icon: <Columns size={18} />, 
                 title: "Split Screen View",
                 desc: "Compare two different map layers or perspectives side-by-side. Sync or unsync camera movements to analyze temporal or thematic changes in the terrain.",
               },
@@ -955,7 +921,6 @@ const GetStartedModal = ({
             ))}
           </div>
 
-          {/* Action Call */}
           <div className="pt-4">
             <button
               onClick={onClose}
@@ -966,7 +931,6 @@ const GetStartedModal = ({
           </div>
         </div>
 
-        {/* Close Button - Added absolute close button for better UX */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 cursor-pointer p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white z-[60]"
@@ -975,7 +939,6 @@ const GetStartedModal = ({
           <X size={20} />
         </button>
 
-        {/* Footer */}
         <div className="p-4 bg-black/40 border-t border-white/5 text-center text-[10px] text-gray-600 font-mono">
           Landscape 360 v1.2.0
         </div>
