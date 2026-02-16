@@ -1,5 +1,5 @@
 import "mapbox-gl/dist/mapbox-gl.css";
-import React, { useRef, useState, useCallback, useEffect } from "react";
+import React, { useRef, useState, useCallback, useEffect, Suspense } from "react";
 import Map, {
   Source,
   Layer,
@@ -17,6 +17,9 @@ import { SearchPanel } from "./SearchPanel";
 import { NavigationControls } from "./NavigationControls";
 import { UserLocationMarker } from "./UserLocationMarker";
 import { WeatherWidget } from "./WeatherWidget";
+// import { MapSynchronizer } from "./MapSync"; // Removed to fix view behavior
+// Lazy Load LiveTrackerLayer
+const LiveTrackerLayer = React.lazy(() => import("./LiveTrackerLayer").then(module => ({ default: module.LiveTrackerLayer })));
 
 const MAPBOX_TOKEN =
   import.meta.env.VITE_MAPBOX_TOKEN || "YOUR_MAPBOX_TOKEN_HERE";
@@ -56,8 +59,9 @@ const MapBoxContainerComponent = ({
     setPitch,
     setBearing,
     setBounds,
-    flyToDestination,
+    // flyToDestination,
     triggerFlyTo,
+    flyToDestination, // Restore flyToDestination from store
   } = useMapStore();
 
   const mode = overrideViewMode || activeView;
@@ -78,30 +82,29 @@ const MapBoxContainerComponent = ({
 
   // Ref to track if we are currently performing a programmatic flyTo
   const isFlying = useRef(false);
-  
+
   // Ref to track user interaction to decouple gesture from store updates
   const isInteracting = useRef(false);
 
-  // Handle flyTo requests
+  // Handle FlyTo (Restored from MapSync)
   useEffect(() => {
     const map = mapRef.current?.getMap();
     if (map && flyToDestination) {
-        isFlying.current = true;
-        map.flyTo({
-            center: flyToDestination.center,
-            zoom: flyToDestination.zoom,
-            duration: flyToDestination.duration || 2000,
-            essential: true
-        });
-        
-        map.once('moveend', () => {
-            isFlying.current = false;
-        });
+      isFlying.current = true;
+      map.flyTo({
+        center: flyToDestination.center,
+        zoom: flyToDestination.zoom,
+        duration: flyToDestination.duration || 2000,
+        essential: true
+      });
 
-        // Clear destination after triggering
-        triggerFlyTo(null);
+      map.once('moveend', () => {
+        isFlying.current = false;
+      });
+
+      triggerFlyTo(null);
     }
-  }, [flyToDestination, triggerFlyTo]);
+  }, [flyToDestination, triggerFlyTo, mapRef]);
 
   const handleMoveStart = useCallback(() => {
     isInteracting.current = true;
@@ -155,6 +158,7 @@ const MapBoxContainerComponent = ({
     [setCenter, setZoom, setPitch, setBearing, setBounds, isMobile, mode],
   );
 
+  // Sync Store -> Map (Imperative) - RESTORED to fix view behavior
   useEffect(() => {
     const map = mapRef.current?.getMap();
     if (!map) return;
@@ -166,46 +170,48 @@ const MapBoxContainerComponent = ({
 
     // Epsilon for float comparison
     const EPS = 0.001;
-    const centerDiff =
-      Math.abs(c.lng - center[0]) + Math.abs(c.lat - center[1]);
+    const centerDiff = Math.abs(c.lng - center[0]) + Math.abs(c.lat - center[1]);
     const zoomDiff = Math.abs(z - zoom);
     const pitchDiff = Math.abs(p - pitch);
     const bearingDiff = Math.abs(b - bearing);
 
-    if (
-      centerDiff > EPS ||
-      zoomDiff > EPS ||
-      pitchDiff > EPS ||
-      bearingDiff > EPS
-    ) {
+    if (centerDiff > EPS || zoomDiff > EPS || pitchDiff > EPS || bearingDiff > EPS) {
       if (!map.isStyleLoaded()) return;
-      
-      // Don't interrupt programmatic animations or user interactions
+
+      // CRITICAL: Don't interrupt programmatic animations or user interactions
+      // This was missing in the split-out component causing jitter
       if (isFlying.current || isInteracting.current) return;
 
-      // Dynamic duration: fast updates (dragging) = immediate, big jumps = smooth
-      // Mode switching (large pitch changes) deserves a longer, more cinematic duration
-      const isModeSwitch = Math.abs(pitchDiff) > 40; 
+      // Dynamic duration logic
+      const isModeSwitch = Math.abs(pitchDiff) > 40;
       const isSmallChange = centerDiff < 0.01 && zoomDiff < 0.1 && pitchDiff < 5 && bearingDiff < 5;
-      
       const duration = isModeSwitch ? 1500 : (isSmallChange ? 0 : 400);
 
       map.easeTo({
         center: center,
         zoom: zoom,
-        pitch: mode === "3D" ? pitch : 0, // Ensure pitch is 0 for 2D
-        bearing: bearing, // Allow bearing rotation in 2D
+        pitch: mode === "3D" ? pitch : 0,
+        bearing: bearing,
         duration: duration,
-        easing: (t) => {
-             // Use standard easeInOutCubic for mode switches (smoother start/end)
-             // Use easeOutQuad for normal navigation (snappy)
-             return isModeSwitch 
-                ? t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
-                : t * (2 - t);
-        }
+        easing: (t) => isModeSwitch 
+          ? t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
+          : t * (2 - t)
       });
     }
-  }, [center, zoom, pitch, bearing, mode]);
+  }, [center, zoom, pitch, bearing, mode, mapRef]);
+
+  // Sync Terrain Exaggeration (Restored)
+  useEffect(() => {
+    const map = mapRef.current?.getMap();
+    if (!map) return;
+    
+    if (map.getSource('mapbox-dem')) {
+        map.setTerrain({
+            source: 'mapbox-dem',
+            exaggeration: mode === '3D' ? elevationExaggeration : 0.0001
+        });
+    }
+  }, [elevationExaggeration, mode, mapRef]);
 
   const handleMapClick = useCallback(
     (evt: MapMouseEvent) => {
@@ -571,6 +577,18 @@ const MapBoxContainerComponent = ({
         <PlottingLayer />
         <RegionSelectionLayer />
         {mode === "3D" && <ThreeScene />}
+        
+        {/* Map Synchronization Logic (Restored to component) */}
+        {/* <Suspense fallback={null}>
+          <MapSynchronizer mapRef={mapRef} />
+        </Suspense> */}
+
+        {/* NEW: Live GPS Tracker Layer (Lazy Loaded & Feature Flagged) */}
+        {import.meta.env.VITE_ENABLE_GPS_TRACKER === 'true' && (
+          <Suspense fallback={null}>
+            <LiveTrackerLayer />
+          </Suspense>
+        )}
         
         {/* User Location Indicator */}
         <UserLocationMarker />

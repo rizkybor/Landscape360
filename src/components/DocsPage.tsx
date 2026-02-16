@@ -11,6 +11,7 @@ import {
   Smartphone,
   Globe,
   CloudSun,
+  Navigation,
 } from "lucide-react";
 import streetsView from "../assets/Street-View.png";
 import outdoorsView from "../assets/Outdoors-View.png";
@@ -362,6 +363,58 @@ export const DocsPage = ({ onBack }: Props) => {
                     <div className="flex flex-wrap gap-2">
                         <span className="px-2 py-1 rounded bg-cyan-500/10 border border-cyan-500/20 text-[10px] text-cyan-300 font-bold uppercase">Live Updates</span>
                         <span className="px-2 py-1 rounded bg-cyan-500/10 border border-cyan-500/20 text-[10px] text-cyan-300 font-bold uppercase">Field Safety</span>
+                    </div>
+                </div>
+              </section>
+
+              {/* GPS Tracker (Coming Soon) */}
+              <section>
+                <div className="flex items-center gap-3 text-white mb-6">
+                  <div className="p-2 bg-green-500/10 rounded-lg border border-green-500/20">
+                     <Navigation size={20} className="text-green-400" />
+                  </div>
+                  <h3 className="text-2xl font-bold">Realtime GPS Tracking</h3>
+                  <span className="px-2 py-1 rounded bg-green-500/20 text-[10px] text-green-400 font-bold uppercase border border-green-500/30 animate-pulse">Coming Soon</span>
+                </div>
+                
+                <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-6 relative overflow-hidden group hover:border-green-500/30 transition-all duration-300">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                    
+                    <div className="grid grid-cols-2 gap-4 relative z-10 mb-4">
+                        <div className="aspect-video bg-gray-900 rounded-lg border border-white/10 flex items-center justify-center relative overflow-hidden p-4">
+                            <div className="flex items-center justify-center gap-2">
+                                <div className="w-3 h-3 bg-green-500 rounded-full animate-ping"></div>
+                                <span className="text-sm font-bold text-white">Live Position</span>
+                            </div>
+                        </div>
+                        <div className="aspect-video bg-green-900/10 rounded-lg border border-green-500/20 flex flex-col justify-center px-4 relative overflow-hidden">
+                           <div className="space-y-2">
+                              <div className="flex justify-between text-[10px] text-gray-400">
+                                <span>Status</span>
+                                <span className="text-green-400 font-bold">ONLINE</span>
+                              </div>
+                              <div className="flex justify-between text-[10px] text-gray-400">
+                                <span>Device</span>
+                                <span className="text-white font-mono">LoRa WAN</span>
+                              </div>
+                              <div className="flex justify-between text-[10px] text-gray-400">
+                                <span>Range</span>
+                                <span className="text-white font-mono">15 km+</span>
+                              </div>
+                           </div>
+                        </div>
+                    </div>
+                    
+                    <h4 className="text-lg font-bold text-white mb-2">Field Team Monitoring</h4>
+                    <p className="text-xs text-gray-400 leading-relaxed mb-4">
+                        Monitor the real-time location of field personnel, rangers, or climbers. 
+                        Features offline-tolerant data transmission via LoRa/Radio for areas with no cellular coverage.
+                    </p>
+                    
+                    <div className="flex flex-wrap gap-2">
+                        <span className="px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-[10px] text-green-300 font-bold uppercase">Live Tracking</span>
+                        <span className="px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-[10px] text-green-300 font-bold uppercase">History Trail</span>
+                        <span className="px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-[10px] text-green-300 font-bold uppercase">Offline Support</span>
                     </div>
                 </div>
               </section>
