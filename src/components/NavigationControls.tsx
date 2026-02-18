@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Minus, Compass, Crosshair, Camera, Loader2, X } from "lucide-react";
 import type { MapRef } from "react-map-gl/mapbox";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
-import JSZip from "jszip";
 import geoportalLogo from "../assets/geoportal360.png";
 import { useSurveyStore } from "../store/useSurveyStore";
 import { useMapStore } from "../store/useMapStore";
@@ -115,6 +112,17 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
     setShowExportMenu(false);
 
     try {
+        // Dynamically import heavy libraries only when needed
+        const [html2canvasModule, jsPDFModule, JSZipModule] = await Promise.all([
+            import('html2canvas'),
+            import('jspdf'),
+            import('jszip')
+        ]);
+        
+        const html2canvasLib = html2canvasModule.default;
+        const jsPDFLib = jsPDFModule.default;
+        const JSZipLib = JSZipModule.default;
+
         const map = mapRef.current.getMap();
         const canvas = map.getCanvas();
         
@@ -159,7 +167,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
             // Ensure no scrollbars
             pageContent.style.overflow = 'hidden';
             
-            return await html2canvas(pageContent, {
+            return await html2canvasLib(pageContent, {
                 useCORS: true,
                 allowTaint: true,
                 scale: captureScale, // High res capture
@@ -693,7 +701,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
 
         // --- EXPORT BASED ON FORMAT ---
         if (format === 'pdf') {
-            const pdf = new jsPDF('p', 'pt', 'a4');
+            const pdf = new jsPDFLib('p', 'pt', 'a4');
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = pdf.internal.pageSize.getHeight();
 
@@ -750,7 +758,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                 }, format === 'png' ? 'image/png' : 'image/jpeg', 0.9);
             } else {
                 // 2. Multi Page -> ZIP Download
-                const zip = new JSZip();
+                const zip = new JSZipLib();
                 const folder = zip.folder("Survey_Report_Images");
                 
                 // Add all pages to zip
