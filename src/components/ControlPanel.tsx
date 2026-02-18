@@ -69,7 +69,8 @@ export const ControlPanel = () => {
     toggleSimulation,
     isLocalBroadcastEnabled,
     toggleLocalBroadcast,
-    connectionStatus
+    connectionStatus,
+    trackers
   } = useTrackerStore(); 
 
   // Auto-stop tracking/monitoring when user logs out or role changes to incompatible state
@@ -402,7 +403,7 @@ export const ControlPanel = () => {
                             connectionStatus === 'connected' ? 'bg-green-500 animate-pulse' :
                             connectionStatus === 'connecting' ? 'bg-yellow-500' : 'bg-red-500'
                         }`} />
-                        {connectionStatus === 'connected' ? 'Monitoring Active' : 
+                        {connectionStatus === 'connected' ? `Monitoring Active (${Object.keys(trackers).length} User${Object.keys(trackers).length > 1 ? 's' : ''})` : 
                          connectionStatus === 'connecting' ? 'Connecting...' : 'Disconnected'}
                      </div>
                   )}
