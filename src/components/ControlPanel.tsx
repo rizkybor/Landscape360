@@ -102,25 +102,35 @@ export const ControlPanel = () => {
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (!isMobile) return;
+    
+    // Check if the target is a range slider or its container
+    const target = e.target as HTMLElement;
+    if (target.closest('input[type="range"]')) return;
+    
     touchStart.current = e.targetTouches[0].clientY;
     setIsDragging(true);
   };
   
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isMobile || touchStart.current === null || !isDragging) return;
+    
+    const target = e.target as HTMLElement;
+    if (target.closest('input[type="range"]')) return;
+
     const currentY = e.targetTouches[0].clientY;
     const diff = currentY - touchStart.current;
     
+    // Only allow dragging downwards (closing) and prevent default scroll if dragging
     if (diff > 0) {
       setTouchOffset(diff);
-      e.preventDefault();
+      // e.preventDefault(); // Don't prevent default blindly to allow scrolling if needed, but here we want to capture the drag
     }
   };
 
   const handleTouchEnd = () => {
     if (!isMobile || touchStart.current === null) return;
     
-    if (touchOffset > 100) {
+    if (touchOffset > 50) { // Reduced threshold for easier closing
       setIsOpen(false);
     } 
     

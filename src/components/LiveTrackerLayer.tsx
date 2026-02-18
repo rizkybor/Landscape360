@@ -4,12 +4,49 @@ import { useTrackerStore } from '../store/useTrackerStore';
 import { useTrackerService } from '../services/TrackerService';
 import { TRACKER_CONFIG } from '../types/tracker';
 import type { TrackerPacket } from '../types/tracker';
-import { Navigation2, Battery, Signal, WifiOff } from 'lucide-react';
+import { Battery, Signal, WifiOff, MapPin, Mountain } from 'lucide-react';
 import type { LineLayer } from 'mapbox-gl';
+
+import { X } from 'lucide-react';
+
+// --- HELPER: Generate Consistent Color from String ---
+const stringToColor = (str: string) => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const h = Math.abs(hash % 360);
+  return `hsl(${h}, 70%, 50%)`;
+};
+
+// --- HELPER: Get Initials from User ID ---
+const getInitials = (name: string) => {
+  return name
+    .split(/[\s._-]+/)
+    .map(part => part[0])
+    .join('')
+    .substring(0, 2)
+    .toUpperCase();
+};
+
+const toDMS = (deg: number, isLat: boolean): string => {
+    const absolute = Math.abs(deg);
+    const degrees = Math.floor(absolute);
+    const minutesNotTruncated = (absolute - degrees) * 60;
+    const minutes = Math.floor(minutesNotTruncated);
+    const seconds = ((minutesNotTruncated - minutes) * 60).toFixed(1);
+    
+    const dir = isLat 
+        ? (deg >= 0 ? "N" : "S") 
+        : (deg >= 0 ? "E" : "W");
+        
+    return `${degrees}° ${minutes}' ${seconds}" ${dir}`;
+};
 
 // --- HELPER: Interpolated Marker for Smooth Movement ---
 const InterpolatedMarker = memo(({ packet, onClick }: { packet: TrackerPacket; onClick: () => void }) => {
   const [position, setPosition] = useState({ lat: packet.lat, lng: packet.lng });
+  const [isHovered, setIsHovered] = useState(false); // State for hover visibility
   const requestRef = useRef<number>(0);
   const startTimeRef = useRef<number>(0);
   const startPosRef = useRef({ lat: packet.lat, lng: packet.lng });
@@ -49,7 +86,13 @@ const InterpolatedMarker = memo(({ packet, onClick }: { packet: TrackerPacket; o
   // Determine color based on status/battery
   const isLowBattery = packet.battery < 20;
   const isOffline = (Date.now() - new Date(packet.timestamp).getTime()) > TRACKER_CONFIG.OFFLINE_THRESHOLD_MS;
-  const markerColor = isOffline ? '#9ca3af' : (isLowBattery ? '#ef4444' : '#22c55e');
+  
+  // Unique Identity Color
+  const userColor = stringToColor(packet.user_id);
+  const userInitials = getInitials(packet.user_id);
+
+  // Marker Color Logic: Gray (Offline) -> Red (Low Battery) -> Unique User Color (Active)
+  const markerColor = isOffline ? '#64748b' : (isLowBattery ? '#ef4444' : userColor);
 
   return (
     <Marker
@@ -60,34 +103,46 @@ const InterpolatedMarker = memo(({ packet, onClick }: { packet: TrackerPacket; o
         e.originalEvent.stopPropagation();
         onClick();
       }}
-      style={{ cursor: 'pointer', zIndex: 10 }} // Ensure clickable
+      style={{ cursor: 'pointer', zIndex: isHovered ? 50 : 10 }} // Elevate z-index on hover
     >
-      <div className="relative group transition-transform duration-300 hover:scale-110">
-        {/* Status Ring */}
+      <div 
+        className="relative group transition-transform duration-300 hover:scale-110"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {/* Status Ring - Adjusted Opacity */}
         <div 
-          className="absolute -inset-2 rounded-full opacity-20 animate-ping"
+          className="absolute -inset-3 rounded-full opacity-30 animate-ping"
           style={{ backgroundColor: markerColor, display: isOffline ? 'none' : 'block' }} 
         />
         
-        {/* Main Icon */}
+        {/* Main Marker - Shows Initials for Identity or Icon for Offline */}
         <div 
-          className="w-8 h-8 rounded-full shadow-lg border-2 border-white flex items-center justify-center text-white text-[10px] font-bold"
+          className="w-10 h-10 rounded-full shadow-xl border-[3px] border-white flex items-center justify-center text-white font-bold backdrop-blur-sm transition-colors duration-300"
           style={{ backgroundColor: markerColor }}
         >
-          {isOffline ? <WifiOff size={14} /> : <Navigation2 size={14} className="transform -rotate-45" />}
+          {isOffline ? (
+            <WifiOff size={18} />
+          ) : (
+            <span className="text-xs tracking-tighter drop-shadow-md">{userInitials}</span>
+          )}
         </div>
 
-        {/* Mini Battery Indicator */}
-        <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 border border-gray-200 shadow-sm">
+        {/* Mini Battery Indicator - Enhanced Visibility */}
+        <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 border-2 border-gray-100 shadow-md">
            <div 
-             className={`w-1.5 h-1.5 rounded-full ${packet.battery < 20 ? 'bg-red-500' : 'bg-green-500'}`} 
+             className={`w-2 h-2 rounded-full ${packet.battery < 20 ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`} 
            />
         </div>
 
-        {/* Hover Label */}
-        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20">
-          {packet.user_id}
-        </div>
+        {/* Hover Label - Shows Full Name (Always visible if isHovered is true) */}
+        {isHovered && (
+            <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-xl whitespace-nowrap z-50 border border-slate-700 animate-in fade-in zoom-in-95 duration-200">
+              {packet.user_id}
+              {/* Tooltip Arrow */}
+              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-900 rotate-45 border-b border-r border-slate-700"></div>
+            </div>
+        )}
       </div>
     </Marker>
   );
@@ -115,7 +170,8 @@ export const LiveTrackerLayer = () => {
         },
         properties: {
           user_id: t.latestPacket.user_id,
-          color: t.latestPacket.user_id === selectedTrackerId ? '#3b82f6' : '#9ca3af',
+          // Use unique user color if selected, otherwise standard gray
+          color: t.latestPacket.user_id === selectedTrackerId ? stringToColor(t.latestPacket.user_id) : '#94a3b8',
           opacity: t.latestPacket.user_id === selectedTrackerId ? 1 : 0.4
         }
       }))
@@ -169,36 +225,94 @@ export const LiveTrackerLayer = () => {
           anchor="bottom"
           offset={25}
           onClose={() => selectTracker(null)}
-          closeButton={true}
+          closeButton={false} // Custom close button used instead
           closeOnClick={false}
-          className="z-50"
+          className="z-50 tracker-popup" // Added class for custom styling if needed
+          maxWidth="300px" // Slightly reduced for mobile optimization
         >
-          <div className="p-2 min-w-[200px]">
-            <div className="flex items-center justify-between mb-2 border-b pb-2">
-              <h3 className="font-bold text-gray-900">{selectedTracker.latestPacket.user_id}</h3>
-              <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${selectedTracker.isOffline ? 'bg-gray-100 text-gray-500' : 'bg-green-100 text-green-700'}`}>
-                {selectedTracker.isOffline ? 'OFFLINE' : 'ACTIVE'}
-              </span>
-            </div>
-            
-            <div className="space-y-1 text-sm text-gray-600">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1"><Battery size={14}/> Battery</span>
-                <span className={`font-mono font-bold ${selectedTracker.latestPacket.battery < 20 ? 'text-red-600' : 'text-gray-900'}`}>
-                  {selectedTracker.latestPacket.battery}%
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1"><Signal size={14}/> Speed</span>
-                <span className="font-mono">{selectedTracker.latestPacket.speed?.toFixed(1) || 0} km/h</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1"><Navigation2 size={14}/> Alt</span>
-                <span className="font-mono">{selectedTracker.latestPacket.alt?.toFixed(0) || '-'} m</span>
-              </div>
-              <div className="text-xs text-gray-400 mt-2 pt-1 border-t">
-                Last update: {new Date(selectedTracker.latestPacket.timestamp).toLocaleTimeString()}
-              </div>
+          <div className="p-0 w-[260px] sm:w-[280px] overflow-hidden rounded-lg"> {/* Responsive width: 260px on mobile, 280px on desktop */}
+            <div className="p-3 sm:p-4 bg-white"> {/* Reduced padding on mobile */}
+                {/* Header with Close Button */}
+                <div className="flex items-start justify-between mb-3 border-b border-gray-100 pb-3">
+                <div className="flex items-center gap-2.5 sm:gap-3">
+                    {/* Identity Color Indicator */}
+                    <div 
+                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white text-base sm:text-lg font-bold shadow-md ring-2 ring-white shrink-0" 
+                        style={{ backgroundColor: stringToColor(selectedTracker.latestPacket.user_id) }}
+                    >
+                        {getInitials(selectedTracker.latestPacket.user_id)}
+                    </div>
+                    <div className="flex flex-col min-w-0"> {/* min-w-0 for truncation */}
+                        <h3 className="font-bold text-gray-900 text-base sm:text-lg leading-none truncate pr-2">{selectedTracker.latestPacket.user_id}</h3>
+                        <div className="flex items-center gap-1.5 mt-1 sm:mt-1.5">
+                            <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full shrink-0 ${selectedTracker.isOffline ? 'bg-slate-400' : 'bg-green-500 animate-pulse'}`}></span>
+                            <span className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest truncate">
+                                {selectedTracker.isOffline ? 'OFFLINE' : 'LIVE TRACKING'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                {/* Professional Close Button */}
+                <button 
+                    onClick={() => selectTracker(null)}
+                    className="cursor-pointer text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-1 rounded-full transition-colors -mt-1 -mr-1 shrink-0"
+                    title="Close"
+                >
+                    <X size={16} />
+                </button>
+                </div>
+                
+                <div className="space-y-3 sm:space-y-4">
+                {/* Coordinates Section */}
+                <div className="bg-slate-50 p-2.5 sm:p-3 rounded-xl border border-slate-100">
+                    <div className="flex items-center gap-2 text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                        <MapPin size={10} className="text-slate-400 sm:w-3 sm:h-3" /> COORDINATES
+                    </div>
+                    <div className="font-mono text-xs sm:text-sm font-medium text-slate-700 leading-relaxed break-all"> {/* break-all ensures long coords wrap */}
+                        <div>{toDMS(selectedTracker.latestPacket.lat, true)}</div>
+                        <div>{toDMS(selectedTracker.latestPacket.lng, false)}</div>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                    <div className="flex flex-col">
+                        <span className="flex items-center gap-1 text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5"><Mountain size={12} className="sm:w-[14px] sm:h-[14px]"/> ELEVATION</span>
+                        <div className="flex items-baseline gap-1">
+                            <span className="font-bold text-gray-900 text-lg sm:text-xl">{selectedTracker.latestPacket.alt?.toFixed(0) || '-'}</span>
+                            <span className="text-[10px] sm:text-xs font-medium text-gray-500">m</span>
+                        </div>
+                    </div>
+                    <div className="flex flex-col">
+                        <span className="flex items-center gap-1 text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5"><Signal size={12} className="sm:w-[14px] sm:h-[14px]"/> SPEED</span>
+                        <div className="flex items-baseline gap-1">
+                            <span className="font-bold text-gray-900 text-lg sm:text-xl">{selectedTracker.latestPacket.speed?.toFixed(1) || 0}</span>
+                            <span className="text-[10px] sm:text-xs font-medium text-gray-500">km/h</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-gray-500">
+                        <Battery size={14} className="text-gray-400 sm:w-4 sm:h-4"/> Battery Level
+                    </div>
+                    <span className={`font-bold text-xs sm:text-sm ${selectedTracker.latestPacket.battery < 20 ? 'text-red-600' : 'text-green-600'}`}>
+                    {selectedTracker.latestPacket.battery}%
+                    </span>
+                </div>
+
+                <div className="border-t border-gray-100 pt-2.5 sm:pt-3 flex justify-between items-start text-[10px] sm:text-xs text-gray-400">
+                    <span>Last update</span>
+                    <span className="font-mono text-right flex flex-col items-end">
+                      <span className="text-gray-600 font-medium">
+                        {new Date(selectedTracker.latestPacket.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':')} WIB
+                      </span>
+                      <span className="text-[9px] sm:text-[10px] text-gray-400 mt-0.5">
+                        {new Date(selectedTracker.latestPacket.timestamp).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                      </span>
+                    </span>
+                </div>
+                </div>
             </div>
           </div>
         </Popup>
