@@ -1,12 +1,12 @@
 import { useEffect, useState, useRef, useMemo, memo } from 'react';
 import { Marker, Popup, Source, Layer } from 'react-map-gl/mapbox';
+import type { MapRef } from 'react-map-gl/mapbox';
 import { useTrackerStore } from '../store/useTrackerStore';
 import { useTrackerService } from '../services/TrackerService';
 import { TRACKER_CONFIG } from '../types/tracker';
 import type { TrackerPacket } from '../types/tracker';
 import { Battery, Signal, WifiOff, MapPin, Mountain } from 'lucide-react';
 import type { LineLayer } from 'mapbox-gl';
-
 import { X } from 'lucide-react';
 
 // --- HELPER: Generate Consistent Color from String ---
@@ -99,7 +99,7 @@ const InterpolatedMarker = memo(({ packet, onClick }: { packet: TrackerPacket; o
       longitude={position.lng}
       latitude={position.lat}
       anchor="center"
-      onClick={(e) => {
+      onClick={(e: any) => {
         e.originalEvent.stopPropagation();
         onClick();
       }}
@@ -148,11 +148,41 @@ const InterpolatedMarker = memo(({ packet, onClick }: { packet: TrackerPacket; o
   );
 });
 
-export const LiveTrackerLayer = () => {
+export const LiveTrackerLayer = ({ mapRef }: { mapRef?: React.RefObject<MapRef | null> }) => {
   const { trackers, selectedTrackerId, selectTracker, isLiveTrackingEnabled } = useTrackerStore();
+  const [terrainElevation, setTerrainElevation] = useState<number | null>(null);
   
   // Initialize Service (Start Simulation/Connection)
   useTrackerService();
+
+  // Update elevation when selected tracker moves
+  useEffect(() => {
+    // Safety check for mapRef
+    if (!mapRef || !mapRef.current) return;
+
+    const map = mapRef.current.getMap();
+    
+    // Ensure map and tracker exist
+    if (selectedTrackerId && trackers[selectedTrackerId] && map) {
+        const { lat, lng } = trackers[selectedTrackerId].latestPacket;
+        
+        // Use type assertion to avoid TS errors if queryTerrainElevation is missing in types
+        // queryTerrainElevation returns number | null. It might be undefined if map style has no terrain.
+        const rawElev = (map as any).queryTerrainElevation ? (map as any).queryTerrainElevation({ lng, lat }) : null;
+        
+        if (rawElev !== null && rawElev !== undefined) {
+             const terrain = map.getTerrain();
+             const exaggeration = (terrain && typeof terrain.exaggeration === 'number') ? terrain.exaggeration : 1;
+             // Protect against division by zero (unlikely but safe)
+             const validExaggeration = exaggeration === 0 ? 1 : exaggeration;
+             setTerrainElevation(rawElev / validExaggeration);
+        } else {
+             setTerrainElevation(null);
+        }
+    } else {
+        setTerrainElevation(null);
+    }
+  }, [selectedTrackerId, trackers, mapRef]);
 
   // Generate GeoJSON for Trails (History)
   const trailsGeoJSON = useMemo(() => {
@@ -279,8 +309,10 @@ export const LiveTrackerLayer = () => {
                     <div className="flex flex-col">
                         <span className="flex items-center gap-1 text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5"><Mountain size={12} className="sm:w-[14px] sm:h-[14px]"/> ELEVATION</span>
                         <div className="flex items-baseline gap-1">
-                            <span className="font-bold text-gray-900 text-lg sm:text-xl">{selectedTracker.latestPacket.alt?.toFixed(0) || '-'}</span>
-                            <span className="text-[10px] sm:text-xs font-medium text-gray-500">m</span>
+                            <span className="font-bold text-gray-900 text-lg sm:text-xl">
+                                {terrainElevation !== null ? terrainElevation.toFixed(0) : (selectedTracker.latestPacket.alt?.toFixed(0) || '-')}
+                            </span>
+                            <span className="text-[10px] sm:text-xs font-medium text-gray-500">mdpl</span>
                         </div>
                     </div>
                     <div className="flex flex-col">

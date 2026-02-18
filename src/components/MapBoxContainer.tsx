@@ -648,7 +648,7 @@ const MapBoxContainerComponent = ({
         {/* NEW: Live GPS Tracker Layer (Lazy Loaded & Feature Flagged) */}
         {import.meta.env.VITE_ENABLE_GPS_TRACKER === 'true' && (
           <Suspense fallback={null}>
-            <LiveTrackerLayer />
+            <LiveTrackerLayer mapRef={mapRef} />
           </Suspense>
         )}
         
