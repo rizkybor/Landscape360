@@ -362,16 +362,18 @@ export const ControlPanel = () => {
               
               {isLiveTrackingEnabled && (subscriptionStatus === 'Pro' || subscriptionStatus === 'Enterprise') && (
                 <div className="space-y-1">
-                  {/* Simulation Toggle (Hide for Monitor?) - Monitor shouldn't simulate maybe? But let's keep it for now */}
-                  <div className="flex items-center justify-between px-2 py-1 bg-white/5 rounded border border-white/10">
-                    <label className="text-[10px] text-gray-400">Simulation Data</label>
-                    <div 
-                      onClick={toggleSimulation}
-                      className={`cursor-pointer w-8 h-4 rounded-full p-0.5 transition-colors ${isSimulationEnabled ? "bg-blue-500" : "bg-gray-600"}`}
-                    >
-                      <div className={`w-3 h-3 bg-white rounded-full shadow-sm transition-transform ${isSimulationEnabled ? "translate-x-4" : ""}`} />
+                  {/* Simulation Toggle (Only for monitor360) */}
+                  {userRole === 'monitor360' && (
+                    <div className="flex items-center justify-between px-2 py-1 bg-white/5 rounded border border-white/10">
+                      <label className="text-[10px] text-gray-400">Simulation Data</label>
+                      <div 
+                        onClick={toggleSimulation}
+                        className={`cursor-pointer w-8 h-4 rounded-full p-0.5 transition-colors ${isSimulationEnabled ? "bg-blue-500" : "bg-gray-600"}`}
+                      >
+                        <div className={`w-3 h-3 bg-white rounded-full shadow-sm transition-transform ${isSimulationEnabled ? "translate-x-4" : ""}`} />
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Local GPS Toggle (Only for pengguna360 with Pro/Enterprise) */}
                   {userRole === 'pengguna360' && (subscriptionStatus === 'Pro' || subscriptionStatus === 'Enterprise') && (
