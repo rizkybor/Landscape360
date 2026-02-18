@@ -20,6 +20,7 @@
 ### 📍 Navigation & Survey
 - **Instant Geolocation**: "Start Your Journey" feature with pre-emptive GPS fetching and zero-delay jump logic.
 - **Navigator Mode**: Precision plotting tools with real-time **Distance**, **Azimuth**, and **Slope** calculations.
+- **GPS Monitoring**: Real-time location tracking with **Smart Reconnect** technology (auto-buffer during signal loss).
 - **Visual Feedback**: Dynamic marker shapes (Diamond vs Circle) and colors (Indigo vs Yellow) to distinguish edited points.
 - **Optimized Controls**:
   - **Desktop**: Smooth scroll zoom (1/600 rate), inertia-based panning, and orbit controls.

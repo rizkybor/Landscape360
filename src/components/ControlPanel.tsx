@@ -1001,6 +1001,11 @@ const GetStartedModal = ({
                 title: "Survey Tools",
                 desc: "Enter Navigator Mode to plot points and measure Azimuth/Back-Azimuth.",
               },
+              {
+                icon: <Navigation size={18} />,
+                title: "GPS Tracking & Monitoring",
+                desc: "Click the GPS button to broadcast your location or monitor teams (Enterprise). Features Smart Reconnect for signal loss.",
+              },
             ].map((item, i) => (
               <div key={i} className="flex gap-4 group">
                 <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-all">

@@ -122,6 +122,66 @@ export const DocsPage = ({ onBack }: Props) => {
             </div>
           </section>
 
+          {/* Quick Start Overview */}
+          <section>
+            <div className="flex items-center gap-3 text-white mb-6">
+                <div className="p-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+                    <Zap className="w-5 h-5 text-yellow-400" />
+                </div>
+                <h3 className="text-2xl font-bold">Quick Start Overview</h3>
+            </div>
+            
+            <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 flex gap-4 items-start group hover:border-yellow-500/30 transition-all">
+                    <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 shrink-0">
+                        <MousePointer size={16} />
+                    </div>
+                    <div>
+                        <h4 className="text-sm font-bold text-white mb-1">Navigation</h4>
+                        <p className="text-xs text-gray-400 leading-relaxed">
+                            <strong>Left-Click Drag</strong> to Rotate (3D) or Pan (2D). <strong>Scroll</strong> to Zoom. Use on-screen buttons for precision control.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 flex gap-4 items-start group hover:border-green-500/30 transition-all">
+                    <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center text-green-400 shrink-0">
+                        <Layers size={16} />
+                    </div>
+                    <div>
+                        <h4 className="text-sm font-bold text-white mb-1">Terrain Analysis</h4>
+                        <p className="text-xs text-gray-400 leading-relaxed">
+                            Toggle <strong>Contours</strong> and adjust exaggeration in the Control Panel. Switch between Streets, Outdoors, and Satellite views.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 flex gap-4 items-start group hover:border-pink-500/30 transition-all">
+                    <div className="w-8 h-8 rounded-lg bg-pink-500/10 flex items-center justify-center text-pink-400 shrink-0">
+                        <Camera size={16} />
+                    </div>
+                    <div>
+                        <h4 className="text-sm font-bold text-white mb-1">Export & Share</h4>
+                        <p className="text-xs text-gray-400 leading-relaxed">
+                            Capture high-res snapshots (PNG/JPG) or generate PDF reports with embedded telemetry data.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 flex gap-4 items-start group hover:border-green-500/30 transition-all">
+                    <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center text-green-400 shrink-0">
+                        <Navigation size={16} />
+                    </div>
+                    <div>
+                        <h4 className="text-sm font-bold text-white mb-1">GPS Tracking</h4>
+                        <p className="text-xs text-gray-400 leading-relaxed">
+                            Click the <strong>GPS Icon</strong> to broadcast your location (Pro) or monitor field teams (Enterprise). Includes Smart Reconnect.
+                        </p>
+                    </div>
+                </div>
+            </div>
+          </section>
+
           {/* New Features Grid */}
           <section>
             <div className="flex items-center gap-3 text-white mb-6">
@@ -396,6 +456,10 @@ export const DocsPage = ({ onBack }: Props) => {
                               <div className="flex justify-between text-[10px] text-gray-400">
                                 <span>Mode</span>
                                 <span className="text-white font-mono">Broadcast / Monitor</span>
+                              </div>
+                              <div className="flex justify-between text-[10px] text-gray-400">
+                                <span>Timezone</span>
+                                <span className="text-white font-mono">WIB (UTC+7)</span>
                               </div>
                               <div className="flex justify-between text-[10px] text-gray-400">
                                 <span>Latency</span>
