@@ -903,15 +903,23 @@ export const DocsPage = ({ onBack }: Props) => {
                           <span className="w-1.5 h-1.5 rounded-full bg-red-900/50"></span> No GPS Tracking
                       </li>
                   </ul>
+
+                  <a href="mailto:contact@jcdigital.co.id?subject=Account Request: Landscape360 Starter Plan&body=Dear Admin,%0D%0A%0D%0AI hope this message finds you well.%0D%0A%0D%0AI would like to request the creation of a Starter (Free) account for the Landscape360 platform.%0D%0A%0D%0APlease let me know if any further information is required from my side.%0D%0A%0D%0AThank you,%0D%0A[Your Name]" className="block w-full py-2 text-center rounded-lg bg-white/5 hover:bg-white/10 text-xs font-bold text-white border border-white/10 transition-colors">
+                      Request Account
+                  </a>
                 </div>
 
                 {/* Pro Plan */}
                 <div className="bg-gradient-to-b from-blue-900/20 to-[#0A0A0A] border border-blue-500/30 rounded-xl p-6 flex flex-col relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-500/20 transition-all"></div>
-                  <div className="mb-4">
+                  <div className="mb-4 flex items-center justify-between">
                      <span className="text-xs font-bold px-2 py-1 bg-blue-500/20 text-blue-400 rounded uppercase tracking-wider border border-blue-500/20">Recommended</span>
+                     <span className="text-[10px] font-bold px-2 py-1 bg-red-500/20 text-red-400 rounded uppercase tracking-wider border border-red-500/20 animate-pulse">Promo</span>
                   </div>
-                  <h4 className="text-2xl font-bold text-white mb-1">$3.5<span className="text-sm font-normal text-gray-500">/mo</span></h4>
+                  <div className="flex items-end gap-2 mb-1">
+                      <span className="text-sm text-gray-500 line-through decoration-red-500/50 decoration-1">Rp 85.000</span>
+                  </div>
+                  <h4 className="text-2xl font-bold text-white mb-1">Rp 55.000<span className="text-sm font-normal text-gray-500">/bln</span></h4>
                   <p className="text-xs text-gray-400 mb-6">For field professionals</p>
                   
                   <ul className="space-y-3 mb-8 flex-1">
@@ -939,10 +947,14 @@ export const DocsPage = ({ onBack }: Props) => {
 
                 {/* Enterprise Plan */}
                 <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-6 flex flex-col hover:border-cyan-500/30 transition-all duration-300">
-                  <div className="mb-4">
+                  <div className="mb-4 flex items-center justify-between">
                      <span className="text-xs font-bold px-2 py-1 bg-cyan-900/30 text-cyan-400 rounded uppercase tracking-wider border border-cyan-500/20">Enterprise</span>
+                     <span className="text-[10px] font-bold px-2 py-1 bg-red-500/20 text-red-400 rounded uppercase tracking-wider border border-red-500/20 animate-pulse">Promo</span>
                   </div>
-                  <h4 className="text-2xl font-bold text-white mb-1">$7<span className="text-sm font-normal text-gray-500">/mo</span></h4>
+                  <div className="flex items-end gap-2 mb-1">
+                      <span className="text-sm text-gray-500 line-through decoration-red-500/50 decoration-1">Rp 165.000</span>
+                  </div>
+                  <h4 className="text-2xl font-bold text-white mb-1">Rp 110.000<span className="text-sm font-normal text-gray-500">/bln</span></h4>
                   <p className="text-xs text-gray-400 mb-6">Maximum power & support</p>
                   
                   <ul className="space-y-3 mb-8 flex-1">
@@ -963,8 +975,8 @@ export const DocsPage = ({ onBack }: Props) => {
                       </li>
                   </ul>
 
-                   <a href="mailto:contact@jcdigital.co.id?subject=Request Upgrade to Enterprise Plan" className="block w-full py-2 text-center rounded-lg bg-white/5 hover:bg-white/10 text-xs font-bold text-white border border-white/10 transition-colors">
-                      Contact Sales
+                   <a href="mailto:contact@jcdigital.co.id?subject=Subscription Upgrade: Landscape360 Enterprise Plan&body=Dear Admin,%0D%0A%0D%0AI hope this message finds you well.%0D%0A%0D%0AWe are interested in upgrading our organization's access to the Landscape360 Enterprise Plan to leverage the Realtime Monitoring and dedicated support features.%0D%0A%0D%0APlease contact us to arrange the upgrade and discuss any specific requirements.%0D%0A%0D%0ABest regards,%0D%0A[Your Name/Organization]" className="block w-full py-2 text-center rounded-lg bg-white/5 hover:bg-white/10 text-xs font-bold text-white border border-white/10 transition-colors">
+                      Upgrade to Enterprise
                   </a>
                 </div>
             </div>
