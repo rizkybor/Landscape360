@@ -367,14 +367,14 @@ export const DocsPage = ({ onBack }: Props) => {
                 </div>
               </section>
 
-              {/* GPS Tracker (Coming Soon) */}
+              {/* GPS Tracker */}
               <section>
                 <div className="flex items-center gap-3 text-white mb-6">
                   <div className="p-2 bg-green-500/10 rounded-lg border border-green-500/20">
                      <Navigation size={20} className="text-green-400" />
                   </div>
                   <h3 className="text-2xl font-bold">Realtime GPS Tracking</h3>
-                  <span className="px-2 py-1 rounded bg-green-500/20 text-[10px] text-green-400 font-bold uppercase border border-green-500/30 animate-pulse">Coming Soon</span>
+                  <span className="px-2 py-1 rounded bg-green-500/20 text-[10px] text-green-400 font-bold uppercase border border-green-500/30">Live Now</span>
                 </div>
                 
                 <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-6 relative overflow-hidden group hover:border-green-500/30 transition-all duration-300">
@@ -394,27 +394,40 @@ export const DocsPage = ({ onBack }: Props) => {
                                 <span className="text-green-400 font-bold">ONLINE</span>
                               </div>
                               <div className="flex justify-between text-[10px] text-gray-400">
-                                <span>Device</span>
-                                <span className="text-white font-mono">LoRa WAN</span>
+                                <span>Mode</span>
+                                <span className="text-white font-mono">Broadcast / Monitor</span>
                               </div>
                               <div className="flex justify-between text-[10px] text-gray-400">
-                                <span>Range</span>
-                                <span className="text-white font-mono">15 km+</span>
+                                <span>Latency</span>
+                                <span className="text-white font-mono">&lt; 100ms</span>
                               </div>
                            </div>
                         </div>
                     </div>
                     
-                    <h4 className="text-lg font-bold text-white mb-2">Field Team Monitoring</h4>
+                    <h4 className="text-lg font-bold text-white mb-2">Command Center & Field Tracking</h4>
                     <p className="text-xs text-gray-400 leading-relaxed mb-4">
-                        Monitor the real-time location of field personnel, rangers, or climbers. 
-                        Features offline-tolerant data transmission via LoRa/Radio for areas with no cellular coverage.
+                        Advanced personnel tracking system with Role-Based Access Control.
+                        <strong> Enterprise Monitors</strong> can visualize all active field units in real-time, while 
+                        <strong> Pro Users</strong> can broadcast their secure location data.
                     </p>
                     
                     <div className="flex flex-wrap gap-2">
-                        <span className="px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-[10px] text-green-300 font-bold uppercase">Live Tracking</span>
-                        <span className="px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-[10px] text-green-300 font-bold uppercase">History Trail</span>
-                        <span className="px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-[10px] text-green-300 font-bold uppercase">Offline Support</span>
+                        <span className="px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-[10px] text-green-300 font-bold uppercase">Realtime Websocket</span>
+                        <span className="px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-[10px] text-green-300 font-bold uppercase">Multi-User Support</span>
+                        <span className="px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-[10px] text-green-300 font-bold uppercase">Heartbeat Sync</span>
+                    </div>
+
+                    <div className="mt-4 p-3 rounded-lg bg-yellow-500/5 border border-yellow-500/10">
+                        <h5 className="text-xs font-bold text-yellow-400 mb-1 flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse"></span>
+                            Connectivity Note
+                        </h5>
+                        <p className="text-[10px] text-gray-400 leading-relaxed">
+                            This feature requires an active internet connection (4G/WiFi) to transmit and receive data via WebSocket. 
+                            If connection is lost, data is buffered locally and automatically flushed when back online (Smart Reconnect).
+                            <strong>Offline tracking is currently not supported.</strong>
+                        </p>
                     </div>
                 </div>
               </section>
@@ -821,6 +834,9 @@ export const DocsPage = ({ onBack }: Props) => {
                       <li className="flex items-center gap-2 text-xs text-gray-300">
                           <span className="w-1.5 h-1.5 rounded-full bg-gray-500"></span> 2 Saved Surveys
                       </li>
+                      <li className="flex items-center gap-2 text-xs text-gray-500 line-through decoration-gray-600">
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-900/50"></span> No GPS Tracking
+                      </li>
                   </ul>
                 </div>
 
@@ -846,6 +862,9 @@ export const DocsPage = ({ onBack }: Props) => {
                        <li className="flex items-center gap-2 text-xs text-gray-200">
                           <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> High-Res Export
                       </li>
+                      <li className="flex items-center gap-2 text-xs text-white font-bold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span> GPS Broadcast
+                      </li>
                   </ul>
                   
                   <a href="mailto:contact@jcdigital.co.id?subject=Request Upgrade to Pro Plan" className="block w-full py-2 text-center rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-colors">
@@ -870,6 +889,9 @@ export const DocsPage = ({ onBack }: Props) => {
                       </li>
                       <li className="flex items-center gap-2 text-xs text-gray-300">
                           <span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span> 10 Saved Surveys
+                      </li>
+                      <li className="flex items-center gap-2 text-xs text-white font-bold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span> Realtime Monitoring
                       </li>
                       <li className="flex items-center gap-2 text-xs text-gray-300">
                           <span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span> 24/7 Priority Support

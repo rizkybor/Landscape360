@@ -25,6 +25,7 @@ describe('useSurveyStore', () => {
       savedSurveys: [],
       groups: [],
       currentSurveyId: null,
+      errorMessage: null,
     });
     vi.clearAllMocks();
   });
@@ -54,7 +55,8 @@ describe('useSurveyStore', () => {
     await useSurveyStore.getState().saveCurrentSurvey('New Survey');
 
     // Assertions
-    expect(consoleMock).toHaveBeenCalledWith(expect.stringContaining('Survey limit reached'));
+    // expect(consoleMock).toHaveBeenCalledWith(expect.stringContaining('Survey limit reached'));
+    expect(useSurveyStore.getState().errorMessage).toContain('Survey limit reached');
     expect(supabase.from).not.toHaveBeenCalled(); // Should not hit DB
 
     alertMock.mockRestore();
@@ -130,7 +132,8 @@ describe('useSurveyStore', () => {
 
     await useSurveyStore.getState().saveCurrentSurvey('New');
 
-    expect(consoleMock).toHaveBeenCalledWith(expect.stringContaining('Survey limit reached'));
+    // expect(consoleMock).toHaveBeenCalledWith(expect.stringContaining('Survey limit reached'));
+    expect(useSurveyStore.getState().errorMessage).toContain('Survey limit reached');
     
     alertMock.mockRestore();
     consoleMock.mockRestore();

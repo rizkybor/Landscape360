@@ -11,15 +11,22 @@ interface TrackerStore {
   selectTracker: (userId: string | null) => void;
   isLiveTrackingEnabled: boolean;
   toggleLiveTracking: () => void;
+  setLiveTracking: (enabled: boolean) => void;
   isSimulationEnabled: boolean;
   toggleSimulation: () => void;
+  isLocalBroadcastEnabled: boolean;
+  toggleLocalBroadcast: () => void;
+  connectionStatus: 'disconnected' | 'connecting' | 'connected' | 'error';
+  setConnectionStatus: (status: 'disconnected' | 'connecting' | 'connected' | 'error') => void;
 }
 
 export const useTrackerStore = create<TrackerStore>((set) => ({
   trackers: {},
   selectedTrackerId: null,
   isLiveTrackingEnabled: false,
-  isSimulationEnabled: false, // Default to false so user must toggle it
+  isSimulationEnabled: false,
+  isLocalBroadcastEnabled: false,
+  connectionStatus: 'disconnected',
 
   addOrUpdateTracker: (packet) => {
     set((state) => {
@@ -67,5 +74,8 @@ export const useTrackerStore = create<TrackerStore>((set) => ({
   selectTracker: (userId) => set({ selectedTrackerId: userId }),
 
   toggleLiveTracking: () => set((state) => ({ isLiveTrackingEnabled: !state.isLiveTrackingEnabled })),
+  setLiveTracking: (enabled) => set({ isLiveTrackingEnabled: enabled }),
   toggleSimulation: () => set((state) => ({ isSimulationEnabled: !state.isSimulationEnabled })),
+  toggleLocalBroadcast: () => set((state) => ({ isLocalBroadcastEnabled: !state.isLocalBroadcastEnabled })),
+  setConnectionStatus: (status) => set({ connectionStatus: status }),
 }));
