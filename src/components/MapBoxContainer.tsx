@@ -117,7 +117,13 @@ const MapBoxContainerComponent = ({
     }, 100);
   }, []);
 
-  const [isMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   // Throttle store updates to prevent UI lag on mobile
   const lastStoreUpdate = useRef(0);

@@ -16,10 +16,12 @@ export const MapDashboard = ({ initialLocation }: { initialLocation?: [number, n
     <div className="w-full h-screen bg-gray-900 relative overflow-hidden">
       <SEO />
       {isSplitScreen ? (
-        <div className="flex w-full h-full">
-          <div className="w-1/2 h-full border-r border-gray-700 relative">
-            <div className="absolute top-4 right-4 z-20 bg-black/50 text-white px-2 py-1 rounded text-xs pointer-events-none backdrop-blur-sm">
-              2D View
+        <div className="flex flex-col md:flex-row w-full h-full">
+          {/* Left/Top Panel (2D) */}
+          <div className="w-full h-1/2 md:w-1/2 md:h-full border-b md:border-b-0 md:border-r border-gray-700 relative group">
+            <div className="absolute top-4 left-4 z-20 bg-black/60 text-white px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-md border border-white/10 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+              2D Topo
             </div>
             <MapBoxContainer
               overrideViewMode="2D"
@@ -27,10 +29,17 @@ export const MapDashboard = ({ initialLocation }: { initialLocation?: [number, n
               mapRef={leftMapRef}
               initialLocation={initialLocation}
             />
+            {/* Sync Indicator */}
+            <div className="absolute bottom-4 right-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                <span className="text-[10px] text-white/50 bg-black/50 px-2 py-1 rounded">Synced</span>
+            </div>
           </div>
-          <div className="w-1/2 h-full relative">
-            <div className="absolute top-4 right-16 z-20 bg-black/50 text-white px-2 py-1 rounded text-xs pointer-events-none backdrop-blur-sm">
-              3D View
+
+          {/* Right/Bottom Panel (3D) */}
+          <div className="w-full h-1/2 md:w-1/2 md:h-full relative group">
+            <div className="absolute top-4 right-16 md:right-20 z-20 bg-black/60 text-white px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-md border border-white/10 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-green-500"></span>
+              3D Terrain
             </div>
             <MapBoxContainer
               overrideViewMode="3D"
@@ -47,16 +56,11 @@ export const MapDashboard = ({ initialLocation }: { initialLocation?: [number, n
         />
       )}
 
-      {/* ScreenshotControl */}
-      {/* <ScreenshotControl
-        mapRefs={isSplitScreen ? [leftMapRef, rightMapRef] : [mainMapRef]}
-      /> */}
-
       {/* Split Screen Toggle */}
       <button
         onClick={() => setIsSplitScreen(!isSplitScreen)}
-        className="
-          cursor-pointer absolute bottom-15 md:bottom-8 left-4 md:left-8 z-30 
+        className={`
+          cursor-pointer absolute z-30 
           bg-white/10 backdrop-blur-md 
           border border-white/20 
           p-3 rounded-full shadow-lg 
@@ -64,10 +68,14 @@ export const MapDashboard = ({ initialLocation }: { initialLocation?: [number, n
           transition-all duration-300
           hover:bg-white/20 hover:scale-105 hover:border-white/40
           active:scale-95
-        "
-        title={isSplitScreen ? "Single View" : "Split Screen"}
+          ${isSplitScreen 
+            ? 'bottom-8 left-1/2 -translate-x-1/2 md:bottom-8 md:left-8 md:translate-x-0 bg-blue-600/80 border-blue-400/50 hover:bg-blue-600' 
+            : 'bottom-20 md:bottom-8 left-4 md:left-8'
+          }
+        `}
+        title={isSplitScreen ? "Exit Split Screen" : "Enter Split Screen"}
       >
-        {isSplitScreen ? <Maximize size={18} /> : <Split size={20} />}
+        {isSplitScreen ? <Maximize size={20} /> : <Split size={20} />}
       </button>
     </div>
   );

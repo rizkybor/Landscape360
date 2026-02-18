@@ -20,6 +20,7 @@ import {
   X,
   CloudSun,
   Navigation,
+  Lock,
 } from "lucide-react";
 import geoportalLogo from "../assets/geoportal360.png";
 import streetsView from "../assets/Street-View.png";
@@ -59,8 +60,35 @@ export const ControlPanel = () => {
     setMapStyle,
   } = useMapStore();
 
-  const { isPlotMode, togglePlotMode } = useSurveyStore();
-  const { isLiveTrackingEnabled, toggleLiveTracking, isSimulationEnabled, toggleSimulation } = useTrackerStore(); // Use Tracker Store
+  const { isPlotMode, togglePlotMode, user, subscriptionStatus, userRole } = useSurveyStore(); // Get userRole
+  const { 
+    isLiveTrackingEnabled, 
+    toggleLiveTracking,
+    setLiveTracking,
+    isSimulationEnabled, 
+    toggleSimulation,
+    isLocalBroadcastEnabled,
+    toggleLocalBroadcast,
+    connectionStatus
+  } = useTrackerStore(); 
+
+  // Auto-stop tracking/monitoring when user logs out or role changes to incompatible state
+  useEffect(() => {
+    if (!user) {
+        if (isLiveTrackingEnabled) setLiveTracking(false);
+        return;
+    }
+    
+    // If Monitor but not Enterprise -> Stop
+    if (userRole === 'monitor360' && subscriptionStatus !== 'Enterprise' && isLiveTrackingEnabled) {
+        setLiveTracking(false);
+    }
+    
+    // If User but Free -> Stop
+    if (userRole === 'pengguna360' && subscriptionStatus === 'Free' && isLiveTrackingEnabled) {
+        setLiveTracking(false);
+    }
+  }, [user, userRole, subscriptionStatus, isLiveTrackingEnabled, setLiveTracking]);
 
   const [showGetStarted, setShowGetStarted] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -298,25 +326,84 @@ export const ControlPanel = () => {
 
         <div className="p-4 space-y-4 overflow-y-auto custom-scrollbar">
           {/* Live Tracking Toggle (Enabled only if Env Var is set) */}
-          {import.meta.env.VITE_ENABLE_GPS_TRACKER === 'true' && (
+          {import.meta.env.VITE_ENABLE_GPS_TRACKER === 'true' && user && (
             <div className="space-y-2">
-              <button
-                onClick={toggleLiveTracking}
-                className={`cursor-pointer w-full flex items-center justify-center gap-2 py-3 md:py-2 text-xs font-bold rounded transition-colors ${isLiveTrackingEnabled ? "bg-green-600 text-white shadow-lg shadow-green-500/30 animate-pulse" : "bg-white/20 hover:bg-white/30 text-green-200 border border-green-500/30"}`}
-              >
-                <Navigation size={14} className={isLiveTrackingEnabled ? "animate-spin" : ""} />
-                {isLiveTrackingEnabled ? "Stop GPS Tracking" : "Start GPS Tracking"}
-              </button>
+              {subscriptionStatus === 'Free' ? (
+                <button
+                  disabled
+                  className="w-full flex items-center justify-center gap-2 py-3 md:py-2 text-xs font-bold rounded bg-gray-500/10 text-gray-500 border border-gray-500/20 cursor-not-allowed opacity-70"
+                  title="Upgrade to Pro or Enterprise to use GPS Tracking"
+                >
+                  <Lock size={14} />
+                  GPS Tracking (Pro Only)
+                </button>
+              ) : (
+                <button
+                  onClick={toggleLiveTracking}
+                  className={`cursor-pointer w-full flex items-center justify-center gap-2 py-3 md:py-2 text-xs font-bold rounded transition-colors ${isLiveTrackingEnabled ? "bg-green-600 text-white shadow-lg shadow-green-500/30 animate-pulse" : "bg-white/20 hover:bg-white/30 text-green-200 border border-green-500/30"}`}
+                >
+                  <Navigation size={14} className={isLiveTrackingEnabled ? "animate-spin" : ""} />
+                  {isLiveTrackingEnabled 
+                    ? (userRole === 'monitor360' && subscriptionStatus === 'Enterprise' ? "Stop GPS Monitoring" : "Stop GPS Tracking") 
+                    : (userRole === 'monitor360' && subscriptionStatus === 'Enterprise' ? "Start GPS Monitoring" : "Start GPS Tracking")
+                  }
+                </button>
+              )}
               
-              {isLiveTrackingEnabled && (
-                <div className="flex items-center justify-between px-2 py-1 bg-white/5 rounded border border-white/10">
-                  <label className="text-[10px] text-gray-400">Simulation Data</label>
-                  <div 
-                    onClick={toggleSimulation}
-                    className={`cursor-pointer w-8 h-4 rounded-full p-0.5 transition-colors ${isSimulationEnabled ? "bg-blue-500" : "bg-gray-600"}`}
-                  >
-                    <div className={`w-3 h-3 bg-white rounded-full shadow-sm transition-transform ${isSimulationEnabled ? "translate-x-4" : ""}`} />
+              {isLiveTrackingEnabled && (subscriptionStatus === 'Pro' || subscriptionStatus === 'Enterprise') && (
+                <div className="space-y-1">
+                  {/* Simulation Toggle (Hide for Monitor?) - Monitor shouldn't simulate maybe? But let's keep it for now */}
+                  <div className="flex items-center justify-between px-2 py-1 bg-white/5 rounded border border-white/10">
+                    <label className="text-[10px] text-gray-400">Simulation Data</label>
+                    <div 
+                      onClick={toggleSimulation}
+                      className={`cursor-pointer w-8 h-4 rounded-full p-0.5 transition-colors ${isSimulationEnabled ? "bg-blue-500" : "bg-gray-600"}`}
+                    >
+                      <div className={`w-3 h-3 bg-white rounded-full shadow-sm transition-transform ${isSimulationEnabled ? "translate-x-4" : ""}`} />
+                    </div>
                   </div>
+
+                  {/* Local GPS Toggle (Only for pengguna360 with Pro/Enterprise) */}
+                  {userRole === 'pengguna360' && (subscriptionStatus === 'Pro' || subscriptionStatus === 'Enterprise') && (
+                    <div className="flex items-center justify-between px-2 py-1 bg-white/5 rounded border border-white/10">
+                        <label className="text-[10px] text-gray-400 flex items-center gap-1">
+                        <span>Broadcast My GPS</span>
+                        {isLocalBroadcastEnabled && <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />}
+                        </label>
+                        <div 
+                        onClick={toggleLocalBroadcast}
+                        className={`cursor-pointer w-8 h-4 rounded-full p-0.5 transition-colors ${isLocalBroadcastEnabled ? "bg-red-500" : "bg-gray-600"}`}
+                        >
+                        <div className={`w-3 h-3 bg-white rounded-full shadow-sm transition-transform ${isLocalBroadcastEnabled ? "translate-x-4" : ""}`} />
+                        </div>
+                    </div>
+                  )}
+                  
+                  {/* Monitor Status (Only for Enterprise Monitors) */}
+                  {userRole === 'monitor360' && subscriptionStatus === 'Enterprise' && (
+                     <div className={`px-2 py-1 rounded border text-[10px] text-center flex items-center justify-center gap-2 transition-colors ${
+                        connectionStatus === 'connected' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
+                        connectionStatus === 'connecting' ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400 animate-pulse' :
+                        'bg-red-500/10 border-red-500/20 text-red-400'
+                     }`}>
+                        <div className={`w-2 h-2 rounded-full ${
+                            connectionStatus === 'connected' ? 'bg-green-500 animate-pulse' :
+                            connectionStatus === 'connecting' ? 'bg-yellow-500' : 'bg-red-500'
+                        }`} />
+                        {connectionStatus === 'connected' ? 'Monitoring Active' : 
+                         connectionStatus === 'connecting' ? 'Connecting...' : 'Disconnected'}
+                     </div>
+                  )}
+                  
+                  {/* Broadcast Status (for Pengguna) */}
+                  {userRole === 'pengguna360' && (subscriptionStatus === 'Pro' || subscriptionStatus === 'Enterprise') && isLocalBroadcastEnabled && (
+                     <div className={`mt-1 px-2 py-1 rounded border text-[10px] text-center flex items-center justify-center gap-2 ${
+                        connectionStatus === 'connected' ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' : 'bg-white/5 border-white/10 text-gray-400'
+                     }`}>
+                        <Wifi size={10} className={connectionStatus === 'connected' ? '' : 'opacity-50'} />
+                        {connectionStatus === 'connected' ? 'Broadcasting Live' : 'Connecting...'}
+                     </div>
+                  )}
                 </div>
               )}
             </div>
