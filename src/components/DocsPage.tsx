@@ -480,15 +480,16 @@ export const DocsPage = ({ onBack }: Props) => {
                         <span className="px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-[10px] text-green-300 font-bold uppercase">Realtime Websocket</span>
                         <span className="px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-[10px] text-green-300 font-bold uppercase">Multi-User Support</span>
                         <span className="px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-[10px] text-green-300 font-bold uppercase">Heartbeat Sync</span>
+                        <span className="px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-[10px] text-green-300 font-bold uppercase">5s Update Interval</span>
                     </div>
 
                     <div className="mt-4 p-3 rounded-lg bg-yellow-500/5 border border-yellow-500/10">
                         <h5 className="text-xs font-bold text-yellow-400 mb-1 flex items-center gap-2">
                             <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse"></span>
-                            Connectivity Note
+                            Connectivity & Data Rate
                         </h5>
                         <p className="text-[10px] text-gray-400 leading-relaxed">
-                            This feature requires an active internet connection (4G/WiFi) to transmit and receive data via WebSocket. 
+                            This feature requires an active internet connection (4G/WiFi). Data is refreshed every <strong>5 seconds</strong> to ensure realtime accuracy while optimizing battery life.
                             If connection is lost, data is buffered locally and automatically flushed when back online (Smart Reconnect).
                             <strong>Offline tracking is currently not supported.</strong>
                         </p>
