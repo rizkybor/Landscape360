@@ -22,15 +22,33 @@ export const ContourLayer = () => {
       // Check if terrain is loaded or we can get elevation
       // Also check bounds
       const bounds = map.getBounds();
-      if (bounds) {
-        // Run in a timeout to avoid blocking UI too much, or ideally use a worker
+      const zoom = map.getZoom();
+
+      // Performance Optimization: Only generate contours if zoom level is sufficient
+      // Generating contours for the whole world at zoom 0 is extremely heavy
+      if (bounds && zoom >= 11) {
         // Debounce: Clear previous timeout
         if ((window as any)._contourTimeout) clearTimeout((window as any)._contourTimeout);
         
+        // Use a shorter debounce for responsiveness, but check moving state
         (window as any)._contourTimeout = setTimeout(() => {
-            const data = generateContours(map, bounds, contourInterval);
-            if (data) setContours(data);
-        }, 200); // Increased debounce to 200ms to prevent lag during rapid movement
+            // Further optimization: Check if map is still moving
+            if (map.isMoving() || map.isZooming()) return;
+
+            // Generate contours in a non-blocking way if possible (using requestIdleCallback if available)
+            const runGeneration = () => {
+                const data = generateContours(map, bounds, contourInterval);
+                if (data) setContours(data);
+            };
+
+            if ('requestIdleCallback' in window) {
+                (window as any).requestIdleCallback(runGeneration);
+            } else {
+                setTimeout(runGeneration, 0);
+            }
+        }, 300); // 300ms is a good balance between responsiveness and performance
+      } else {
+        setContours(null); // Clear contours if zoomed out too far to save memory
       }
     };
 
@@ -84,16 +102,15 @@ export const ContourLayer = () => {
       <Layer
         id="contour-intermediate"
         type="line"
-        minzoom={12}
+        minzoom={13} // Increase minzoom for intermediate lines to reduce load
         filter={[
             'all',
-            ['!=', ['%', ['get', 'elevation'], indexInterval], 0],
-            ['==', ['%', ['get', 'elevation'], contourInterval], 0]
+            ['!=', ['%', ['get', 'elevation'], indexInterval], 0]
         ]}
         paint={{
           'line-color': '#FFBF00',
           'line-width': 0.8,
-          'line-opacity': opacity * 0.6
+          'line-opacity': opacity * 0.5
         }}
       />
 
@@ -101,19 +118,20 @@ export const ContourLayer = () => {
       <Layer
         id="contour-index"
         type="line"
-        minzoom={10} // Index contours visible earlier
+        minzoom={11} // Index contours visible earlier
         filter={['==', ['%', ['get', 'elevation'], indexInterval], 0]}
         paint={{
           'line-color': '#FFBF00',
-          'line-width': 2.0,
+          'line-width': 1.5,
           'line-opacity': opacity
         }}
       />
 
-      {/* Index Contour Labels */}
+      {/* Index Contour Labels - Only at higher zoom */}
       <Layer
         id="contour-labels"
         type="symbol"
+        minzoom={14}
         filter={['==', ['%', ['get', 'elevation'], indexInterval], 0]}
         layout={{
           'symbol-placement': 'line',
@@ -121,7 +139,8 @@ export const ContourLayer = () => {
           'text-size': 10,
           'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
           'text-allow-overlap': false,
-          'text-ignore-placement': false
+          'text-ignore-placement': false,
+          'text-max-angle': 30
         }}
         paint={{
           'text-color': '#FFFFFF',

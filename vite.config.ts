@@ -44,6 +44,7 @@ export default defineConfig({
     })
   ],
   build: {
+    sourcemap: false, // Disable sourcemaps for production
     rollupOptions: {
       output: {
         manualChunks: {

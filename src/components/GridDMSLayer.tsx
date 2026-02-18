@@ -55,10 +55,19 @@ export const GridDMSLayer = React.memo(() => {
     }
 
     const updateGrid = () => {
+      // Performance: Skip update if map is moving or zooming
+      if (map.isMoving() || map.isZooming()) return;
+
       const bounds = map.getBounds();
       const zoom = map.getZoom();
 
       if (!bounds) return;
+
+      // Only show grid at reasonable zoom levels to prevent clutter
+      if (zoom < 4) {
+          setGridData({ type: 'FeatureCollection', features: [] });
+          return;
+      }
 
       const south = bounds.getSouth();
       const north = bounds.getNorth();
@@ -167,20 +176,13 @@ export const GridDMSLayer = React.memo(() => {
     // Initial update
     updateGrid();
 
-    // Listen for move events
-    // Optimization: We use 'moveend' to only update AFTER drag/zoom is finished.
-    // This prevents lag during interaction (drag/pinch).
-    // The previous grid remains visible during drag, then snaps to new bounds after stop.
-    map.on('moveend', updateGrid);
-    
-    // Also update on zoom to change density
-    // Mapbox fires 'moveend' after zoom too, but explicit 'zoomend' ensures coverage.
-    // 'moveend' usually covers 'zoomend' in GL JS, but redundant listener is safe/cheap here.
-    map.on('zoomend', updateGrid);
+    // Listen for idle events to update grid when map stops moving
+    map.on('idle', updateGrid);
+    map.on('moveend', updateGrid); // Redundant but ensures update happens
 
     return () => {
+      map.off('idle', updateGrid);
       map.off('moveend', updateGrid);
-      map.off('zoomend', updateGrid);
     };
   }, [map, showGridDMS, gridStep]); // Added gridStep dependency
 
