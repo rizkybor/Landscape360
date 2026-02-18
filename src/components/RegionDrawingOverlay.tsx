@@ -35,11 +35,24 @@ export const RegionDrawingOverlay = () => {
   useEffect(() => {
     if (storeSubscriptionStatus) {
         setSubscriptionStatus(storeSubscriptionStatus);
+        // If user is already Pro, default upgrade option should be Enterprise
+        if (storeSubscriptionStatus === 'Pro') {
+            setSelectedUpgradePlan('Enterprise');
+        } else {
+            setSelectedUpgradePlan('Pro');
+        }
     } else if (user) {
       supabase.from('profiles').select('status_subscribe').eq('id', user.id).single()
         .then(({ data }) => {
           if (data) {
-            setSubscriptionStatus(data.status_subscribe || 'Free');
+            const status = data.status_subscribe || 'Free';
+            setSubscriptionStatus(status);
+             // If user is already Pro, default upgrade option should be Enterprise
+            if (status === 'Pro') {
+                setSelectedUpgradePlan('Enterprise');
+            } else {
+                setSelectedUpgradePlan('Pro');
+            }
           }
         });
     }
@@ -296,7 +309,7 @@ export const RegionDrawingOverlay = () => {
                              {selectedUpgradePlan === 'Pro' && <div className="absolute top-2 right-2 w-2 h-2 bg-blue-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>}
                              <div className="text-left">
                                  <div className="text-xs font-bold text-blue-400 mb-1">PRO PLAN</div>
-                                 <div className="text-lg font-bold text-white mb-1">$3.5<span className="text-[10px] text-gray-400 font-normal">/mo</span></div>
+                                 <div className="text-lg font-bold text-white mb-1">Rp 55.000<span className="text-[10px] text-gray-400 font-normal">/bln</span></div>
                                  <div className="text-[10px] text-gray-400">Up to 10 MB / download</div>
                              </div>
                          </button>
@@ -308,7 +321,7 @@ export const RegionDrawingOverlay = () => {
                              {selectedUpgradePlan === 'Enterprise' && <div className="absolute top-2 right-2 w-2 h-2 bg-purple-500 rounded-full shadow-[0_0_10px_rgba(168,85,247,0.5)]"></div>}
                              <div className="text-left">
                                  <div className="text-xs font-bold text-purple-400 mb-1">ENTERPRISE</div>
-                                 <div className="text-lg font-bold text-white mb-1">$7<span className="text-[10px] text-gray-400 font-normal">/mo</span></div>
+                                 <div className="text-lg font-bold text-white mb-1">Rp 110.000<span className="text-[10px] text-gray-400 font-normal">/bln</span></div>
                                  <div className="text-[10px] text-gray-400">Up to 25 MB / download</div>
                              </div>
                          </button>
@@ -321,7 +334,9 @@ export const RegionDrawingOverlay = () => {
 
                 <div className="flex flex-col gap-2 w-full mt-2">
                     <a
-                        href={`mailto:contact@jcdigital.co.id?subject=Request Upgrade to ${selectedUpgradePlan} Plan&body=Hi Admin,%0D%0A%0D%0AI would like to request an upgrade for my account to the ${selectedUpgradePlan} Plan (${selectedUpgradePlan === 'Pro' ? '$3.5/mo' : '$7/mo'}).%0D%0A%0D%0AMy Account Email: ${user?.email}%0D%0A%0D%0AThank you.`}
+                        href={selectedUpgradePlan === 'Pro' 
+                            ? `mailto:contact@jcdigital.co.id?subject=Subscription Upgrade: Landscape360 Pro Plan&body=Dear Admin,%0D%0A%0D%0AI hope this message finds you well.%0D%0A%0D%0AI am writing to request an upgrade of my account to the Landscape360 Pro Plan. I am interested in utilizing the advanced field tools and GPS broadcasting features.%0D%0A%0D%0AMy Account Email: ${user?.email}%0D%0A%0D%0APlease guide me through the payment and activation process.%0D%0A%0D%0AThank you,%0D%0A[Your Name]`
+                            : `mailto:contact@jcdigital.co.id?subject=Subscription Upgrade: Landscape360 Enterprise Plan&body=Dear Admin,%0D%0A%0D%0AI hope this message finds you well.%0D%0A%0D%0AWe are interested in upgrading our organization's access to the Landscape360 Enterprise Plan to leverage the Realtime Monitoring and dedicated support features.%0D%0A%0D%0AMy Account Email: ${user?.email}%0D%0A%0D%0APlease contact us to arrange the upgrade and discuss any specific requirements.%0D%0A%0D%0ABest regards,%0D%0A[Your Name/Organization]`}
                         className={`cursor-pointer w-full py-3 text-white rounded-xl text-sm font-bold shadow-lg transition-all flex items-center justify-center gap-2 ${selectedUpgradePlan === 'Enterprise' ? 'bg-purple-600 hover:bg-purple-500 shadow-purple-600/20' : 'bg-blue-600 hover:bg-blue-500 shadow-blue-600/20'}`}
                     >
                         Request {selectedUpgradePlan} Upgrade

@@ -603,32 +603,54 @@ export const AuthControl = () => {
                 <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
                     <div className="grid md:grid-cols-3 gap-4">
                         {/* Free Plan */}
-                        <div className={`p-4 rounded-xl border ${subscriptionStatus === 'Free' ? 'bg-white/5 border-blue-500/50' : 'bg-transparent border-white/10'} relative`}>
+                        <div className={`p-4 rounded-xl border ${subscriptionStatus === 'Free' ? 'bg-white/5 border-blue-500/50' : 'bg-transparent border-white/10'} relative flex flex-col`}>
                             {subscriptionStatus === 'Free' && <div className="absolute top-2 right-2 text-[10px] bg-blue-500 text-white px-2 py-0.5 rounded-full font-bold">CURRENT</div>}
+                            <div className="mb-4">
+                                <span className="text-xs font-bold px-2 py-1 bg-gray-800 text-gray-300 rounded uppercase tracking-wider">Starter</span>
+                            </div>
                             <h3 className="font-bold text-white mb-1">Free</h3>
-                            <p className="text-2xl font-bold text-gray-400 mb-4">$0<span className="text-xs font-normal text-gray-500">/mo</span></p>
-                            <ul className="space-y-2 text-xs text-gray-400 mb-4">
-                                <li className="flex gap-2"><span>✓</span> 1 MB max download</li>
-                                <li className="flex gap-2"><span>✓</span> 1 offline maps</li>
-                                <li className="flex gap-2"><span>✓</span> 2 saved surveys</li>
+                            <p className="text-sm text-gray-400 mb-6">Basic exploration tools</p>
+                            
+                            <ul className="space-y-2 text-xs text-gray-400 mb-6 flex-1">
+                                <li className="flex gap-2"><span>✓</span> 1 MB Max Download</li>
+                                <li className="flex gap-2"><span>✓</span> 1 Offline Maps</li>
+                                <li className="flex gap-2"><span>✓</span> 2 Saved Surveys</li>
+                                <li className="flex gap-2 text-gray-600 line-through decoration-gray-700"><span className="opacity-50">×</span> No GPS Tracking</li>
                             </ul>
+
+                            {subscriptionStatus !== 'Free' && (
+                                <a 
+                                    href="mailto:contact@jcdigital.co.id?subject=Account Request: Landscape360 Starter Plan&body=Dear Admin,%0D%0A%0D%0AI hope this message finds you well.%0D%0A%0D%0AI would like to request the creation of a Starter (Free) account for the Landscape360 platform.%0D%0A%0D%0APlease let me know if any further information is required from my side.%0D%0A%0D%0AThank you,%0D%0A[Your Name]"
+                                    className="block w-full py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-center rounded-lg text-xs font-bold transition-colors"
+                                >
+                                    Request Account
+                                </a>
+                            )}
                         </div>
 
                         {/* Pro Plan */}
-                        <div className={`p-4 rounded-xl border ${subscriptionStatus === 'Pro' ? 'bg-blue-500/10 border-blue-500' : 'bg-transparent border-white/10 hover:border-blue-500/50'} relative transition-colors`}>
+                        <div className={`p-4 rounded-xl border ${subscriptionStatus === 'Pro' ? 'bg-blue-500/10 border-blue-500' : 'bg-transparent border-white/10 hover:border-blue-500/50'} relative transition-colors flex flex-col`}>
                              {subscriptionStatus === 'Pro' && <div className="absolute top-2 right-2 text-[10px] bg-blue-500 text-white px-2 py-0.5 rounded-full font-bold">CURRENT</div>}
-                            <h3 className="font-bold text-white mb-1 text-blue-400">Pro</h3>
-                            <p className="text-2xl font-bold text-white mb-4">$3.5<span className="text-xs font-normal text-gray-400">/mo</span></p>
-                            <ul className="space-y-2 text-xs text-gray-300 mb-6">
-                                <li className="flex gap-2"><span>✓</span> 10 MB max download</li>
-                                <li className="flex gap-2"><span>✓</span> 3 offline maps</li>
-                                <li className="flex gap-2"><span>✓</span> 4 saved surveys</li>
+                            <div className="mb-4">
+                                <span className="text-xs font-bold px-2 py-1 bg-blue-500/20 text-blue-400 rounded uppercase tracking-wider border border-blue-500/20">Recommended</span>
+                            </div>
+                            <div className="flex items-end gap-2 mb-1">
+                                <span className="text-xs text-gray-500 line-through decoration-red-500/50 decoration-1">Rp 85.000</span>
+                            </div>
+                            <h3 className="text-xl font-bold text-white mb-1">Rp 55.000<span className="text-xs font-normal text-gray-500">/bln</span></h3>
+                            <p className="text-xs text-gray-400 mb-6">For field professionals</p>
+                            
+                            <ul className="space-y-2 text-xs text-gray-300 mb-6 flex-1">
+                                <li className="flex gap-2"><span>✓</span> 10 MB Max Download</li>
+                                <li className="flex gap-2"><span>✓</span> 3 Offline Maps</li>
+                                <li className="flex gap-2"><span>✓</span> 4 Saved Surveys</li>
                                 <li className="flex gap-2"><span>✓</span> High-Res Export</li>
-                                <li className="flex gap-2"><span>✓</span> Priority Support</li>
+                                <li className="flex gap-2 font-bold text-white"><span className="text-green-400">✓</span> GPS Broadcast</li>
                             </ul>
+                            
                             {subscriptionStatus !== 'Pro' && (
                                 <a
-                                    href="mailto:contact@jcdigital.co.id?subject=Request Upgrade to Pro Plan&body=Hi Admin,%0D%0A%0D%0AI would like to request an upgrade for my account to the Pro Plan ($3.5/mo).%0D%0A%0D%0AThank you."
+                                    href="mailto:contact@jcdigital.co.id?subject=Subscription Upgrade: Landscape360 Pro Plan&body=Dear Admin,%0D%0A%0D%0AI hope this message finds you well.%0D%0A%0D%0AI am writing to request an upgrade of my account to the Landscape360 Pro Plan. I am interested in utilizing the advanced field tools and GPS broadcasting features.%0D%0A%0D%0APlease guide me through the payment and activation process.%0D%0A%0D%0AThank you,%0D%0A[Your Name]"
                                     className="block w-full py-2 bg-blue-600 hover:bg-blue-500 text-white text-center rounded-lg text-xs font-bold transition-colors"
                                 >
                                     Upgrade to Pro
@@ -637,20 +659,28 @@ export const AuthControl = () => {
                         </div>
 
                         {/* Enterprise Plan */}
-                        <div className={`p-4 rounded-xl border ${subscriptionStatus === 'Enterprise' ? 'bg-purple-500/10 border-purple-500' : 'bg-transparent border-white/10 hover:border-purple-500/50'} relative transition-colors`}>
+                        <div className={`p-4 rounded-xl border ${subscriptionStatus === 'Enterprise' ? 'bg-purple-500/10 border-purple-500' : 'bg-transparent border-white/10 hover:border-purple-500/50'} relative transition-colors flex flex-col`}>
                              {subscriptionStatus === 'Enterprise' && <div className="absolute top-2 right-2 text-[10px] bg-purple-500 text-white px-2 py-0.5 rounded-full font-bold">CURRENT</div>}
-                            <h3 className="font-bold text-white mb-1 text-purple-400">Enterprise</h3>
-                            <p className="text-2xl font-bold text-white mb-4">$7<span className="text-xs font-normal text-gray-400">/mo</span></p>
-                            <ul className="space-y-2 text-xs text-gray-300 mb-6">
-                                <li className="flex gap-2"><span>✓</span> 25 MB max download</li>
-                                <li className="flex gap-2"><span>✓</span> 10 offline maps</li>
-                                <li className="flex gap-2"><span>✓</span> 10 saved surveys</li>
-                                <li className="flex gap-2"><span>✓</span> High-Res Export</li>
-                                <li className="flex gap-2"><span>✓</span> 24/7 Dedicated Support</li>
+                            <div className="mb-4">
+                                <span className="text-xs font-bold px-2 py-1 bg-cyan-900/30 text-cyan-400 rounded uppercase tracking-wider border border-cyan-500/20">Enterprise</span>
+                            </div>
+                            <div className="flex items-end gap-2 mb-1">
+                                <span className="text-xs text-gray-500 line-through decoration-red-500/50 decoration-1">Rp 165.000</span>
+                            </div>
+                            <h3 className="text-xl font-bold text-white mb-1">Rp 110.000<span className="text-xs font-normal text-gray-500">/bln</span></h3>
+                            <p className="text-xs text-gray-400 mb-6">Maximum power & support</p>
+
+                            <ul className="space-y-2 text-xs text-gray-300 mb-6 flex-1">
+                                <li className="flex gap-2"><span>✓</span> 25 MB Max Download</li>
+                                <li className="flex gap-2"><span>✓</span> 10 Offline Maps</li>
+                                <li className="flex gap-2"><span>✓</span> 10 Saved Surveys</li>
+                                <li className="flex gap-2 font-bold text-white"><span className="text-green-400">✓</span> Realtime Monitoring</li>
+                                <li className="flex gap-2"><span>✓</span> 24/7 Priority Support</li>
                             </ul>
+                            
                             {subscriptionStatus !== 'Enterprise' && (
                                 <a
-                                    href="mailto:contact@jcdigital.co.id?subject=Request Upgrade to Enterprise Plan&body=Hi Admin,%0D%0A%0D%0AI would like to request an upgrade for my account to the Enterprise Plan ($7/mo).%0D%0A%0D%0AThank you."
+                                    href="mailto:contact@jcdigital.co.id?subject=Subscription Upgrade: Landscape360 Enterprise Plan&body=Dear Admin,%0D%0A%0D%0AI hope this message finds you well.%0D%0A%0D%0AWe are interested in upgrading our organization's access to the Landscape360 Enterprise Plan to leverage the Realtime Monitoring and dedicated support features.%0D%0A%0D%0APlease contact us to arrange the upgrade and discuss any specific requirements.%0D%0A%0D%0ABest regards,%0D%0A[Your Name/Organization]"
                                     className="block w-full py-2 bg-purple-600 hover:bg-purple-500 text-white text-center rounded-lg text-xs font-bold transition-colors"
                                 >
                                     Upgrade to Enterprise
