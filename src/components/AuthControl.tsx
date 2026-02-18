@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useSurveyStore } from '../store/useSurveyStore';
+import { useMapStore } from '../store/useMapStore';
+import { useOfflineStore } from '../store/useOfflineStore';
 import { OfflineManager } from './OfflineManager';
+import { RegionDrawingOverlay } from './RegionDrawingOverlay';
 import { LogIn, LogOut, FolderOpen, Plus, Loader2, WifiOff, Trash2, Eye, EyeOff, Pencil, X, Check } from 'lucide-react';
 
 export const AuthControl = () => {
@@ -18,12 +21,17 @@ export const AuthControl = () => {
     deleteSurvey,
     currentSurveyId,
     isSyncing,
-    subscriptionStatus
+    subscriptionStatus,
+    userRole
   } = useSurveyStore();
+  
+  const { interactionMode } = useMapStore();
+  const { regions } = useOfflineStore();
   
   const [showMenu, setShowMenu] = useState(false);
   const [showOfflineManager, setShowOfflineManager] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   useEffect(() => {
     // Check active session
@@ -58,7 +66,6 @@ export const AuthControl = () => {
   // Profile Edit State
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editName, setEditName] = useState('');
-  const [editAvatarUrl, setEditAvatarUrl] = useState('');
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,8 +73,7 @@ export const AuthControl = () => {
     try {
       const { data, error } = await supabase.auth.updateUser({
         data: {
-          full_name: editName,
-          avatar_url: editAvatarUrl
+          full_name: editName
         }
       });
       
@@ -132,6 +138,7 @@ export const AuthControl = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setShowMenu(false);
+    setShowLogoutConfirm(false);
   };
 
   // --- RENDER FOR GUEST (NOT LOGGED IN) ---
@@ -150,9 +157,9 @@ export const AuthControl = () => {
 
         {/* Full Screen Modal for Auth - Rendered via Portal */}
         {showMenu && createPortal(
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm md:backdrop-blur-md animate-in fade-in duration-200">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center md:p-4 bg-black/80 backdrop-blur-sm md:backdrop-blur-md animate-in fade-in duration-200">
                 <div 
-                    className="relative w-full max-w-md bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden"
+                    className="relative w-full h-full md:h-auto md:max-w-md bg-[#0a0a0a] border-0 md:border md:border-white/10 rounded-none md:rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col justify-center"
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Glow Decor */}
@@ -162,7 +169,7 @@ export const AuthControl = () => {
                     <div className="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-blue-600/10 blur-[100px] rounded-full pointer-events-none"></div>
                     <div className="absolute bottom-0 left-0 -mb-16 -ml-16 w-64 h-64 bg-purple-600/10 blur-[100px] rounded-full pointer-events-none"></div>
 
-                    <div className="p-8 relative z-10">
+                    <div className="p-8 relative z-10 overflow-y-auto custom-scrollbar flex-1 flex flex-col justify-center">
                         {/* Header */}
                         <div className="text-center mb-8">
                             <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">
@@ -297,6 +304,18 @@ export const AuthControl = () => {
   // Cast user to any to avoid strict type checking issues with user_metadata in this context
   const currentUser = user as any;
 
+  // Calculate Limits
+  const mapUsage = regions.filter(r => r.userId === user?.id).length;
+  const surveyUsage = savedSurveys.length;
+  
+  const limits = {
+    'Free': { maps: 1, surveys: 2 },
+    'Pro': { maps: 3, surveys: 4 },
+    'Enterprise': { maps: 10, surveys: 10 }
+  };
+  
+  const currentLimits = limits[subscriptionStatus as keyof typeof limits] || limits['Free'];
+
   return (
     <div className="relative w-full">
       <button
@@ -310,15 +329,15 @@ export const AuthControl = () => {
                 {currentUser.email?.charAt(0).toUpperCase()}
             </div>
         )}
-        <span className="max-w-[80px] truncate">{currentUser.user_metadata?.full_name || currentUser.email}</span>
+        <span className="max-w-[80px] truncate">{currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || currentUser.email}</span>
         {isSyncing && <Loader2 size={12} className="animate-spin text-blue-400" />}
       </button>
 
        {/* Full Screen Modal for User Menu - Rendered via Portal */}
        {showMenu && createPortal(
-           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm md:backdrop-blur-md animate-in fade-in duration-200">
+           <div className="fixed inset-0 z-[100] flex items-center justify-center md:p-4 bg-black/80 backdrop-blur-sm md:backdrop-blur-md animate-in fade-in duration-200">
                <div 
-                   className="relative w-full max-w-sm bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden"
+                   className="relative w-full h-full md:h-auto md:max-w-sm bg-[#0a0a0a] border-0 md:border md:border-white/10 rounded-none md:rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col"
                    onClick={(e) => e.stopPropagation()}
                >
                    {/* Header */}
@@ -354,24 +373,12 @@ export const AuthControl = () => {
                                </div>
                                
                                <div className="flex items-center gap-3">
-                                   {editAvatarUrl ? (
-                                       <img src={editAvatarUrl} className="w-12 h-12 rounded-full border border-blue-500/50 object-cover" alt="Preview" onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/48?text=?')} />
-                                   ) : (
-                                       <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-gray-500 text-xs">?</div>
-                                   )}
                                    <div className="flex-1 space-y-2">
                                         <input
                                             type="text"
                                             value={editName}
                                             onChange={(e) => setEditName(e.target.value)}
-                                            placeholder="Full Name"
-                                            className="w-full bg-black/40 border border-white/10 rounded px-2 py-1.5 text-xs text-white focus:border-blue-500 outline-none"
-                                        />
-                                        <input
-                                            type="text"
-                                            value={editAvatarUrl}
-                                            onChange={(e) => setEditAvatarUrl(e.target.value)}
-                                            placeholder="Avatar URL (https://...)"
+                                            placeholder="Display Name"
                                             className="w-full bg-black/40 border border-white/10 rounded px-2 py-1.5 text-xs text-white focus:border-blue-500 outline-none"
                                         />
                                    </div>
@@ -396,13 +403,12 @@ export const AuthControl = () => {
                                )}
                                <div className="flex-1">
                                    <div className="flex items-center justify-between">
-                                       <h3 className="font-bold text-lg text-white">{currentUser.user_metadata?.full_name || 'Use L360'}</h3>
+                                       <h3 className="font-bold text-lg text-white">{currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || 'User L360'}</h3>
                                        <button 
                                            onClick={() => {
-                                               setEditName(currentUser.user_metadata?.full_name || '');
-                                               setEditAvatarUrl(currentUser.user_metadata?.avatar_url || '');
-                                               setIsEditingProfile(true);
-                                           }}
+                                           setEditName(currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || '');
+                                           setIsEditingProfile(true);
+                                       }}
                                            className="cursor-pointer p-1.5 text-gray-500 hover:text-white bg-transparent hover:bg-white/10 rounded-lg transition-colors"
                                            title="Edit Profile"
                                        >
@@ -410,16 +416,58 @@ export const AuthControl = () => {
                                        </button>
                                    </div>
                                    <p className="text-xs text-gray-400">{currentUser.email}</p>
-                                   <div className="flex gap-2 mt-2">
-                                      <button 
-                                        onClick={() => setShowUpgradeModal(true)}
-                                        className={`cursor-pointer text-[10px] px-2 py-0.5 rounded-full border hover:brightness-110 transition-all ${
-                                        subscriptionStatus === 'Enterprise' 
-                                            ? 'bg-purple-500/20 text-purple-300 border-purple-500/20' 
-                                            : (subscriptionStatus === 'Pro' ? 'bg-blue-500/20 text-blue-300 border-blue-500/20' : 'bg-gray-500/20 text-gray-300 border-gray-500/20')
-                                      }`}>
-                                        {subscriptionStatus} Plan
-                                      </button>
+                                   
+                                   {/* Status & Limits */}
+                                   <div className="mt-3 space-y-2">
+                                       <div className="flex items-center gap-2">
+                                           <div className={`text-[10px] px-2 py-0.5 rounded-full border ${
+                                                subscriptionStatus === 'Enterprise' 
+                                                    ? 'bg-purple-500/20 text-purple-300 border-purple-500/20' 
+                                                    : (subscriptionStatus === 'Pro' ? 'bg-blue-500/20 text-blue-300 border-blue-500/20' : 'bg-gray-500/20 text-gray-300 border-gray-500/20')
+                                           }`}>
+                                                {subscriptionStatus} Plan
+                                           </div>
+                                           <div className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 border border-green-500/20">
+                                                Status: {userRole === 'monitor360' ? 'Monitor' : 'Active'}
+                                           </div>
+                                            <button 
+                                                onClick={() => setShowUpgradeModal(true)}
+                                                className="text-[10px] text-blue-400 hover:text-blue-300 hover:underline"
+                                            >
+                                                Upgrade
+                                            </button>
+                                       </div>
+
+                                       <div className="grid grid-cols-2 gap-2">
+                                            <div className="bg-white/5 rounded-lg p-2 border border-white/5">
+                                                <div className="text-[9px] text-gray-500 uppercase font-bold mb-1">Maps Downloaded</div>
+                                                <div className="flex items-end justify-between">
+                                                    <span className={`text-xs font-bold ${mapUsage >= currentLimits.maps ? 'text-red-400' : 'text-white'}`}>
+                                                        {mapUsage} <span className="text-gray-500 font-normal">/ {currentLimits.maps}</span>
+                                                    </span>
+                                                    <div className="w-12 h-1 bg-gray-700 rounded-full overflow-hidden">
+                                                        <div 
+                                                            className={`h-full rounded-full ${mapUsage >= currentLimits.maps ? 'bg-red-500' : 'bg-blue-500'}`} 
+                                                            style={{ width: `${Math.min(100, (mapUsage / currentLimits.maps) * 100)}%` }}
+                                                        ></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="bg-white/5 rounded-lg p-2 border border-white/5">
+                                                <div className="text-[9px] text-gray-500 uppercase font-bold mb-1">Saved Surveys</div>
+                                                <div className="flex items-end justify-between">
+                                                    <span className={`text-xs font-bold ${surveyUsage >= currentLimits.surveys ? 'text-red-400' : 'text-white'}`}>
+                                                        {surveyUsage} <span className="text-gray-500 font-normal">/ {currentLimits.surveys}</span>
+                                                    </span>
+                                                    <div className="w-12 h-1 bg-gray-700 rounded-full overflow-hidden">
+                                                        <div 
+                                                            className={`h-full rounded-full ${surveyUsage >= currentLimits.surveys ? 'bg-red-500' : 'bg-purple-500'}`} 
+                                                            style={{ width: `${Math.min(100, (surveyUsage / currentLimits.surveys) * 100)}%` }}
+                                                        ></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                       </div>
                                    </div>
                                </div>
                            </div>
@@ -500,7 +548,7 @@ export const AuthControl = () => {
 
                        {/* Logout Button */}
                        <button
-                           onClick={handleLogout}
+                           onClick={() => setShowLogoutConfirm(true)}
                            className="cursor-pointer w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 transition-all font-medium text-sm"
                        >
                            <LogOut size={16} /> Sign Out
@@ -512,14 +560,25 @@ export const AuthControl = () => {
        )}
 
       {showOfflineManager && createPortal(
-        <OfflineManager onClose={() => setShowOfflineManager(false)} />,
+        <OfflineManager 
+            onClose={() => setShowOfflineManager(false)} 
+            onBack={() => {
+                setShowOfflineManager(false);
+                setShowMenu(true);
+            }}
+        />,
+        document.body
+      )}
+
+      {interactionMode === 'draw_region' && createPortal(
+        <RegionDrawingOverlay />,
         document.body
       )}
 
       {showUpgradeModal && createPortal(
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm md:backdrop-blur-md animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[110] flex items-center justify-center md:p-4 bg-black/80 backdrop-blur-sm md:backdrop-blur-md animate-in fade-in duration-300">
             <div 
-                className="relative w-full max-w-2xl bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-[0_0_50px_rgba(59,130,246,0.15)] overflow-hidden flex flex-col max-h-[90vh]"
+                className="relative w-full h-full md:h-auto md:max-w-2xl bg-[#0a0a0a] border-0 md:border md:border-white/10 rounded-none md:rounded-2xl shadow-[0_0_50px_rgba(59,130,246,0.15)] overflow-hidden flex flex-col md:max-h-[90vh]"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
@@ -541,7 +600,7 @@ export const AuthControl = () => {
                     </button>
                 </div>
 
-                <div className="p-6 overflow-y-auto custom-scrollbar">
+                <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
                     <div className="grid md:grid-cols-3 gap-4">
                         {/* Free Plan */}
                         <div className={`p-4 rounded-xl border ${subscriptionStatus === 'Free' ? 'bg-white/5 border-blue-500/50' : 'bg-transparent border-white/10'} relative`}>
@@ -644,6 +703,50 @@ export const AuthControl = () => {
                         </button>
                         <button
                             onClick={() => setDeleteConfirmId(null)}
+                            className="cursor-pointer w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition-all active:scale-[0.98]"
+                        >
+                            Batalkan
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>,
+        document.body
+      )}
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && createPortal(
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm md:backdrop-blur-md animate-in fade-in duration-300">
+            <div 
+                className="relative w-full max-w-xs bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-[0_0_50px_rgba(239,68,68,0.15)] overflow-hidden p-6 animate-in zoom-in-95 duration-300"
+                onClick={(e) => e.stopPropagation()}
+            >
+                {/* Red Glow Decor */}
+                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-red-500/50 to-transparent"></div>
+                
+                <div className="flex flex-col items-center text-center gap-5">
+                    <div className="relative">
+                        <div className="absolute inset-0 bg-red-500/20 blur-xl rounded-full"></div>
+                        <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-red-500/20 to-red-600/10 border border-red-500/30 flex items-center justify-center text-red-500 shadow-inner">
+                            <LogOut size={28} strokeWidth={1.5} />
+                        </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                        <h3 className="text-xl font-bold text-white tracking-tight">Keluar Akun?</h3>
+                        <p className="text-xs text-gray-400 leading-relaxed px-2">
+                            Apakah Anda yakin ingin keluar? Anda perlu masuk kembali untuk mengakses data tersimpan.
+                        </p>
+                    </div>
+
+                    <div className="flex flex-col gap-2 w-full mt-2">
+                        <button
+                            onClick={handleLogout}
+                            className="cursor-pointer w-full py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-red-600/30 transition-all active:scale-[0.98] border border-red-400/20"
+                        >
+                            Ya, Keluar
+                        </button>
+                        <button
+                            onClick={() => setShowLogoutConfirm(false)}
                             className="cursor-pointer w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition-all active:scale-[0.98]"
                         >
                             Batalkan

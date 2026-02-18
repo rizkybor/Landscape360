@@ -1,5 +1,5 @@
 import "mapbox-gl/dist/mapbox-gl.css";
-import React, { useRef, useState, useCallback, useEffect } from "react";
+import React, { useRef, useState, useCallback, useEffect, Suspense } from "react";
 import Map, {
   Source,
   Layer,
@@ -17,6 +17,9 @@ import { SearchPanel } from "./SearchPanel";
 import { NavigationControls } from "./NavigationControls";
 import { UserLocationMarker } from "./UserLocationMarker";
 import { WeatherWidget } from "./WeatherWidget";
+// import { MapSynchronizer } from "./MapSync"; // Removed to fix view behavior
+// Lazy Load LiveTrackerLayer
+const LiveTrackerLayer = React.lazy(() => import("./LiveTrackerLayer").then(module => ({ default: module.LiveTrackerLayer })));
 
 const MAPBOX_TOKEN =
   import.meta.env.VITE_MAPBOX_TOKEN || "YOUR_MAPBOX_TOKEN_HERE";
@@ -56,8 +59,9 @@ const MapBoxContainerComponent = ({
     setPitch,
     setBearing,
     setBounds,
-    flyToDestination,
+    // flyToDestination,
     triggerFlyTo,
+    flyToDestination, // Restore flyToDestination from store
   } = useMapStore();
 
   const mode = overrideViewMode || activeView;
@@ -78,43 +82,75 @@ const MapBoxContainerComponent = ({
 
   // Ref to track if we are currently performing a programmatic flyTo
   const isFlying = useRef(false);
-  
+
   // Ref to track user interaction to decouple gesture from store updates
   const isInteracting = useRef(false);
 
-  // Handle flyTo requests
+  // Handle FlyTo (Restored from MapSync)
   useEffect(() => {
     const map = mapRef.current?.getMap();
     if (map && flyToDestination) {
-        isFlying.current = true;
-        map.flyTo({
-            center: flyToDestination.center,
-            zoom: flyToDestination.zoom,
-            duration: flyToDestination.duration || 2000,
-            essential: true
-        });
-        
-        map.once('moveend', () => {
-            isFlying.current = false;
-        });
+      isFlying.current = true;
+      map.flyTo({
+        center: flyToDestination.center,
+        zoom: flyToDestination.zoom,
+        duration: flyToDestination.duration || 2000,
+        essential: true
+      });
 
-        // Clear destination after triggering
-        triggerFlyTo(null);
+      map.once('moveend', () => {
+        isFlying.current = false;
+      });
+
+      triggerFlyTo(null);
     }
-  }, [flyToDestination, triggerFlyTo]);
+  }, [flyToDestination, triggerFlyTo, mapRef]);
 
   const handleMoveStart = useCallback(() => {
     isInteracting.current = true;
   }, []);
 
   const handleMoveEnd = useCallback(() => {
+    // Force a final sync to ensure store matches map exactly
+    // This prevents "snap back" or "zoom out" glitches when inertia ends
+    const map = mapRef.current?.getMap();
+    if (map) {
+        setCenter(map.getCenter().toArray() as [number, number]);
+        setZoom(map.getZoom());
+        
+        // Sync bearing in all modes
+        setBearing(map.getBearing());
+        
+        // Only sync pitch in 3D mode (keep 2D flat)
+        if (mode === '3D') {
+            setPitch(map.getPitch());
+        }
+        
+        // Update bounds
+        const bounds = map.getBounds();
+        if (bounds) {
+           setBounds({
+             north: bounds.getNorth(),
+             south: bounds.getSouth(),
+             east: bounds.getEast(),
+             west: bounds.getWest(),
+           });
+        }
+    }
+
     // Add a small delay to ensure we don't snap back immediately after a fling
     setTimeout(() => {
         isInteracting.current = false;
     }, 100);
+  }, [setCenter, setZoom, setPitch, setBearing, setBounds, mode, mapRef]);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  const [isMobile] = useState(window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   // Throttle store updates to prevent UI lag on mobile
   const lastStoreUpdate = useRef(0);
@@ -137,8 +173,12 @@ const MapBoxContainerComponent = ({
           if (evt.originalEvent) {
             setCenter([evt.viewState.longitude, evt.viewState.latitude]);
             setZoom(evt.viewState.zoom);
-            setPitch(evt.viewState.pitch);
-            setBearing(evt.viewState.bearing);
+            setBearing(evt.viewState.bearing); // Always sync bearing (rotation is allowed in 2D)
+            
+            // Only update pitch if in 3D mode
+            if (mode === '3D') {
+                setPitch(evt.viewState.pitch);
+            }
           }
           
           const bounds = evt.target.getBounds();
@@ -155,6 +195,7 @@ const MapBoxContainerComponent = ({
     [setCenter, setZoom, setPitch, setBearing, setBounds, isMobile, mode],
   );
 
+  // Sync Store -> Map (Imperative) - RESTORED to fix view behavior
   useEffect(() => {
     const map = mapRef.current?.getMap();
     if (!map) return;
@@ -166,50 +207,56 @@ const MapBoxContainerComponent = ({
 
     // Epsilon for float comparison
     const EPS = 0.001;
-    const centerDiff =
-      Math.abs(c.lng - center[0]) + Math.abs(c.lat - center[1]);
+    const centerDiff = Math.abs(c.lng - center[0]) + Math.abs(c.lat - center[1]);
     const zoomDiff = Math.abs(z - zoom);
     const pitchDiff = Math.abs(p - pitch);
     const bearingDiff = Math.abs(b - bearing);
 
-    if (
-      centerDiff > EPS ||
-      zoomDiff > EPS ||
-      pitchDiff > EPS ||
-      bearingDiff > EPS
-    ) {
+    if (centerDiff > EPS || zoomDiff > EPS || pitchDiff > EPS || bearingDiff > EPS) {
       if (!map.isStyleLoaded()) return;
-      
-      // Don't interrupt programmatic animations or user interactions
+
+      // CRITICAL: Don't interrupt programmatic animations or user interactions
+      // This was missing in the split-out component causing jitter
       if (isFlying.current || isInteracting.current) return;
 
-      // Dynamic duration: fast updates (dragging) = immediate, big jumps = smooth
-      // Mode switching (large pitch changes) deserves a longer, more cinematic duration
-      const isModeSwitch = Math.abs(pitchDiff) > 40; 
+      // Dynamic duration logic
+      const isModeSwitch = Math.abs(pitchDiff) > 40;
       const isSmallChange = centerDiff < 0.01 && zoomDiff < 0.1 && pitchDiff < 5 && bearingDiff < 5;
-      
       const duration = isModeSwitch ? 1500 : (isSmallChange ? 0 : 400);
 
       map.easeTo({
         center: center,
         zoom: zoom,
-        pitch: mode === "3D" ? pitch : 0, // Ensure pitch is 0 for 2D
-        bearing: bearing, // Allow bearing rotation in 2D
+        pitch: mode === "3D" ? pitch : 0,
+        bearing: bearing,
         duration: duration,
-        easing: (t) => {
-             // Use standard easeInOutCubic for mode switches (smoother start/end)
-             // Use easeOutQuad for normal navigation (snappy)
-             return isModeSwitch 
-                ? t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
-                : t * (2 - t);
-        }
+        easing: (t) => isModeSwitch 
+          ? t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
+          : t * (2 - t)
       });
     }
-  }, [center, zoom, pitch, bearing, mode]);
+  }, [center, zoom, pitch, bearing, mode, mapRef]);
+
+  // Sync Terrain Exaggeration (Restored)
+  useEffect(() => {
+    const map = mapRef.current?.getMap();
+    if (!map) return;
+    
+    if (map.getSource('mapbox-dem')) {
+        map.setTerrain({
+            source: 'mapbox-dem',
+            exaggeration: mode === '3D' ? elevationExaggeration : 0.0001
+        });
+    }
+  }, [elevationExaggeration, mode, mapRef]);
 
   const handleMapClick = useCallback(
     (evt: MapMouseEvent) => {
       if (interactionMode === "draw_region") {
+        // Check limit directly from store state to avoid subscribing component to regionPoints
+        if (useMapStore.getState().regionPoints.length >= 4) {
+            return;
+        }
         const { lng, lat } = evt.lngLat;
         addRegionPoint([lng, lat]);
       }
@@ -287,9 +334,9 @@ const MapBoxContainerComponent = ({
         
         // Enhance inertia for smoother 'throw' effect when panning
         map.dragPan.enable({
-           linearity: mode === '3D' ? 0.5 : 0.3, // Higher linearity in 3D for tighter control
+           linearity: mode === '3D' ? 0.3 : 0.1, // Reduced linearity for more fluid "throw" feel (0.3 in 3D, 0.1 in 2D)
            easing: (t) => t * (2 - t), // Standard easeOutQuad
-           deceleration: mode === '3D' ? 2000 : 2500, // Slightly faster stop in 3D
+           deceleration: mode === '3D' ? 2500 : 3000, // Increased deceleration for longer glide (3000ms in 2D)
         });
 
         // 2. Mobile Optimizations
@@ -307,7 +354,12 @@ const MapBoxContainerComponent = ({
              
              // Improve touch pan responsiveness
              // Note: Mapbox GL JS defaults are usually good, but ensuring handlers are active
-             map.dragPan.enable();
+             // Enhanced dragPan for mobile
+             map.dragPan.enable({
+                linearity: 0.1, // Very low linearity for responsive touch tracking
+                easing: (t) => t * (2 - t),
+                deceleration: 3000, // Long glide on mobile swipe
+             });
         }
     }
     
@@ -566,11 +618,39 @@ const MapBoxContainerComponent = ({
           />
         )}
 
-        {showContours && <ContourLayer />}
-        <GridDMSLayer />
-        <PlottingLayer />
+        {showContours && (
+          <Suspense fallback={null}>
+            <ContourLayer />
+          </Suspense>
+        )}
+        
+        <Suspense fallback={null}>
+          <GridDMSLayer />
+        </Suspense>
+
+        <Suspense fallback={null}>
+          <PlottingLayer />
+        </Suspense>
+
         <RegionSelectionLayer />
-        {mode === "3D" && <ThreeScene />}
+        
+        {mode === "3D" && (
+          <Suspense fallback={null}>
+            <ThreeScene />
+          </Suspense>
+        )}
+        
+        {/* Map Synchronization Logic (Restored to component) */}
+        {/* <Suspense fallback={null}>
+          <MapSynchronizer mapRef={mapRef} />
+        </Suspense> */}
+
+        {/* NEW: Live GPS Tracker Layer (Lazy Loaded & Feature Flagged) */}
+        {import.meta.env.VITE_ENABLE_GPS_TRACKER === 'true' && (
+          <Suspense fallback={null}>
+            <LiveTrackerLayer mapRef={mapRef} />
+          </Suspense>
+        )}
         
         {/* User Location Indicator */}
         <UserLocationMarker />
@@ -608,9 +688,9 @@ const MapBoxContainerComponent = ({
         </div>
       )}
 
-      <SurveyorPanel />
-      <SearchPanel />
-      <WeatherWidget />
+      {showControls && <SurveyorPanel />}
+      {showControls && <SearchPanel />}
+      {showControls && <WeatherWidget />}
     </div>
   );
 };

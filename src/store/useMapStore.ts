@@ -44,6 +44,7 @@ interface MapState {
   setInteractionMode: (mode: 'default' | 'draw_region') => void;
   setRegionPoints: (points: [number, number][]) => void;
   addRegionPoint: (point: [number, number]) => void;
+  updateRegionPoint: (index: number, point: [number, number]) => void;
   clearRegionPoints: () => void;
   setMapState: (state: Partial<Omit<MapState, 'actions'>>) => void;
   triggerFlyTo: (destination: { center: [number, number]; zoom: number; duration?: number } | null) => void;
@@ -92,7 +93,18 @@ export const useMapStore = create<MapState>()(
       setMouseControlMode: (mouseControlMode) => set({ mouseControlMode }),
       setInteractionMode: (interactionMode) => set({ interactionMode }),
       setRegionPoints: (regionPoints) => set({ regionPoints }),
-      addRegionPoint: (point) => set((state) => ({ regionPoints: [...state.regionPoints, point] })),
+      addRegionPoint: (point) => set((state) => {
+        if (state.regionPoints.length >= 4) return state;
+        return { regionPoints: [...state.regionPoints, point] };
+      }),
+      updateRegionPoint: (index, point) => set((state) => {
+        const newPoints = [...state.regionPoints];
+        if (index >= 0 && index < newPoints.length) {
+            newPoints[index] = point;
+            return { regionPoints: newPoints };
+        }
+        return state;
+      }),
       clearRegionPoints: () => set({ regionPoints: [] }),
       setMapState: (newState) => set((state) => ({ ...state, ...newState })),
       triggerFlyTo: (flyToDestination) => set({ flyToDestination }),

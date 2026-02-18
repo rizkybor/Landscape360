@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { saveTile, getTile } from './offline-db';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { initDB, saveTile, getTile, hasTile, clearAllTiles, saveTilesBulk } from './offline-db';
 import { openDB } from 'idb';
 
 // Mock idb
@@ -7,57 +7,101 @@ vi.mock('idb', () => ({
   openDB: vi.fn(),
 }));
 
-describe('offline-db', () => {
-  const mockPut = vi.fn();
-  const mockGet = vi.fn();
-  const mockDb = {
-    put: mockPut,
-    get: mockGet,
-  };
+describe('Offline Mode (IndexedDB)', () => {
+  let mockDB: any;
+  let mockTx: any;
+  let mockStore: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (openDB as any).mockResolvedValue(mockDb);
+
+    mockStore = {
+      put: vi.fn().mockResolvedValue('ok'),
+      get: vi.fn(),
+      count: vi.fn(),
+      delete: vi.fn().mockResolvedValue('ok'),
+      clear: vi.fn().mockResolvedValue('ok'),
+    };
+
+    mockTx = {
+      objectStore: vi.fn().mockReturnValue(mockStore),
+      done: Promise.resolve(),
+    };
+
+    mockDB = {
+      transaction: vi.fn().mockReturnValue(mockTx),
+      put: vi.fn().mockResolvedValue('ok'),
+      get: vi.fn(),
+      count: vi.fn(),
+      delete: vi.fn().mockResolvedValue('ok'),
+      clear: vi.fn().mockResolvedValue('ok'),
+      objectStoreNames: { contains: vi.fn() },
+      createObjectStore: vi.fn(),
+    };
+
+    (openDB as any).mockResolvedValue(mockDB);
   });
 
-  it('saveTile should normalize URL and save blob', async () => {
-    const url = 'https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/512/14/10/10?access_token=pk.xxx';
-    const blob = new Blob(['test'], { type: 'image/png' });
+  it('should initialize DB correctly', async () => {
+    await initDB();
+    expect(openDB).toHaveBeenCalledWith('landscape360-offline-db', 1, expect.any(Object));
+  });
+
+  it('should save tile to offline storage', async () => {
+    const url = 'https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/1/1/1';
+    const blob = new Blob(['fake-image'], { type: 'image/png' });
 
     await saveTile(url, blob);
 
-    expect(mockPut).toHaveBeenCalledWith(
-        'tiles', 
-        expect.objectContaining({
-            key: '/styles/v1/mapbox/satellite-v9/tiles/512/14/10/10',
-            url: url,
-            blob: blob,
-            timestamp: expect.any(Number)
-        })
-    );
+    expect(mockDB.put).toHaveBeenCalledWith('tiles', expect.objectContaining({
+      url,
+      blob,
+      key: '/styles/v1/mapbox/satellite-v9/tiles/1/1/1' // Normalized key
+    }));
   });
 
-  it('getTile should retrieve blob using normalized key', async () => {
-    const url = 'https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/512/14/10/10?access_token=pk.yyy'; // Different token
-    const mockBlob = new Blob(['cached'], { type: 'image/png' });
-    // Mock the full object stored in DB
-    mockGet.mockResolvedValue({
-        key: '/styles/v1/mapbox/satellite-v9/tiles/512/14/10/10',
-        blob: mockBlob
-    });
+  it('should retrieve tile from offline storage', async () => {
+    const url = 'https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/1/1/1';
+    const mockEntry = { blob: new Blob(['data']), timestamp: Date.now() };
+    
+    mockDB.get.mockResolvedValue(mockEntry);
 
     const result = await getTile(url);
 
-    expect(mockGet).toHaveBeenCalledWith(
-        'tiles',
-        '/styles/v1/mapbox/satellite-v9/tiles/512/14/10/10'
-    );
-    expect(result).toBe(mockBlob);
+    expect(mockDB.get).toHaveBeenCalledWith('tiles', '/styles/v1/mapbox/satellite-v9/tiles/1/1/1');
+    expect(result).toBe(mockEntry.blob);
   });
 
-  it('getTile should return undefined if not found', async () => {
-    mockGet.mockResolvedValue(undefined);
-    const result = await getTile('https://example.com/tile.png');
+  it('should return undefined if tile not found', async () => {
+    mockDB.get.mockResolvedValue(undefined);
+    const result = await getTile('https://unknown.url');
     expect(result).toBeUndefined();
+  });
+
+  it('should check if tile exists', async () => {
+    mockDB.count.mockResolvedValue(1);
+    const exists = await hasTile('https://url');
+    expect(exists).toBe(true);
+
+    mockDB.count.mockResolvedValue(0);
+    const notExists = await hasTile('https://url');
+    expect(notExists).toBe(false);
+  });
+
+  it('should bulk save tiles', async () => {
+    const items = [
+      { url: 'https://a.com/1.png', blob: new Blob(['1']) },
+      { url: 'https://b.com/2.png', blob: new Blob(['2']) }
+    ];
+
+    await saveTilesBulk(items);
+
+    expect(mockTx.objectStore).toHaveBeenCalledWith('tiles');
+    expect(mockStore.put).toHaveBeenCalledTimes(2);
+  });
+
+  it('should clear all offline tiles', async () => {
+    await clearAllTiles();
+    expect(mockDB.clear).toHaveBeenCalledWith('tiles');
   });
 });

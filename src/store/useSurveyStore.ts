@@ -36,12 +36,13 @@ interface SurveyState {
   savedSurveys: SavedSurvey[];
   isSyncing: boolean;
   subscriptionStatus: 'Free' | 'Pro' | 'Enterprise';
+  userRole: 'pengguna360' | 'monitor360'; // New User Role
 
   errorMessage: string | null;
   clearError: () =>  Promise<void>;
   
   setUser: (user: User | null) => void;
-  loadSubscriptionStatus: () => Promise<void>;
+  loadUserProfile: () => Promise<void>; // Renamed from loadSubscriptionStatus to reflect broader usage
   loadSavedSurveys: () => Promise<void>;
   loadSurvey: (id: string) => Promise<void>;
   saveCurrentSurvey: (name?: string) => Promise<void>;
@@ -79,6 +80,7 @@ export const useSurveyStore = create<SurveyState>()(
   savedSurveys: [],
   isSyncing: false,
   subscriptionStatus: 'Free',
+  userRole: 'pengguna360', // Default
 
   errorMessage: null,
   clearError: async () => {
@@ -88,13 +90,14 @@ export const useSurveyStore = create<SurveyState>()(
   setUser: (user) => {
     set({ user });
     if (user) {
-      get().loadSubscriptionStatus();
+      get().loadUserProfile(); // Load profile (sub + role)
       get().loadSavedSurveys();
     } else {
       set({ 
         savedSurveys: [], 
         currentSurveyId: null, 
         subscriptionStatus: 'Free',
+        userRole: 'pengguna360',
         // Clear survey data on logout
         groups: [],
         activeGroupId: null,
@@ -103,30 +106,29 @@ export const useSurveyStore = create<SurveyState>()(
     }
   },
 
-  loadSubscriptionStatus: async () => {
+  loadUserProfile: async () => {
     const { user } = get();
     // If no user, status is Free
     if (!user) {
-        // DO NOT reset to Free here if we are offline and have a persisted user!
-        // The setUser function handles the initial "logged out" state reset.
-        // Here we only want to fetch updates.
         return;
     }
     
     const { data, error } = await supabase
       .from('profiles')
-      .select('status_subscribe')
+      .select('status_subscribe, status_user')
       .eq('id', user.id)
       .single();
       
     if (error) {
-        // Offline or error: keep existing status
-        console.warn("Could not fetch subscription status (offline?), using cached:", get().subscriptionStatus);
+        console.warn("Could not fetch user profile (offline?), using cached:", get().subscriptionStatus);
         return;
     }
       
-    if (data && data.status_subscribe) {
-      set({ subscriptionStatus: data.status_subscribe as 'Free' | 'Pro' | 'Enterprise' });
+    if (data) {
+      set({ 
+        subscriptionStatus: (data.status_subscribe as 'Free' | 'Pro' | 'Enterprise') || 'Free',
+        userRole: (data.status_user as 'pengguna360' | 'monitor360') || 'pengguna360'
+      });
     }
   },
 
@@ -484,6 +486,7 @@ export const useSurveyStore = create<SurveyState>()(
         currentSurveyId: state.currentSurveyId,
         savedSurveys: state.savedSurveys, // Persist list of surveys for offline access
         subscriptionStatus: state.subscriptionStatus,
+        userRole: state.userRole, // Persist role
         user: state.user // Persist user for instant auth state on reload
       }),
     }

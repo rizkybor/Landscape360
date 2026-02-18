@@ -11,6 +11,7 @@ import {
   Smartphone,
   Globe,
   CloudSun,
+  Navigation,
 } from "lucide-react";
 import streetsView from "../assets/Street-View.png";
 import outdoorsView from "../assets/Outdoors-View.png";
@@ -118,6 +119,66 @@ export const DocsPage = ({ onBack }: Props) => {
                   </span>
                 </p>
               </a>
+            </div>
+          </section>
+
+          {/* Quick Start Overview */}
+          <section>
+            <div className="flex items-center gap-3 text-white mb-6">
+                <div className="p-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+                    <Zap className="w-5 h-5 text-yellow-400" />
+                </div>
+                <h3 className="text-2xl font-bold">Quick Start Overview</h3>
+            </div>
+            
+            <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 flex gap-4 items-start group hover:border-yellow-500/30 transition-all">
+                    <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 shrink-0">
+                        <MousePointer size={16} />
+                    </div>
+                    <div>
+                        <h4 className="text-sm font-bold text-white mb-1">Navigation</h4>
+                        <p className="text-xs text-gray-400 leading-relaxed">
+                            <strong>Left-Click Drag</strong> to Rotate (3D) or Pan (2D). <strong>Scroll</strong> to Zoom. Use on-screen buttons for precision control.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 flex gap-4 items-start group hover:border-green-500/30 transition-all">
+                    <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center text-green-400 shrink-0">
+                        <Layers size={16} />
+                    </div>
+                    <div>
+                        <h4 className="text-sm font-bold text-white mb-1">Terrain Analysis</h4>
+                        <p className="text-xs text-gray-400 leading-relaxed">
+                            Toggle <strong>Contours</strong> and adjust exaggeration in the Control Panel. Switch between Streets, Outdoors, and Satellite views.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 flex gap-4 items-start group hover:border-pink-500/30 transition-all">
+                    <div className="w-8 h-8 rounded-lg bg-pink-500/10 flex items-center justify-center text-pink-400 shrink-0">
+                        <Camera size={16} />
+                    </div>
+                    <div>
+                        <h4 className="text-sm font-bold text-white mb-1">Export & Share</h4>
+                        <p className="text-xs text-gray-400 leading-relaxed">
+                            Capture high-res snapshots (PNG/JPG) or generate PDF reports with embedded telemetry data.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 flex gap-4 items-start group hover:border-green-500/30 transition-all">
+                    <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center text-green-400 shrink-0">
+                        <Navigation size={16} />
+                    </div>
+                    <div>
+                        <h4 className="text-sm font-bold text-white mb-1">GPS Tracking</h4>
+                        <p className="text-xs text-gray-400 leading-relaxed">
+                            Click the <strong>GPS Icon</strong> to broadcast your location (Pro) or monitor field teams (Enterprise). Includes Smart Reconnect.
+                        </p>
+                    </div>
+                </div>
             </div>
           </section>
 
@@ -362,6 +423,76 @@ export const DocsPage = ({ onBack }: Props) => {
                     <div className="flex flex-wrap gap-2">
                         <span className="px-2 py-1 rounded bg-cyan-500/10 border border-cyan-500/20 text-[10px] text-cyan-300 font-bold uppercase">Live Updates</span>
                         <span className="px-2 py-1 rounded bg-cyan-500/10 border border-cyan-500/20 text-[10px] text-cyan-300 font-bold uppercase">Field Safety</span>
+                    </div>
+                </div>
+              </section>
+
+              {/* GPS Tracker */}
+              <section>
+                <div className="flex items-center gap-3 text-white mb-6">
+                  <div className="p-2 bg-green-500/10 rounded-lg border border-green-500/20">
+                     <Navigation size={20} className="text-green-400" />
+                  </div>
+                  <h3 className="text-2xl font-bold">Realtime GPS Tracking</h3>
+                  <span className="px-2 py-1 rounded bg-green-500/20 text-[10px] text-green-400 font-bold uppercase border border-green-500/30">Live Now</span>
+                </div>
+                
+                <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-6 relative overflow-hidden group hover:border-green-500/30 transition-all duration-300">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                    
+                    <div className="grid grid-cols-2 gap-4 relative z-10 mb-4">
+                        <div className="aspect-video bg-gray-900 rounded-lg border border-white/10 flex items-center justify-center relative overflow-hidden p-4">
+                            <div className="flex items-center justify-center gap-2">
+                                <div className="w-3 h-3 bg-green-500 rounded-full animate-ping"></div>
+                                <span className="text-sm font-bold text-white">Live Position</span>
+                            </div>
+                        </div>
+                        <div className="aspect-video bg-green-900/10 rounded-lg border border-green-500/20 flex flex-col justify-center px-4 relative overflow-hidden">
+                           <div className="space-y-2">
+                              <div className="flex justify-between text-[10px] text-gray-400">
+                                <span>Status</span>
+                                <span className="text-green-400 font-bold">ONLINE</span>
+                              </div>
+                              <div className="flex justify-between text-[10px] text-gray-400">
+                                <span>Mode</span>
+                                <span className="text-white font-mono">Broadcast / Monitor</span>
+                              </div>
+                              <div className="flex justify-between text-[10px] text-gray-400">
+                                <span>Timezone</span>
+                                <span className="text-white font-mono">WIB (UTC+7)</span>
+                              </div>
+                              <div className="flex justify-between text-[10px] text-gray-400">
+                                <span>Latency</span>
+                                <span className="text-white font-mono">&lt; 100ms</span>
+                              </div>
+                           </div>
+                        </div>
+                    </div>
+                    
+                    <h4 className="text-lg font-bold text-white mb-2">Command Center & Field Tracking</h4>
+                    <p className="text-xs text-gray-400 leading-relaxed mb-4">
+                        Advanced personnel tracking system with Role-Based Access Control.
+                        <strong> Enterprise Monitors</strong> can visualize all active field units in real-time, while 
+                        <strong> Pro Users</strong> can broadcast their secure location data.
+                    </p>
+                    
+                    <div className="flex flex-wrap gap-2">
+                        <span className="px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-[10px] text-green-300 font-bold uppercase">Realtime Websocket</span>
+                        <span className="px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-[10px] text-green-300 font-bold uppercase">Multi-User Support</span>
+                        <span className="px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-[10px] text-green-300 font-bold uppercase">Heartbeat Sync</span>
+                        <span className="px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-[10px] text-green-300 font-bold uppercase">5s Update Interval</span>
+                    </div>
+
+                    <div className="mt-4 p-3 rounded-lg bg-yellow-500/5 border border-yellow-500/10">
+                        <h5 className="text-xs font-bold text-yellow-400 mb-1 flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse"></span>
+                            Connectivity & Data Rate
+                        </h5>
+                        <p className="text-[10px] text-gray-400 leading-relaxed">
+                            This feature requires an active internet connection (4G/WiFi). Data is refreshed every <strong>5 seconds</strong> to ensure realtime accuracy while optimizing battery life.
+                            If connection is lost, data is buffered locally and automatically flushed when back online (Smart Reconnect).
+                            <strong>Offline tracking is currently not supported.</strong>
+                        </p>
                     </div>
                 </div>
               </section>
@@ -768,6 +899,9 @@ export const DocsPage = ({ onBack }: Props) => {
                       <li className="flex items-center gap-2 text-xs text-gray-300">
                           <span className="w-1.5 h-1.5 rounded-full bg-gray-500"></span> 2 Saved Surveys
                       </li>
+                      <li className="flex items-center gap-2 text-xs text-gray-500 line-through decoration-gray-600">
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-900/50"></span> No GPS Tracking
+                      </li>
                   </ul>
                 </div>
 
@@ -793,6 +927,9 @@ export const DocsPage = ({ onBack }: Props) => {
                        <li className="flex items-center gap-2 text-xs text-gray-200">
                           <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> High-Res Export
                       </li>
+                      <li className="flex items-center gap-2 text-xs text-white font-bold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span> GPS Broadcast
+                      </li>
                   </ul>
                   
                   <a href="mailto:contact@jcdigital.co.id?subject=Request Upgrade to Pro Plan" className="block w-full py-2 text-center rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-colors">
@@ -817,6 +954,9 @@ export const DocsPage = ({ onBack }: Props) => {
                       </li>
                       <li className="flex items-center gap-2 text-xs text-gray-300">
                           <span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span> 10 Saved Surveys
+                      </li>
+                      <li className="flex items-center gap-2 text-xs text-white font-bold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span> Realtime Monitoring
                       </li>
                       <li className="flex items-center gap-2 text-xs text-gray-300">
                           <span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span> 24/7 Priority Support

@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
-import { Source, Layer, Marker } from 'react-map-gl/mapbox';
+import { Source, Layer, Marker, type MarkerDragEvent } from 'react-map-gl/mapbox';
 import { useMapStore } from '../store/useMapStore';
 
 export const RegionSelectionLayer = () => {
-  const { regionPoints, interactionMode } = useMapStore();
+  const { regionPoints, interactionMode, updateRegionPoint } = useMapStore();
 
   const geoJsonData = useMemo(() => {
     if (regionPoints.length === 0) return null;
@@ -50,8 +50,12 @@ export const RegionSelectionLayer = () => {
             longitude={point[0]} 
             latitude={point[1]} 
             anchor="center"
+            draggable={true}
+            onDrag={(evt: MarkerDragEvent) => {
+                updateRegionPoint(index, [evt.lngLat.lng, evt.lngLat.lat]);
+            }}
         >
-            <div className="w-4 h-4 bg-white border-2 border-blue-600 rounded-full shadow-md flex items-center justify-center text-[8px] font-bold text-blue-600">
+            <div className="w-4 h-4 bg-white border-2 border-blue-600 rounded-full shadow-md flex items-center justify-center text-[8px] font-bold text-blue-600 cursor-move hover:scale-125 transition-transform">
                 {index + 1}
             </div>
         </Marker>

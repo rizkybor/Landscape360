@@ -20,6 +20,7 @@
 ### 📍 Navigation & Survey
 - **Instant Geolocation**: "Start Your Journey" feature with pre-emptive GPS fetching and zero-delay jump logic.
 - **Navigator Mode**: Precision plotting tools with real-time **Distance**, **Azimuth**, and **Slope** calculations.
+- **GPS Monitoring**: Real-time location tracking with **Smart Reconnect** technology (auto-buffer during signal loss).
 - **Visual Feedback**: Dynamic marker shapes (Diamond vs Circle) and colors (Indigo vs Yellow) to distinguish edited points.
 - **Optimized Controls**:
   - **Desktop**: Smooth scroll zoom (1/600 rate), inertia-based panning, and orbit controls.
@@ -34,17 +35,24 @@
   - Optimized `backdrop-blur` effects to reduce GPU load.
 - **State Persistence**: User preferences (Map Style, View Mode, Camera Position) are automatically saved via `Zustand` middleware.
 
-## 💎 Subscription Plans
+## 💎 Subscription Plans & User Roles
 
-Landscape 360 offers flexible plans tailored to your needs:
+Landscape 360 offers flexible plans tailored to your needs, integrated with a Role-Based Access Control (RBAC) system:
 
 | Feature | **Starter (Free)** | **Pro** | **Enterprise** |
 | :--- | :--- | :--- | :--- |
 | **Max Download Size** | 1 MB | 10 MB | 25 MB |
 | **Offline Maps** | 1 Region | 3 Regions | 10 Regions |
 | **Saved Surveys** | 2 Surveys | 4 Surveys | 10 Surveys |
-| **Export Quality** | Standard | High-Res | High-Res |
+| **GPS Tracking** | ❌ Disabled | ✅ Broadcast & View Self | ✅ Broadcast & View Self |
+| **Realtime Monitoring** | ❌ Disabled | ❌ Disabled | ✅ **Monitor All Users** (Requires `monitor360` Role) |
 | **Support** | Community | Priority | 24/7 Dedicated |
+
+### 🔐 User Roles
+- **`pengguna360`**: Standard user. Can track their own location and broadcast it (if Pro/Enterprise).
+- **`monitor360`**: Command center role. Can monitor all active users on the map in real-time. **Requires Enterprise Subscription.**
+
+> **Note:** GPS Tracking & Monitoring features require an active internet connection. Offline buffering (Smart Reconnect) is available for temporary signal loss.
 
 ## 🛠️ Tech Stack
 
@@ -57,6 +65,8 @@ Landscape 360 offers flexible plans tailored to your needs:
 - **Testing**: Vitest, React Testing Library
 
 ## 📂 Project Structure
+
+For a detailed technical overview, please refer to [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ```bash
 src/
