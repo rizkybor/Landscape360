@@ -111,11 +111,38 @@ const MapBoxContainerComponent = ({
   }, []);
 
   const handleMoveEnd = useCallback(() => {
+    // Force a final sync to ensure store matches map exactly
+    // This prevents "snap back" or "zoom out" glitches when inertia ends
+    const map = mapRef.current?.getMap();
+    if (map) {
+        setCenter(map.getCenter().toArray() as [number, number]);
+        setZoom(map.getZoom());
+        
+        // Sync bearing in all modes
+        setBearing(map.getBearing());
+        
+        // Only sync pitch in 3D mode (keep 2D flat)
+        if (mode === '3D') {
+            setPitch(map.getPitch());
+        }
+        
+        // Update bounds
+        const bounds = map.getBounds();
+        if (bounds) {
+           setBounds({
+             north: bounds.getNorth(),
+             south: bounds.getSouth(),
+             east: bounds.getEast(),
+             west: bounds.getWest(),
+           });
+        }
+    }
+
     // Add a small delay to ensure we don't snap back immediately after a fling
     setTimeout(() => {
         isInteracting.current = false;
     }, 100);
-  }, []);
+  }, [setCenter, setZoom, setPitch, setBearing, setBounds, mode, mapRef]);
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -146,8 +173,12 @@ const MapBoxContainerComponent = ({
           if (evt.originalEvent) {
             setCenter([evt.viewState.longitude, evt.viewState.latitude]);
             setZoom(evt.viewState.zoom);
-            setPitch(evt.viewState.pitch);
-            setBearing(evt.viewState.bearing);
+            setBearing(evt.viewState.bearing); // Always sync bearing (rotation is allowed in 2D)
+            
+            // Only update pitch if in 3D mode
+            if (mode === '3D') {
+                setPitch(evt.viewState.pitch);
+            }
           }
           
           const bounds = evt.target.getBounds();
@@ -222,6 +253,10 @@ const MapBoxContainerComponent = ({
   const handleMapClick = useCallback(
     (evt: MapMouseEvent) => {
       if (interactionMode === "draw_region") {
+        // Check limit directly from store state to avoid subscribing component to regionPoints
+        if (useMapStore.getState().regionPoints.length >= 4) {
+            return;
+        }
         const { lng, lat } = evt.lngLat;
         addRegionPoint([lng, lat]);
       }
@@ -299,9 +334,9 @@ const MapBoxContainerComponent = ({
         
         // Enhance inertia for smoother 'throw' effect when panning
         map.dragPan.enable({
-           linearity: mode === '3D' ? 0.5 : 0.3, // Higher linearity in 3D for tighter control
+           linearity: mode === '3D' ? 0.3 : 0.1, // Reduced linearity for more fluid "throw" feel (0.3 in 3D, 0.1 in 2D)
            easing: (t) => t * (2 - t), // Standard easeOutQuad
-           deceleration: mode === '3D' ? 2000 : 2500, // Slightly faster stop in 3D
+           deceleration: mode === '3D' ? 2500 : 3000, // Increased deceleration for longer glide (3000ms in 2D)
         });
 
         // 2. Mobile Optimizations
@@ -319,7 +354,12 @@ const MapBoxContainerComponent = ({
              
              // Improve touch pan responsiveness
              // Note: Mapbox GL JS defaults are usually good, but ensuring handlers are active
-             map.dragPan.enable();
+             // Enhanced dragPan for mobile
+             map.dragPan.enable({
+                linearity: 0.1, // Very low linearity for responsive touch tracking
+                easing: (t) => t * (2 - t),
+                deceleration: 3000, // Long glide on mobile swipe
+             });
         }
     }
     
@@ -578,11 +618,27 @@ const MapBoxContainerComponent = ({
           />
         )}
 
-        {showContours && <ContourLayer />}
-        <GridDMSLayer />
-        <PlottingLayer />
+        {showContours && (
+          <Suspense fallback={null}>
+            <ContourLayer />
+          </Suspense>
+        )}
+        
+        <Suspense fallback={null}>
+          <GridDMSLayer />
+        </Suspense>
+
+        <Suspense fallback={null}>
+          <PlottingLayer />
+        </Suspense>
+
         <RegionSelectionLayer />
-        {mode === "3D" && <ThreeScene />}
+        
+        {mode === "3D" && (
+          <Suspense fallback={null}>
+            <ThreeScene />
+          </Suspense>
+        )}
         
         {/* Map Synchronization Logic (Restored to component) */}
         {/* <Suspense fallback={null}>
@@ -632,9 +688,9 @@ const MapBoxContainerComponent = ({
         </div>
       )}
 
-      <SurveyorPanel />
-      <SearchPanel />
-      <WeatherWidget />
+      {showControls && <SurveyorPanel />}
+      {showControls && <SearchPanel />}
+      {showControls && <WeatherWidget />}
     </div>
   );
 };

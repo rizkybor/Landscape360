@@ -18,9 +18,9 @@ export const MapDashboard = ({ initialLocation }: { initialLocation?: [number, n
       {isSplitScreen ? (
         <div className="flex flex-col md:flex-row w-full h-full">
           {/* Left/Top Panel (2D) */}
-          <div className="w-full h-1/2 md:w-1/2 md:h-full border-b md:border-b-0 md:border-r border-gray-700 relative group">
-            <div className="absolute top-4 left-4 z-20 bg-black/60 text-white px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-md border border-white/10 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+          <div className="w-full h-[40%] md:w-1/2 md:h-full border-b-2 md:border-b-0 md:border-r-2 border-gray-800 relative group transition-all duration-300 ease-in-out">
+            <div className="absolute top-4 left-4 z-20 bg-black/60 text-white px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-md border border-white/10 flex items-center gap-2 shadow-lg pointer-events-none select-none">
+              <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
               2D Topo
             </div>
             <MapBoxContainer
@@ -30,15 +30,18 @@ export const MapDashboard = ({ initialLocation }: { initialLocation?: [number, n
               initialLocation={initialLocation}
             />
             {/* Sync Indicator */}
-            <div className="absolute bottom-4 right-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                <span className="text-[10px] text-white/50 bg-black/50 px-2 py-1 rounded">Synced</span>
+            <div className="absolute bottom-4 right-4 z-20 transition-opacity pointer-events-none opacity-0 group-hover:opacity-100 md:opacity-100">
+                <span className="text-[10px] font-mono text-blue-300 bg-blue-900/50 border border-blue-500/30 px-2 py-1 rounded flex items-center gap-1 backdrop-blur-md shadow-lg">
+                    <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+                    SYNC ACTIVE
+                </span>
             </div>
           </div>
 
           {/* Right/Bottom Panel (3D) */}
-          <div className="w-full h-1/2 md:w-1/2 md:h-full relative group">
-            <div className="absolute top-4 right-16 md:right-20 z-20 bg-black/60 text-white px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-md border border-white/10 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-green-500"></span>
+          <div className="w-full h-[60%] md:w-1/2 md:h-full relative group transition-all duration-300 ease-in-out">
+            <div className="absolute top-4 right-16 md:right-20 z-20 bg-black/60 text-white px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-md border border-white/10 flex items-center gap-2 shadow-lg pointer-events-none select-none">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
               3D Terrain
             </div>
             <MapBoxContainer
@@ -70,7 +73,7 @@ export const MapDashboard = ({ initialLocation }: { initialLocation?: [number, n
           active:scale-95
           ${isSplitScreen 
             ? 'bottom-8 left-1/2 -translate-x-1/2 md:bottom-8 md:left-8 md:translate-x-0 bg-blue-600/80 border-blue-400/50 hover:bg-blue-600' 
-            : 'bottom-20 md:bottom-8 left-4 md:left-8'
+            : 'bottom-24 md:bottom-8 left-4 md:left-8'
           }
         `}
         title={isSplitScreen ? "Exit Split Screen" : "Enter Split Screen"}
