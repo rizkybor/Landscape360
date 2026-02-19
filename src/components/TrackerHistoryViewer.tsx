@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useSurveyStore } from '../store/useSurveyStore';
-import { X, History, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, History, RefreshCw, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 
 interface TrackerLog {
     id: string;
@@ -11,6 +11,7 @@ interface TrackerLog {
     elevation: number;
     speed: number;
     timestamp: string;
+    profiles?: { email: string } | null; // Added manual profile mapping
 }
 
 const toDMS = (deg: number, isLat: boolean): string => {
@@ -37,42 +38,76 @@ export const TrackerHistoryViewer = () => {
     const [availableUsers, setAvailableUsers] = useState<{id: string, name: string}[]>([]);
     const LIMIT = 20;
 
-    // Fetch unique users for filter (Monitor only)
+    // Delete Log Function (Monitor Only)
+    const deleteLog = async (logId: string) => {
+        if (userRole !== 'monitor360') return;
+        if (!confirm("Are you sure you want to delete this log entry?")) return;
+
+        try {
+            const { error } = await supabase
+                .from('tracker_logs')
+                .delete()
+                .eq('id', logId);
+
+            if (error) throw error;
+            
+            // Remove from local state immediately
+            setLogs(prev => prev.filter(l => l.id !== logId));
+        } catch (err) {
+            console.error("Failed to delete log:", err);
+            alert("Failed to delete log. Ensure you have permission.");
+        }
+    };
+
+    // Fetch unique users for filter (Monitor only) - Decoupled Approach
     useEffect(() => {
         if (isOpen && userRole === 'monitor360') {
             const fetchUsers = async () => {
-                const { data } = await supabase
+                // 1. Get recent unique user_ids from logs
+                const { data: logData } = await supabase
                     .from('tracker_logs')
                     .select('user_id')
                     .order('timestamp', { ascending: false })
                     .limit(100);
 
-                if (data) {
-                    const uniqueUsers = Array.from(new Set(data.map(l => l.user_id)));
-                    setAvailableUsers(uniqueUsers);
+                if (logData) {
+                    const userIds = Array.from(new Set(logData.map(l => l.user_id)));
+                    
+                    // 2. Get profiles for these IDs
+                    const { data: profileData } = await supabase
+                        .from('profiles')
+                        .select('id, email')
+                        .in('id', userIds);
+                        
+                    const profileMap = new Map();
+                    profileData?.forEach((p: any) => profileMap.set(p.id, p));
+
+                    // 3. Merge
+                    const uniqueUsersList = userIds.map(id => {
+                        const profile = profileMap.get(id);
+                        return {
+                            id,
+                            name: profile?.email || `User ${id.slice(0, 8)}`
+                        };
+                    });
+                    
+                    setAvailableUsers(uniqueUsersList);
                 }
             };
             fetchUsers();
         }
     }, [isOpen, userRole]);
 
-    // Fetch Logs
+    // Fetch Logs - Decoupled Approach
     const fetchLogs = async () => {
         if (!user) return;
         setIsLoading(true);
         
         try {
-            // Join with profiles to get user email/name if needed (for Monitor)
-            // Note: Supabase JS simple join syntax is often: select('*, profiles(email)')
-            // But RLS might restrict accessing other profiles. 
-            // Assuming Monitor has access via RLS.
-            
+            // Step 1: Fetch logs ONLY (No join)
             let query = supabase
                 .from('tracker_logs')
-                .select(`
-                    *,
-                    profiles:user_id ( email, status_user )
-                `)
+                .select('*')
                 .order('timestamp', { ascending: false })
                 .range(page * LIMIT, (page + 1) * LIMIT - 1);
 
@@ -82,10 +117,33 @@ export const TrackerHistoryViewer = () => {
                 query = query.eq('user_id', selectedUserFilter);
             }
 
-            const { data, error } = await query;
+            const { data: logData, error: logError } = await query;
 
-            if (error) throw error;
-            setLogs(data || []);
+            if (logError) throw logError;
+            
+            if (!logData || logData.length === 0) {
+                setLogs([]);
+                return;
+            }
+
+            // Step 2: Fetch profiles manually for the fetched logs
+            // This avoids issues if FK is missing or RLS on profiles behaves differently in joins
+            const userIds = Array.from(new Set(logData.map(l => l.user_id)));
+            const { data: profileData } = await supabase
+                .from('profiles')
+                .select('id, email')
+                .in('id', userIds);
+            
+            const profileMap = new Map();
+            profileData?.forEach((p: any) => profileMap.set(p.id, p));
+
+            // Step 3: Merge data
+            const logsWithProfiles = logData.map(log => ({
+                ...log,
+                profiles: profileMap.get(log.user_id) || null
+            }));
+
+            setLogs(logsWithProfiles);
         } catch (err) {
             console.error("Error fetching logs:", err);
         } finally {
@@ -103,14 +161,16 @@ export const TrackerHistoryViewer = () => {
 
     return (
         <>
-            {/* Toggle Button */}
-            <button
-                onClick={() => setIsOpen(true)}
-                className="absolute bottom-24 right-4 md:right-20 z-30 bg-white text-slate-800 p-3 rounded-full shadow-lg hover:bg-slate-50 transition-all active:scale-95 border border-slate-200"
-                title="View Tracking History"
-            >
-                <History size={20} />
-            </button>
+            {/* Toggle Button - Repositioned to bottom-right vertical control style */}
+            <div className="absolute top-[280px] right-2 flex flex-col items-center gap-2 z-[20]">
+                <button
+                    onClick={() => setIsOpen(true)}
+                    className="w-[30px] h-[30px] bg-white rounded-md shadow-md flex items-center justify-center text-slate-700 hover:bg-slate-50 active:bg-slate-100 transition-colors"
+                    title="View Tracking History"
+                >
+                    <History size={16} strokeWidth={2.5} />
+                </button>
+            </div>
 
             {/* Slide-Up Panel (Bottom Sheet) */}
             <div 
@@ -206,12 +266,18 @@ export const TrackerHistoryViewer = () => {
                                     <div className="flex items-center gap-3 min-w-[120px] sm:min-w-[140px]">
                                          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-[10px] sm:text-xs shrink-0">
                                             {/* Initials */}
-                                            {(log as any).profiles?.email ? (log as any).profiles.email.substring(0, 2).toUpperCase() : log.user_id.substring(0, 2).toUpperCase()}
+                                            {(() => {
+                                                const email = log.profiles?.email;
+                                                return email ? email.substring(0, 2).toUpperCase() : log.user_id.substring(0, 2).toUpperCase();
+                                            })()}
                                          </div>
                                          <div className="flex flex-col overflow-hidden">
                                             <span className="text-xs sm:text-sm font-bold text-slate-800 truncate max-w-[80px] sm:max-w-none">
                                                 {/* Show Name/Email if available (Monitor), else Time */}
-                                                {(log as any).profiles?.email ? (log as any).profiles.email.split('@')[0] : 'Me'}
+                                                {(() => {
+                                                    const email = log.profiles?.email;
+                                                    return email ? email.split('@')[0] : 'Me';
+                                                })()}
                                             </span>
                                             <span className="text-[9px] sm:text-[10px] text-slate-400 font-mono">
                                                 {new Date(log.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':')}
@@ -232,7 +298,7 @@ export const TrackerHistoryViewer = () => {
                                         </div>
                                     </div>
 
-                                    {/* Right: Stats */}
+                                    {/* Right: Stats & Actions */}
                                     <div className="flex items-center gap-2 sm:gap-4 text-right">
                                          <div className="flex flex-col items-end w-[40px] sm:w-[60px]">
                                             <span className="text-xs sm:text-sm font-bold text-slate-700">{log.elevation?.toFixed(0) || 0}</span>
@@ -242,6 +308,17 @@ export const TrackerHistoryViewer = () => {
                                             <span className="text-xs sm:text-sm font-bold text-slate-700">{log.speed?.toFixed(1) || 0}</span>
                                             <span className="text-[8px] sm:text-[9px] text-slate-400 uppercase">km/h</span>
                                          </div>
+                                         
+                                         {/* Delete Action (Monitor Only) */}
+                                         {userRole === 'monitor360' && (
+                                             <button 
+                                                onClick={() => deleteLog(log.id)}
+                                                className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors ml-1"
+                                                title="Delete Log"
+                                             >
+                                                 <Trash2 size={14} />
+                                             </button>
+                                         )}
                                     </div>
                                 </div>
                             ))}
