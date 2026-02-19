@@ -5,10 +5,12 @@ import {
   X,
   History,
   RefreshCw,
-  ChevronLeft,
-  ChevronRight,
   Trash2,
+  FileDown,
 } from "lucide-react";
+// Removed static imports to optimize bundle size
+// import jsPDF from "jspdf";
+// import "jspdf-autotable";
 
 interface TrackerLog {
   id: string;
@@ -43,7 +45,60 @@ export const TrackerHistoryViewer = () => {
   const [availableUsers, setAvailableUsers] = useState<
     { id: string; name: string }[]
   >([]);
+  const [hasMore, setHasMore] = useState(true);
   const LIMIT = 20;
+
+  // Export PDF Function (Optimized)
+  const exportPDF = () => {
+    if (logs.length === 0) {
+      alert("No logs to export.");
+      return;
+    }
+
+    // Optimization: Dynamic import to reduce initial bundle size
+    import('jspdf').then(({ default: jsPDF }) => {
+        import('jspdf-autotable').then(() => {
+            const doc = new jsPDF();
+            const title = userRole === "monitor360" && selectedUserFilter !== "all" 
+                ? `Tracking Log - User: ${selectedUserFilter}`
+                : "Tracking Logs Report";
+        
+            doc.text(title, 14, 15);
+            doc.setFontSize(10);
+            doc.text(`Generated: ${new Date().toLocaleString("id-ID")}`, 14, 22);
+        
+            const tableColumn = ["Time", "Date", "User", "Latitude", "Longitude", "Elev (m)", "Speed (km/h)"];
+            const tableRows: any[] = [];
+        
+            logs.forEach((log) => {
+              const email = log.profiles?.email || log.user_id;
+              const userName = email.includes("@") ? email.split("@")[0] : email.slice(0, 8);
+              const dateObj = new Date(log.timestamp);
+              
+              const logData = [
+                dateObj.toLocaleTimeString("id-ID"),
+                dateObj.toLocaleDateString("id-ID"),
+                userName,
+                log.lat.toFixed(6),
+                log.lng.toFixed(6),
+                log.elevation?.toFixed(0) || "0",
+                log.speed?.toFixed(1) || "0"
+              ];
+              tableRows.push(logData);
+            });
+        
+            (doc as any).autoTable({
+              head: [tableColumn],
+              body: tableRows,
+              startY: 30,
+              styles: { fontSize: 8 }, // Optimize font size for table
+              headStyles: { fillColor: [41, 128, 185] } // Professional blue header
+            });
+        
+            doc.save(`tracking_logs_${new Date().toISOString().slice(0, 10)}.pdf`);
+        });
+    });
+  };
 
   // Delete Log Function (Monitor Only)
   const deleteLog = async (logId: string) => {
@@ -106,7 +161,7 @@ export const TrackerHistoryViewer = () => {
   }, [isOpen, userRole]);
 
   // Fetch Logs - Decoupled Approach & Memoized
-  const fetchLogs = useCallback(async () => {
+  const fetchLogs = useCallback(async (isLoadMore = false) => {
     if (!user) return;
     setIsLoading(true);
 
@@ -130,8 +185,15 @@ export const TrackerHistoryViewer = () => {
       if (logError) throw logError;
 
       if (!logData || logData.length === 0) {
-        setLogs([]);
+        if (!isLoadMore) setLogs([]);
+        setHasMore(false);
         return;
+      }
+      
+      if (logData.length < LIMIT) {
+          setHasMore(false);
+      } else {
+          setHasMore(true);
       }
 
       // Step 2: Fetch profiles manually for the fetched logs
@@ -150,7 +212,7 @@ export const TrackerHistoryViewer = () => {
         profiles: profileMap.get(log.user_id) || null,
       }));
 
-      setLogs(logsWithProfiles);
+      setLogs(prev => isLoadMore ? [...prev, ...logsWithProfiles] : logsWithProfiles);
     } catch (err) {
       console.error("Error fetching logs:", err);
     } finally {
@@ -158,11 +220,27 @@ export const TrackerHistoryViewer = () => {
     }
   }, [user, userRole, page, selectedUserFilter, LIMIT]);
 
+  // Initial Load & Filter Change
   useEffect(() => {
-    if (isOpen) {
-      fetchLogs();
-    }
-  }, [isOpen, fetchLogs]);
+    setPage(0);
+    setHasMore(true);
+    fetchLogs(false);
+  }, [selectedUserFilter]);
+
+  // Load More when page changes (scrolling)
+  useEffect(() => {
+      if (page > 0) {
+          fetchLogs(true);
+      }
+  }, [page]);
+
+  // Infinite Scroll Handler
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+      const { scrollTop, clientHeight, scrollHeight } = e.currentTarget;
+      if (scrollHeight - scrollTop <= clientHeight + 50 && !isLoading && hasMore) {
+          setPage(prev => prev + 1);
+      }
+  };
 
   if (!user) return null;
 
@@ -182,7 +260,7 @@ export const TrackerHistoryViewer = () => {
       {/* Slide-Up Panel (Bottom Sheet) */}
       <div
         className={`fixed inset-x-0 bottom-0 z-[60] bg-white shadow-[0_-5px_20px_-5px_rgba(0,0,0,0.1)] rounded-t-2xl transition-transform duration-300 ease-out transform ${isOpen ? "translate-y-0" : "translate-y-full"}`}
-        style={{ height: "50vh", maxHeight: "500px" }} // Fixed height for slider
+        style={{ height: "auto", maxHeight: "60vh" }} // Auto height to fit content, max 60vh
       >
         {/* Drag Handle (Visual Only) */}
         <div
@@ -214,7 +292,11 @@ export const TrackerHistoryViewer = () => {
           <div className="flex items-center gap-2">
             {/* Manual Refresh Button */}
             <button
-              onClick={() => fetchLogs()}
+              onClick={() => {
+                  setPage(0);
+                  setHasMore(true);
+                  fetchLogs(false);
+              }}
               className="p-1.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-blue-600 transition-colors"
               title="Refresh Data"
             >
@@ -223,6 +305,17 @@ export const TrackerHistoryViewer = () => {
                 className={isLoading ? "animate-spin" : ""}
               />
             </button>
+            
+            {/* Export PDF (Monitor Only) */}
+            {userRole === "monitor360" && (
+                <button
+                    onClick={exportPDF}
+                    className="p-1.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-red-600 transition-colors"
+                    title="Export to PDF"
+                >
+                    <FileDown size={16} />
+                </button>
+            )}
 
             {/* Monitor Filter */}
             {userRole === "monitor360" && (
@@ -256,9 +349,13 @@ export const TrackerHistoryViewer = () => {
           </div>
         </div>
 
-        {/* Content Area */}
-        <div className="overflow-auto h-[calc(100%-110px)] bg-white">
-          {isLoading ? (
+        {/* Content Area - Fixed Height for ~6 rows (~350px) + Scroll */}
+        <div 
+            className="overflow-y-auto bg-white scroll-smooth"
+            style={{ height: '350px' }} // Approx height for 5-6 rows
+            onScroll={handleScroll}
+        >
+          {isLoading && logs.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-2">
               <RefreshCw size={24} className="animate-spin" />
               <span className="text-xs">Loading data...</span>
@@ -299,15 +396,22 @@ export const TrackerHistoryViewer = () => {
                           return email ? email.split("@")[0] : "Me";
                         })()}
                       </span>
-                      <span className="text-[9px] sm:text-[10px] text-slate-400 font-mono">
-                        {new Date(log.timestamp)
-                          .toLocaleTimeString("id-ID", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            second: "2-digit",
-                          })
-                          .replace(/\./g, ":")}
-                      </span>
+                      <div className="flex flex-col">
+                        <span className="text-[9px] sm:text-[10px] text-slate-400 font-mono leading-tight">
+                            {new Date(log.timestamp).toLocaleTimeString("id-ID", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                second: "2-digit",
+                            }).replace(/\./g, ":")}
+                        </span>
+                        <span className="text-[8px] sm:text-[9px] text-slate-300 font-medium leading-tight">
+                            {new Date(log.timestamp).toLocaleDateString("id-ID", {
+                                weekday: "short",
+                                day: "numeric",
+                                month: "short",
+                            })}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -356,27 +460,19 @@ export const TrackerHistoryViewer = () => {
                   </div>
                 </div>
               ))}
-
-              {/* Load More Trigger (Simple Pagination for now) */}
-              <div className="p-4 flex justify-center border-t border-slate-50 bg-slate-50/30">
-                <div className="flex items-center gap-4 text-xs font-medium text-slate-500">
-                  <button
-                    disabled={page === 0}
-                    onClick={() => setPage((p) => Math.max(0, p - 1))}
-                    className="hover:text-blue-600 disabled:opacity-30 disabled:hover:text-slate-500 flex items-center gap-1"
-                  >
-                    <ChevronLeft size={14} /> Prev
-                  </button>
-                  <span>Page {page + 1}</span>
-                  <button
-                    disabled={logs.length < LIMIT}
-                    onClick={() => setPage((p) => p + 1)}
-                    className="hover:text-blue-600 disabled:opacity-30 disabled:hover:text-slate-500 flex items-center gap-1"
-                  >
-                    Next <ChevronRight size={14} />
-                  </button>
-                </div>
-              </div>
+              
+              {/* Loading Indicator for Infinite Scroll */}
+              {isLoading && logs.length > 0 && (
+                  <div className="p-4 flex justify-center items-center text-slate-400 gap-2 text-xs">
+                      <RefreshCw size={14} className="animate-spin" /> Loading more...
+                  </div>
+              )}
+              
+              {!hasMore && logs.length > 0 && (
+                  <div className="p-4 text-center text-[10px] text-slate-300 uppercase tracking-widest font-medium">
+                      No more logs
+                  </div>
+              )}
             </div>
           )}
         </div>
