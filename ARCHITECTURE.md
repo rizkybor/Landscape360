@@ -11,32 +11,33 @@ Menggambarkan bagaimana pengguna berinteraksi dengan aplikasi dan layanan ekster
 
 ```mermaid
 graph TD
-    %% Actors
-    TrackerUser[Pengguna (Tracker)]
-    MonitorUser[Monitor (Admin)]
 
-    %% Main System
-    subgraph ClientSide [Landscape 360 Web App]
-        UI[React UI]
-        Logic[Business Logic / Services]
-        Store[Zustand State]
-        LocalDB[(IndexedDB Cache)]
+    %% Actors
+    TrackerUser["Pengguna (Tracker)"]
+    MonitorUser["Monitor (Admin)"]
+
+    %% Client Side
+    subgraph ClientSide["Landscape 360 Web App"]
+        UI["React UI"]
+        Logic["Business Logic / Services"]
+        Store["Zustand State"]
+        LocalDB[("IndexedDB Cache")]
     end
 
-    %% External Services
-    subgraph Backend [Backend Services]
-        Supabase[Supabase (Auth, DB, Realtime)]
-        Mapbox[Mapbox API (Maps)]
+    %% Backend Services
+    subgraph Backend["Backend Services"]
+        Supabase["Supabase (Auth, DB, Realtime)"]
+        Mapbox["Mapbox API (Maps)"]
     end
 
     %% Relationships
     TrackerUser -->|Melacak Posisi| UI
     MonitorUser -->|Memantau User| UI
-    
+
     UI --> Logic
     Logic --> Store
     Logic --> LocalDB
-    
+
     Logic -->|WebSocket / HTTP| Supabase
     UI -->|Fetch Tiles| Mapbox
 ```
