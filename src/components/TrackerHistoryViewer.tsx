@@ -47,6 +47,7 @@ export const TrackerHistoryViewer = () => {
   >([]);
   const [hasMore, setHasMore] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<string | null>(null);
   const LIMIT = 20;
 
   // Export PDF Function (Optimized - Fetches Full Data)
@@ -55,7 +56,7 @@ export const TrackerHistoryViewer = () => {
     try {
       // 1. Load Libraries Dynamically
       const { default: jsPDF } = await import("jspdf");
-      await import("jspdf-autotable");
+      const { default: autoTable } = await import("jspdf-autotable");
 
       // 2. Fetch ALL relevant data (up to 1000 records for PDF)
       let query = supabase
@@ -96,11 +97,19 @@ export const TrackerHistoryViewer = () => {
           ? `Tracking Log - User: ${selectedUserFilter}`
           : "Tracking Logs Report";
 
-      doc.text(title, 14, 15);
-      doc.setFontSize(10);
-      doc.text(`Generated: ${new Date().toLocaleString("id-ID")}`, 14, 22);
-      doc.text(`Total Records: ${logData.length}`, 14, 27);
+      // --- Header & Layout ---
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.text(title, 14, 20); // Main Title
 
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.text(`Generated: ${new Date().toLocaleString("id-ID")}`, 14, 28);
+      doc.text(`Total Records: ${logData.length}`, 14, 33);
+
+      // Add "Landscape 360" Watermark (Diagonal)
+      // This needs to be added to every page, so we use the didDrawPage hook
+      
       const tableColumn = [
         "Time",
         "Date",
@@ -123,27 +132,78 @@ export const TrackerHistoryViewer = () => {
           dateObj.toLocaleTimeString("id-ID"),
           dateObj.toLocaleDateString("id-ID"),
           userName,
-          log.lat.toFixed(6),
-          log.lng.toFixed(6),
+          toDMS(log.lat, true),  // Converted to DMS
+          toDMS(log.lng, false), // Converted to DMS
           log.elevation?.toFixed(0) || "0",
           (log.speed?.toFixed(1) || "0") + " km/h",
         ];
       });
 
-      // Fix for autoTable typing issue: Use type assertion or default export check
-      // Some versions of jspdf-autotable attach to the prototype differently
-      // The safest way with dynamic import is often to use the applyPlugin manually if needed, 
-      // but usually just importing it is enough for side-effects.
-      // However, if doc.autoTable is missing, we might need to cast doc as any.
-      
-      (doc as any).autoTable({
+      // Explicitly register plugin if needed or call directly if it's a default export function
+      // In newer jspdf-autotable versions with dynamic import, we might need to call it as a function
+      const autoTableOptions = {
         head: [tableColumn],
         body: tableRows,
-        startY: 32,
-        styles: { fontSize: 8 },
-        headStyles: { fillColor: [41, 128, 185] },
+        startY: 40,
+        styles: { 
+            fontSize: 9, 
+            font: "helvetica",
+            cellPadding: 3,
+            textColor: [50, 50, 50] 
+        },
+        headStyles: { 
+            fillColor: [31, 111, 178], // #1F6FB2 (Requested Blue)
+            textColor: [255, 255, 255],
+            fontStyle: 'bold'
+        },
+        alternateRowStyles: {
+            fillColor: [245, 245, 245] // Zebra striping
+        },
+        columnStyles: {
+            0: { cellWidth: 20 }, // Time
+            1: { cellWidth: 20 }, // Date
+            2: { cellWidth: 25 }, // User
+            // Lat/Lng need more space for DMS
+            3: { cellWidth: 35 }, 
+            4: { cellWidth: 35 },
+            5: { halign: 'right' }, // Elev right-align
+            6: { halign: 'right' }  // Speed right-align
+        },
         theme: "grid",
-      });
+        
+        // --- Watermark & Footer Hook ---
+        didDrawPage: (_data: any) => {
+            const pageSize = doc.internal.pageSize;
+            const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
+            const pageWidth = pageSize.width ? pageSize.width : pageSize.getWidth();
+
+            // Watermark (Top Right, Small, Thin)
+            doc.saveGraphicsState();
+            doc.setTextColor(180, 180, 180); // Subtle Gray
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "normal"); 
+            doc.text("Landscape 360", pageWidth - 14, 12, {
+                align: 'right',
+            });
+            doc.restoreGraphicsState();
+
+            // Footer
+            const pageCount = (doc.internal as any).getNumberOfPages();
+            const str = "Page " + pageCount;
+            doc.setFontSize(8);
+            doc.setTextColor(100, 100, 100);
+            doc.text(str, pageWidth - 20, pageHeight - 10, { align: 'right' });
+            doc.text("Landscape 360 Tracking System", 14, pageHeight - 10);
+        }
+      };
+
+      if (typeof autoTable === 'function') {
+          // @ts-ignore
+          autoTable(doc, autoTableOptions);
+      } else {
+          // Fallback to prototype method
+          (doc as any).autoTable(autoTableOptions);
+      }
 
       doc.save(`tracking_logs_${new Date().toISOString().slice(0, 10)}.pdf`);
     } catch (err) {
@@ -158,8 +218,8 @@ export const TrackerHistoryViewer = () => {
   // Delete Log Function (Monitor Only)
   const deleteLog = async (logId: string) => {
     if (userRole !== "monitor360") return;
-    if (!confirm("Are you sure you want to delete this log entry?")) return;
-
+    // Removed default confirm alert
+    
     try {
       const { error } = await supabase
         .from("tracker_logs")
@@ -170,6 +230,7 @@ export const TrackerHistoryViewer = () => {
 
       // Remove from local state immediately
       setLogs((prev) => prev.filter((l) => l.id !== logId));
+      setDeleteConfirmation(null); // Close modal on success
     } catch (err) {
       console.error("Failed to delete log:", err);
       alert("Failed to delete log. Ensure you have permission.");
@@ -305,7 +366,7 @@ export const TrackerHistoryViewer = () => {
       <div className="absolute top-[270px] right-4.5 flex flex-col items-center gap-2 z-[20]">
         <button
           onClick={() => setIsOpen(true)}
-          className="w-[40px] h-[40px] bg-white rounded-xl shadow-[0_0_0_2px_rgba(0,0,0,0.1)] flex items-center justify-center text-slate-700 hover:bg-slate-50 active:bg-slate-100 transition-colors border border-slate-300/50"
+          className="cursor-pointer w-[40px] h-[40px] bg-white rounded-xl shadow-[0_0_0_2px_rgba(0,0,0,0.1)] flex items-center justify-center text-slate-700 hover:bg-slate-50 active:bg-slate-100 transition-colors border border-slate-300/50"
           title="View Tracking History"
         >
           <History size={16} strokeWidth={2.5} />
@@ -352,7 +413,7 @@ export const TrackerHistoryViewer = () => {
                   setHasMore(true);
                   fetchLogs(false);
               }}
-              className="p-1.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-blue-600 transition-colors"
+              className="cursor-pointer p-1.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-blue-600 transition-colors"
               title="Refresh Data"
             >
               <RefreshCw
@@ -366,7 +427,7 @@ export const TrackerHistoryViewer = () => {
                 <button
                     onClick={exportPDF}
                     disabled={isExporting}
-                    className="p-1.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-red-600 transition-colors disabled:opacity-50"
+                    className="cursor-pointer p-1.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-red-600 transition-colors disabled:opacity-50"
                     title="Export to PDF"
                 >
                     <FileDown size={16} className={isExporting ? "animate-bounce" : ""} />
@@ -382,7 +443,7 @@ export const TrackerHistoryViewer = () => {
                     setSelectedUserFilter(e.target.value);
                     setPage(0);
                   }}
-                  className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none bg-slate-50 text-slate-600 max-w-[120px]"
+                  className="cursor-pointer text-xs border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none bg-slate-50 text-slate-600 max-w-[120px]"
                 >
                   <option value="all">All Users</option>
                   {availableUsers.map((u) => (
@@ -398,7 +459,7 @@ export const TrackerHistoryViewer = () => {
 
             <button
               onClick={() => setIsOpen(false)}
-              className="p-1.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
+              className="cursor-pointer p-1.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
             >
               <X size={20} />
             </button>
@@ -506,8 +567,8 @@ export const TrackerHistoryViewer = () => {
                     {/* Delete Action (Monitor Only) */}
                     {userRole === "monitor360" && (
                       <button
-                        onClick={() => deleteLog(log.id)}
-                        className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors ml-1"
+                        onClick={() => setDeleteConfirmation(log.id)}
+                        className="cursor-pointer p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors ml-1"
                         title="Delete Log"
                       >
                         <Trash2 size={14} />
@@ -533,6 +594,44 @@ export const TrackerHistoryViewer = () => {
           )}
         </div>
       </div>
+      {/* Custom Delete Confirmation Modal */}
+      {deleteConfirmation && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="bg-slate-800 rounded-xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-700">
+                {/* Header */}
+                <div className="px-5 py-4 border-b border-slate-700/50 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center shrink-0">
+                         <Trash2 size={16} className="text-red-500" />
+                    </div>
+                    <div>
+                        <h3 className="text-white font-semibold text-sm">Delete Log Entry</h3>
+                        <p className="text-slate-400 text-xs mt-0.5">This action cannot be undone.</p>
+                    </div>
+                </div>
+                
+                {/* Content */}
+                <div className="px-5 py-4 text-slate-300 text-sm leading-relaxed">
+                    Are you sure you want to delete this tracking history record permanently?
+                </div>
+
+                {/* Footer Actions */}
+                <div className="px-5 py-4 bg-slate-900/50 flex items-center justify-end gap-3">
+                    <button 
+                        onClick={() => setDeleteConfirmation(null)}
+                        className="cursor-pointer px-4 py-2 rounded-lg text-slate-400 text-xs font-medium hover:text-white hover:bg-slate-700 transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button 
+                        onClick={() => deleteLog(deleteConfirmation)}
+                        className="cursor-pointer px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-bold shadow-lg shadow-red-500/20 transition-all transform active:scale-95"
+                    >
+                        Yes, Delete it
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
     </>
   );
 };
