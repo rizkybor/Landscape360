@@ -5,7 +5,6 @@ import { AuthControl } from './AuthControl';
 import { useSurveyStore } from '../store/useSurveyStore';
 import { useMapStore } from '../store/useMapStore';
 import { useOfflineStore } from '../store/useOfflineStore';
-import { supabase } from '../lib/supabaseClient';
 
 // Mocks
 vi.mock('../store/useSurveyStore');
