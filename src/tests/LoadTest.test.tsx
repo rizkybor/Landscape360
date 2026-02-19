@@ -15,12 +15,11 @@ describe('Load Test: 200+ Simultaneous Users', () => {
           user_id: `user-${i}`,
           lat: -6.200000 + (Math.random() * 0.1),
           lng: 106.816666 + (Math.random() * 0.1),
-          timestamp: Date.now(),
-          altitude: 100,
+          timestamp: new Date().toISOString(),
+          alt: 100, // Corrected from altitude
           speed: 10,
-          heading: 0,
           battery: 100,
-          accuracy: 5
+          status: 'active' // Added required field
         });
       }
     });
@@ -44,7 +43,9 @@ describe('Load Test: 200+ Simultaneous Users', () => {
                 user_id: `user-${i}`,
                 lat: 0,
                 lng: 0,
-                timestamp: Date.now()
+                timestamp: new Date().toISOString(),
+                battery: 100, // Added required
+                status: 'active' // Added required
             });
         }
     });
@@ -59,7 +60,9 @@ describe('Load Test: 200+ Simultaneous Users', () => {
                 user_id: `user-${i}`,
                 lat: 1,
                 lng: 1,
-                timestamp: Date.now() + 1000
+                timestamp: new Date(Date.now() + 1000).toISOString(),
+                battery: 99, // Added required
+                status: 'active' // Added required
             });
         }
     });

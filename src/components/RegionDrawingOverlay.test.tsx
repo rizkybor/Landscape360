@@ -5,7 +5,6 @@ import { RegionDrawingOverlay } from './RegionDrawingOverlay';
 import { useMapStore } from '../store/useMapStore';
 import { useOfflineStore } from '../store/useOfflineStore';
 import { useSurveyStore } from '../store/useSurveyStore';
-import { supabase } from '../lib/supabaseClient';
 import * as tileUtils from '../utils/tileUtils'; // Import as namespace to spy on it
 
 // Mocks
