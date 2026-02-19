@@ -130,6 +130,12 @@ export const TrackerHistoryViewer = () => {
         ];
       });
 
+      // Fix for autoTable typing issue: Use type assertion or default export check
+      // Some versions of jspdf-autotable attach to the prototype differently
+      // The safest way with dynamic import is often to use the applyPlugin manually if needed, 
+      // but usually just importing it is enough for side-effects.
+      // However, if doc.autoTable is missing, we might need to cast doc as any.
+      
       (doc as any).autoTable({
         head: [tableColumn],
         body: tableRows,
@@ -142,7 +148,8 @@ export const TrackerHistoryViewer = () => {
       doc.save(`tracking_logs_${new Date().toISOString().slice(0, 10)}.pdf`);
     } catch (err) {
       console.error("Export failed:", err);
-      alert("Failed to export PDF. Please try again.");
+      // Detailed error for debugging
+      alert(`Failed to export PDF: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setIsExporting(false);
     }
