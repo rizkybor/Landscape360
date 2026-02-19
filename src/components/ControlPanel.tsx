@@ -21,6 +21,7 @@ import {
   CloudSun,
   Navigation,
   Lock,
+  Binoculars,
 } from "lucide-react";
 import geoportalLogo from "../assets/geoportal360.png";
 import streetsView from "../assets/Street-View.png";
@@ -353,7 +354,11 @@ export const ControlPanel = () => {
                   onClick={toggleLiveTracking}
                   className={`cursor-pointer w-full flex items-center justify-center gap-2 py-3 md:py-2 text-xs font-bold rounded transition-colors ${isLiveTrackingEnabled ? "bg-green-600 text-white shadow-lg shadow-green-500/30 animate-pulse" : "bg-white/20 hover:bg-white/30 text-green-200 border border-green-500/30"}`}
                 >
-                  <Navigation size={14} className={isLiveTrackingEnabled ? "animate-spin" : ""} />
+                  {userRole === 'monitor360' && subscriptionStatus === 'Enterprise' ? (
+                    <Binoculars size={14} />
+                  ) : (
+                    <Navigation size={14} className={isLiveTrackingEnabled ? "animate-spin" : ""} />
+                  )}
                   {isLiveTrackingEnabled 
                     ? (userRole === 'monitor360' && subscriptionStatus === 'Enterprise' ? "Stop GPS Monitoring" : "Stop GPS Tracking") 
                     : (userRole === 'monitor360' && subscriptionStatus === 'Enterprise' ? "Start GPS Monitoring" : "Start GPS Tracking")
