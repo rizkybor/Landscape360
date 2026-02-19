@@ -8,6 +8,7 @@ import type { TrackerPacket } from '../types/tracker';
 import { Battery, Signal, WifiOff, MapPin, Mountain } from 'lucide-react';
 import type { LineLayer } from 'mapbox-gl';
 import { X } from 'lucide-react';
+import { TrackerHistoryViewer } from './TrackerHistoryViewer';
 
 // --- HELPER: Generate Consistent Color from String ---
 const stringToColor = (str: string) => {
@@ -231,6 +232,9 @@ export const LiveTrackerLayer = ({ mapRef }: { mapRef?: React.RefObject<MapRef |
 
   return (
     <>
+      {/* History Viewer Button & Panel */}
+      <TrackerHistoryViewer />
+
       {/* 1. Trails Layer */}
       {trailsGeoJSON && (
         <Source id="tracker-trails-source" type="geojson" data={trailsGeoJSON as any}>
@@ -265,7 +269,6 @@ export const LiveTrackerLayer = ({ mapRef }: { mapRef?: React.RefObject<MapRef |
                 {/* Header with Close Button */}
                 <div className="flex items-start justify-between mb-3 border-b border-gray-100 pb-3">
                 <div className="flex items-center gap-2.5 sm:gap-3">
-                    {/* Identity Color Indicator */}
                     <div 
                         className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white text-base sm:text-lg font-bold shadow-md ring-2 ring-white shrink-0" 
                         style={{ backgroundColor: stringToColor(selectedTracker.latestPacket.user_id) }}
