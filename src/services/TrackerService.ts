@@ -269,13 +269,21 @@ export const useTrackerService = () => {
           latestPacketRef.current = myPacket;
 
           // --- LOGGING TO DATABASE ---
-          // Save every 30 seconds to avoid flooding database
-          // Allow higher accuracy threshold (e.g. 1000m) for testing if GPS is weak
+          // Save every 10 seconds to avoid flooding database, BUT only if moved > 5 meters
           // IMPORTANT: Check if user exists
           const isAccuracyGood = position.coords.accuracy < 1000;
-          const isTimetoLog = (Date.now() - lastDbLogRef.current > 10000); // 10s for testing
+          const isTimeThresholdMet = (Date.now() - lastDbLogRef.current > 10000); // 10s for testing
+          
+          // Distance Check Optimization (Lightweight)
+          // Haversine formula approximation or simple Euclidean for short distances
+          // 1 degree lat approx 111km. 0.00001 deg approx 1.1m.
+          // 5 meters approx 0.00005 deg difference.
+          const lastLogPos = (window as any)._lastLogPos || { lat: 0, lng: 0 };
+          const distLat = Math.abs(latitude - lastLogPos.lat);
+          const distLng = Math.abs(longitude - lastLogPos.lng);
+          const hasMoved = (distLat > 0.00005 || distLng > 0.00005); // Approx 5-6 meters
 
-          if (user && isAccuracyGood && isTimetoLog) {
+          if (user && isAccuracyGood && isTimeThresholdMet && hasMoved) {
              console.log("Attempting to log GPS to DB...", { lat: latitude, lng: longitude }); 
              
              supabase.from('tracker_logs').insert({
@@ -291,10 +299,11 @@ export const useTrackerService = () => {
                     console.error("Failed to log GPS:", error);
                 } else {
                     console.log("GPS Logged to DB:", myPacket.timestamp);
+                    // Update last log position and time only on success
+                    (window as any)._lastLogPos = { lat: latitude, lng: longitude };
+                    lastDbLogRef.current = Date.now();
                 }
              });
-             
-             lastDbLogRef.current = Date.now();
           }
 
           const now = Date.now();
