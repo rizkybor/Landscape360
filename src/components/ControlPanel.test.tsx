@@ -1,3 +1,4 @@
+
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ControlPanel } from './ControlPanel';
@@ -11,6 +12,16 @@ vi.mock('../store/useMapStore');
 vi.mock('../store/useSurveyStore');
 vi.mock('../store/useTrackerStore');
 vi.mock('./AuthControl', () => ({ AuthControl: () => <div data-testid="auth-control">Auth</div> }));
+
+// Mock Lucide Icons for easier testing
+vi.mock('lucide-react', async () => {
+  const actual = await vi.importActual('lucide-react');
+  return {
+    ...actual,
+    Navigation: (props: any) => <div data-testid="icon-navigation" {...props} />,
+    Binoculars: (props: any) => <div data-testid="icon-binoculars" {...props} />,
+  };
+});
 
 describe('ControlPanel', () => {
   let mockSetMapStyle: any;
@@ -39,8 +50,8 @@ describe('ControlPanel', () => {
       setShowSearch: vi.fn(),
       showWeather: false,
       setShowWeather: vi.fn(),
-      setPitch: vi.fn(), // Added
-      setBearing: vi.fn(), // Added
+      setPitch: vi.fn(),
+      setBearing: vi.fn(),
       pitch: 60,
       bearing: 0,
       mouseControlMode: 'map',
@@ -53,6 +64,7 @@ describe('ControlPanel', () => {
       setShowGridDMS: vi.fn(),
     });
 
+    // Default mock: Enterprise Monitor (should show Binoculars)
     (useSurveyStore as any).mockReturnValue({
       isPlotMode: false,
       togglePlotMode: vi.fn(),
@@ -66,7 +78,8 @@ describe('ControlPanel', () => {
       toggleLiveTracking: mockToggleLiveTracking,
       isSimulationEnabled: false,
       isLocalBroadcastEnabled: false,
-      connectionStatus: 'disconnected'
+      connectionStatus: 'disconnected',
+      trackers: {}
     });
   });
 
@@ -97,12 +110,49 @@ describe('ControlPanel', () => {
     expect(mockSetActiveView).toHaveBeenCalledWith('2D');
   });
 
-  it('should show GPS Monitoring button for Enterprise Monitor', () => {
+  it('should show "Start GPS Monitoring" and Binoculars icon for Enterprise Monitor', () => {
     renderComponent();
     expect(screen.getByText('Start GPS Monitoring')).toBeInTheDocument();
+    expect(screen.getByTestId('icon-binoculars')).toBeInTheDocument();
+    expect(screen.queryByTestId('icon-navigation')).not.toBeInTheDocument();
   });
 
-  it('should toggle GPS Tracking', () => {
+  it('should show "Start GPS Tracking" and Navigation icon for Pro User (Not Monitor)', () => {
+    (useSurveyStore as any).mockReturnValue({
+      isPlotMode: false,
+      togglePlotMode: vi.fn(),
+      user: { id: 'user2' },
+      subscriptionStatus: 'Pro',
+      userRole: 'pengguna360'
+    });
+
+    renderComponent();
+    expect(screen.getByText('Start GPS Tracking')).toBeInTheDocument();
+    expect(screen.getByTestId('icon-navigation')).toBeInTheDocument();
+    expect(screen.queryByTestId('icon-binoculars')).not.toBeInTheDocument();
+  });
+
+  it('should show "Start GPS Monitoring" but Navigation icon if Monitor is NOT Enterprise (Logic check)', () => {
+    // According to the code: userRole === 'monitor360' && subscriptionStatus === 'Enterprise' ? Binoculars : Navigation
+    // So a Monitor with 'Pro' plan should see Navigation icon and "Start GPS Tracking" text?
+    // Let's check code logic again:
+    // Text: (userRole === 'monitor360' && subscriptionStatus === 'Enterprise' ? "Start GPS Monitoring" : "Start GPS Tracking")
+    // Icon: same condition.
+    
+    (useSurveyStore as any).mockReturnValue({
+      isPlotMode: false,
+      togglePlotMode: vi.fn(),
+      user: { id: 'user3' },
+      subscriptionStatus: 'Pro',
+      userRole: 'monitor360'
+    });
+
+    renderComponent();
+    expect(screen.getByText('Start GPS Tracking')).toBeInTheDocument(); // Fallback text
+    expect(screen.getByTestId('icon-navigation')).toBeInTheDocument(); // Fallback icon
+  });
+
+  it('should toggle GPS Tracking on click', () => {
     renderComponent();
     fireEvent.click(screen.getByText('Start GPS Monitoring'));
     expect(mockToggleLiveTracking).toHaveBeenCalled();
