@@ -109,6 +109,51 @@ export const useTrackerService = () => {
   const latestPacketRef = useRef<TrackerPacket | null>(null);
   const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // --- SMART RECONNECT: OFFLINE BUFFER HANDLING ---
+  const flushBuffer = async () => {
+      if (!navigator.onLine) return;
+      
+      const bufferStr = localStorage.getItem('TRACKER_OFFLINE_BUFFER');
+      if (!bufferStr) return;
+
+      try {
+        const buffer = JSON.parse(bufferStr);
+        if (!Array.isArray(buffer) || buffer.length === 0) {
+            localStorage.removeItem('TRACKER_OFFLINE_BUFFER');
+            return;
+        }
+
+        console.log(`Smart Reconnect: Flushing ${buffer.length} buffered logs...`);
+        
+        // Insert in batches if needed, but Supabase handles small batches fine
+        const { error } = await supabase.from('tracker_logs').insert(buffer);
+        
+        if (!error) {
+          console.log("Offline buffer flushed successfully.");
+          localStorage.removeItem('TRACKER_OFFLINE_BUFFER');
+        } else {
+          console.error("Failed to flush offline buffer:", error);
+        }
+      } catch (e) {
+        console.error("Error processing offline buffer:", e);
+      }
+  };
+
+  // Listen for online status to trigger flush
+  useEffect(() => {
+    const handleOnline = () => {
+        console.log("Network Online: Triggering buffer flush...");
+        flushBuffer();
+    };
+
+    window.addEventListener('online', handleOnline);
+    
+    // Initial check on mount
+    if (navigator.onLine) flushBuffer();
+
+    return () => window.removeEventListener('online', handleOnline);
+  }, []);
+
   useEffect(() => {
 
     /* ==============================
@@ -284,9 +329,7 @@ export const useTrackerService = () => {
           const hasMoved = (distLat > 0.0009 || distLng > 0.0009); // Approx 100 meters
 
           if (user && isAccuracyGood && isTimeThresholdMet && hasMoved) {
-             console.log("Attempting to log GPS to DB (Moved > 100m)...", { lat: latitude, lng: longitude }); 
-             
-             supabase.from('tracker_logs').insert({
+             const logData = {
                 user_id: user.id,
                 lat: latitude,
                 lng: longitude,
@@ -294,14 +337,41 @@ export const useTrackerService = () => {
                 speed: speed,
                 battery: 100, 
                 timestamp: myPacket.timestamp
-             }).then(({ error }) => {
+             };
+
+             // 1. If Offline, Buffer Immediately
+             if (!navigator.onLine) {
+                 console.log("Device Offline: Buffering GPS log locally...");
+                 const buffer = JSON.parse(localStorage.getItem('TRACKER_OFFLINE_BUFFER') || '[]');
+                 buffer.push(logData);
+                 // Limit buffer size to prevent storage issues (e.g. 1000 points)
+                 if (buffer.length > 1000) buffer.shift(); 
+                 localStorage.setItem('TRACKER_OFFLINE_BUFFER', JSON.stringify(buffer));
+                 
+                 // Update local refs to prevent duplicate buffering of same point
+                 (window as any)._lastLogPos = { lat: latitude, lng: longitude };
+                 lastDbLogRef.current = Date.now();
+                 return;
+             }
+
+             console.log("Attempting to log GPS to DB (Moved > 100m)...", { lat: latitude, lng: longitude }); 
+             
+             supabase.from('tracker_logs').insert(logData).then(({ error }) => {
                 if (error) {
-                    console.error("Failed to log GPS:", error);
+                    console.error("Failed to log GPS to DB, buffering locally:", error);
+                    // 2. Buffer on API Error
+                    const buffer = JSON.parse(localStorage.getItem('TRACKER_OFFLINE_BUFFER') || '[]');
+                    buffer.push(logData);
+                    if (buffer.length > 1000) buffer.shift();
+                    localStorage.setItem('TRACKER_OFFLINE_BUFFER', JSON.stringify(buffer));
                 } else {
                     console.log("GPS Logged to DB:", myPacket.timestamp);
                     // Update last log position and time only on success
                     (window as any)._lastLogPos = { lat: latitude, lng: longitude };
                     lastDbLogRef.current = Date.now();
+
+                    // 3. Piggyback Flush: If success, check if we have other logs to flush
+                    flushBuffer();
                 }
              });
           }
