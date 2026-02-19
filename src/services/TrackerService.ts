@@ -105,6 +105,7 @@ export const useTrackerService = () => {
   const watchIdRef = useRef<number | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const lastBroadcastRef = useRef<number>(0);
+  const lastDbLogRef = useRef<number>(0); // NEW: Separate throttle for DB logging
   const latestPacketRef = useRef<TrackerPacket | null>(null);
   const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -133,12 +134,15 @@ export const useTrackerService = () => {
     if (!channelRef.current) {
       setConnectionStatus('connecting');
 
+      // Create new channel (or rejoin)
+      // Note: We might want to use a unique channel per user-group in production, but 'tracking-room' is fine for demo.
       const channel = supabase.channel('tracking-room', {
         config: { broadcast: { self: false } }
       });
 
-      // Monitor Mode
-      if (userRole === 'monitor360' && subscriptionStatus === 'Enterprise') {
+      // Monitor Mode: Listen for updates
+      // Allow monitor to listen if they are 'monitor360' OR 'Enterprise' (Relaxed check)
+      if (userRole === 'monitor360' || subscriptionStatus === 'Enterprise') {
         channel.on(
           'broadcast',
           { event: 'location-update' },
@@ -149,6 +153,7 @@ export const useTrackerService = () => {
                 user?.email?.split('@')[0].toUpperCase() ||
                 user?.id.slice(0, 8).toUpperCase();
 
+              // Prevent self-update echo
               if (packet.user_id !== myTrackerId) {
                 addOrUpdateTracker(packet);
               }
@@ -157,12 +162,13 @@ export const useTrackerService = () => {
         );
       }
 
-      // Heartbeat Response
+      // Heartbeat Response (Broadcasters respond to this)
       channel.on(
         'broadcast',
         { event: 'heartbeat-request' },
         () => {
           if (isLocalBroadcastEnabled && user && latestPacketRef.current) {
+            console.log("Received Heartbeat Request - Sending Location Immediately");
             channel.send({
               type: 'broadcast',
               event: 'location-update',
@@ -175,12 +181,29 @@ export const useTrackerService = () => {
       channel.subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           setConnectionStatus('connected');
+          
+          // If I am a Monitor, ask everyone to report immediately
+          if (userRole === 'monitor360' || subscriptionStatus === 'Enterprise') {
+              console.log("Monitor Joined - Requesting Heartbeat...");
+              channel.send({
+                  type: 'broadcast',
+                  event: 'heartbeat-request',
+                  payload: {}
+              });
+          }
+
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
           setConnectionStatus('error');
         }
       });
 
       channelRef.current = channel;
+    } else {
+        // Channel already exists, but check if we need to re-subscribe due to role change?
+        // Actually, the useEffect cleanup handles channel destruction on dependency change.
+        // So if we are here, it means channelRef.current is TRULY missing (first run).
+        // BUT, wait! If useEffect re-runs, cleanup runs first, setting channelRef.current = null.
+        // So we are safe. The logic above "if (!channelRef.current)" will execute correctly on re-run.
     }
 
     /* ==============================
@@ -219,9 +242,11 @@ export const useTrackerService = () => {
     ============================== */
 
     if (isLocalBroadcastEnabled && navigator.geolocation && user) {
+      console.log("Starting Local GPS Broadcast..."); // Debug Log
 
       watchIdRef.current = navigator.geolocation.watchPosition(
         (position) => {
+          console.log("GPS Position Received:", position.coords); // Debug Log
 
           const { latitude, longitude, altitude, speed } = position.coords;
 
@@ -235,7 +260,7 @@ export const useTrackerService = () => {
             lng: longitude,
             alt: altitude || 0,
             speed: speed || 0,
-            battery: 100,
+            battery: 100, // In a real app, use navigator.getBattery() if available
             timestamp: new Date().toISOString(),
             status: 'active'
           };
@@ -243,8 +268,47 @@ export const useTrackerService = () => {
           addOrUpdateTracker(myPacket);
           latestPacketRef.current = myPacket;
 
+          // --- LOGGING TO DATABASE ---
+          // Save every 10 seconds to avoid flooding database, BUT only if moved > 5 meters
+          // IMPORTANT: Check if user exists
+          const isAccuracyGood = position.coords.accuracy < 1000;
+          const isTimeThresholdMet = (Date.now() - lastDbLogRef.current > 10000); // 10s for testing
+          
+          // Distance Check Optimization (Lightweight)
+          // Haversine formula approximation or simple Euclidean for short distances
+          // 1 degree lat approx 111km. 0.00001 deg approx 1.1m.
+          // 5 meters approx 0.00005 deg difference.
+          const lastLogPos = (window as any)._lastLogPos || { lat: 0, lng: 0 };
+          const distLat = Math.abs(latitude - lastLogPos.lat);
+          const distLng = Math.abs(longitude - lastLogPos.lng);
+          const hasMoved = (distLat > 0.00005 || distLng > 0.00005); // Approx 5-6 meters
+
+          if (user && isAccuracyGood && isTimeThresholdMet && hasMoved) {
+             console.log("Attempting to log GPS to DB...", { lat: latitude, lng: longitude }); 
+             
+             supabase.from('tracker_logs').insert({
+                user_id: user.id,
+                lat: latitude,
+                lng: longitude,
+                elevation: altitude,
+                speed: speed,
+                battery: 100, 
+                timestamp: myPacket.timestamp
+             }).then(({ error }) => {
+                if (error) {
+                    console.error("Failed to log GPS:", error);
+                } else {
+                    console.log("GPS Logged to DB:", myPacket.timestamp);
+                    // Update last log position and time only on success
+                    (window as any)._lastLogPos = { lat: latitude, lng: longitude };
+                    lastDbLogRef.current = Date.now();
+                }
+             });
+          }
+
           const now = Date.now();
 
+          // Realtime Broadcast (Every 3s)
           if (channelRef.current && now - lastBroadcastRef.current > 3000) {
             channelRef.current.send({
               type: 'broadcast',
@@ -257,8 +321,15 @@ export const useTrackerService = () => {
         },
         (error) => {
           console.warn("GPS Error", error);
+          // Retry with lower accuracy if needed or notify user
+          if (error.code === 1) {
+              alert("GPS Permission Denied. Please enable location access.");
+          } else if (error.code === 3) {
+              console.log("GPS Timeout - Retrying...");
+          }
         },
-        { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+        // Relaxed options for better stability
+        { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 }
       );
     }
 

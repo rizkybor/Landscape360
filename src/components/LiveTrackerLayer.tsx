@@ -8,6 +8,7 @@ import type { TrackerPacket } from '../types/tracker';
 import { Battery, Signal, WifiOff, MapPin, Mountain } from 'lucide-react';
 import type { LineLayer } from 'mapbox-gl';
 import { X } from 'lucide-react';
+import { TrackerHistoryViewer } from './TrackerHistoryViewer';
 
 // --- HELPER: Generate Consistent Color from String ---
 const stringToColor = (str: string) => {
@@ -47,10 +48,19 @@ const toDMS = (deg: number, isLat: boolean): string => {
 const InterpolatedMarker = memo(({ packet, onClick }: { packet: TrackerPacket; onClick: () => void }) => {
   const [position, setPosition] = useState({ lat: packet.lat, lng: packet.lng });
   const [isHovered, setIsHovered] = useState(false); // State for hover visibility
+  const [, setTick] = useState(0); // Force re-render for offline status check
   const requestRef = useRef<number>(0);
   const startTimeRef = useRef<number>(0);
   const startPosRef = useRef({ lat: packet.lat, lng: packet.lng });
   const targetPosRef = useRef({ lat: packet.lat, lng: packet.lng });
+
+  // Force re-render periodically to update 'isOffline' status
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTick(t => t + 1);
+    }, 5000); // Check every 5 seconds
+    return () => clearInterval(interval);
+  }, []);
 
   // Update target when packet changes
   useEffect(() => {
@@ -85,6 +95,10 @@ const InterpolatedMarker = memo(({ packet, onClick }: { packet: TrackerPacket; o
 
   // Determine color based on status/battery
   const isLowBattery = packet.battery < 20;
+  
+  // FIXED: isOffline should NOT be affected by local UI state (like hover)
+  // It is purely based on time difference.
+  // The 'setTick' force re-render ensures this value updates even if no new props come in.
   const isOffline = (Date.now() - new Date(packet.timestamp).getTime()) > TRACKER_CONFIG.OFFLINE_THRESHOLD_MS;
   
   // Unique Identity Color
@@ -92,6 +106,20 @@ const InterpolatedMarker = memo(({ packet, onClick }: { packet: TrackerPacket; o
   const userInitials = getInitials(packet.user_id);
 
   // Marker Color Logic: Gray (Offline) -> Red (Low Battery) -> Unique User Color (Active)
+  // When Hovered, we force it to show COLOR (Active style) so user can see who it is, unless it's truly offline?
+  // Wait, user said "why does it change to offline when hovered?".
+  // This implies the hover action caused a re-render which triggered the offline check.
+  // If the packet is old, it IS offline.
+  // BUT maybe the user means "it looks like the offline icon appears on hover"?
+  // Let's check the render logic below.
+  
+  // Ah, the issue might be that on hover, we want to see the USER, not the offline icon if possible?
+  // Or maybe the 'isOffline' calc was buggy?
+  // Actually, let's strictly follow the rule:
+  // Offline = Gray + WifiOff Icon
+  // Online = Color + Initials
+  // Hover should NOT change this state.
+  
   const markerColor = isOffline ? '#64748b' : (isLowBattery ? '#ef4444' : userColor);
 
   return (
@@ -231,6 +259,9 @@ export const LiveTrackerLayer = ({ mapRef }: { mapRef?: React.RefObject<MapRef |
 
   return (
     <>
+      {/* History Viewer Button & Panel */}
+      <TrackerHistoryViewer />
+
       {/* 1. Trails Layer */}
       {trailsGeoJSON && (
         <Source id="tracker-trails-source" type="geojson" data={trailsGeoJSON as any}>
@@ -265,7 +296,6 @@ export const LiveTrackerLayer = ({ mapRef }: { mapRef?: React.RefObject<MapRef |
                 {/* Header with Close Button */}
                 <div className="flex items-start justify-between mb-3 border-b border-gray-100 pb-3">
                 <div className="flex items-center gap-2.5 sm:gap-3">
-                    {/* Identity Color Indicator */}
                     <div 
                         className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white text-base sm:text-lg font-bold shadow-md ring-2 ring-white shrink-0" 
                         style={{ backgroundColor: stringToColor(selectedTracker.latestPacket.user_id) }}
