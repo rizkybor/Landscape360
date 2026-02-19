@@ -269,7 +269,7 @@ export const useTrackerService = () => {
           latestPacketRef.current = myPacket;
 
           // --- LOGGING TO DATABASE ---
-          // Save every 10 seconds to avoid flooding database, BUT only if moved > 5 meters
+          // Save every 10 seconds to avoid flooding database, BUT only if moved > 100 meters
           // IMPORTANT: Check if user exists
           const isAccuracyGood = position.coords.accuracy < 1000;
           const isTimeThresholdMet = (Date.now() - lastDbLogRef.current > 10000); // 10s for testing
@@ -277,14 +277,14 @@ export const useTrackerService = () => {
           // Distance Check Optimization (Lightweight)
           // Haversine formula approximation or simple Euclidean for short distances
           // 1 degree lat approx 111km. 0.00001 deg approx 1.1m.
-          // 5 meters approx 0.00005 deg difference.
+          // 100 meters approx 0.0009 deg difference.
           const lastLogPos = (window as any)._lastLogPos || { lat: 0, lng: 0 };
           const distLat = Math.abs(latitude - lastLogPos.lat);
           const distLng = Math.abs(longitude - lastLogPos.lng);
-          const hasMoved = (distLat > 0.00005 || distLng > 0.00005); // Approx 5-6 meters
+          const hasMoved = (distLat > 0.0009 || distLng > 0.0009); // Approx 100 meters
 
           if (user && isAccuracyGood && isTimeThresholdMet && hasMoved) {
-             console.log("Attempting to log GPS to DB...", { lat: latitude, lng: longitude }); 
+             console.log("Attempting to log GPS to DB (Moved > 100m)...", { lat: latitude, lng: longitude }); 
              
              supabase.from('tracker_logs').insert({
                 user_id: user.id,
