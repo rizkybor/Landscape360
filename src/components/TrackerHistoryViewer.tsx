@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useSurveyStore } from '../store/useSurveyStore';
 import { X, History, RefreshCw, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
@@ -98,16 +98,17 @@ export const TrackerHistoryViewer = () => {
         }
     }, [isOpen, userRole]);
 
-    // Fetch Logs - Decoupled Approach
-    const fetchLogs = async () => {
+    // Fetch Logs - Decoupled Approach & Memoized
+    const fetchLogs = useCallback(async () => {
         if (!user) return;
         setIsLoading(true);
         
         try {
             // Step 1: Fetch logs ONLY (No join)
+            // Optimize: Select only needed fields to reduce payload
             let query = supabase
                 .from('tracker_logs')
-                .select('*')
+                .select('id, user_id, lat, lng, elevation, speed, timestamp')
                 .order('timestamp', { ascending: false })
                 .range(page * LIMIT, (page + 1) * LIMIT - 1);
 
@@ -127,7 +128,6 @@ export const TrackerHistoryViewer = () => {
             }
 
             // Step 2: Fetch profiles manually for the fetched logs
-            // This avoids issues if FK is missing or RLS on profiles behaves differently in joins
             const userIds = Array.from(new Set(logData.map(l => l.user_id)));
             const { data: profileData } = await supabase
                 .from('profiles')
@@ -149,23 +149,23 @@ export const TrackerHistoryViewer = () => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [user, userRole, page, selectedUserFilter, LIMIT]);
 
     useEffect(() => {
         if (isOpen) {
             fetchLogs();
         }
-    }, [isOpen, page, selectedUserFilter]);
+    }, [isOpen, fetchLogs]);
 
     if (!user) return null;
 
     return (
         <>
-            {/* Toggle Button - Repositioned to bottom-right vertical control style */}
-            <div className="absolute top-[280px] right-2 flex flex-col items-center gap-2 z-[20]">
+            {/* Toggle Button - Repositioned to group with Mapbox Controls (Top Right) */}
+            <div className="absolute top-[270px] right-4.5 flex flex-col items-center gap-2 z-[20]">
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="w-[30px] h-[30px] bg-white rounded-md shadow-md flex items-center justify-center text-slate-700 hover:bg-slate-50 active:bg-slate-100 transition-colors"
+                    className="w-[40px] h-[40px] bg-white rounded-xl shadow-[0_0_0_2px_rgba(0,0,0,0.1)] flex items-center justify-center text-slate-700 hover:bg-slate-50 active:bg-slate-100 transition-colors border border-slate-300/50"
                     title="View Tracking History"
                 >
                     <History size={16} strokeWidth={2.5} />
