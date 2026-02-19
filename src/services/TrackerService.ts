@@ -134,12 +134,15 @@ export const useTrackerService = () => {
     if (!channelRef.current) {
       setConnectionStatus('connecting');
 
+      // Create new channel (or rejoin)
+      // Note: We might want to use a unique channel per user-group in production, but 'tracking-room' is fine for demo.
       const channel = supabase.channel('tracking-room', {
         config: { broadcast: { self: false } }
       });
 
-      // Monitor Mode
-      if (userRole === 'monitor360' && subscriptionStatus === 'Enterprise') {
+      // Monitor Mode: Listen for updates
+      // Allow monitor to listen if they are 'monitor360' OR 'Enterprise' (Relaxed check)
+      if (userRole === 'monitor360' || subscriptionStatus === 'Enterprise') {
         channel.on(
           'broadcast',
           { event: 'location-update' },
@@ -150,6 +153,7 @@ export const useTrackerService = () => {
                 user?.email?.split('@')[0].toUpperCase() ||
                 user?.id.slice(0, 8).toUpperCase();
 
+              // Prevent self-update echo
               if (packet.user_id !== myTrackerId) {
                 addOrUpdateTracker(packet);
               }
@@ -158,12 +162,13 @@ export const useTrackerService = () => {
         );
       }
 
-      // Heartbeat Response
+      // Heartbeat Response (Broadcasters respond to this)
       channel.on(
         'broadcast',
         { event: 'heartbeat-request' },
         () => {
           if (isLocalBroadcastEnabled && user && latestPacketRef.current) {
+            console.log("Received Heartbeat Request - Sending Location Immediately");
             channel.send({
               type: 'broadcast',
               event: 'location-update',
@@ -176,12 +181,29 @@ export const useTrackerService = () => {
       channel.subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           setConnectionStatus('connected');
+          
+          // If I am a Monitor, ask everyone to report immediately
+          if (userRole === 'monitor360' || subscriptionStatus === 'Enterprise') {
+              console.log("Monitor Joined - Requesting Heartbeat...");
+              channel.send({
+                  type: 'broadcast',
+                  event: 'heartbeat-request',
+                  payload: {}
+              });
+          }
+
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
           setConnectionStatus('error');
         }
       });
 
       channelRef.current = channel;
+    } else {
+        // Channel already exists, but check if we need to re-subscribe due to role change?
+        // Actually, the useEffect cleanup handles channel destruction on dependency change.
+        // So if we are here, it means channelRef.current is TRULY missing (first run).
+        // BUT, wait! If useEffect re-runs, cleanup runs first, setting channelRef.current = null.
+        // So we are safe. The logic above "if (!channelRef.current)" will execute correctly on re-run.
     }
 
     /* ==============================
