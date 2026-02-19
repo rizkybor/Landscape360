@@ -17,6 +17,7 @@ import { SearchPanel } from "./SearchPanel";
 import { NavigationControls } from "./NavigationControls";
 import { UserLocationMarker } from "./UserLocationMarker";
 import { WeatherWidget } from "./WeatherWidget";
+import { ErrorBoundary } from "./ErrorBoundary";
 // import { MapSynchronizer } from "./MapSync"; // Removed to fix view behavior
 // Lazy Load LiveTrackerLayer
 const LiveTrackerLayer = React.lazy(() => import("./LiveTrackerLayer").then(module => ({ default: module.LiveTrackerLayer })));
@@ -647,9 +648,11 @@ const MapBoxContainerComponent = ({
 
         {/* NEW: Live GPS Tracker Layer (Lazy Loaded & Feature Flagged) */}
         {import.meta.env.VITE_ENABLE_GPS_TRACKER === 'true' && (
-          <Suspense fallback={null}>
-            <LiveTrackerLayer mapRef={mapRef} />
-          </Suspense>
+          <ErrorBoundary fallback={null}>
+            <Suspense fallback={null}>
+              <LiveTrackerLayer mapRef={mapRef} />
+            </Suspense>
+          </ErrorBoundary>
         )}
         
         {/* User Location Indicator */}

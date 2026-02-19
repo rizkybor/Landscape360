@@ -105,6 +105,7 @@ export const useTrackerService = () => {
   const watchIdRef = useRef<number | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const lastBroadcastRef = useRef<number>(0);
+  const lastDbLogRef = useRef<number>(0); // NEW: Separate throttle for DB logging
   const latestPacketRef = useRef<TrackerPacket | null>(null);
   const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -219,9 +220,11 @@ export const useTrackerService = () => {
     ============================== */
 
     if (isLocalBroadcastEnabled && navigator.geolocation && user) {
+      console.log("Starting Local GPS Broadcast..."); // Debug Log
 
       watchIdRef.current = navigator.geolocation.watchPosition(
         (position) => {
+          console.log("GPS Position Received:", position.coords); // Debug Log
 
           const { latitude, longitude, altitude, speed } = position.coords;
 
@@ -235,7 +238,7 @@ export const useTrackerService = () => {
             lng: longitude,
             alt: altitude || 0,
             speed: speed || 0,
-            battery: 100,
+            battery: 100, // In a real app, use navigator.getBattery() if available
             timestamp: new Date().toISOString(),
             status: 'active'
           };
@@ -243,8 +246,38 @@ export const useTrackerService = () => {
           addOrUpdateTracker(myPacket);
           latestPacketRef.current = myPacket;
 
+          // --- LOGGING TO DATABASE ---
+          // Save every 30 seconds to avoid flooding database
+          // Allow higher accuracy threshold (e.g. 1000m) for testing if GPS is weak
+          // IMPORTANT: Check if user exists
+          const isAccuracyGood = position.coords.accuracy < 1000;
+          const isTimetoLog = (Date.now() - lastDbLogRef.current > 10000); // 10s for testing
+
+          if (user && isAccuracyGood && isTimetoLog) {
+             console.log("Attempting to log GPS to DB...", { lat: latitude, lng: longitude }); 
+             
+             supabase.from('tracker_logs').insert({
+                user_id: user.id,
+                lat: latitude,
+                lng: longitude,
+                elevation: altitude,
+                speed: speed,
+                battery: 100, 
+                timestamp: myPacket.timestamp
+             }).then(({ error }) => {
+                if (error) {
+                    console.error("Failed to log GPS:", error);
+                } else {
+                    console.log("GPS Logged to DB:", myPacket.timestamp);
+                }
+             });
+             
+             lastDbLogRef.current = Date.now();
+          }
+
           const now = Date.now();
 
+          // Realtime Broadcast (Every 3s)
           if (channelRef.current && now - lastBroadcastRef.current > 3000) {
             channelRef.current.send({
               type: 'broadcast',
@@ -257,8 +290,15 @@ export const useTrackerService = () => {
         },
         (error) => {
           console.warn("GPS Error", error);
+          // Retry with lower accuracy if needed or notify user
+          if (error.code === 1) {
+              alert("GPS Permission Denied. Please enable location access.");
+          } else if (error.code === 3) {
+              console.log("GPS Timeout - Retrying...");
+          }
         },
-        { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+        // Relaxed options for better stability
+        { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 }
       );
     }
 
