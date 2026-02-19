@@ -46,58 +46,106 @@ export const TrackerHistoryViewer = () => {
     { id: string; name: string }[]
   >([]);
   const [hasMore, setHasMore] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
   const LIMIT = 20;
 
-  // Export PDF Function (Optimized)
-  const exportPDF = () => {
-    if (logs.length === 0) {
-      alert("No logs to export.");
-      return;
-    }
+  // Export PDF Function (Optimized - Fetches Full Data)
+  const exportPDF = async () => {
+    setIsExporting(true);
+    try {
+      // 1. Load Libraries Dynamically
+      const { default: jsPDF } = await import("jspdf");
+      await import("jspdf-autotable");
 
-    // Optimization: Dynamic import to reduce initial bundle size
-    import('jspdf').then(({ default: jsPDF }) => {
-        import('jspdf-autotable').then(() => {
-            const doc = new jsPDF();
-            const title = userRole === "monitor360" && selectedUserFilter !== "all" 
-                ? `Tracking Log - User: ${selectedUserFilter}`
-                : "Tracking Logs Report";
-        
-            doc.text(title, 14, 15);
-            doc.setFontSize(10);
-            doc.text(`Generated: ${new Date().toLocaleString("id-ID")}`, 14, 22);
-        
-            const tableColumn = ["Time", "Date", "User", "Latitude", "Longitude", "Elev (m)", "Speed (km/h)"];
-            const tableRows: any[] = [];
-        
-            logs.forEach((log) => {
-              const email = log.profiles?.email || log.user_id;
-              const userName = email.includes("@") ? email.split("@")[0] : email.slice(0, 8);
-              const dateObj = new Date(log.timestamp);
-              
-              const logData = [
-                dateObj.toLocaleTimeString("id-ID"),
-                dateObj.toLocaleDateString("id-ID"),
-                userName,
-                log.lat.toFixed(6),
-                log.lng.toFixed(6),
-                log.elevation?.toFixed(0) || "0",
-                log.speed?.toFixed(1) || "0"
-              ];
-              tableRows.push(logData);
-            });
-        
-            (doc as any).autoTable({
-              head: [tableColumn],
-              body: tableRows,
-              startY: 30,
-              styles: { fontSize: 8 }, // Optimize font size for table
-              headStyles: { fillColor: [41, 128, 185] } // Professional blue header
-            });
-        
-            doc.save(`tracking_logs_${new Date().toISOString().slice(0, 10)}.pdf`);
-        });
-    });
+      // 2. Fetch ALL relevant data (up to 1000 records for PDF)
+      let query = supabase
+        .from("tracker_logs")
+        .select("id, user_id, lat, lng, elevation, speed, timestamp")
+        .order("timestamp", { ascending: false })
+        .limit(1000); // Reasonable limit for export
+
+      if (userRole !== "monitor360") {
+        if (!user) return; // Guard clause
+        query = query.eq("user_id", user.id);
+      } else if (selectedUserFilter !== "all") {
+        query = query.eq("user_id", selectedUserFilter);
+      }
+
+      const { data: logData, error } = await query;
+      if (error) throw error;
+
+      if (!logData || logData.length === 0) {
+        alert("No logs to export.");
+        return;
+      }
+
+      // 3. Fetch Profiles
+      const userIds = Array.from(new Set(logData.map((l) => l.user_id)));
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id, email")
+        .in("id", userIds);
+
+      const profileMap = new Map();
+      profileData?.forEach((p: any) => profileMap.set(p.id, p));
+
+      // 4. Generate PDF
+      const doc = new jsPDF();
+      const title =
+        userRole === "monitor360" && selectedUserFilter !== "all"
+          ? `Tracking Log - User: ${selectedUserFilter}`
+          : "Tracking Logs Report";
+
+      doc.text(title, 14, 15);
+      doc.setFontSize(10);
+      doc.text(`Generated: ${new Date().toLocaleString("id-ID")}`, 14, 22);
+      doc.text(`Total Records: ${logData.length}`, 14, 27);
+
+      const tableColumn = [
+        "Time",
+        "Date",
+        "User",
+        "Latitude",
+        "Longitude",
+        "Elev (m)",
+        "Speed",
+      ];
+      
+      const tableRows = logData.map((log) => {
+        const profile = profileMap.get(log.user_id);
+        const email = profile?.email || log.user_id;
+        const userName = email.includes("@")
+          ? email.split("@")[0]
+          : email.slice(0, 8);
+        const dateObj = new Date(log.timestamp);
+
+        return [
+          dateObj.toLocaleTimeString("id-ID"),
+          dateObj.toLocaleDateString("id-ID"),
+          userName,
+          log.lat.toFixed(6),
+          log.lng.toFixed(6),
+          log.elevation?.toFixed(0) || "0",
+          (log.speed?.toFixed(1) || "0") + " km/h",
+        ];
+      });
+
+      (doc as any).autoTable({
+        head: [tableColumn],
+        body: tableRows,
+        startY: 32,
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [41, 128, 185] },
+        theme: "grid",
+      });
+
+      doc.save(`tracking_logs_${new Date().toISOString().slice(0, 10)}.pdf`);
+    } catch (err) {
+      console.error("Export failed:", err);
+      alert("Failed to export PDF. Please try again.");
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   // Delete Log Function (Monitor Only)
@@ -310,10 +358,11 @@ export const TrackerHistoryViewer = () => {
             {userRole === "monitor360" && (
                 <button
                     onClick={exportPDF}
-                    className="p-1.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-red-600 transition-colors"
+                    disabled={isExporting}
+                    className="p-1.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-red-600 transition-colors disabled:opacity-50"
                     title="Export to PDF"
                 >
-                    <FileDown size={16} />
+                    <FileDown size={16} className={isExporting ? "animate-bounce" : ""} />
                 </button>
             )}
 
