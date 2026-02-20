@@ -155,10 +155,16 @@ export const AuthControl = () => {
     } catch (err: any) {
       // Improve error message for common cases
       let errorMessage = err.message;
-      if (err.message.includes("Invalid login credentials") && isLoginView) {
-        errorMessage =
-          "Invalid credentials. Have you registered this account yet?";
+      
+      // Handle Rate Limiting (Brute Force Protection)
+      if (err.status === 429 || err.message.toLowerCase().includes("too many requests")) {
+        errorMessage = "Too many attempts. Please wait a few minutes before trying again.";
       }
+      // Handle Invalid Credentials
+      else if (err.message.includes("Invalid login credentials") && isLoginView) {
+        errorMessage = "Invalid credentials. Have you registered this account yet?";
+      }
+      
       setMessage({ type: "error", text: errorMessage });
     } finally {
       setLoading(false);
