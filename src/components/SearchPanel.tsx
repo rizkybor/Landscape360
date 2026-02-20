@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useMapStore } from '../store/useMapStore';
 import { Search, X, MapPin, Loader2 } from 'lucide-react';
+import customLocations from '../data/myDataLocation.json';
 
 // Using the same token as in MapBoxContainer
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
@@ -98,23 +99,43 @@ export const SearchPanel = () => {
       // - place/locality: Kota, Desa
       const typesParam = isCoordinate ? '' : '&types=country,region,district,place,locality,neighborhood,address,poi';
 
+      // Perform local search IMMEDIATELY
+      let customResults: SearchResult[] = [];
+      if (!isCoordinate) {
+          customResults = (customLocations as any[]).filter(loc => 
+            loc.place_name.toLowerCase().includes(searchText.toLowerCase())
+          ).map(loc => ({
+              ...loc,
+              place_type: [...loc.place_type, "custom"] // Ensure 'custom' tag is present
+          }));
+      }
+
+      // If we have custom results, show them immediately while loading remote
+      // Note: We might want to keep loading=true to indicate "more coming"
+      // But for now, let's just fetch remote and merge.
+
       const response = await fetch(
         `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${MAPBOX_TOKEN}&limit=10&language=id${countryParam}${typesParam}${proximityParam}`
       );
       const data = await response.json();
-      if (data.features) {
-        // Removed strict client-side filtering because it causes issues with aliases
-        // e.g. "Universitas Indonesia" might be returned as "UI" or "Kampus UI", which fails "every" word check.
-        // With country=id enforced, foreign results are already gone.
-        // We trust Mapbox relevance now.
+      
+      let mapboxResults: SearchResult[] = [];
 
-        setResults(data.features.map((f: { id: string; place_name: string; center: [number, number]; place_type: string[]; properties?: { category?: string } }) => ({
+      if (data.features && data.features.length > 0) {
+        mapboxResults = data.features.map((f: { id: string; place_name: string; center: [number, number]; place_type: string[]; properties?: { category?: string } }) => ({
           id: f.id,
           place_name: f.place_name,
           center: f.center,
           place_type: f.place_type
-        })));
+        }));
       }
+
+      // Merge: Custom Results FIRST, then Mapbox Results
+      // Optional: Remove duplicates if needed, but for now just concat
+      const finalResults = [...customResults, ...mapboxResults];
+
+      setResults(finalResults);
+
     } catch (error) {
       console.error("Search error:", error);
     } finally {
@@ -178,11 +199,12 @@ export const SearchPanel = () => {
                   onClick={() => handleSelect(res)}
                   className="w-full text-left p-3 hover:bg-white/10 transition-colors flex items-start gap-3 group"
                 >
-                  <MapPin size={16} className={`mt-0.5 shrink-0 ${res.place_type.includes('poi') ? 'text-green-400' : 'text-gray-500 group-hover:text-blue-400'}`} />
+                  <MapPin size={16} className={`mt-0.5 shrink-0 ${res.place_type.includes('custom') ? 'text-purple-400' : res.place_type.includes('poi') ? 'text-green-400' : 'text-gray-500 group-hover:text-blue-400'}`} />
                   <div>
                     <p className="text-xs font-bold text-gray-200 group-hover:text-white flex items-center gap-2">
                         {res.place_name.split(',')[0]}
-                        {res.place_type.includes('poi') && <span className="text-[9px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded uppercase">POI</span>}
+                        {res.place_type.includes('custom') && <span className="text-[9px] bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded uppercase font-bold border border-purple-500/30">Official</span>}
+                        {res.place_type.includes('poi') && !res.place_type.includes('custom') && <span className="text-[9px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded uppercase">POI</span>}
                         {res.place_type.includes('mountain') && <span className="text-[9px] bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded uppercase">Mountain</span>}
                     </p>
                     <p className="text-[10px] text-gray-500 line-clamp-1 break-all">

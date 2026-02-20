@@ -1,0 +1,53 @@
+[
+  {
+    "id": "place.1",
+    "type": "Feature",
+    "place_type": ["poi", "custom"],
+    "relevance": 1,
+    "properties": {
+      "mapbox_id": null,
+      "wikidata": null
+    },
+    "text": "Sekretariat Makopala UBL",
+    "place_name": "Sekretariat Makopala UBL",
+    "center": [106.74697, -6.23345],
+    "geometry": {
+      "type": "Point",
+      "coordinates": [106.74697, -6.23345]
+    }
+  },
+  {
+    "id": "place.2",
+    "type": "Feature",
+    "place_type": ["mountain", "custom"],
+    "relevance": 1,
+    "properties": {
+      "mapbox_id": null,
+      "wikidata": null
+    },
+    "text": "BC Gunung Gede Pangrango (TNGGP) via Putri",
+    "place_name": "BC Gunung Gede Pangrango (TNGGP) via Putri",
+    "center": [107.01037, -6.75567],
+    "geometry": {
+      "type": "Point",
+      "coordinates": [107.01037, -6.75567]
+    }
+  },
+  {
+    "id": "place.3",
+    "type": "Feature",
+    "place_type": ["mountain", "custom"],
+    "relevance": 1,
+    "properties": {
+      "mapbox_id": null,
+      "wikidata": null
+    },
+    "text": "BC Gunung Gede Pangrango (TNGGP) via Cibodas",
+    "place_name": "BC Gunung Gede Pangrango (TNGGP) via Cibodas",
+    "center": [107.00683, -6.73614],
+    "geometry": {
+      "type": "Point",
+      "coordinates": [107.00683, -6.73614]
+    }
+  }
+]
