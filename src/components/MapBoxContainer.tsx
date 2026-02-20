@@ -1,9 +1,12 @@
 import "mapbox-gl/dist/mapbox-gl.css";
-import React, { useRef, useState, useCallback, useEffect, Suspense } from "react";
-import Map, {
-  Source,
-  Layer,
-} from "react-map-gl/mapbox";
+import React, {
+  useRef,
+  useState,
+  useCallback,
+  useEffect,
+  Suspense,
+} from "react";
+import Map, { Source, Layer } from "react-map-gl/mapbox";
 import type { MapRef, MapMouseEvent } from "react-map-gl/mapbox";
 import { useMapStore } from "../store/useMapStore";
 import { ThreeScene } from "./ThreeScene";
@@ -18,9 +21,17 @@ import { NavigationControls } from "./NavigationControls";
 import { UserLocationMarker } from "./UserLocationMarker";
 import { WeatherWidget } from "./WeatherWidget";
 import { ErrorBoundary } from "./ErrorBoundary";
-// import { MapSynchronizer } from "./MapSync"; // Removed to fix view behavior
+import { Marker } from "react-map-gl/mapbox";
+import myDataLocation from "../data/myDataLocation.json";
+import houseIcon from "../assets/house.svg";
+import mountainIcon from "../assets/mountain.svg";
+
 // Lazy Load LiveTrackerLayer
-const LiveTrackerLayer = React.lazy(() => import("./LiveTrackerLayer").then(module => ({ default: module.LiveTrackerLayer })));
+const LiveTrackerLayer = React.lazy(() =>
+  import("./LiveTrackerLayer").then((module) => ({
+    default: module.LiveTrackerLayer,
+  })),
+);
 
 const MAPBOX_TOKEN =
   import.meta.env.VITE_MAPBOX_TOKEN || "YOUR_MAPBOX_TOKEN_HERE";
@@ -42,7 +53,7 @@ const MapBoxContainerComponent = ({
 }: MapBoxContainerProps) => {
   const internalRef = useRef<MapRef>(null);
   const mapRef = externalRef || internalRef;
-  
+
   const {
     center,
     zoom,
@@ -60,9 +71,8 @@ const MapBoxContainerComponent = ({
     setPitch,
     setBearing,
     setBounds,
-    // flyToDestination,
     triggerFlyTo,
-    flyToDestination, // Restore flyToDestination from store
+    flyToDestination,
   } = useMapStore();
 
   const mode = overrideViewMode || activeView;
@@ -72,12 +82,12 @@ const MapBoxContainerComponent = ({
     const handleOnline = () => setIsOffline(false);
     const handleOffline = () => setIsOffline(true);
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     };
   }, []);
 
@@ -96,10 +106,10 @@ const MapBoxContainerComponent = ({
         center: flyToDestination.center,
         zoom: flyToDestination.zoom,
         duration: flyToDestination.duration || 2000,
-        essential: true
+        essential: true,
       });
 
-      map.once('moveend', () => {
+      map.once("moveend", () => {
         isFlying.current = false;
       });
 
@@ -116,32 +126,32 @@ const MapBoxContainerComponent = ({
     // This prevents "snap back" or "zoom out" glitches when inertia ends
     const map = mapRef.current?.getMap();
     if (map) {
-        setCenter(map.getCenter().toArray() as [number, number]);
-        setZoom(map.getZoom());
-        
-        // Sync bearing in all modes
-        setBearing(map.getBearing());
-        
-        // Only sync pitch in 3D mode (keep 2D flat)
-        if (mode === '3D') {
-            setPitch(map.getPitch());
-        }
-        
-        // Update bounds
-        const bounds = map.getBounds();
-        if (bounds) {
-           setBounds({
-             north: bounds.getNorth(),
-             south: bounds.getSouth(),
-             east: bounds.getEast(),
-             west: bounds.getWest(),
-           });
-        }
+      setCenter(map.getCenter().toArray() as [number, number]);
+      setZoom(map.getZoom());
+
+      // Sync bearing in all modes
+      setBearing(map.getBearing());
+
+      // Only sync pitch in 3D mode (keep 2D flat)
+      if (mode === "3D") {
+        setPitch(map.getPitch());
+      }
+
+      // Update bounds
+      const bounds = map.getBounds();
+      if (bounds) {
+        setBounds({
+          north: bounds.getNorth(),
+          south: bounds.getSouth(),
+          east: bounds.getEast(),
+          west: bounds.getWest(),
+        });
+      }
     }
 
     // Add a small delay to ensure we don't snap back immediately after a fling
     setTimeout(() => {
-        isInteracting.current = false;
+      isInteracting.current = false;
     }, 100);
   }, [setCenter, setZoom, setPitch, setBearing, setBounds, mode, mapRef]);
 
@@ -160,37 +170,37 @@ const MapBoxContainerComponent = ({
     (evt: any) => {
       // If originalEvent is present, it's a user interaction
       if (evt.originalEvent) {
-          isInteracting.current = true;
+        isInteracting.current = true;
       }
 
       // Throttle store updates
       // On mobile 3D, we limit state sync to 30fps (approx 33ms) to save CPU for the map renderer
       const now = Date.now();
-      const throttleLimit = (isMobile && mode === '3D') ? 33 : 0; // 0 = sync every frame on desktop
-      
+      const throttleLimit = isMobile && mode === "3D" ? 33 : 0; // 0 = sync every frame on desktop
+
       if (now - lastStoreUpdate.current >= throttleLimit) {
-          lastStoreUpdate.current = now;
-          
-          if (evt.originalEvent) {
-            setCenter([evt.viewState.longitude, evt.viewState.latitude]);
-            setZoom(evt.viewState.zoom);
-            setBearing(evt.viewState.bearing); // Always sync bearing (rotation is allowed in 2D)
-            
-            // Only update pitch if in 3D mode
-            if (mode === '3D') {
-                setPitch(evt.viewState.pitch);
-            }
+        lastStoreUpdate.current = now;
+
+        if (evt.originalEvent) {
+          setCenter([evt.viewState.longitude, evt.viewState.latitude]);
+          setZoom(evt.viewState.zoom);
+          setBearing(evt.viewState.bearing); // Always sync bearing (rotation is allowed in 2D)
+
+          // Only update pitch if in 3D mode
+          if (mode === "3D") {
+            setPitch(evt.viewState.pitch);
           }
-          
-          const bounds = evt.target.getBounds();
-          if (bounds) {
-            setBounds({
-              north: bounds.getNorth(),
-              south: bounds.getSouth(),
-              east: bounds.getEast(),
-              west: bounds.getWest(),
-            });
-          }
+        }
+
+        const bounds = evt.target.getBounds();
+        if (bounds) {
+          setBounds({
+            north: bounds.getNorth(),
+            south: bounds.getSouth(),
+            east: bounds.getEast(),
+            west: bounds.getWest(),
+          });
+        }
       }
     },
     [setCenter, setZoom, setPitch, setBearing, setBounds, isMobile, mode],
@@ -208,12 +218,18 @@ const MapBoxContainerComponent = ({
 
     // Epsilon for float comparison
     const EPS = 0.001;
-    const centerDiff = Math.abs(c.lng - center[0]) + Math.abs(c.lat - center[1]);
+    const centerDiff =
+      Math.abs(c.lng - center[0]) + Math.abs(c.lat - center[1]);
     const zoomDiff = Math.abs(z - zoom);
     const pitchDiff = Math.abs(p - pitch);
     const bearingDiff = Math.abs(b - bearing);
 
-    if (centerDiff > EPS || zoomDiff > EPS || pitchDiff > EPS || bearingDiff > EPS) {
+    if (
+      centerDiff > EPS ||
+      zoomDiff > EPS ||
+      pitchDiff > EPS ||
+      bearingDiff > EPS
+    ) {
       if (!map.isStyleLoaded()) return;
 
       // CRITICAL: Don't interrupt programmatic animations or user interactions
@@ -222,8 +238,9 @@ const MapBoxContainerComponent = ({
 
       // Dynamic duration logic
       const isModeSwitch = Math.abs(pitchDiff) > 40;
-      const isSmallChange = centerDiff < 0.01 && zoomDiff < 0.1 && pitchDiff < 5 && bearingDiff < 5;
-      const duration = isModeSwitch ? 1500 : (isSmallChange ? 0 : 400);
+      const isSmallChange =
+        centerDiff < 0.01 && zoomDiff < 0.1 && pitchDiff < 5 && bearingDiff < 5;
+      const duration = isModeSwitch ? 1500 : isSmallChange ? 0 : 400;
 
       map.easeTo({
         center: center,
@@ -231,9 +248,12 @@ const MapBoxContainerComponent = ({
         pitch: mode === "3D" ? pitch : 0,
         bearing: bearing,
         duration: duration,
-        easing: (t) => isModeSwitch 
-          ? t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
-          : t * (2 - t)
+        easing: (t) =>
+          isModeSwitch
+            ? t < 0.5
+              ? 4 * t * t * t
+              : 1 - Math.pow(-2 * t + 2, 3) / 2
+            : t * (2 - t),
       });
     }
   }, [center, zoom, pitch, bearing, mode, mapRef]);
@@ -242,12 +262,12 @@ const MapBoxContainerComponent = ({
   useEffect(() => {
     const map = mapRef.current?.getMap();
     if (!map) return;
-    
-    if (map.getSource('mapbox-dem')) {
-        map.setTerrain({
-            source: 'mapbox-dem',
-            exaggeration: mode === '3D' ? elevationExaggeration : 0.0001
-        });
+
+    if (map.getSource("mapbox-dem")) {
+      map.setTerrain({
+        source: "mapbox-dem",
+        exaggeration: mode === "3D" ? elevationExaggeration : 0.0001,
+      });
     }
   }, [elevationExaggeration, mode, mapRef]);
 
@@ -256,32 +276,32 @@ const MapBoxContainerComponent = ({
       if (interactionMode === "draw_region") {
         // Check limit directly from store state to avoid subscribing component to regionPoints
         if (useMapStore.getState().regionPoints.length >= 4) {
-            return;
+          return;
         }
         const { lng, lat } = evt.lngLat;
         addRegionPoint([lng, lat]);
       }
     },
-    [interactionMode, addRegionPoint]
+    [interactionMode, addRegionPoint],
   );
-  
+
   // Auto-geolocate on mount (moved to onLoad for reliability)
   // useEffect(() => { ... }, []); removed
-  
+
   const [mapError, setMapError] = useState<string | null>(null);
 
   // Handle late-arriving initialLocation (e.g. from App.tsx geolocation)
   useEffect(() => {
     if (initialLocation) {
-        const map = mapRef.current?.getMap();
-        if (map && map.isStyleLoaded()) {
-            map.jumpTo({
-                center: initialLocation,
-                zoom: 16
-            });
-            setCenter(initialLocation);
-            setZoom(16);
-        }
+      const map = mapRef.current?.getMap();
+      if (map && map.isStyleLoaded()) {
+        map.jumpTo({
+          center: initialLocation,
+          zoom: 16,
+        });
+        setCenter(initialLocation);
+        setZoom(16);
+      }
     }
   }, [initialLocation, setCenter, setZoom]);
 
@@ -292,16 +312,17 @@ const MapBoxContainerComponent = ({
           const { longitude, latitude } = position.coords;
           // Use triggerFlyTo to avoid conflict with state synchronization
           triggerFlyTo({
-             center: [longitude, latitude],
-             zoom: 16,
-             duration: 2000
+            center: [longitude, latitude],
+            zoom: 16,
+            duration: 2000,
           });
         },
         (error) => {
           let errorMessage = "Unknown error";
-          switch(error.code) {
+          switch (error.code) {
             case error.PERMISSION_DENIED:
-              errorMessage = "Location permission denied. Please enable location services.";
+              errorMessage =
+                "Location permission denied. Please enable location services.";
               break;
             case error.POSITION_UNAVAILABLE:
               errorMessage = "Location information is unavailable.";
@@ -313,7 +334,7 @@ const MapBoxContainerComponent = ({
           console.warn("Geolocation error:", errorMessage, error);
           alert(errorMessage);
         },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
       );
     } else {
       alert("Geolocation is not supported by your browser.");
@@ -326,56 +347,56 @@ const MapBoxContainerComponent = ({
 
     const map = mapRef.current?.getMap();
     if (map) {
-        // Optimize Zoom & Gestures
-        
-        // 1. Desktop Optimizations
-        // Increase smoothness for panning and zooming
-        // Default scrollZoom rate is ~1/450. Adjusted for precision.
-        map.scrollZoom.setWheelZoomRate(1 / 450); 
-        
-        // Enhance inertia for smoother 'throw' effect when panning
-        map.dragPan.enable({
-           linearity: mode === '3D' ? 0.3 : 0.1, // Reduced linearity for more fluid "throw" feel (0.3 in 3D, 0.1 in 2D)
-           easing: (t) => t * (2 - t), // Standard easeOutQuad
-           deceleration: mode === '3D' ? 2500 : 3000, // Increased deceleration for longer glide (3000ms in 2D)
-        });
+      // Optimize Zoom & Gestures
 
-        // 2. Mobile Optimizations
-        if (isMobile) {
-             // Enable rotation but center pinch zoom for stability
-             map.touchZoomRotate.enable({ around: 'center' });
-             
-             // Disable pitch (tilt) via touch in 2D mode to prevent accidental tilting
-             // Only allow pitch in 3D mode
-             if (mode === "3D") {
-                 map.touchPitch.enable();
-             } else {
-                 map.touchPitch.disable();
-             }
-             
-             // Improve touch pan responsiveness
-             // Note: Mapbox GL JS defaults are usually good, but ensuring handlers are active
-             // Enhanced dragPan for mobile
-             map.dragPan.enable({
-                linearity: 0.1, // Very low linearity for responsive touch tracking
-                easing: (t) => t * (2 - t),
-                deceleration: 3000, // Long glide on mobile swipe
-             });
+      // 1. Desktop Optimizations
+      // Increase smoothness for panning and zooming
+      // Default scrollZoom rate is ~1/450. Adjusted for precision.
+      map.scrollZoom.setWheelZoomRate(1 / 450);
+
+      // Enhance inertia for smoother 'throw' effect when panning
+      map.dragPan.enable({
+        linearity: mode === "3D" ? 0.3 : 0.1, // Reduced linearity for more fluid "throw" feel (0.3 in 3D, 0.1 in 2D)
+        easing: (t) => t * (2 - t), // Standard easeOutQuad
+        deceleration: mode === "3D" ? 2500 : 3000, // Increased deceleration for longer glide (3000ms in 2D)
+      });
+
+      // 2. Mobile Optimizations
+      if (isMobile) {
+        // Enable rotation but center pinch zoom for stability
+        map.touchZoomRotate.enable({ around: "center" });
+
+        // Disable pitch (tilt) via touch in 2D mode to prevent accidental tilting
+        // Only allow pitch in 3D mode
+        if (mode === "3D") {
+          map.touchPitch.enable();
+        } else {
+          map.touchPitch.disable();
         }
+
+        // Improve touch pan responsiveness
+        // Note: Mapbox GL JS defaults are usually good, but ensuring handlers are active
+        // Enhanced dragPan for mobile
+        map.dragPan.enable({
+          linearity: 0.1, // Very low linearity for responsive touch tracking
+          easing: (t) => t * (2 - t),
+          deceleration: 3000, // Long glide on mobile swipe
+        });
+      }
     }
-    
+
     // If we already have an initial location from App.tsx, use it immediately
     if (initialLocation) {
-        const map = mapRef.current?.getMap();
-        if (map) {
-            map.jumpTo({
-                center: initialLocation,
-                zoom: 16
-            });
-        }
-        setCenter(initialLocation);
-        setZoom(16);
-        return;
+      const map = mapRef.current?.getMap();
+      if (map) {
+        map.jumpTo({
+          center: initialLocation,
+          zoom: 16,
+        });
+      }
+      setCenter(initialLocation);
+      setZoom(16);
+      return;
     }
 
     // Otherwise fallback to normal geolocation
@@ -383,24 +404,25 @@ const MapBoxContainerComponent = ({
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { longitude, latitude } = position.coords;
-          
+
           // Use jumpTo for instant transition
           const map = mapRef.current?.getMap();
           if (map) {
-             map.jumpTo({
-                 center: [longitude, latitude],
-                 zoom: 16
-             });
+            map.jumpTo({
+              center: [longitude, latitude],
+              zoom: 16,
+            });
           }
-          
+
           setCenter([longitude, latitude]);
           setZoom(16);
         },
         (error) => {
           let errorMessage = "Unknown error";
-          switch(error.code) {
+          switch (error.code) {
             case error.PERMISSION_DENIED:
-              errorMessage = "Location permission denied. Please enable location services.";
+              errorMessage =
+                "Location permission denied. Please enable location services.";
               break;
             case error.POSITION_UNAVAILABLE:
               errorMessage = "Location information is unavailable.";
@@ -411,20 +433,20 @@ const MapBoxContainerComponent = ({
           }
           console.warn("Geolocation error:", errorMessage, error);
         },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
       );
     } else {
-        console.warn("Geolocation is not supported by this browser.");
+      console.warn("Geolocation is not supported by this browser.");
     }
   }, [setCenter, setZoom]);
 
   const handleMapError = useCallback((e: any) => {
-      console.error("MapBox Error:", e);
-      if (e?.error?.status === 401 || e?.error?.message?.includes("forbidden")) {
-          setMapError("Invalid Mapbox Token. Please check your configuration.");
-      } else if (e?.error?.status === 404) {
-          setMapError("Map style not found. Using fallback.");
-      }
+    console.error("MapBox Error:", e);
+    if (e?.error?.status === 401 || e?.error?.message?.includes("forbidden")) {
+      setMapError("Invalid Mapbox Token. Please check your configuration.");
+    } else if (e?.error?.status === 404) {
+      setMapError("Map style not found. Using fallback.");
+    }
   }, []);
 
   // Custom Mouse Interaction Handler (Left=Rotate, Right=Pan)
@@ -481,8 +503,8 @@ const MapBoxContainerComponent = ({
 
         // Sensitivity factors (Optimized for smoother control)
         // Adaptive sensitivity for 3D mode
-        const sensitivity = mode === '3D' ? 0.6 : 0.4;
-        const bearingDelta = dx * sensitivity; 
+        const sensitivity = mode === "3D" ? 0.6 : 0.4;
+        const bearingDelta = dx * sensitivity;
         const pitchDelta = dy * (sensitivity * 0.6); // Pitch usually needs less sensitivity
 
         // Perform mutation directly on map without waiting for react render
@@ -581,7 +603,7 @@ const MapBoxContainerComponent = ({
         mapStyle={mapStyle}
         terrain={{
           source: "mapbox-dem",
-          exaggeration: mode === "3D" ? elevationExaggeration : 0.0001 // Keep a tiny value in 2D to enable elevation queries
+          exaggeration: mode === "3D" ? elevationExaggeration : 0.0001, // Keep a tiny value in 2D to enable elevation queries
         }}
         maxPitch={85}
         fog={
@@ -624,7 +646,7 @@ const MapBoxContainerComponent = ({
             <ContourLayer />
           </Suspense>
         )}
-        
+
         <Suspense fallback={null}>
           <GridDMSLayer />
         </Suspense>
@@ -634,48 +656,122 @@ const MapBoxContainerComponent = ({
         </Suspense>
 
         <RegionSelectionLayer />
-        
+
         {mode === "3D" && (
           <Suspense fallback={null}>
             <ThreeScene />
           </Suspense>
         )}
-        
-        {/* Map Synchronization Logic (Restored to component) */}
-        {/* <Suspense fallback={null}>
-          <MapSynchronizer mapRef={mapRef} />
-        </Suspense> */}
 
+        {/* Map Synchronization Logic (Restored to component) */}
+        
         {/* NEW: Live GPS Tracker Layer (Lazy Loaded & Feature Flagged) */}
-        {import.meta.env.VITE_ENABLE_GPS_TRACKER === 'true' && (
+        {import.meta.env.VITE_ENABLE_GPS_TRACKER === "true" && (
           <ErrorBoundary fallback={null}>
             <Suspense fallback={null}>
               <LiveTrackerLayer mapRef={mapRef} />
             </Suspense>
           </ErrorBoundary>
         )}
-        
+
         {/* User Location Indicator */}
         <UserLocationMarker initialLocation={initialLocation} />
 
+        {/* Custom Location Markers */}
+        {myDataLocation.map((location) => (
+          <Marker
+            key={location.id}
+            longitude={location.center[0]}
+            latitude={location.center[1]}
+            anchor="bottom"
+            onClick={(e) => {
+              e.originalEvent.stopPropagation();
+
+              // Fly to location
+              const map = mapRef.current?.getMap();
+              if (map) {
+                map.flyTo({
+                  center: [location.center[0], location.center[1]],
+                  zoom: 16,
+                  essential: true,
+                });
+
+                // Update store
+                setCenter([location.center[0], location.center[1]]);
+                setZoom(16);
+              }
+            }}
+          >
+            <div className="group relative cursor-pointer">
+              {/* Label (Visible on Hover) */}
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black/80 backdrop-blur-sm text-white text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 border border-white/20">
+                {location.place_name}
+                <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-black/80"></div>
+              </div>
+
+              {/* Icon */}
+              <div className="transform transition-all duration-300 ease-out group-hover:scale-110">
+                {location.place_type.includes("mountain") ? (
+                  // Mountain Icon
+                  <div
+                    className="w-10 h-10 rounded-full bg-yellow-50 flex items-center justify-center 
+                    shadow-md hover:shadow-lg border border-yellow-200 
+                    backdrop-blur-sm"
+                  >
+                    <img
+                      src={mountainIcon}
+                      alt="Mountain"
+                      className="w-5 h-5 object-contain"
+                    />
+                  </div>
+                ) : (
+                  // POI / Default Icon
+                  <div
+                    className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center 
+                    shadow-md hover:shadow-lg border border-blue-200 
+                    backdrop-blur-sm"
+                  >
+                    <img
+                      src={houseIcon}
+                      alt="Location"
+                      className="w-5 h-5 object-contain"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          </Marker>
+        ))}
+
         {/* Custom Navigation Controls */}
-        <NavigationControls 
-          mapRef={mapRef} 
-          onGeolocate={handleGeolocate} 
-          bearing={bearing} 
+        <NavigationControls
+          mapRef={mapRef}
+          onGeolocate={handleGeolocate}
+          bearing={bearing}
           pitch={pitch}
         />
       </Map>
 
       {showControls && <ControlPanel />}
       {showControls && <TelemetryOverlay mapRef={mapRef} />}
-      
+
       {/* Map Error Indicator */}
       {mapError && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-red-900/90 text-white px-6 py-4 rounded-xl border border-red-500/50 shadow-2xl backdrop-blur-md max-w-sm text-center">
           <div className="text-red-200 mb-2">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-8 w-8 mx-auto"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
             </svg>
           </div>
           <h3 className="font-bold text-lg mb-1">Map Error</h3>
