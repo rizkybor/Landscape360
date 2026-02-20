@@ -8,6 +8,10 @@
 
 **Landscape 360** is a high-performance, web-based geospatial analysis platform designed for professionals. It combines precision 3D mapping, real-time contour generation, and advanced survey tools into a seamless browser experience.
 
+<p align="center">
+  <img src="src/assets/wp.png" width="600" alt="Landscape360 Watermark Preview" />
+</p>
+
 ## 🚀 Key Features
 
 ### 🌍 Advanced Visualization
