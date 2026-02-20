@@ -107,6 +107,7 @@ src/
     VITE_MAPBOX_TOKEN=your_pk.eyJ...
     VITE_SUPABASE_URL=your_supabase_url
     VITE_SUPABASE_ANON_KEY=your_supabase_key
+    VITE_ENABLE_GPS_TRACKER=...
     ```
 
 4.  **Run Development Server**:
