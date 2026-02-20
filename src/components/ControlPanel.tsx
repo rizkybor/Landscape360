@@ -405,32 +405,6 @@ export const ControlPanel = () => {
                 </div>
               )}
 
-              {/* Weather Toggle */}
-              <button
-                onClick={() => setShowWeather(!showWeather)}
-                className={`col-span-1 w-full flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
-                  showWeather 
-                    ? "bg-cyan-900/20 border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.1)]" 
-                    : "bg-white/5 border-white/10 hover:bg-white/10"
-                } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
-              >
-                <div className={`p-2 rounded-lg transition-colors ${
-                  showWeather ? "bg-cyan-600 text-white shadow-lg shadow-cyan-500/40" : "bg-white/10 text-gray-400 group-hover:text-white"
-                } ${isMobile ? "mb-1" : ""}`}>
-                  <CloudSun size={isMobile ? 18 : 16} />
-                </div>
-                <div className="flex-1">
-                  <div className={`font-bold transition-colors ${showWeather ? "text-white" : "text-gray-300"} ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}>
-                    Weather
-                  </div>
-                  {!isMobile && (
-                    <div className={`text-[10px] ${showWeather ? "text-cyan-200" : "text-gray-500"}`}>
-                      {showWeather ? "Visible" : "Hidden"}
-                    </div>
-                  )}
-                </div>
-              </button>
-
               {/* Navigator Mode */}
               <button
                 onClick={togglePlotMode}
@@ -452,6 +426,32 @@ export const ControlPanel = () => {
                   {!isMobile && (
                     <div className={`text-[10px] ${isPlotMode ? "text-yellow-200" : "text-gray-500"}`}>
                       {isPlotMode ? "Active" : "Tools"}
+                    </div>
+                  )}
+                </div>
+              </button>
+
+              {/* Weather Toggle */}
+              <button
+                onClick={() => setShowWeather(!showWeather)}
+                className={`col-span-1 w-full flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
+                  showWeather 
+                    ? "bg-cyan-900/20 border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.1)]" 
+                    : "bg-white/5 border-white/10 hover:bg-white/10"
+                } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
+              >
+                <div className={`p-2 rounded-lg transition-colors ${
+                  showWeather ? "bg-cyan-600 text-white shadow-lg shadow-cyan-500/40" : "bg-white/10 text-gray-400 group-hover:text-white"
+                } ${isMobile ? "mb-1" : ""}`}>
+                  <CloudSun size={isMobile ? 18 : 16} />
+                </div>
+                <div className="flex-1">
+                  <div className={`font-bold transition-colors ${showWeather ? "text-white" : "text-gray-300"} ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}>
+                    Weather
+                  </div>
+                  {!isMobile && (
+                    <div className={`text-[10px] ${showWeather ? "text-cyan-200" : "text-gray-500"}`}>
+                      {showWeather ? "Visible" : "Hidden"}
                     </div>
                   )}
                 </div>
