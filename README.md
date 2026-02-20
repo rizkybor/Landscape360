@@ -1,7 +1,7 @@
 # Landscape 360 - Professional Terrain Visualization Platform
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/version-1.2.0-green.svg)
+![Version](https://img.shields.io/badge/version-2.0.0-green.svg)
 ![Status](https://img.shields.io/badge/status-production-orange.svg)
 ![React](https://img.shields.io/badge/react-v19.0.0-blue)
 ![PWA](https://img.shields.io/badge/PWA-Supported-purple)

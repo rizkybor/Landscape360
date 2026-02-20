@@ -56,7 +56,7 @@ export const DocsPage = ({ onBack }: Props) => {
                 <span>Performance Optimized</span>
              </div>
              <span className="text-xs font-mono text-blue-400 border border-blue-500/30 px-2 py-1 rounded bg-blue-500/10">
-                v1.2.0
+                v2.0.0
              </span>
           </div>
         </div>
