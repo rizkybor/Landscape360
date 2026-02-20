@@ -4,6 +4,7 @@ import { LoadingOverlay } from './components/LoadingOverlay';
 import { SEO } from './components/SEO';
 import { useState, useEffect, Suspense, lazy, useCallback } from 'react';
 import { SpeedInsights } from "@vercel/speed-insights/react"
+import { Analytics } from "@vercel/analytics/react"
 import { Loader2 } from 'lucide-react';
 
 // Lazy load heavy map component
@@ -38,6 +39,7 @@ function App() {
     <>
       <SEO />
       <SpeedInsights />
+      <Analytics />
       
       {/* Conditionally render LoadingOverlay so it unmounts completely when done */}
       {isLoading && <LoadingOverlay onComplete={handleStart} />}
