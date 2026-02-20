@@ -262,7 +262,7 @@ export const ControlPanel = () => {
         }}
         className={`
         fixed z-50 
-        bottom-0 left-0 right-0 max-h-[70vh] rounded-t-2xl
+        bottom-0 left-0 right-0 max-h-[85vh] rounded-t-2xl
         md:top-4 md:left-4 md:bottom-auto md:right-auto md:w-64 md:rounded-xl
         bg-black/80 md:bg-black/60 backdrop-blur-md md:backdrop-blur-xl border-t md:border border-white/20 text-white shadow-2xl flex flex-col
         ${!isOpen ? "md:opacity-0 md:pointer-events-none" : ""}
@@ -334,6 +334,212 @@ export const ControlPanel = () => {
             <div className="flex justify-center relative z-50">
               <AuthControl />
             </div>
+
+            <div className="mt-3 space-y-3 border-white/10 p-1">
+              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-2 block">
+                Tools & Exploration
+              </label>
+
+            {/* Tools Grid for Mobile */}
+            <div className={`grid gap-3 ${isMobile ? "grid-cols-3" : "grid-cols-1"}`}>
+              {/* Live Tracking Toggle */}
+              {import.meta.env.VITE_ENABLE_GPS_TRACKER === "true" && user && (
+                <div className={`col-span-1 ${isMobile ? "" : "w-full"}`}>
+                  {subscriptionStatus === "Free" ? (
+                    <button
+                      disabled
+                      className={`w-full flex items-center ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"} rounded-xl border border-white/5 bg-white/5 opacity-60 cursor-not-allowed group`}
+                    >
+                      <div className={`p-2 rounded-lg bg-gray-500/10 text-gray-500 ${isMobile ? "mb-1" : ""}`}>
+                        <Lock size={isMobile ? 18 : 16} />
+                      </div>
+                      <div className="flex-1">
+                        <div className={`font-bold text-gray-400 ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}>
+                          {isMobile ? "GPS" : "GPS Tracking"}
+                        </div>
+                        {!isMobile && <div className="text-[10px] text-gray-600">Upgrade to Pro</div>}
+                      </div>
+                    </button>
+                  ) : (
+                    <div className={`rounded-xl border transition-all duration-300 h-full ${
+                      isLiveTrackingEnabled 
+                        ? userRole === "monitor360" && subscriptionStatus === "Enterprise"
+                          ? "bg-blue-900/20 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.15)]"
+                          : "bg-green-900/20 border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.15)]"
+                        : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20"
+                    }`}>
+                      <button
+                        onClick={toggleLiveTracking}
+                        className={`w-full flex items-center cursor-pointer ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
+                      >
+                        <div className={`p-2 rounded-lg transition-colors ${
+                          isLiveTrackingEnabled
+                            ? userRole === "monitor360"
+                              ? "bg-blue-500 text-white shadow-lg shadow-blue-500/40"
+                              : "bg-green-500 text-white shadow-lg shadow-green-500/40"
+                            : "bg-white/10 text-gray-400 group-hover:text-white"
+                        } ${isMobile ? "mb-1" : ""}`}>
+                          {userRole === "monitor360" && subscriptionStatus === "Enterprise" ? (
+                            <Binoculars size={isMobile ? 18 : 16} className={isLiveTrackingEnabled ? "animate-pulse" : ""} />
+                          ) : (
+                            <Navigation size={isMobile ? 18 : 16} className={isLiveTrackingEnabled ? "animate-spin" : ""} />
+                          )}
+                        </div>
+                        
+                        <div className="flex-1">
+                          <div className={`font-bold transition-colors ${isLiveTrackingEnabled ? "text-white" : "text-gray-300"} ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}>
+                            {userRole === "monitor360" && subscriptionStatus === "Enterprise" 
+                              ? (isMobile ? "Monitor" : "Team Monitor")
+                              : (isMobile ? "GPS" : "GPS Tracking")}
+                          </div>
+                          {!isMobile && (
+                            <div className={`text-[10px] flex items-center gap-1.5 ${isLiveTrackingEnabled ? "text-blue-200" : "text-gray-500"}`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${isLiveTrackingEnabled ? "bg-green-400 animate-pulse" : "bg-gray-600"}`} />
+                              {isLiveTrackingEnabled ? "Active" : "Inactive"}
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Weather Toggle */}
+              <button
+                onClick={() => setShowWeather(!showWeather)}
+                className={`col-span-1 w-full flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
+                  showWeather 
+                    ? "bg-cyan-900/20 border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.1)]" 
+                    : "bg-white/5 border-white/10 hover:bg-white/10"
+                } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
+              >
+                <div className={`p-2 rounded-lg transition-colors ${
+                  showWeather ? "bg-cyan-600 text-white shadow-lg shadow-cyan-500/40" : "bg-white/10 text-gray-400 group-hover:text-white"
+                } ${isMobile ? "mb-1" : ""}`}>
+                  <CloudSun size={isMobile ? 18 : 16} />
+                </div>
+                <div className="flex-1">
+                  <div className={`font-bold transition-colors ${showWeather ? "text-white" : "text-gray-300"} ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}>
+                    Weather
+                  </div>
+                  {!isMobile && (
+                    <div className={`text-[10px] ${showWeather ? "text-cyan-200" : "text-gray-500"}`}>
+                      {showWeather ? "Visible" : "Hidden"}
+                    </div>
+                  )}
+                </div>
+              </button>
+
+              {/* Navigator Mode */}
+              <button
+                onClick={togglePlotMode}
+                className={`col-span-1 w-full flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
+                  isPlotMode 
+                    ? "bg-yellow-900/20 border-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.1)]" 
+                    : "bg-white/5 border-white/10 hover:bg-white/10"
+                } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
+              >
+                <div className={`p-2 rounded-lg transition-colors ${
+                  isPlotMode ? "bg-yellow-500 text-black shadow-lg shadow-yellow-500/40" : "bg-white/10 text-gray-400 group-hover:text-white"
+                } ${isMobile ? "mb-1" : ""}`}>
+                  <Ruler size={isMobile ? 18 : 16} />
+                </div>
+                <div className="flex-1">
+                  <div className={`font-bold transition-colors ${isPlotMode ? "text-white" : "text-gray-300"} ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}>
+                    Navigator
+                  </div>
+                  {!isMobile && (
+                    <div className={`text-[10px] ${isPlotMode ? "text-yellow-200" : "text-gray-500"}`}>
+                      {isPlotMode ? "Active" : "Tools"}
+                    </div>
+                  )}
+                </div>
+              </button>
+            </div>
+
+            {/* Advanced Controls (Simulation/Broadcast) - Moved outside grid for better mobile layout */}
+            {isLiveTrackingEnabled && !isMobile && (
+              <div className="px-3 pb-3 pt-1 space-y-2 border-t border-white/5 mt-1">
+                {/* Monitor Status */}
+                {userRole === "monitor360" && subscriptionStatus === "Enterprise" && (
+                  <div className={`text-[10px] py-1.5 px-2 rounded-lg flex items-center justify-between ${
+                      connectionStatus === "connected" ? "bg-green-500/10 text-green-300" : "bg-red-500/10 text-red-300"
+                  }`}>
+                    <span className="flex items-center gap-1.5">
+                      <span className={`w-1.5 h-1.5 rounded-full ${connectionStatus === "connected" ? "bg-green-400" : "bg-red-400"}`} />
+                      {connectionStatus === "connected" ? "Online" : "Offline"}
+                    </span>
+                    <span>{Object.keys(trackers).length} Users</span>
+                  </div>
+                )}
+
+                {/* Simulation Toggle */}
+                {userRole === "monitor360" && (
+                  <div className="flex items-center justify-between group cursor-pointer" onClick={toggleSimulation}>
+                    <label className="text-[10px] text-gray-400 cursor-pointer group-hover:text-gray-300">Simulate Data</label>
+                    <div className={`w-7 h-3.5 rounded-full p-0.5 transition-colors ${isSimulationEnabled ? "bg-blue-500" : "bg-gray-700"}`}>
+                      <div className={`w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-transform ${isSimulationEnabled ? "translate-x-3.5" : ""}`} />
+                    </div>
+                  </div>
+                )}
+
+                {/* Broadcast Toggle */}
+                {userRole === "pengguna360" && (
+                  <div className="flex items-center justify-between group cursor-pointer" onClick={toggleLocalBroadcast}>
+                    <label className="text-[10px] text-gray-400 cursor-pointer group-hover:text-gray-300 flex items-center gap-1.5">
+                      Broadcast Location
+                      {isLocalBroadcastEnabled && <Wifi size={10} className="text-green-400 animate-pulse" />}
+                    </label>
+                    <div className={`w-7 h-3.5 rounded-full p-0.5 transition-colors ${isLocalBroadcastEnabled ? "bg-green-500" : "bg-gray-700"}`}>
+                      <div className={`w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-transform ${isLocalBroadcastEnabled ? "translate-x-3.5" : ""}`} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {/* Mobile-optimized Advanced Controls Container */}
+            {isLiveTrackingEnabled && isMobile && (
+               <div className="mt-2 px-3 py-2 rounded-lg border border-white/5 bg-white/5 space-y-2">
+                  {/* Monitor Status */}
+                  {userRole === "monitor360" && subscriptionStatus === "Enterprise" && (
+                    <div className={`text-[10px] py-1.5 px-2 rounded-lg flex items-center justify-between ${
+                        connectionStatus === "connected" ? "bg-green-500/10 text-green-300" : "bg-red-500/10 text-red-300"
+                    }`}>
+                      <span className="flex items-center gap-1.5">
+                        <span className={`w-1.5 h-1.5 rounded-full ${connectionStatus === "connected" ? "bg-green-400" : "bg-red-400"}`} />
+                        {connectionStatus === "connected" ? "Online" : "Offline"}
+                      </span>
+                      <span>{Object.keys(trackers).length} Users</span>
+                    </div>
+                  )}
+
+                  {/* Simulation Toggle */}
+                  {userRole === "monitor360" && (
+                    <div className="flex items-center justify-between group cursor-pointer" onClick={toggleSimulation}>
+                      <label className="text-[10px] text-gray-400 cursor-pointer group-hover:text-gray-300">Simulate Data</label>
+                      <div className={`w-7 h-3.5 rounded-full p-0.5 transition-colors ${isSimulationEnabled ? "bg-blue-500" : "bg-gray-700"}`}>
+                        <div className={`w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-transform ${isSimulationEnabled ? "translate-x-3.5" : ""}`} />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Broadcast Toggle */}
+                  {userRole === "pengguna360" && (
+                    <div className="flex items-center justify-between group cursor-pointer" onClick={toggleLocalBroadcast}>
+                      <label className="text-[10px] text-gray-400 cursor-pointer group-hover:text-gray-300 flex items-center gap-1.5">
+                        Broadcast Location
+                        {isLocalBroadcastEnabled && <Wifi size={10} className="text-green-400 animate-pulse" />}
+                      </label>
+                      <div className={`w-7 h-3.5 rounded-full p-0.5 transition-colors ${isLocalBroadcastEnabled ? "bg-green-500" : "bg-gray-700"}`}>
+                        <div className={`w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-transform ${isLocalBroadcastEnabled ? "translate-x-3.5" : ""}`} />
+                      </div>
+                    </div>
+                  )}
+               </div>
+            )}
+            </div>
           </div>
         </div>
 
@@ -356,162 +562,6 @@ export const ControlPanel = () => {
         </div>
 
         <div className="p-4 space-y-4 overflow-y-auto custom-scrollbar">
-          {/* Live Tracking Toggle (Enabled only if Env Var is set) */}
-          {import.meta.env.VITE_ENABLE_GPS_TRACKER === "true" && user && (
-            <div className="space-y-2">
-              {subscriptionStatus === "Free" ? (
-                <button
-                  disabled
-                  className="w-full flex items-center justify-center gap-2 py-3 md:py-2 text-xs font-bold rounded bg-gray-500/10 text-gray-500 border border-gray-500/20 cursor-not-allowed opacity-70"
-                  title="Upgrade to Pro or Enterprise to use GPS Tracking"
-                >
-                  <Lock size={14} />
-                  GPS Tracking (Pro Only)
-                </button>
-              ) : (
-                <button
-                  onClick={toggleLiveTracking}
-                  className={`cursor-pointer w-full flex items-center justify-center gap-2 py-3 md:py-2 text-xs font-bold rounded transition-colors ${
-                    isLiveTrackingEnabled
-                      ? "bg-green-600 text-white shadow-lg shadow-green-500/30 animate-pulse"
-                      : userRole !== "monitor360" ||
-                          subscriptionStatus !== "Enterprise"
-                        ? "bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-500/30"
-                        : "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/30"
-                  }`}
-                >
-                  {userRole === "monitor360" &&
-                  subscriptionStatus === "Enterprise" ? (
-                    <Binoculars size={14} />
-                  ) : (
-                    <Navigation
-                      size={14}
-                      className={isLiveTrackingEnabled ? "animate-spin" : ""}
-                    />
-                  )}
-                  {isLiveTrackingEnabled
-                    ? userRole === "monitor360" &&
-                      subscriptionStatus === "Enterprise"
-                      ? "Stop GPS Monitoring"
-                      : "Stop GPS Tracking"
-                    : userRole === "monitor360" &&
-                        subscriptionStatus === "Enterprise"
-                      ? "Start GPS Monitoring"
-                      : "Start GPS Tracking"}
-                </button>
-              )}
-
-              {isLiveTrackingEnabled &&
-                (subscriptionStatus === "Pro" ||
-                  subscriptionStatus === "Enterprise") && (
-                  <div className="space-y-1">
-                    {/* Simulation Toggle (Only for monitor360) */}
-                    {userRole === "monitor360" && (
-                      <div className="flex items-center justify-between px-2 py-1 bg-white/5 rounded border border-white/10">
-                        <label className="text-[10px] text-gray-400">
-                          Simulation Data
-                        </label>
-                        <div
-                          onClick={toggleSimulation}
-                          className={`cursor-pointer w-8 h-4 rounded-full p-0.5 transition-colors ${isSimulationEnabled ? "bg-blue-500" : "bg-gray-600"}`}
-                        >
-                          <div
-                            className={`w-3 h-3 bg-white rounded-full shadow-sm transition-transform ${isSimulationEnabled ? "translate-x-4" : ""}`}
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Local GPS Toggle (Only for pengguna360 with Pro/Enterprise) */}
-                    {userRole === "pengguna360" &&
-                      (subscriptionStatus === "Pro" ||
-                        subscriptionStatus === "Enterprise") && (
-                        <div className="flex items-center justify-between px-2 py-1 bg-white/5 rounded border border-white/10">
-                          <label className="text-[10px] text-gray-400 flex items-center gap-1">
-                            <span>Broadcast My GPS</span>
-                            {isLocalBroadcastEnabled && (
-                              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                            )}
-                          </label>
-                          <div
-                            onClick={toggleLocalBroadcast}
-                            className={`cursor-pointer w-8 h-4 rounded-full p-0.5 transition-colors ${isLocalBroadcastEnabled ? "bg-red-500" : "bg-gray-600"}`}
-                          >
-                            <div
-                              className={`w-3 h-3 bg-white rounded-full shadow-sm transition-transform ${isLocalBroadcastEnabled ? "translate-x-4" : ""}`}
-                            />
-                          </div>
-                        </div>
-                      )}
-
-                    {/* Monitor Status (Only for Enterprise Monitors) */}
-                    {userRole === "monitor360" &&
-                      subscriptionStatus === "Enterprise" && (
-                        <div
-                          className={`px-2 py-1 rounded border text-[10px] text-center flex items-center justify-center gap-2 transition-colors ${
-                            connectionStatus === "connected"
-                              ? "bg-green-500/10 border-green-500/20 text-green-400"
-                              : connectionStatus === "connecting"
-                                ? "bg-yellow-500/10 border-yellow-500/20 text-yellow-400 animate-pulse"
-                                : "bg-red-500/10 border-red-500/20 text-red-400"
-                          }`}
-                        >
-                          <div
-                            className={`w-2 h-2 rounded-full ${
-                              connectionStatus === "connected"
-                                ? "bg-green-500 animate-pulse"
-                                : connectionStatus === "connecting"
-                                  ? "bg-yellow-500"
-                                  : "bg-red-500"
-                            }`}
-                          />
-                          {connectionStatus === "connected"
-                            ? `Monitoring Active (${Object.keys(trackers).length} User${Object.keys(trackers).length > 1 ? "s" : ""})`
-                            : connectionStatus === "connecting"
-                              ? "Connecting..."
-                              : "Disconnected"}
-                        </div>
-                      )}
-
-                    {/* Broadcast Status (for Pengguna) */}
-                    {userRole === "pengguna360" &&
-                      (subscriptionStatus === "Pro" ||
-                        subscriptionStatus === "Enterprise") &&
-                      isLocalBroadcastEnabled && (
-                        <div
-                          className={`mt-1 px-2 py-1 rounded border text-[10px] text-center flex items-center justify-center gap-2 ${
-                            connectionStatus === "connected"
-                              ? "bg-blue-500/10 border-blue-500/20 text-blue-400"
-                              : "bg-white/5 border-white/10 text-gray-400"
-                          }`}
-                        >
-                          <Wifi
-                            size={10}
-                            className={
-                              connectionStatus === "connected"
-                                ? ""
-                                : "opacity-50"
-                            }
-                          />
-                          {connectionStatus === "connected"
-                            ? "Broadcasting Live"
-                            : "Connecting..."}
-                        </div>
-                      )}
-                  </div>
-                )}
-            </div>
-          )}
-
-          {/* Weather Toggle */}
-          <button
-            onClick={() => setShowWeather(!showWeather)}
-            className={`cursor-pointer w-full flex items-center justify-center gap-2 py-3 md:py-2 text-xs font-bold rounded transition-colors ${showWeather ? "bg-cyan-600 text-white shadow-lg" : "bg-white/20 hover:bg-white/30 text-cyan-200 border border-cyan-500/30"}`}
-          >
-            <CloudSun size={14} />
-            {showWeather ? "Hide Weather Info" : "Show Weather Info"}
-          </button>
-
           {/* Search Toggle */}
           <button
             onClick={() => setShowSearch(!showSearch)}
@@ -555,15 +605,6 @@ export const ControlPanel = () => {
               ))}
             </div>
           </div>
-
-          {/* Surveyor Toggle */}
-          <button
-            onClick={togglePlotMode}
-            className={`cursor-pointer w-full flex items-center justify-center gap-2 py-3 md:py-2 text-xs font-bold rounded transition-colors ${isPlotMode ? "bg-yellow-500 text-black shadow-lg shadow-yellow-500/50" : "bg-white/20 hover:bg-white/30 text-yellow-200 border border-yellow-500/30"}`}
-          >
-            <Ruler size={14} />
-            {isPlotMode ? "Exit Navigator Mode" : "Start Navigator Mode"}
-          </button>
 
           {/* Mouse Mode Toggle - Desktop Only */}
           <div className="bg-blue-600/20 p-2 rounded text-[10px] text-blue-100 mb-2 space-y-2 hidden md:block">
