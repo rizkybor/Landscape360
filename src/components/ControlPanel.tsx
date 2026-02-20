@@ -377,7 +377,7 @@ export const ControlPanel = () => {
                       : userRole !== "monitor360" ||
                           subscriptionStatus !== "Enterprise"
                         ? "bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-500/30"
-                        : "bg-white/20 hover:bg-white/30 text-green-200 border border-green-500/30"
+                        : "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/30"
                   }`}
                 >
                   {userRole === "monitor360" &&
