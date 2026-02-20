@@ -3,7 +3,7 @@ import { useMapStore } from '../store/useMapStore';
 import { Search, X, MapPin, Loader2 } from 'lucide-react';
 
 // Using the same token as in MapBoxContainer
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || 'pk.eyJ1Ijoicml6a3lhamllIiwiYSI6ImNsZ2J4bDQ4bjA0Z2wzZHF5c3J2aGZ3eWcifQ.8-lIqB1r8P9S3p3Q2j4xQw';
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
 interface SearchResult {
   id: string;
@@ -143,7 +143,7 @@ export const SearchPanel = () => {
         </p>
         <button 
           onClick={() => setShowSearch(false)}
-          className="text-gray-400 hover:text-white transition-colors"
+          className="text-gray-400 hover:text-white transition-colors cursor-pointer"
         >
           <X size={16} />
         </button>
