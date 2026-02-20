@@ -26,9 +26,9 @@ interface Props {
 export const DocsPage = ({ onBack }: Props) => {
   return (
     <div className="h-screen bg-[#050505] text-white font-sans overflow-hidden flex flex-col">
-      <SEO
-        title="Dokumentasi & Panduan"
-        description="Pelajari cara menggunakan Landscape 360, navigasi peta 3D, analisis kontur, dan fitur-fitur canggih lainnya."
+      <SEO 
+        title="Documentation & Guide"
+        description="Learn how to use Landscape 360, 3D map navigation, contour analysis, and other advanced features."
       />
       {/* Header */}
       <div className="shrink-0 sticky top-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/10">
