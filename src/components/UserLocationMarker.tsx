@@ -1,8 +1,21 @@
 import { useEffect, useState } from 'react';
 import { Marker } from 'react-map-gl/mapbox';
 
-export const UserLocationMarker = () => {
-  const [coords, setCoords] = useState<{longitude: number, latitude: number, heading: number | null} | null>(null);
+export const UserLocationMarker = ({ initialLocation }: { initialLocation?: [number, number] | null }) => {
+  const [coords, setCoords] = useState<{longitude: number, latitude: number, heading: number | null} | null>(
+    initialLocation ? { longitude: initialLocation[0], latitude: initialLocation[1], heading: null } : null
+  );
+
+  useEffect(() => {
+    // If initialLocation changes and we don't have coords, update them
+    if (initialLocation && !coords) {
+        setCoords({
+            longitude: initialLocation[0],
+            latitude: initialLocation[1],
+            heading: null
+        });
+    }
+  }, [initialLocation]);
 
   useEffect(() => {
     if (!navigator.geolocation) return;
@@ -16,14 +29,14 @@ export const UserLocationMarker = () => {
             heading: pos.coords.heading
         });
       },
-      () => {
+      (err) => {
           // Silent fail or debug log
-          // console.warn("Location watch error:", err);
+          console.warn("Location watch error:", err);
       },
       { 
           enableHighAccuracy: true, 
           maximumAge: 0, 
-          timeout: 5000 
+          timeout: 10000 
       }
     );
 
