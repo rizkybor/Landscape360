@@ -17,27 +17,18 @@ function App() {
   const [initialLocation, setInitialLocation] = useState<[number, number] | null>(null);
 
   useEffect(() => {
-    // Start geolocation as soon as the app mounts so it's ready when user clicks Start
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setInitialLocation([position.coords.longitude, position.coords.latitude]);
-        },
-        (error) => console.warn("Pre-emptive geolocation error:", error),
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
-    }
+    // We defer geolocation to user interaction (handleStart) to follow best practices
   }, []);
 
   const handleStart = useCallback(() => {
-    // If we don't have location yet, try one more time quickly
+    // Request geolocation when user explicitly starts the app
     if (!initialLocation && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           setInitialLocation([position.coords.longitude, position.coords.latitude]);
         },
-        (error) => console.warn("Final attempt geolocation error:", error),
-        { enableHighAccuracy: true, timeout: 3000 }
+        (error) => console.warn("Geolocation error:", error),
+        { enableHighAccuracy: true, timeout: 5000 }
       );
     }
     setIsLoading(false);
