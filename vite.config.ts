@@ -20,15 +20,17 @@ const inlineCss = (): Plugin => {
         for (const cssFile of cssAssets) {
           const chunk = ctx.bundle[cssFile]
           if (chunk.type === 'asset' && typeof chunk.source === 'string') {
-            newHtml = newHtml.replace(
-              new RegExp(`<link[^>]*href=["']\\/?${cssFile}["'][^>]*>`, 'g'),
-              ''
-            )
-            newHtml = newHtml.replace(
-              '</head>', 
-              `<style>${chunk.source}</style></head>`
-            )
-            delete ctx.bundle[cssFile]
+            // Only inline if the CSS file is explicitly linked in the HTML
+            const linkRegex = new RegExp(`<link[^>]*href=["']\\/?${cssFile}["'][^>]*>`, 'g')
+            if (linkRegex.test(newHtml)) {
+              newHtml = newHtml.replace(linkRegex, '')
+              newHtml = newHtml.replace(
+                '</head>', 
+                `<style>${chunk.source}</style></head>`
+              )
+              // Only delete from bundle if we inlined it
+              delete ctx.bundle[cssFile]
+            }
           }
         }
         return newHtml
