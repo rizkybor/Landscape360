@@ -61,36 +61,51 @@ export const ControlPanel = () => {
     setMapStyle,
   } = useMapStore();
 
-  const { isPlotMode, togglePlotMode, user, subscriptionStatus, userRole } = useSurveyStore(); // Get userRole
-  const { 
-    isLiveTrackingEnabled, 
+  const { isPlotMode, togglePlotMode, user, subscriptionStatus, userRole } =
+    useSurveyStore(); // Get userRole
+  const {
+    isLiveTrackingEnabled,
     toggleLiveTracking,
     setLiveTracking,
-    isSimulationEnabled, 
+    isSimulationEnabled,
     toggleSimulation,
     isLocalBroadcastEnabled,
     toggleLocalBroadcast,
     connectionStatus,
-    trackers
-  } = useTrackerStore(); 
+    trackers,
+  } = useTrackerStore();
 
   // Auto-stop tracking/monitoring when user logs out or role changes to incompatible state
   useEffect(() => {
     if (!user) {
-        if (isLiveTrackingEnabled) setLiveTracking(false);
-        return;
+      if (isLiveTrackingEnabled) setLiveTracking(false);
+      return;
     }
-    
+
     // If Monitor but not Enterprise -> Stop
-    if (userRole === 'monitor360' && subscriptionStatus !== 'Enterprise' && isLiveTrackingEnabled) {
-        setLiveTracking(false);
+    if (
+      userRole === "monitor360" &&
+      subscriptionStatus !== "Enterprise" &&
+      isLiveTrackingEnabled
+    ) {
+      setLiveTracking(false);
     }
-    
+
     // If User but Free -> Stop
-    if (userRole === 'pengguna360' && subscriptionStatus === 'Free' && isLiveTrackingEnabled) {
-        setLiveTracking(false);
+    if (
+      userRole === "pengguna360" &&
+      subscriptionStatus === "Free" &&
+      isLiveTrackingEnabled
+    ) {
+      setLiveTracking(false);
     }
-  }, [user, userRole, subscriptionStatus, isLiveTrackingEnabled, setLiveTracking]);
+  }, [
+    user,
+    userRole,
+    subscriptionStatus,
+    isLiveTrackingEnabled,
+    setLiveTracking,
+  ]);
 
   const [showGetStarted, setShowGetStarted] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -104,24 +119,24 @@ export const ControlPanel = () => {
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (!isMobile) return;
-    
+
     // Check if the target is a range slider or its container
     const target = e.target as HTMLElement;
     if (target.closest('input[type="range"]')) return;
-    
+
     touchStart.current = e.targetTouches[0].clientY;
     setIsDragging(true);
   };
-  
+
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isMobile || touchStart.current === null || !isDragging) return;
-    
+
     const target = e.target as HTMLElement;
     if (target.closest('input[type="range"]')) return;
 
     const currentY = e.targetTouches[0].clientY;
     const diff = currentY - touchStart.current;
-    
+
     // Only allow dragging downwards (closing) and prevent default scroll if dragging
     if (diff > 0) {
       setTouchOffset(diff);
@@ -131,11 +146,12 @@ export const ControlPanel = () => {
 
   const handleTouchEnd = () => {
     if (!isMobile || touchStart.current === null) return;
-    
-    if (touchOffset > 50) { // Reduced threshold for easier closing
+
+    if (touchOffset > 50) {
+      // Reduced threshold for easier closing
       setIsOpen(false);
-    } 
-    
+    }
+
     setTouchOffset(0);
     setIsDragging(false);
     touchStart.current = null;
@@ -234,12 +250,15 @@ export const ControlPanel = () => {
 
       <div
         style={{
-          transform: isMobile && isOpen && isDragging 
-            ? `translateY(${touchOffset}px)`
-            : isOpen 
-              ? 'translateY(0)' 
-              : 'translateY(100%)',
-          transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          transform:
+            isMobile && isOpen && isDragging
+              ? `translateY(${touchOffset}px)`
+              : isOpen
+                ? "translateY(0)"
+                : "translateY(100%)",
+          transition: isDragging
+            ? "none"
+            : "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
         }}
         className={`
         fixed z-50 
@@ -249,7 +268,7 @@ export const ControlPanel = () => {
         ${!isOpen ? "md:opacity-0 md:pointer-events-none" : ""}
       `}
       >
-        <div 
+        <div
           className="md:hidden w-full flex items-center justify-center pt-3 pb-1 shrink-0 z-30 cursor-grab active:cursor-grabbing touch-none"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
@@ -258,7 +277,7 @@ export const ControlPanel = () => {
           <div className="w-12 h-1.5 bg-white/20 rounded-full shadow-sm"></div>
         </div>
 
-        <div 
+        <div
           className="relative shrink-0 z-20 touch-none"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
@@ -338,9 +357,9 @@ export const ControlPanel = () => {
 
         <div className="p-4 space-y-4 overflow-y-auto custom-scrollbar">
           {/* Live Tracking Toggle (Enabled only if Env Var is set) */}
-          {import.meta.env.VITE_ENABLE_GPS_TRACKER === 'true' && user && (
+          {import.meta.env.VITE_ENABLE_GPS_TRACKER === "true" && user && (
             <div className="space-y-2">
-              {subscriptionStatus === 'Free' ? (
+              {subscriptionStatus === "Free" ? (
                 <button
                   disabled
                   className="w-full flex items-center justify-center gap-2 py-3 md:py-2 text-xs font-bold rounded bg-gray-500/10 text-gray-500 border border-gray-500/20 cursor-not-allowed opacity-70"
@@ -352,78 +371,135 @@ export const ControlPanel = () => {
               ) : (
                 <button
                   onClick={toggleLiveTracking}
-                  className={`cursor-pointer w-full flex items-center justify-center gap-2 py-3 md:py-2 text-xs font-bold rounded transition-colors ${isLiveTrackingEnabled ? "bg-green-600 text-white shadow-lg shadow-green-500/30 animate-pulse" : "bg-white/20 hover:bg-white/30 text-green-200 border border-green-500/30"}`}
+                  className={`cursor-pointer w-full flex items-center justify-center gap-2 py-3 md:py-2 text-xs font-bold rounded transition-colors ${
+                    isLiveTrackingEnabled
+                      ? "bg-green-600 text-white shadow-lg shadow-green-500/30 animate-pulse"
+                      : userRole !== "monitor360" ||
+                          subscriptionStatus !== "Enterprise"
+                        ? "bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-500/30"
+                        : "bg-white/20 hover:bg-white/30 text-green-200 border border-green-500/30"
+                  }`}
                 >
-                  {userRole === 'monitor360' && subscriptionStatus === 'Enterprise' ? (
+                  {userRole === "monitor360" &&
+                  subscriptionStatus === "Enterprise" ? (
                     <Binoculars size={14} />
                   ) : (
-                    <Navigation size={14} className={isLiveTrackingEnabled ? "animate-spin" : ""} />
+                    <Navigation
+                      size={14}
+                      className={isLiveTrackingEnabled ? "animate-spin" : ""}
+                    />
                   )}
-                  {isLiveTrackingEnabled 
-                    ? (userRole === 'monitor360' && subscriptionStatus === 'Enterprise' ? "Stop GPS Monitoring" : "Stop GPS Tracking") 
-                    : (userRole === 'monitor360' && subscriptionStatus === 'Enterprise' ? "Start GPS Monitoring" : "Start GPS Tracking")
-                  }
+                  {isLiveTrackingEnabled
+                    ? userRole === "monitor360" &&
+                      subscriptionStatus === "Enterprise"
+                      ? "Stop GPS Monitoring"
+                      : "Stop GPS Tracking"
+                    : userRole === "monitor360" &&
+                        subscriptionStatus === "Enterprise"
+                      ? "Start GPS Monitoring"
+                      : "Start GPS Tracking"}
                 </button>
               )}
-              
-              {isLiveTrackingEnabled && (subscriptionStatus === 'Pro' || subscriptionStatus === 'Enterprise') && (
-                <div className="space-y-1">
-                  {/* Simulation Toggle (Only for monitor360) */}
-                  {userRole === 'monitor360' && (
-                    <div className="flex items-center justify-between px-2 py-1 bg-white/5 rounded border border-white/10">
-                      <label className="text-[10px] text-gray-400">Simulation Data</label>
-                      <div 
-                        onClick={toggleSimulation}
-                        className={`cursor-pointer w-8 h-4 rounded-full p-0.5 transition-colors ${isSimulationEnabled ? "bg-blue-500" : "bg-gray-600"}`}
-                      >
-                        <div className={`w-3 h-3 bg-white rounded-full shadow-sm transition-transform ${isSimulationEnabled ? "translate-x-4" : ""}`} />
-                      </div>
-                    </div>
-                  )}
 
-                  {/* Local GPS Toggle (Only for pengguna360 with Pro/Enterprise) */}
-                  {userRole === 'pengguna360' && (subscriptionStatus === 'Pro' || subscriptionStatus === 'Enterprise') && (
-                    <div className="flex items-center justify-between px-2 py-1 bg-white/5 rounded border border-white/10">
-                        <label className="text-[10px] text-gray-400 flex items-center gap-1">
-                        <span>Broadcast My GPS</span>
-                        {isLocalBroadcastEnabled && <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />}
+              {isLiveTrackingEnabled &&
+                (subscriptionStatus === "Pro" ||
+                  subscriptionStatus === "Enterprise") && (
+                  <div className="space-y-1">
+                    {/* Simulation Toggle (Only for monitor360) */}
+                    {userRole === "monitor360" && (
+                      <div className="flex items-center justify-between px-2 py-1 bg-white/5 rounded border border-white/10">
+                        <label className="text-[10px] text-gray-400">
+                          Simulation Data
                         </label>
-                        <div 
-                        onClick={toggleLocalBroadcast}
-                        className={`cursor-pointer w-8 h-4 rounded-full p-0.5 transition-colors ${isLocalBroadcastEnabled ? "bg-red-500" : "bg-gray-600"}`}
+                        <div
+                          onClick={toggleSimulation}
+                          className={`cursor-pointer w-8 h-4 rounded-full p-0.5 transition-colors ${isSimulationEnabled ? "bg-blue-500" : "bg-gray-600"}`}
                         >
-                        <div className={`w-3 h-3 bg-white rounded-full shadow-sm transition-transform ${isLocalBroadcastEnabled ? "translate-x-4" : ""}`} />
+                          <div
+                            className={`w-3 h-3 bg-white rounded-full shadow-sm transition-transform ${isSimulationEnabled ? "translate-x-4" : ""}`}
+                          />
                         </div>
-                    </div>
-                  )}
-                  
-                  {/* Monitor Status (Only for Enterprise Monitors) */}
-                  {userRole === 'monitor360' && subscriptionStatus === 'Enterprise' && (
-                     <div className={`px-2 py-1 rounded border text-[10px] text-center flex items-center justify-center gap-2 transition-colors ${
-                        connectionStatus === 'connected' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
-                        connectionStatus === 'connecting' ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400 animate-pulse' :
-                        'bg-red-500/10 border-red-500/20 text-red-400'
-                     }`}>
-                        <div className={`w-2 h-2 rounded-full ${
-                            connectionStatus === 'connected' ? 'bg-green-500 animate-pulse' :
-                            connectionStatus === 'connecting' ? 'bg-yellow-500' : 'bg-red-500'
-                        }`} />
-                        {connectionStatus === 'connected' ? `Monitoring Active (${Object.keys(trackers).length} User${Object.keys(trackers).length > 1 ? 's' : ''})` : 
-                         connectionStatus === 'connecting' ? 'Connecting...' : 'Disconnected'}
-                     </div>
-                  )}
-                  
-                  {/* Broadcast Status (for Pengguna) */}
-                  {userRole === 'pengguna360' && (subscriptionStatus === 'Pro' || subscriptionStatus === 'Enterprise') && isLocalBroadcastEnabled && (
-                     <div className={`mt-1 px-2 py-1 rounded border text-[10px] text-center flex items-center justify-center gap-2 ${
-                        connectionStatus === 'connected' ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' : 'bg-white/5 border-white/10 text-gray-400'
-                     }`}>
-                        <Wifi size={10} className={connectionStatus === 'connected' ? '' : 'opacity-50'} />
-                        {connectionStatus === 'connected' ? 'Broadcasting Live' : 'Connecting...'}
-                     </div>
-                  )}
-                </div>
-              )}
+                      </div>
+                    )}
+
+                    {/* Local GPS Toggle (Only for pengguna360 with Pro/Enterprise) */}
+                    {userRole === "pengguna360" &&
+                      (subscriptionStatus === "Pro" ||
+                        subscriptionStatus === "Enterprise") && (
+                        <div className="flex items-center justify-between px-2 py-1 bg-white/5 rounded border border-white/10">
+                          <label className="text-[10px] text-gray-400 flex items-center gap-1">
+                            <span>Broadcast My GPS</span>
+                            {isLocalBroadcastEnabled && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                            )}
+                          </label>
+                          <div
+                            onClick={toggleLocalBroadcast}
+                            className={`cursor-pointer w-8 h-4 rounded-full p-0.5 transition-colors ${isLocalBroadcastEnabled ? "bg-red-500" : "bg-gray-600"}`}
+                          >
+                            <div
+                              className={`w-3 h-3 bg-white rounded-full shadow-sm transition-transform ${isLocalBroadcastEnabled ? "translate-x-4" : ""}`}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                    {/* Monitor Status (Only for Enterprise Monitors) */}
+                    {userRole === "monitor360" &&
+                      subscriptionStatus === "Enterprise" && (
+                        <div
+                          className={`px-2 py-1 rounded border text-[10px] text-center flex items-center justify-center gap-2 transition-colors ${
+                            connectionStatus === "connected"
+                              ? "bg-green-500/10 border-green-500/20 text-green-400"
+                              : connectionStatus === "connecting"
+                                ? "bg-yellow-500/10 border-yellow-500/20 text-yellow-400 animate-pulse"
+                                : "bg-red-500/10 border-red-500/20 text-red-400"
+                          }`}
+                        >
+                          <div
+                            className={`w-2 h-2 rounded-full ${
+                              connectionStatus === "connected"
+                                ? "bg-green-500 animate-pulse"
+                                : connectionStatus === "connecting"
+                                  ? "bg-yellow-500"
+                                  : "bg-red-500"
+                            }`}
+                          />
+                          {connectionStatus === "connected"
+                            ? `Monitoring Active (${Object.keys(trackers).length} User${Object.keys(trackers).length > 1 ? "s" : ""})`
+                            : connectionStatus === "connecting"
+                              ? "Connecting..."
+                              : "Disconnected"}
+                        </div>
+                      )}
+
+                    {/* Broadcast Status (for Pengguna) */}
+                    {userRole === "pengguna360" &&
+                      (subscriptionStatus === "Pro" ||
+                        subscriptionStatus === "Enterprise") &&
+                      isLocalBroadcastEnabled && (
+                        <div
+                          className={`mt-1 px-2 py-1 rounded border text-[10px] text-center flex items-center justify-center gap-2 ${
+                            connectionStatus === "connected"
+                              ? "bg-blue-500/10 border-blue-500/20 text-blue-400"
+                              : "bg-white/5 border-white/10 text-gray-400"
+                          }`}
+                        >
+                          <Wifi
+                            size={10}
+                            className={
+                              connectionStatus === "connected"
+                                ? ""
+                                : "opacity-50"
+                            }
+                          />
+                          {connectionStatus === "connected"
+                            ? "Broadcasting Live"
+                            : "Connecting..."}
+                        </div>
+                      )}
+                  </div>
+                )}
             </div>
           )}
 
@@ -814,70 +890,80 @@ export const TelemetryOverlay = ({
 
     const onMouseMove = (evt: mapboxgl.MapMouseEvent) => {
       const now = Date.now();
-      const throttleLimit = mode === '3D' ? 100 : 50;
-      
+      const throttleLimit = mode === "3D" ? 100 : 50;
+
       if (now - lastUpdate.current < throttleLimit) return;
       lastUpdate.current = now;
 
       if (rafId.current) cancelAnimationFrame(rafId.current);
 
       rafId.current = requestAnimationFrame(() => {
-          if (!map.isStyleLoaded()) return;
-          
-          const { lng, lat } = evt.lngLat;
-          const terrain = map.getTerrain();
-          const exaggeration = (terrain && typeof terrain.exaggeration === 'number') ? terrain.exaggeration : 1;
-          
-          const rawElevation = map.queryTerrainElevation
-            ? map.queryTerrainElevation(evt.lngLat) || 0
-            : 0;
-          
-          const elevation = rawElevation / exaggeration;
+        if (!map.isStyleLoaded()) return;
 
-          const offset = 0.0001;
-          const e1Raw = map.queryTerrainElevation
-            ? map.queryTerrainElevation(new mapboxgl.LngLat(lng + offset, lat)) || rawElevation
-            : rawElevation;
-          const e2Raw = map.queryTerrainElevation
-            ? map.queryTerrainElevation(new mapboxgl.LngLat(lng, lat + offset)) || rawElevation
-            : rawElevation;
-            
-          const e1 = e1Raw / exaggeration;
-          const e2 = e2Raw / exaggeration;
+        const { lng, lat } = evt.lngLat;
+        const terrain = map.getTerrain();
+        const exaggeration =
+          terrain && typeof terrain.exaggeration === "number"
+            ? terrain.exaggeration
+            : 1;
 
-          const dist = 11.132;
-          const slope1 = Math.atan((e1 - elevation) / dist);
-          const slope2 = Math.atan((e2 - elevation) / dist);
-          const slope = Math.max(Math.abs(slope1), Math.abs(slope2)) * (180 / Math.PI);
+        const rawElevation = map.queryTerrainElevation
+          ? map.queryTerrainElevation(evt.lngLat) || 0
+          : 0;
 
-          setInfo({
-            lng,
-            lat,
-            elev: elevation,
-            slope,
-            pitch: map.getPitch(),
-            bearing: map.getBearing(),
-          });
+        const elevation = rawElevation / exaggeration;
+
+        const offset = 0.0001;
+        const e1Raw = map.queryTerrainElevation
+          ? map.queryTerrainElevation(new mapboxgl.LngLat(lng + offset, lat)) ||
+            rawElevation
+          : rawElevation;
+        const e2Raw = map.queryTerrainElevation
+          ? map.queryTerrainElevation(new mapboxgl.LngLat(lng, lat + offset)) ||
+            rawElevation
+          : rawElevation;
+
+        const e1 = e1Raw / exaggeration;
+        const e2 = e2Raw / exaggeration;
+
+        const dist = 11.132;
+        const slope1 = Math.atan((e1 - elevation) / dist);
+        const slope2 = Math.atan((e2 - elevation) / dist);
+        const slope =
+          Math.max(Math.abs(slope1), Math.abs(slope2)) * (180 / Math.PI);
+
+        setInfo({
+          lng,
+          lat,
+          elev: elevation,
+          slope,
+          pitch: map.getPitch(),
+          bearing: map.getBearing(),
+        });
       });
     };
 
     const onMove = () => {
-        if (rafId.current) cancelAnimationFrame(rafId.current);
-        rafId.current = requestAnimationFrame(() => {
-            setInfo(prev => prev ? ({
+      if (rafId.current) cancelAnimationFrame(rafId.current);
+      rafId.current = requestAnimationFrame(() => {
+        setInfo((prev) =>
+          prev
+            ? {
                 ...prev,
                 pitch: map.getPitch(),
-                bearing: map.getBearing()
-            }) : null);
-        });
+                bearing: map.getBearing(),
+              }
+            : null,
+        );
+      });
     };
-    
-    map.on('mousemove', onMouseMove);
-    map.on('move', onMove);
+
+    map.on("mousemove", onMouseMove);
+    map.on("move", onMove);
 
     return () => {
-      map.off('mousemove', onMouseMove);
-      map.off('move', onMove);
+      map.off("mousemove", onMouseMove);
+      map.off("move", onMove);
       if (rafId.current) cancelAnimationFrame(rafId.current);
     };
   }, [mapRef, mode]);
@@ -978,7 +1064,7 @@ const GetStartedModal = ({
                 desc: "Download map areas for use without internet connection. Perfect for remote field surveys.",
               },
               {
-                icon: <Download size={18} />, 
+                icon: <Download size={18} />,
                 title: "Export & Capture",
                 desc: (
                   <>
@@ -1000,7 +1086,7 @@ const GetStartedModal = ({
                 ),
               },
               {
-                icon: <Columns size={18} />, 
+                icon: <Columns size={18} />,
                 title: "Split Screen View",
                 desc: "Compare two different map layers or perspectives side-by-side. Sync or unsync camera movements to analyze temporal or thematic changes in the terrain.",
               },
