@@ -1,4 +1,4 @@
-# Landscape 360 - Professional-grade 3D terrain engine for mountaineers platform.
+# Landscape 360 | Professional-grade 3D terrain engine for mountaineers platform.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Version](https://img.shields.io/badge/version-2.0.0-green.svg)
