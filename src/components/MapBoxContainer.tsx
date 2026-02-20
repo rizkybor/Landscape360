@@ -6,7 +6,7 @@ import React, {
   useEffect,
   Suspense,
 } from "react";
-import Map, { Source, Layer } from "react-map-gl/mapbox";
+import Map, { Source, Layer, Marker } from "react-map-gl/mapbox";
 import type { MapRef, MapMouseEvent } from "react-map-gl/mapbox";
 import { useMapStore } from "../store/useMapStore";
 import { ThreeScene } from "./ThreeScene";
@@ -21,10 +21,7 @@ import { NavigationControls } from "./NavigationControls";
 import { UserLocationMarker } from "./UserLocationMarker";
 import { WeatherWidget } from "./WeatherWidget";
 import { ErrorBoundary } from "./ErrorBoundary";
-import { Marker } from "react-map-gl/mapbox";
 import myDataLocation from "../data/myDataLocation.json";
-import houseIcon from "../assets/house.svg";
-import mountainIcon from "../assets/mountain.svg";
 
 // Lazy Load LiveTrackerLayer
 const LiveTrackerLayer = React.lazy(() =>
@@ -677,71 +674,129 @@ const MapBoxContainerComponent = ({
         {/* User Location Indicator */}
         <UserLocationMarker initialLocation={initialLocation} />
 
-        {/* Custom Location Markers */}
-        {myDataLocation.map((location) => (
-          <Marker
-            key={location.id}
-            longitude={location.center[0]}
-            latitude={location.center[1]}
-            anchor="bottom"
-            onClick={(e) => {
-              e.originalEvent.stopPropagation();
-
-              // Fly to location
-              const map = mapRef.current?.getMap();
-              if (map) {
-                map.flyTo({
-                  center: [location.center[0], location.center[1]],
-                  zoom: 16,
-                  essential: true,
-                });
-
-                // Update store
-                setCenter([location.center[0], location.center[1]]);
-                setZoom(16);
-              }
+        {/* Custom Location Markers - GeoJSON + Cluster */}
+        <Source
+          id="custom-locations"
+          type="geojson"
+          data={{
+            type: "FeatureCollection",
+            features: myDataLocation.map((location) => ({
+              type: "Feature",
+              geometry: {
+                type: "Point",
+                coordinates: location.center,
+              },
+              properties: {
+                id: location.id,
+                place_name: location.place_name,
+                isMountain: location.place_type.includes("mountain"),
+              },
+            })),
+          }}
+          cluster={true}
+          clusterRadius={50}
+          clusterMaxZoom={14}
+        >
+          {/* Cluster circles */}
+          <Layer
+            id="custom-clusters"
+            type="circle"
+            filter={["has", "point_count"]}
+            paint={{
+              "circle-color": [
+                "step",
+                ["get", "point_count"],
+                "#60a5fa",
+                50,
+                "#2563eb",
+                200,
+                "#1d4ed8",
+              ],
+              "circle-radius": [
+                "step",
+                ["get", "point_count"],
+                16,
+                50,
+                22,
+                200,
+                28,
+              ],
+              "circle-opacity": 0.9,
             }}
-          >
-            <div className="group relative cursor-pointer">
-              {/* Label (Visible on Hover) */}
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black/80 backdrop-blur-sm text-white text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 border border-white/20">
-                {location.place_name}
-                <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-black/80"></div>
-              </div>
+          />
+          {/* Cluster labels */}
+          <Layer
+            id="custom-cluster-count"
+            type="symbol"
+            filter={["has", "point_count"]}
+            layout={{
+              "text-field": "{point_count_abbreviated}",
+              "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
+              "text-size": 12,
+            }}
+            paint={{
+              "text-color": "#ffffff",
+            }}
+          />
+        </Source>
 
-              {/* Icon */}
-              <div className="transform transition-all duration-300 ease-out group-hover:scale-110">
-                {location.place_type.includes("mountain") ? (
-                  // Mountain Icon
-                  <div
-                    className="w-10 h-10 rounded-full bg-yellow-50 flex items-center justify-center 
-                    shadow-md hover:shadow-lg border border-yellow-200 
-                    backdrop-blur-sm"
-                  >
-                    <img
-                      src={mountainIcon}
-                      alt="Mountain"
-                      className="w-5 h-5 object-contain"
-                    />
+        {/* Unclustered points with SVG icons via React Marker */}
+        {zoom >= 10 &&
+          myDataLocation.map((location) => {
+            const [longitude, latitude] = location.center;
+            const isMountain = location.place_type.includes("mountain");
+
+            return (
+              <Marker
+                key={location.id}
+                longitude={longitude}
+                latitude={latitude}
+                anchor="bottom"
+                onClick={(e) => {
+                  e.originalEvent.stopPropagation();
+
+                  const map = mapRef.current?.getMap();
+                  if (map) {
+                    map.flyTo({
+                      center: [longitude, latitude],
+                      zoom: 16,
+                      essential: true,
+                    });
+
+                    setCenter([longitude, latitude]);
+                    setZoom(16);
+                  }
+                }}
+              >
+                <div className="group relative cursor-pointer">
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black/80 backdrop-blur-sm text-white text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 border border-white/20">
+                    {location.place_name}
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-black/80"></div>
                   </div>
-                ) : (
-                  // POI / Default Icon
-                  <div
-                    className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center 
-                    shadow-md hover:shadow-lg border border-blue-200 
-                    backdrop-blur-sm"
-                  >
-                    <img
-                      src={houseIcon}
-                      alt="Location"
-                      className="w-5 h-5 object-contain"
-                    />
+
+                  <div className="transform transition-all duration-300 ease-out group-hover:scale-110">
+                    {isMountain ? (
+                      <div className="w-10 h-10 rounded-full bg-yellow-50 flex items-center justify-center shadow-md hover:shadow-lg border border-yellow-200 backdrop-blur-sm">
+                        <img
+                          src="/mountain.svg"
+                          alt="Mountain"
+                          className="w-5 h-5 object-contain"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center shadow-md hover:shadow-lg border border-blue-200 backdrop-blur-sm">
+                        <img
+                          src="/house.svg"
+                          alt="Location"
+                          className="w-5 h-5 object-contain"
+                        />
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </div>
-          </Marker>
-        ))}
+                </div>
+              </Marker>
+            );
+          })}
 
         {/* Custom Navigation Controls */}
         <NavigationControls
