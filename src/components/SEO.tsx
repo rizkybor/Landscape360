@@ -11,14 +11,14 @@ interface SEOProps {
 }
 
 export const SEO: React.FC<SEOProps> = ({
-  title = 'Landscape 360 | Precision 3D Terrain & Navigation Platform',
-  description = 'Professional web-based geospatial platform for high-fidelity 3D terrain visualization, real-time contour generation, and precise digital plotting.',
-  keywords = 'geoportal, 3d terrain, plotting, contour lines, digital elevation model, gis, topographic map, mapping tool, webgl, makopala, indonesia',
+  title = 'Landscape 360 | Explore without Limits, Guided by Precision',
+  description = 'The ultimate 3D navigation and tracking tool for wilderness experts. Engineered for safety and limitless exploration.',
+  keywords = 'explore, orienteering, geoportal, 3d terrain, plotting, contour lines, digital elevation model, gis, topographic map, mapping tool, webgl, makopala, makopala ubl, makopala universitas budi luhur, budi luhur, indonesia, pendaki gunung, pendakian, land navigation, mountaineering, route planner, real-time tracking, terrain intelligence, wilderness exploration, hiking maps, off-grid navigation, spatial visualization, slope analysis, trail monitor, summit tracker, peta gunung indonesia, gunung, mountain',
   image = 'https://landscape360.jcdigital.co.id/og-image.jpg',
   url = 'https://landscape360.jcdigital.co.id/',
   type = 'website',
 }) => {
-  const siteTitle = title === 'Landscape 360 | Precision 3D Terrain & Navigation Platform' ? title : `${title} | Landscape 360`;
+  const siteTitle = title === 'Landscape 360 | Explore without Limits, Guided by Precision' ? title : `${title} | Landscape 360`;
 
   const structuredData = {
     "@context": "https://schema.org",

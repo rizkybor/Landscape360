@@ -25,7 +25,7 @@ export const LoadingOverlay = ({ onComplete }: { onComplete?: () => void }) => {
           </span>
         </h1>
         <p className="text-sm md:text-lg text-blue-200/80 uppercase tracking-[0.3em] font-light animate-fade-in-up-delay">
-          Precision in Every Dimension.
+          Explore without Limits, Guided by Precision
         </p>
         
         {/* Glow effect - Optimized for mobile: removed heavy blur */}

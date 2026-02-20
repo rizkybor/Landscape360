@@ -17,7 +17,7 @@ import streetsView from "../assets/Street-View.png";
 import outdoorsView from "../assets/Outdoors-View.png";
 import satelliteView from "../assets/Satellite-View.png";
 import geoportalLogo from "../assets/geoportal360.png";
-import { SEO } from './SEO';
+import { SEO } from "./SEO";
 
 interface Props {
   onBack?: () => void;
@@ -26,7 +26,7 @@ interface Props {
 export const DocsPage = ({ onBack }: Props) => {
   return (
     <div className="h-screen bg-[#050505] text-white font-sans overflow-hidden flex flex-col">
-      <SEO 
+      <SEO
         title="Dokumentasi & Panduan"
         description="Pelajari cara menggunakan Landscape 360, navigasi peta 3D, analisis kontur, dan fitur-fitur canggih lainnya."
       />
@@ -45,19 +45,23 @@ export const DocsPage = ({ onBack }: Props) => {
                 <BookOpen className="w-4 h-4 text-white" />
               </div>
               <div>
-                <h1 className="text-lg font-bold leading-none">Documentation</h1>
-                <p className="text-[10px] text-gray-400 font-mono mt-1">System Guide</p>
+                <h1 className="text-lg font-bold leading-none">
+                  Documentation
+                </h1>
+                <p className="text-[10px] text-gray-400 font-mono mt-1">
+                  System Guide
+                </p>
               </div>
             </div>
           </div>
           <div className="flex items-center gap-3">
-             <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] font-bold uppercase tracking-wider">
-                <Zap size={10} />
-                <span>Performance Optimized</span>
-             </div>
-             <span className="text-xs font-mono text-blue-400 border border-blue-500/30 px-2 py-1 rounded bg-blue-500/10">
-                v2.0.0
-             </span>
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] font-bold uppercase tracking-wider">
+              <Zap size={10} />
+              <span>Performance Optimized</span>
+            </div>
+            <span className="text-xs font-mono text-blue-400 border border-blue-500/30 px-2 py-1 rounded bg-blue-500/10">
+              v2.0.0
+            </span>
           </div>
         </div>
       </div>
@@ -68,7 +72,7 @@ export const DocsPage = ({ onBack }: Props) => {
           {/* Intro */}
           <section className="space-y-6 text-center pb-12 border-b border-white/5 relative">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-blue-500/5 blur-[100px] pointer-events-none rounded-full"></div>
-            
+
             <div className="relative z-10 flex justify-center mb-8">
               <div className="relative group">
                 <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full group-hover:bg-blue-500/30 transition-all duration-500"></div>
@@ -79,26 +83,40 @@ export const DocsPage = ({ onBack }: Props) => {
                 />
               </div>
             </div>
-            
+
             <div className="relative z-10 space-y-4">
-                <h2 className="text-4xl sm:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-white to-blue-400 bg-[length:200%_auto] animate-shine tracking-tight">
-                  Landscape 360
-                </h2>
-                <p className="text-lg sm:text-xl text-blue-200/60 font-light tracking-[0.2em] uppercase">
-                  Precision in Every Dimension
-                </p>
+              <h2 className="text-4xl sm:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-white to-blue-400 bg-[length:200%_auto] animate-shine tracking-tight">
+                Landscape 360
+              </h2>
+              <p className="text-lg sm:text-xl text-blue-200/60 font-light tracking-[0.2em] uppercase">
+                Explore without Limits, Guided by Precision
+              </p>
             </div>
 
             <div className="relative z-10 max-w-2xl mx-auto space-y-4 text-gray-400 leading-relaxed text-sm sm:text-base">
-                <p>
-                  A professional-grade terrain visualization platform combining high-accuracy 3D mapping, 
-                  real-time contour generation, and precision survey tools.
-                </p>
-                <div className="flex flex-wrap justify-center gap-2 mt-4">
-                    <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">WebGL Powered</span>
-                    <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">Offline Capable</span>
-                    <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">Sub-meter Accuracy</span>
-                </div>
+              <p>
+                Master the terrain with the ultimate engine for outdoor
+                exploration. Engineered for{" "}
+                <span className="text-blue-200">
+                  mountaineers and wilderness experts
+                </span>{" "}
+                who demand absolute precision in navigation, real-time tracking,
+                and comprehensive terrain intelligence.
+              </p>
+              <div className="flex flex-wrap justify-center gap-2 mt-4">
+                <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">
+                  Advanced Land Navigation
+                </span>
+                <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">
+                  Live Path Monitoring
+                </span>
+                <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">
+                  3D Contour Visualization
+                </span>
+                <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">
+                  Reliable Offline Maps
+                </span>
+              </div>
             </div>
 
             <div className="mt-10 flex justify-center relative z-10">
@@ -125,121 +143,160 @@ export const DocsPage = ({ onBack }: Props) => {
           {/* Quick Start Overview */}
           <section>
             <div className="flex items-center gap-3 text-white mb-6">
-                <div className="p-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
-                    <Zap className="w-5 h-5 text-yellow-400" />
-                </div>
-                <h3 className="text-2xl font-bold">Quick Start Overview</h3>
+              <div className="p-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+                <Zap className="w-5 h-5 text-yellow-400" />
+              </div>
+              <h3 className="text-2xl font-bold">Quick Start Overview</h3>
             </div>
-            
+
             <div className="grid md:grid-cols-2 gap-4">
-                <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 flex gap-4 items-start group hover:border-yellow-500/30 transition-all">
-                    <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 shrink-0">
-                        <MousePointer size={16} />
-                    </div>
-                    <div>
-                        <h4 className="text-sm font-bold text-white mb-1">Navigation</h4>
-                        <p className="text-xs text-gray-400 leading-relaxed">
-                            <strong>Left-Click Drag</strong> to Rotate (3D) or Pan (2D). <strong>Scroll</strong> to Zoom. Use on-screen buttons for precision control.
-                        </p>
-                    </div>
+              <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 flex gap-4 items-start group hover:border-yellow-500/30 transition-all">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 shrink-0">
+                  <MousePointer size={16} />
                 </div>
+                <div>
+                  <h4 className="text-sm font-bold text-white mb-1">
+                    Navigation
+                  </h4>
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    <strong>Left-Click Drag</strong> to Rotate (3D) or Pan (2D).{" "}
+                    <strong>Scroll</strong> to Zoom. Use on-screen buttons for
+                    precision control.
+                  </p>
+                </div>
+              </div>
 
-                <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 flex gap-4 items-start group hover:border-green-500/30 transition-all">
-                    <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center text-green-400 shrink-0">
-                        <Layers size={16} />
-                    </div>
-                    <div>
-                        <h4 className="text-sm font-bold text-white mb-1">Terrain Analysis</h4>
-                        <p className="text-xs text-gray-400 leading-relaxed">
-                            Toggle <strong>Contours</strong> and adjust exaggeration in the Control Panel. Switch between Streets, Outdoors, and Satellite views.
-                        </p>
-                    </div>
+              <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 flex gap-4 items-start group hover:border-green-500/30 transition-all">
+                <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center text-green-400 shrink-0">
+                  <Layers size={16} />
                 </div>
+                <div>
+                  <h4 className="text-sm font-bold text-white mb-1">
+                    Terrain Analysis
+                  </h4>
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    Toggle <strong>Contours</strong> and adjust exaggeration in
+                    the Control Panel. Switch between Streets, Outdoors, and
+                    Satellite views.
+                  </p>
+                </div>
+              </div>
 
-                <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 flex gap-4 items-start group hover:border-pink-500/30 transition-all">
-                    <div className="w-8 h-8 rounded-lg bg-pink-500/10 flex items-center justify-center text-pink-400 shrink-0">
-                        <Camera size={16} />
-                    </div>
-                    <div>
-                        <h4 className="text-sm font-bold text-white mb-1">Export & Share</h4>
-                        <p className="text-xs text-gray-400 leading-relaxed">
-                            Capture high-res snapshots (PNG/JPG) or generate PDF reports with embedded telemetry data.
-                        </p>
-                    </div>
+              <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 flex gap-4 items-start group hover:border-pink-500/30 transition-all">
+                <div className="w-8 h-8 rounded-lg bg-pink-500/10 flex items-center justify-center text-pink-400 shrink-0">
+                  <Camera size={16} />
                 </div>
+                <div>
+                  <h4 className="text-sm font-bold text-white mb-1">
+                    Export & Share
+                  </h4>
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    Capture high-res snapshots (PNG/JPG) or generate PDF reports
+                    with embedded telemetry data.
+                  </p>
+                </div>
+              </div>
 
-                <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 flex gap-4 items-start group hover:border-green-500/30 transition-all">
-                    <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center text-green-400 shrink-0">
-                        <Navigation size={16} />
-                    </div>
-                    <div>
-                        <h4 className="text-sm font-bold text-white mb-1">GPS Tracking</h4>
-                        <p className="text-xs text-gray-400 leading-relaxed">
-                            Click the <strong>GPS Icon</strong> to broadcast your location (Pro) or monitor field teams (Enterprise). Includes Smart Reconnect.
-                        </p>
-                    </div>
+              <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 flex gap-4 items-start group hover:border-green-500/30 transition-all">
+                <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center text-green-400 shrink-0">
+                  <Navigation size={16} />
                 </div>
+                <div>
+                  <h4 className="text-sm font-bold text-white mb-1">
+                    GPS Tracking
+                  </h4>
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    Click the <strong>GPS Icon</strong> to broadcast your
+                    location (Pro) or monitor field teams (Enterprise). Includes
+                    Smart Reconnect.
+                  </p>
+                </div>
+              </div>
             </div>
           </section>
 
           {/* New Features Grid */}
           <section>
             <div className="flex items-center gap-3 text-white mb-6">
-                <div className="p-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
-                    <Globe className="w-5 h-5 text-blue-400" />
-                </div>
-                <h3 className="text-2xl font-bold">Visualization & Styles</h3>
+              <div className="p-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                <Globe className="w-5 h-5 text-blue-400" />
+              </div>
+              <h3 className="text-2xl font-bold">Visualization & Styles</h3>
             </div>
-            
+
             <div className="grid md:grid-cols-3 gap-4">
-                {/* Streets */}
-                <div className="group bg-[#0A0A0A] border border-white/10 rounded-xl overflow-hidden hover:border-blue-500/30 transition-all duration-300">
-                    <div className="h-24 bg-gradient-to-br from-blue-900/20 to-gray-900/50 relative overflow-hidden">
-                        <div className="absolute inset-0 opacity-40 group-hover:opacity-60 transition-opacity duration-500">
-                             <img src={streetsView} alt="Streets View" className="w-full h-full object-cover" />
-                        </div>
-                    </div>
-                    <div className="p-4">
-                        <h4 className="font-bold text-white mb-1 group-hover:text-blue-400 transition-colors">Streets</h4>
-                        <p className="text-xs text-gray-400 leading-relaxed">
-                            Vector-based street map with high clarity. Best for urban navigation and location identification.
-                        </p>
-                    </div>
+              {/* Streets */}
+              <div className="group bg-[#0A0A0A] border border-white/10 rounded-xl overflow-hidden hover:border-blue-500/30 transition-all duration-300">
+                <div className="h-24 bg-gradient-to-br from-blue-900/20 to-gray-900/50 relative overflow-hidden">
+                  <div className="absolute inset-0 opacity-40 group-hover:opacity-60 transition-opacity duration-500">
+                    <img
+                      src={streetsView}
+                      alt="Streets View"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                 </div>
+                <div className="p-4">
+                  <h4 className="font-bold text-white mb-1 group-hover:text-blue-400 transition-colors">
+                    Streets
+                  </h4>
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    Vector-based street map with high clarity. Best for urban
+                    navigation and location identification.
+                  </p>
+                </div>
+              </div>
 
-                {/* Outdoors */}
-                <div className="group bg-[#0A0A0A] border border-white/10 rounded-xl overflow-hidden hover:border-green-500/30 transition-all duration-300">
-                    <div className="h-24 bg-gradient-to-br from-green-900/20 to-gray-900/50 relative overflow-hidden">
-                         <div className="absolute inset-0 opacity-40 group-hover:opacity-60 transition-opacity duration-500">
-                             <img src={outdoorsView} alt="Outdoors View" className="w-full h-full object-cover" />
-                         </div>
-                    </div>
-                    <div className="p-4">
-                        <h4 className="font-bold text-white mb-1 group-hover:text-green-400 transition-colors">Outdoors</h4>
-                        <p className="text-xs text-gray-400 leading-relaxed">
-                            Topographic features with terrain shading. Ideal for hiking, contour analysis, and nature surveys.
-                        </p>
-                    </div>
+              {/* Outdoors */}
+              <div className="group bg-[#0A0A0A] border border-white/10 rounded-xl overflow-hidden hover:border-green-500/30 transition-all duration-300">
+                <div className="h-24 bg-gradient-to-br from-green-900/20 to-gray-900/50 relative overflow-hidden">
+                  <div className="absolute inset-0 opacity-40 group-hover:opacity-60 transition-opacity duration-500">
+                    <img
+                      src={outdoorsView}
+                      alt="Outdoors View"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                 </div>
+                <div className="p-4">
+                  <h4 className="font-bold text-white mb-1 group-hover:text-green-400 transition-colors">
+                    Outdoors
+                  </h4>
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    Topographic features with terrain shading. Ideal for hiking,
+                    contour analysis, and nature surveys.
+                  </p>
+                </div>
+              </div>
 
-                {/* Satellite */}
-                <div className="group bg-[#0A0A0A] border border-white/10 rounded-xl overflow-hidden hover:border-purple-500/30 transition-all duration-300">
-                    <div className="h-24 bg-gradient-to-br from-gray-900 to-black relative overflow-hidden">
-                         <div className="absolute inset-0 opacity-40 group-hover:opacity-60 transition-opacity duration-500">
-                             <img src={satelliteView} alt="Satellite View" className="w-full h-full object-cover" />
-                         </div>
-                    </div>
-                    <div className="p-4">
-                        <h4 className="font-bold text-white mb-1 group-hover:text-purple-400 transition-colors">Satellite Streets</h4>
-                        <p className="text-xs text-gray-400 leading-relaxed">
-                            High-resolution satellite imagery overlaid with street labels. Perfect for real-world context verification.
-                        </p>
-                    </div>
+              {/* Satellite */}
+              <div className="group bg-[#0A0A0A] border border-white/10 rounded-xl overflow-hidden hover:border-purple-500/30 transition-all duration-300">
+                <div className="h-24 bg-gradient-to-br from-gray-900 to-black relative overflow-hidden">
+                  <div className="absolute inset-0 opacity-40 group-hover:opacity-60 transition-opacity duration-500">
+                    <img
+                      src={satelliteView}
+                      alt="Satellite View"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                 </div>
+                <div className="p-4">
+                  <h4 className="font-bold text-white mb-1 group-hover:text-purple-400 transition-colors">
+                    Satellite Streets
+                  </h4>
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    High-resolution satellite imagery overlaid with street
+                    labels. Perfect for real-world context verification.
+                  </p>
+                </div>
+              </div>
             </div>
             <div className="mt-4 flex items-center gap-2 text-xs text-gray-500 bg-white/5 p-3 rounded-lg border border-white/5">
-                <Zap size={12} className="text-yellow-500" />
-                <span>Your preferred map style and view angle are automatically saved and restored on your next visit.</span>
+              <Zap size={12} className="text-yellow-500" />
+              <span>
+                Your preferred map style and view angle are automatically saved
+                and restored on your next visit.
+              </span>
             </div>
           </section>
 
@@ -248,61 +305,76 @@ export const DocsPage = ({ onBack }: Props) => {
               {/* Navigation Controls */}
               <section>
                 <div className="flex items-center gap-3 text-white mb-6">
-                    <div className="p-2 bg-purple-500/10 rounded-lg border border-purple-500/20">
-                        <MousePointer className="w-5 h-5 text-purple-400" />
-                    </div>
-                    <h3 className="text-2xl font-bold">Navigation Controls</h3>
+                  <div className="p-2 bg-purple-500/10 rounded-lg border border-purple-500/20">
+                    <MousePointer className="w-5 h-5 text-purple-400" />
+                  </div>
+                  <h3 className="text-2xl font-bold">Navigation Controls</h3>
                 </div>
-                
+
                 <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-1 overflow-hidden">
-                    <div className="grid grid-cols-2 divide-x divide-white/10">
-                        <div className="p-5 space-y-4">
-                            <div className="flex items-center gap-2 text-sm font-bold text-white">
-                                <Map size={14} className="text-blue-400"/> Desktop
-                            </div>
-                            <ul className="space-y-3 text-xs text-gray-400">
-                                <li className="flex justify-between">
-                                    <span>Left Drag</span>
-                                    <span className="text-gray-200 font-medium">Rotate / Orbit</span>
-                                </li>
-                                <li className="flex justify-between">
-                                    <span>Right Drag</span>
-                                    <span className="text-gray-200 font-medium">Pan Map</span>
-                                </li>
-                                <li className="flex justify-between">
-                                    <span>Scroll</span>
-                                    <span className="text-gray-200 font-medium">Smooth Zoom</span>
-                                </li>
-                                <li className="flex justify-between">
-                                    <span>Shift + Scroll</span>
-                                    <span className="text-gray-200 font-medium">Tilt (Pitch)</span>
-                                </li>
-                            </ul>
-                        </div>
-                        <div className="p-5 space-y-4 bg-white/[0.02]">
-                            <div className="flex items-center gap-2 text-sm font-bold text-white">
-                                <Smartphone size={14} className="text-green-400"/> Mobile
-                            </div>
-                            <ul className="space-y-3 text-xs text-gray-400">
-                                <li className="flex justify-between">
-                                    <span>One Finger</span>
-                                    <span className="text-gray-200 font-medium">Pan</span>
-                                </li>
-                                <li className="flex justify-between">
-                                    <span>Two Fingers</span>
-                                    <span className="text-gray-200 font-medium">Pinch Zoom</span>
-                                </li>
-                                <li className="flex justify-between">
-                                    <span>Twist</span>
-                                    <span className="text-gray-200 font-medium">Rotate</span>
-                                </li>
-                                <li className="flex justify-between">
-                                    <span>Two Finger Drag</span>
-                                    <span className="text-gray-200 font-medium">Tilt (3D Only)</span>
-                                </li>
-                            </ul>
-                        </div>
+                  <div className="grid grid-cols-2 divide-x divide-white/10">
+                    <div className="p-5 space-y-4">
+                      <div className="flex items-center gap-2 text-sm font-bold text-white">
+                        <Map size={14} className="text-blue-400" /> Desktop
+                      </div>
+                      <ul className="space-y-3 text-xs text-gray-400">
+                        <li className="flex justify-between">
+                          <span>Left Drag</span>
+                          <span className="text-gray-200 font-medium">
+                            Rotate / Orbit
+                          </span>
+                        </li>
+                        <li className="flex justify-between">
+                          <span>Right Drag</span>
+                          <span className="text-gray-200 font-medium">
+                            Pan Map
+                          </span>
+                        </li>
+                        <li className="flex justify-between">
+                          <span>Scroll</span>
+                          <span className="text-gray-200 font-medium">
+                            Smooth Zoom
+                          </span>
+                        </li>
+                        <li className="flex justify-between">
+                          <span>Shift + Scroll</span>
+                          <span className="text-gray-200 font-medium">
+                            Tilt (Pitch)
+                          </span>
+                        </li>
+                      </ul>
                     </div>
+                    <div className="p-5 space-y-4 bg-white/[0.02]">
+                      <div className="flex items-center gap-2 text-sm font-bold text-white">
+                        <Smartphone size={14} className="text-green-400" />{" "}
+                        Mobile
+                      </div>
+                      <ul className="space-y-3 text-xs text-gray-400">
+                        <li className="flex justify-between">
+                          <span>One Finger</span>
+                          <span className="text-gray-200 font-medium">Pan</span>
+                        </li>
+                        <li className="flex justify-between">
+                          <span>Two Fingers</span>
+                          <span className="text-gray-200 font-medium">
+                            Pinch Zoom
+                          </span>
+                        </li>
+                        <li className="flex justify-between">
+                          <span>Twist</span>
+                          <span className="text-gray-200 font-medium">
+                            Rotate
+                          </span>
+                        </li>
+                        <li className="flex justify-between">
+                          <span>Two Finger Drag</span>
+                          <span className="text-gray-200 font-medium">
+                            Tilt (3D Only)
+                          </span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
                 </div>
               </section>
 
@@ -314,32 +386,53 @@ export const DocsPage = ({ onBack }: Props) => {
                   </div>
                   <h3 className="text-2xl font-bold">Navigator Mode</h3>
                 </div>
-                
+
                 <div className="bg-gradient-to-br from-yellow-500/5 to-transparent border border-yellow-500/20 rounded-xl p-6 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-                  
+
                   <div className="relative z-10 space-y-6">
                     <div className="flex gap-4 items-start group">
-                      <div className="w-8 h-8 bg-yellow-500/10 rounded-lg flex items-center justify-center text-yellow-400 font-bold border border-yellow-500/20 shrink-0 group-hover:scale-110 transition-transform">1</div>
-                      <div>
-                        <h4 className="font-bold text-white text-sm">Precision Plotting</h4>
-                        <p className="text-xs text-gray-400 mt-1">Click to drop points. Elevation data is automatically captured from the terrain model.</p>
+                      <div className="w-8 h-8 bg-yellow-500/10 rounded-lg flex items-center justify-center text-yellow-400 font-bold border border-yellow-500/20 shrink-0 group-hover:scale-110 transition-transform">
+                        1
                       </div>
-                    </div>
-                    
-                    <div className="flex gap-4 items-start group">
-                      <div className="w-8 h-8 bg-yellow-500/10 rounded-lg flex items-center justify-center text-yellow-400 font-bold border border-yellow-500/20 shrink-0 group-hover:scale-110 transition-transform">2</div>
                       <div>
-                        <h4 className="font-bold text-white text-sm">Real-time Measurement</h4>
-                        <p className="text-xs text-gray-400 mt-1">Instant calculation of Distance, Azimuth, and Slope between consecutive points.</p>
+                        <h4 className="font-bold text-white text-sm">
+                          Precision Plotting
+                        </h4>
+                        <p className="text-xs text-gray-400 mt-1">
+                          Click to drop points. Elevation data is automatically
+                          captured from the terrain model.
+                        </p>
                       </div>
                     </div>
 
                     <div className="flex gap-4 items-start group">
-                      <div className="w-8 h-8 bg-yellow-500/10 rounded-lg flex items-center justify-center text-yellow-400 font-bold border border-yellow-500/20 shrink-0 group-hover:scale-110 transition-transform">3</div>
+                      <div className="w-8 h-8 bg-yellow-500/10 rounded-lg flex items-center justify-center text-yellow-400 font-bold border border-yellow-500/20 shrink-0 group-hover:scale-110 transition-transform">
+                        2
+                      </div>
                       <div>
-                        <h4 className="font-bold text-white text-sm">Group Management</h4>
-                        <p className="text-xs text-gray-400 mt-1">Organize complex surveys into named groups via the Navigator Panel.</p>
+                        <h4 className="font-bold text-white text-sm">
+                          Real-time Measurement
+                        </h4>
+                        <p className="text-xs text-gray-400 mt-1">
+                          Instant calculation of Distance, Azimuth, and Slope
+                          between consecutive points.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-4 items-start group">
+                      <div className="w-8 h-8 bg-yellow-500/10 rounded-lg flex items-center justify-center text-yellow-400 font-bold border border-yellow-500/20 shrink-0 group-hover:scale-110 transition-transform">
+                        3
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-white text-sm">
+                          Group Management
+                        </h4>
+                        <p className="text-xs text-gray-400 mt-1">
+                          Organize complex surveys into named groups via the
+                          Navigator Panel.
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -350,80 +443,104 @@ export const DocsPage = ({ onBack }: Props) => {
               <section>
                 <div className="flex items-center gap-3 text-white mb-6">
                   <div className="p-2 bg-indigo-500/10 rounded-lg border border-indigo-500/20">
-                     <Activity className="w-5 h-5 text-indigo-400" />
+                    <Activity className="w-5 h-5 text-indigo-400" />
                   </div>
                   <h3 className="text-2xl font-bold">Split Screen</h3>
                 </div>
-                
+
                 <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-6 relative overflow-hidden group hover:border-indigo-500/30 transition-all duration-300">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-                    
-                    <div className="grid grid-cols-2 gap-4 relative z-10 mb-4">
-                        <div className="aspect-video bg-gray-900 rounded-lg border border-white/10 flex items-center justify-center relative overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-black opacity-50"></div>
-                            <span className="relative text-[10px] font-bold text-gray-500 uppercase tracking-widest">2D Topo</span>
-                        </div>
-                        <div className="aspect-video bg-indigo-900/20 rounded-lg border border-indigo-500/20 flex items-center justify-center relative overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/40 to-black opacity-50"></div>
-                            <span className="relative text-[10px] font-bold text-indigo-400 uppercase tracking-widest">3D Sat</span>
-                        </div>
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+
+                  <div className="grid grid-cols-2 gap-4 relative z-10 mb-4">
+                    <div className="aspect-video bg-gray-900 rounded-lg border border-white/10 flex items-center justify-center relative overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-black opacity-50"></div>
+                      <span className="relative text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                        2D Topo
+                      </span>
                     </div>
-                    
-                    <h4 className="text-lg font-bold text-white mb-2">Synchronized Dual-View</h4>
-                    <p className="text-xs text-gray-400 leading-relaxed mb-4">
-                        Compare different map styles side-by-side in real-time. Camera movements (pan, zoom, rotate) are instantly synchronized between both viewports.
-                    </p>
-                    
-                    <div className="flex flex-wrap gap-2">
-                        <span className="px-2 py-1 rounded bg-indigo-500/10 border border-indigo-500/20 text-[10px] text-indigo-300 font-bold uppercase">Multi-Spectral Analysis</span>
-                        <span className="px-2 py-1 rounded bg-indigo-500/10 border border-indigo-500/20 text-[10px] text-indigo-300 font-bold uppercase">Cross-Reference</span>
+                    <div className="aspect-video bg-indigo-900/20 rounded-lg border border-indigo-500/20 flex items-center justify-center relative overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/40 to-black opacity-50"></div>
+                      <span className="relative text-[10px] font-bold text-indigo-400 uppercase tracking-widest">
+                        3D Sat
+                      </span>
                     </div>
+                  </div>
+
+                  <h4 className="text-lg font-bold text-white mb-2">
+                    Synchronized Dual-View
+                  </h4>
+                  <p className="text-xs text-gray-400 leading-relaxed mb-4">
+                    Compare different map styles side-by-side in real-time.
+                    Camera movements (pan, zoom, rotate) are instantly
+                    synchronized between both viewports.
+                  </p>
+
+                  <div className="flex flex-wrap gap-2">
+                    <span className="px-2 py-1 rounded bg-indigo-500/10 border border-indigo-500/20 text-[10px] text-indigo-300 font-bold uppercase">
+                      Multi-Spectral Analysis
+                    </span>
+                    <span className="px-2 py-1 rounded bg-indigo-500/10 border border-indigo-500/20 text-[10px] text-indigo-300 font-bold uppercase">
+                      Cross-Reference
+                    </span>
+                  </div>
                 </div>
               </section>
               {/* Weather Info */}
               <section>
                 <div className="flex items-center gap-3 text-white mb-6">
                   <div className="p-2 bg-cyan-500/10 rounded-lg border border-cyan-500/20">
-                     <CloudSun className="w-5 h-5 text-cyan-400" />
+                    <CloudSun className="w-5 h-5 text-cyan-400" />
                   </div>
                   <h3 className="text-2xl font-bold">Weather Intelligence</h3>
                 </div>
-                
+
                 <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-6 relative overflow-hidden group hover:border-cyan-500/30 transition-all duration-300">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-                    
-                    <div className="grid grid-cols-2 gap-4 relative z-10 mb-4">
-                        <div className="aspect-video bg-gray-900 rounded-lg border border-white/10 flex items-center justify-center relative overflow-hidden p-4">
-                            <div className="text-center">
-                                <span className="text-3xl font-bold text-white block">28°<span className="text-cyan-400 text-lg">C</span></span>
-                                <span className="text-[10px] text-gray-400 uppercase tracking-wider">Current</span>
-                            </div>
-                        </div>
-                        <div className="aspect-video bg-cyan-900/10 rounded-lg border border-cyan-500/20 flex flex-col justify-center px-4 relative overflow-hidden">
-                            <div className="flex justify-between items-center text-xs text-cyan-200 mb-1">
-                                <span>Humidity</span>
-                                <span className="font-bold">81%</span>
-                            </div>
-                            <div className="w-full bg-cyan-900/30 h-1.5 rounded-full overflow-hidden">
-                                <div className="bg-cyan-400 h-full w-[81%]"></div>
-                            </div>
-                            <div className="mt-2 flex justify-between items-center text-xs text-emerald-200">
-                                <span>Wind</span>
-                                <span className="font-bold">10 km/h</span>
-                            </div>
-                        </div>
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+
+                  <div className="grid grid-cols-2 gap-4 relative z-10 mb-4">
+                    <div className="aspect-video bg-gray-900 rounded-lg border border-white/10 flex items-center justify-center relative overflow-hidden p-4">
+                      <div className="text-center">
+                        <span className="text-3xl font-bold text-white block">
+                          28°<span className="text-cyan-400 text-lg">C</span>
+                        </span>
+                        <span className="text-[10px] text-gray-400 uppercase tracking-wider">
+                          Current
+                        </span>
+                      </div>
                     </div>
-                    
-                    <h4 className="text-lg font-bold text-white mb-2">Real-time Atmospheric Data</h4>
-                    <p className="text-xs text-gray-400 leading-relaxed mb-4">
-                        Integrated live weather feed from BMKG (Badan Meteorologi, Klimatologi, dan Geofisika). 
-                        Provides essential environmental context for field surveys, including 3-day forecasting.
-                    </p>
-                    
-                    <div className="flex flex-wrap gap-2">
-                        <span className="px-2 py-1 rounded bg-cyan-500/10 border border-cyan-500/20 text-[10px] text-cyan-300 font-bold uppercase">Live Updates</span>
-                        <span className="px-2 py-1 rounded bg-cyan-500/10 border border-cyan-500/20 text-[10px] text-cyan-300 font-bold uppercase">Field Safety</span>
+                    <div className="aspect-video bg-cyan-900/10 rounded-lg border border-cyan-500/20 flex flex-col justify-center px-4 relative overflow-hidden">
+                      <div className="flex justify-between items-center text-xs text-cyan-200 mb-1">
+                        <span>Humidity</span>
+                        <span className="font-bold">81%</span>
+                      </div>
+                      <div className="w-full bg-cyan-900/30 h-1.5 rounded-full overflow-hidden">
+                        <div className="bg-cyan-400 h-full w-[81%]"></div>
+                      </div>
+                      <div className="mt-2 flex justify-between items-center text-xs text-emerald-200">
+                        <span>Wind</span>
+                        <span className="font-bold">10 km/h</span>
+                      </div>
                     </div>
+                  </div>
+
+                  <h4 className="text-lg font-bold text-white mb-2">
+                    Real-time Atmospheric Data
+                  </h4>
+                  <p className="text-xs text-gray-400 leading-relaxed mb-4">
+                    Integrated live weather feed from BMKG (Badan Meteorologi,
+                    Klimatologi, dan Geofisika). Provides essential
+                    environmental context for field surveys, including 3-day
+                    forecasting.
+                  </p>
+
+                  <div className="flex flex-wrap gap-2">
+                    <span className="px-2 py-1 rounded bg-cyan-500/10 border border-cyan-500/20 text-[10px] text-cyan-300 font-bold uppercase">
+                      Live Updates
+                    </span>
+                    <span className="px-2 py-1 rounded bg-cyan-500/10 border border-cyan-500/20 text-[10px] text-cyan-300 font-bold uppercase">
+                      Field Safety
+                    </span>
+                  </div>
                 </div>
               </section>
 
@@ -431,69 +548,100 @@ export const DocsPage = ({ onBack }: Props) => {
               <section>
                 <div className="flex items-center gap-3 text-white mb-6">
                   <div className="p-2 bg-green-500/10 rounded-lg border border-green-500/20">
-                     <Navigation size={20} className="text-green-400" />
+                    <Navigation size={20} className="text-green-400" />
                   </div>
                   <h3 className="text-2xl font-bold">Realtime GPS Tracking</h3>
-                  <span className="px-2 py-1 rounded bg-green-500/20 text-[10px] text-green-400 font-bold uppercase border border-green-500/30">Live Now</span>
+                  <span className="px-2 py-1 rounded bg-green-500/20 text-[10px] text-green-400 font-bold uppercase border border-green-500/30">
+                    Live Now
+                  </span>
                 </div>
-                
-                <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-6 relative overflow-hidden group hover:border-green-500/30 transition-all duration-300">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-                    
-                    <div className="grid grid-cols-2 gap-4 relative z-10 mb-4">
-                        <div className="aspect-video bg-gray-900 rounded-lg border border-white/10 flex items-center justify-center relative overflow-hidden p-4">
-                            <div className="flex items-center justify-center gap-2">
-                                <div className="w-3 h-3 bg-green-500 rounded-full animate-ping"></div>
-                                <span className="text-sm font-bold text-white">Live Position</span>
-                            </div>
-                        </div>
-                        <div className="aspect-video bg-green-900/10 rounded-lg border border-green-500/20 flex flex-col justify-center px-4 relative overflow-hidden">
-                           <div className="space-y-2">
-                              <div className="flex justify-between text-[10px] text-gray-400">
-                                <span>Status</span>
-                                <span className="text-green-400 font-bold">ONLINE</span>
-                              </div>
-                              <div className="flex justify-between text-[10px] text-gray-400">
-                                <span>Mode</span>
-                                <span className="text-white font-mono">Broadcast / Monitor</span>
-                              </div>
-                              <div className="flex justify-between text-[10px] text-gray-400">
-                                <span>Timezone</span>
-                                <span className="text-white font-mono">WIB (UTC+7)</span>
-                              </div>
-                              <div className="flex justify-between text-[10px] text-gray-400">
-                                <span>Latency</span>
-                                <span className="text-white font-mono">&lt; 100ms</span>
-                              </div>
-                           </div>
-                        </div>
-                    </div>
-                    
-                    <h4 className="text-lg font-bold text-white mb-2">Command Center & Field Tracking</h4>
-                    <p className="text-xs text-gray-400 leading-relaxed mb-4">
-                        Advanced personnel tracking system with Role-Based Access Control.
-                        <strong> Enterprise Monitors</strong> can visualize all active field units in real-time, while 
-                        <strong> Pro Users</strong> can broadcast their secure location data.
-                    </p>
-                    
-                    <div className="flex flex-wrap gap-2">
-                        <span className="px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-[10px] text-green-300 font-bold uppercase">Realtime Websocket</span>
-                        <span className="px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-[10px] text-green-300 font-bold uppercase">Multi-User Support</span>
-                        <span className="px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-[10px] text-green-300 font-bold uppercase">Heartbeat Sync</span>
-                        <span className="px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-[10px] text-green-300 font-bold uppercase">5s Update Interval</span>
-                    </div>
 
-                    <div className="mt-4 p-3 rounded-lg bg-yellow-500/5 border border-yellow-500/10">
-                        <h5 className="text-xs font-bold text-yellow-400 mb-1 flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse"></span>
-                            Connectivity & Data Rate
-                        </h5>
-                        <p className="text-[10px] text-gray-400 leading-relaxed">
-                            This feature requires an active internet connection (4G/WiFi). Data is refreshed every <strong>5 seconds</strong> to ensure realtime accuracy while optimizing battery life.
-                            If connection is lost, data is buffered locally and automatically flushed when back online (Smart Reconnect).
-                            <strong>Offline tracking is currently not supported.</strong>
-                        </p>
+                <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-6 relative overflow-hidden group hover:border-green-500/30 transition-all duration-300">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+
+                  <div className="grid grid-cols-2 gap-4 relative z-10 mb-4">
+                    <div className="aspect-video bg-gray-900 rounded-lg border border-white/10 flex items-center justify-center relative overflow-hidden p-4">
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-3 h-3 bg-green-500 rounded-full animate-ping"></div>
+                        <span className="text-sm font-bold text-white">
+                          Live Position
+                        </span>
+                      </div>
                     </div>
+                    <div className="aspect-video bg-green-900/10 rounded-lg border border-green-500/20 flex flex-col justify-center px-4 relative overflow-hidden">
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-[10px] text-gray-400">
+                          <span>Status</span>
+                          <span className="text-green-400 font-bold">
+                            ONLINE
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-[10px] text-gray-400">
+                          <span>Mode</span>
+                          <span className="text-white font-mono">
+                            Broadcast / Monitor
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-[10px] text-gray-400">
+                          <span>Timezone</span>
+                          <span className="text-white font-mono">
+                            WIB (UTC+7)
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-[10px] text-gray-400">
+                          <span>Latency</span>
+                          <span className="text-white font-mono">
+                            &lt; 100ms
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <h4 className="text-lg font-bold text-white mb-2">
+                    Command Center & Field Tracking
+                  </h4>
+                  <p className="text-xs text-gray-400 leading-relaxed mb-4">
+                    Advanced personnel tracking system with Role-Based Access
+                    Control.
+                    <strong> Enterprise Monitors</strong> can visualize all
+                    active field units in real-time, while
+                    <strong> Pro Users</strong> can broadcast their secure
+                    location data.
+                  </p>
+
+                  <div className="flex flex-wrap gap-2">
+                    <span className="px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-[10px] text-green-300 font-bold uppercase">
+                      Realtime Websocket
+                    </span>
+                    <span className="px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-[10px] text-green-300 font-bold uppercase">
+                      Multi-User Support
+                    </span>
+                    <span className="px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-[10px] text-green-300 font-bold uppercase">
+                      Heartbeat Sync
+                    </span>
+                    <span className="px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-[10px] text-green-300 font-bold uppercase">
+                      5s Update Interval
+                    </span>
+                  </div>
+
+                  <div className="mt-4 p-3 rounded-lg bg-yellow-500/5 border border-yellow-500/10">
+                    <h5 className="text-xs font-bold text-yellow-400 mb-1 flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse"></span>
+                      Connectivity & Data Rate
+                    </h5>
+                    <p className="text-[10px] text-gray-400 leading-relaxed">
+                      This feature requires an active internet connection
+                      (4G/WiFi). Data is refreshed every{" "}
+                      <strong>5 seconds</strong> to ensure realtime accuracy
+                      while optimizing battery life. If connection is lost, data
+                      is buffered locally and automatically flushed when back
+                      online (Smart Reconnect).
+                      <strong>
+                        Offline tracking is currently not supported.
+                      </strong>
+                    </p>
+                  </div>
                 </div>
               </section>
             </div>
@@ -503,56 +651,74 @@ export const DocsPage = ({ onBack }: Props) => {
               <section>
                 <div className="flex items-center gap-3 text-white mb-6">
                   <div className="p-2 bg-green-500/10 rounded-lg border border-green-500/20">
-                     <Layers className="w-5 h-5 text-green-400" />
+                    <Layers className="w-5 h-5 text-green-400" />
                   </div>
                   <h3 className="text-2xl font-bold">Terrain Analysis</h3>
                 </div>
-                
+
                 <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-6 space-y-6">
                   {/* Data Source Info */}
                   <div className="p-4 bg-blue-500/5 rounded-lg border border-blue-500/10 mb-6">
-                     <h4 className="text-sm font-bold text-blue-300 mb-2 flex items-center gap-2">
-                        <Activity size={14} className="text-blue-400"/> Data Sources
-                     </h4>
-                     <p className="text-xs text-gray-300 leading-relaxed">
-                        Topographic data and contours are generated in real-time from the <strong>Mapbox Terrain-RGB v1</strong> tile set. 
-                        This global Digital Elevation Model (DEM) aggregates data from multiple sources:
-                     </p>
-                     <ul className="mt-2 space-y-1 ml-4 list-disc text-[11px] text-gray-400">
-                        <li><strong>SRTM 30m</strong> (Shuttle Radar Topography Mission) for global coverage.</li>
-                        <li><strong>ASTER GDEM</strong> (Advanced Spaceborne Thermal Emission and Reflection Radiometer).</li>
-                        <li>High-resolution local government data (LiDAR/Sonar) where available (e.g., USGS, EEA).</li>
-                     </ul>
-                     <p className="text-[10px] text-gray-500 mt-2 italic">
-                        *Vertical accuracy varies by location (typically ±5m to ±10m RMSE globally, sub-meter in high-res zones).
-                     </p>
+                    <h4 className="text-sm font-bold text-blue-300 mb-2 flex items-center gap-2">
+                      <Activity size={14} className="text-blue-400" /> Data
+                      Sources
+                    </h4>
+                    <p className="text-xs text-gray-300 leading-relaxed">
+                      Topographic data and contours are generated in real-time
+                      from the <strong>Mapbox Terrain-RGB v1</strong> tile set.
+                      This global Digital Elevation Model (DEM) aggregates data
+                      from multiple sources:
+                    </p>
+                    <ul className="mt-2 space-y-1 ml-4 list-disc text-[11px] text-gray-400">
+                      <li>
+                        <strong>SRTM 30m</strong> (Shuttle Radar Topography
+                        Mission) for global coverage.
+                      </li>
+                      <li>
+                        <strong>ASTER GDEM</strong> (Advanced Spaceborne Thermal
+                        Emission and Reflection Radiometer).
+                      </li>
+                      <li>
+                        High-resolution local government data (LiDAR/Sonar)
+                        where available (e.g., USGS, EEA).
+                      </li>
+                    </ul>
+                    <p className="text-[10px] text-gray-500 mt-2 italic">
+                      *Vertical accuracy varies by location (typically ±5m to
+                      ±10m RMSE globally, sub-meter in high-res zones).
+                    </p>
                   </div>
 
                   <div className="p-4 bg-white/5 rounded-lg border border-white/5">
                     <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                        Contour Configuration
+                      <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                      Contour Configuration
                     </h4>
                     <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                            <span className="text-[10px] uppercase text-gray-500 font-bold tracking-wider">Interval</span>
-                            <p className="text-xs text-gray-300">2.5m - 500m</p>
-                        </div>
-                         <div className="space-y-1">
-                            <span className="text-[10px] uppercase text-gray-500 font-bold tracking-wider">Exaggeration</span>
-                            <p className="text-xs text-gray-300">1.0x - 10.0x</p>
-                        </div>
+                      <div className="space-y-1">
+                        <span className="text-[10px] uppercase text-gray-500 font-bold tracking-wider">
+                          Interval
+                        </span>
+                        <p className="text-xs text-gray-300">2.5m - 500m</p>
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-[10px] uppercase text-gray-500 font-bold tracking-wider">
+                          Exaggeration
+                        </span>
+                        <p className="text-xs text-gray-300">1.0x - 10.0x</p>
+                      </div>
                     </div>
                   </div>
-                  
+
                   <div className="p-4 bg-white/5 rounded-lg border border-white/5">
-                     <h4 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
-                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                        Opacity Control
-                     </h4>
-                     <p className="text-xs text-gray-400">
-                        Fine-tune the transparency of contour layers to blend seamlessly with satellite imagery or street maps.
-                     </p>
+                    <h4 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
+                      <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                      Opacity Control
+                    </h4>
+                    <p className="text-xs text-gray-400">
+                      Fine-tune the transparency of contour layers to blend
+                      seamlessly with satellite imagery or street maps.
+                    </p>
                   </div>
                 </div>
               </section>
@@ -561,56 +727,79 @@ export const DocsPage = ({ onBack }: Props) => {
               <section>
                 <div className="flex items-center gap-3 text-white mb-6">
                   <div className="p-2 bg-blue-600/10 rounded-lg border border-blue-600/20">
-                     <Globe className="w-5 h-5 text-blue-400" />
+                    <Globe className="w-5 h-5 text-blue-400" />
                   </div>
                   <h3 className="text-2xl font-bold">Geospatial Grid System</h3>
                 </div>
-                
+
                 <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-6 space-y-6">
                   <div className="p-4 bg-blue-900/10 rounded-lg border border-blue-500/10 mb-2">
-                     <h4 className="text-sm font-bold text-blue-300 mb-2 flex items-center gap-2">
-                        <Activity size={14} className="text-blue-400"/> Dynamic DMS Grid
-                     </h4>
-                     <p className="text-xs text-gray-300 leading-relaxed">
-                        A high-precision coordinate grid overlay that automatically adjusts based on your zoom level. 
-                        Displays Latitude/Longitude in <strong>DMS (Degrees, Minutes, Seconds)</strong> format for professional cartography.
-                     </p>
+                    <h4 className="text-sm font-bold text-blue-300 mb-2 flex items-center gap-2">
+                      <Activity size={14} className="text-blue-400" /> Dynamic
+                      DMS Grid
+                    </h4>
+                    <p className="text-xs text-gray-300 leading-relaxed">
+                      A high-precision coordinate grid overlay that
+                      automatically adjusts based on your zoom level. Displays
+                      Latitude/Longitude in{" "}
+                      <strong>DMS (Degrees, Minutes, Seconds)</strong> format
+                      for professional cartography.
+                    </p>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="p-4 bg-white/5 rounded-lg border border-white/5">
-                        <h4 className="text-sm font-bold text-white mb-3">Scale-based Intervals</h4>
-                        <ul className="space-y-2 text-xs text-gray-400">
-                            <li className="flex justify-between border-b border-white/5 pb-1">
-                                <span>1:10.000</span>
-                                <span className="text-blue-300 font-mono">15" (~450m)</span>
-                            </li>
-                            <li className="flex justify-between border-b border-white/5 pb-1">
-                                <span>1:25.000</span>
-                                <span className="text-blue-300 font-mono">30" (~900m)</span>
-                            </li>
-                            <li className="flex justify-between border-b border-white/5 pb-1">
-                                <span>1:50.000</span>
-                                <span className="text-blue-300 font-mono">1' (~1.8km)</span>
-                            </li>
-                            <li className="flex justify-between pb-1">
-                                <span>1:250.000</span>
-                                <span className="text-blue-300 font-mono">5' (~9km)</span>
-                            </li>
-                        </ul>
-                      </div>
+                    <div className="p-4 bg-white/5 rounded-lg border border-white/5">
+                      <h4 className="text-sm font-bold text-white mb-3">
+                        Scale-based Intervals
+                      </h4>
+                      <ul className="space-y-2 text-xs text-gray-400">
+                        <li className="flex justify-between border-b border-white/5 pb-1">
+                          <span>1:10.000</span>
+                          <span className="text-blue-300 font-mono">
+                            15" (~450m)
+                          </span>
+                        </li>
+                        <li className="flex justify-between border-b border-white/5 pb-1">
+                          <span>1:25.000</span>
+                          <span className="text-blue-300 font-mono">
+                            30" (~900m)
+                          </span>
+                        </li>
+                        <li className="flex justify-between border-b border-white/5 pb-1">
+                          <span>1:50.000</span>
+                          <span className="text-blue-300 font-mono">
+                            1' (~1.8km)
+                          </span>
+                        </li>
+                        <li className="flex justify-between pb-1">
+                          <span>1:250.000</span>
+                          <span className="text-blue-300 font-mono">
+                            5' (~9km)
+                          </span>
+                        </li>
+                      </ul>
+                    </div>
 
-                      <div className="p-4 bg-white/5 rounded-lg border border-white/5 flex flex-col justify-center">
-                         <h4 className="text-sm font-bold text-white mb-2">Visual Customization</h4>
-                         <p className="text-xs text-gray-400 mb-3">
-                            Full control over grid visibility to ensure it complements your map without obstructing critical data.
-                         </p>
-                         <div className="flex flex-wrap gap-2">
-                            <span className="px-2 py-1 rounded bg-blue-500/10 border border-blue-500/20 text-[10px] text-blue-300 font-bold uppercase">Adjustable Opacity</span>
-                            <span className="px-2 py-1 rounded bg-blue-500/10 border border-blue-500/20 text-[10px] text-blue-300 font-bold uppercase">Auto-Scaling</span>
-                            <span className="px-2 py-1 rounded bg-blue-500/10 border border-blue-500/20 text-[10px] text-blue-300 font-bold uppercase">Client-Side Rendering</span>
-                         </div>
+                    <div className="p-4 bg-white/5 rounded-lg border border-white/5 flex flex-col justify-center">
+                      <h4 className="text-sm font-bold text-white mb-2">
+                        Visual Customization
+                      </h4>
+                      <p className="text-xs text-gray-400 mb-3">
+                        Full control over grid visibility to ensure it
+                        complements your map without obstructing critical data.
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        <span className="px-2 py-1 rounded bg-blue-500/10 border border-blue-500/20 text-[10px] text-blue-300 font-bold uppercase">
+                          Adjustable Opacity
+                        </span>
+                        <span className="px-2 py-1 rounded bg-blue-500/10 border border-blue-500/20 text-[10px] text-blue-300 font-bold uppercase">
+                          Auto-Scaling
+                        </span>
+                        <span className="px-2 py-1 rounded bg-blue-500/10 border border-blue-500/20 text-[10px] text-blue-300 font-bold uppercase">
+                          Client-Side Rendering
+                        </span>
                       </div>
+                    </div>
                   </div>
                 </div>
               </section>
@@ -618,61 +807,97 @@ export const DocsPage = ({ onBack }: Props) => {
               {/* Export & Capture */}
               <section>
                 <div className="flex items-center gap-3 text-white mb-6">
-                   <div className="p-2 bg-pink-500/10 rounded-lg border border-pink-500/20">
-                      <Camera className="w-5 h-5 text-pink-400" />
-                   </div>
-                   <h3 className="text-2xl font-bold">Export Tools</h3>
+                  <div className="p-2 bg-pink-500/10 rounded-lg border border-pink-500/20">
+                    <Camera className="w-5 h-5 text-pink-400" />
+                  </div>
+                  <h3 className="text-2xl font-bold">Export Tools</h3>
                 </div>
-                
+
                 <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-6">
-                    <div className="grid grid-cols-3 gap-3 mb-6">
-                        <div className="text-center p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors border border-white/5">
-                            <span className="block text-xs font-bold text-white mb-1">PNG</span>
-                            <span className="text-[10px] text-gray-500">High Res</span>
-                        </div>
-                         <div className="text-center p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors border border-white/5">
-                            <span className="block text-xs font-bold text-white mb-1">JPG</span>
-                            <span className="text-[10px] text-gray-500">Compressed</span>
-                        </div>
-                         <div className="text-center p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors border border-white/5">
-                            <span className="block text-xs font-bold text-white mb-1">PDF</span>
-                            <span className="text-[10px] text-gray-500">Document</span>
-                        </div>
+                  <div className="grid grid-cols-3 gap-3 mb-6">
+                    <div className="text-center p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors border border-white/5">
+                      <span className="block text-xs font-bold text-white mb-1">
+                        PNG
+                      </span>
+                      <span className="text-[10px] text-gray-500">
+                        High Res
+                      </span>
                     </div>
-
-                    <div className="space-y-4">
-                        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Included Metadata</h4>
-                        <div className="space-y-3">
-                             <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg border border-white/5">
-                                <div className="mt-0.5 text-pink-400 font-bold text-[10px]">01</div>
-                                <div>
-                                    <strong className="text-white text-xs block">Geospatial Telemetry</strong>
-                                    <p className="text-[10px] text-gray-400">Exact Center Point coordinates (Lat/Lng), Average Elevation (mdpl), and Heading/Pitch angles.</p>
-                                </div>
-                             </div>
-                             <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg border border-white/5">
-                                <div className="mt-0.5 text-pink-400 font-bold text-[10px]">02</div>
-                                <div>
-                                    <strong className="text-white text-xs block">Survey Data Table</strong>
-                                    <p className="text-[10px] text-gray-400">Comprehensive list of all plotted points including individual coordinates, elevation, and segment distances.</p>
-                                </div>
-                             </div>
-                             <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg border border-white/5">
-                                <div className="mt-0.5 text-pink-400 font-bold text-[10px]">03</div>
-                                <div>
-                                    <strong className="text-white text-xs block">Elevation Profile</strong>
-                                    <p className="text-[10px] text-gray-400">Visual chart showing Min, Max, and Elevation Gain along the survey path.</p>
-                                </div>
-                             </div>
-                        </div>
+                    <div className="text-center p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors border border-white/5">
+                      <span className="block text-xs font-bold text-white mb-1">
+                        JPG
+                      </span>
+                      <span className="text-[10px] text-gray-500">
+                        Compressed
+                      </span>
                     </div>
+                    <div className="text-center p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors border border-white/5">
+                      <span className="block text-xs font-bold text-white mb-1">
+                        PDF
+                      </span>
+                      <span className="text-[10px] text-gray-500">
+                        Document
+                      </span>
+                    </div>
+                  </div>
 
-                    <p className="text-[10px] text-gray-500 mt-4 text-center italic border-t border-white/5 pt-4">
-                        *Exports automatically hide UI controls for a clean, presentation-ready output.
-                    </p>
+                  <div className="space-y-4">
+                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                      Included Metadata
+                    </h4>
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg border border-white/5">
+                        <div className="mt-0.5 text-pink-400 font-bold text-[10px]">
+                          01
+                        </div>
+                        <div>
+                          <strong className="text-white text-xs block">
+                            Geospatial Telemetry
+                          </strong>
+                          <p className="text-[10px] text-gray-400">
+                            Exact Center Point coordinates (Lat/Lng), Average
+                            Elevation (mdpl), and Heading/Pitch angles.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg border border-white/5">
+                        <div className="mt-0.5 text-pink-400 font-bold text-[10px]">
+                          02
+                        </div>
+                        <div>
+                          <strong className="text-white text-xs block">
+                            Survey Data Table
+                          </strong>
+                          <p className="text-[10px] text-gray-400">
+                            Comprehensive list of all plotted points including
+                            individual coordinates, elevation, and segment
+                            distances.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg border border-white/5">
+                        <div className="mt-0.5 text-pink-400 font-bold text-[10px]">
+                          03
+                        </div>
+                        <div>
+                          <strong className="text-white text-xs block">
+                            Elevation Profile
+                          </strong>
+                          <p className="text-[10px] text-gray-400">
+                            Visual chart showing Min, Max, and Elevation Gain
+                            along the survey path.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p className="text-[10px] text-gray-500 mt-4 text-center italic border-t border-white/5 pt-4">
+                    *Exports automatically hide UI controls for a clean,
+                    presentation-ready output.
+                  </p>
                 </div>
               </section>
-
             </div>
           </div>
 
@@ -697,8 +922,8 @@ export const DocsPage = ({ onBack }: Props) => {
             </div>
 
             <div className="grid md:grid-cols-2 gap-6"> */}
-                {/* Video 1 */}
-                {/* <div className="group bg-[#0A0A0A] border border-white/10 rounded-xl overflow-hidden hover:border-red-500/30 transition-all duration-300">
+          {/* Video 1 */}
+          {/* <div className="group bg-[#0A0A0A] border border-white/10 rounded-xl overflow-hidden hover:border-red-500/30 transition-all duration-300">
                     <div className="aspect-video relative bg-black">
                         <iframe 
                             className="w-full h-full absolute inset-0"
@@ -718,8 +943,8 @@ export const DocsPage = ({ onBack }: Props) => {
                     </div>
                 </div> */}
 
-                {/* Video 2 */}
-                {/* <div className="group bg-[#0A0A0A] border border-white/10 rounded-xl overflow-hidden hover:border-red-500/30 transition-all duration-300">
+          {/* Video 2 */}
+          {/* <div className="group bg-[#0A0A0A] border border-white/10 rounded-xl overflow-hidden hover:border-red-500/30 transition-all duration-300">
                      <div className="aspect-video relative bg-black">
                         <iframe 
                             className="w-full h-full absolute inset-0"
@@ -745,240 +970,361 @@ export const DocsPage = ({ onBack }: Props) => {
           <section className="space-y-8 pt-8 border-t border-white/5">
             <div className="flex items-center gap-3 text-white mb-6">
               <div className="p-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
-                 <Activity className="w-5 h-5 text-yellow-400" />
+                <Activity className="w-5 h-5 text-yellow-400" />
               </div>
               <h3 className="text-2xl font-bold">Real-time Telemetry</h3>
             </div>
 
             <div className="space-y-12">
-                {/* Navigator Tooltip */}
-                <div className="space-y-4">
-                    <h4 className="text-lg font-bold text-white">Navigator Tooltip</h4>
-                    <p className="text-xs text-gray-400 leading-relaxed">
-                        When using Navigator Mode (Plotting), a reactive tooltip appears next to your cursor to provide instant feedback before you place a point.
-                    </p>
-                    
-                    <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-6 flex flex-col items-center justify-center relative overflow-hidden group">
-                        {/* Mock Map Background */}
-                        <div className="absolute inset-0 bg-green-900/20 blur-sm opacity-50"></div>
-                        
-                        {/* The Tooltip UI */}
-                        <div className="relative z-10 bg-white/20 backdrop-blur-md text-white text-[10px] rounded px-3 py-2 shadow-xl border border-white/20 flex flex-col gap-1 min-w-[140px] transform group-hover:scale-105 transition-transform duration-300">
-                            <div className="flex items-center justify-between gap-3">
-                                <span className="text-white/80 font-bold uppercase text-[8px]">Azim</span>
-                                <span className="font-bold font-mono text-white">120.0°</span>
-                            </div>
-                        </div>
+              {/* Navigator Tooltip */}
+              <div className="space-y-4">
+                <h4 className="text-lg font-bold text-white">
+                  Navigator Tooltip
+                </h4>
+                <p className="text-xs text-gray-400 leading-relaxed">
+                  When using Navigator Mode (Plotting), a reactive tooltip
+                  appears next to your cursor to provide instant feedback before
+                  you place a point.
+                </p>
 
-                        {/* Caption */}
-                        <div className="absolute bottom-2 left-0 right-0 text-center">
-                            <span className="text-[9px] text-gray-500 font-mono uppercase tracking-widest">Reactive Feedback</span>
-                        </div>
-                    </div>
+                <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-6 flex flex-col items-center justify-center relative overflow-hidden group">
+                  {/* Mock Map Background */}
+                  <div className="absolute inset-0 bg-green-900/20 blur-sm opacity-50"></div>
 
-                    <div className="grid gap-3 mt-4">
-                        <div className="bg-white/5 p-3 rounded-lg border border-white/5">
-                            <span className="text-[10px] font-bold text-gray-400 block mb-1">AZIM (Azimuth)</span>
-                            <p className="text-[10px] text-gray-300">
-                                The compass bearing (0-360°) from your last point to the cursor location. Essential for orienteering.
-                            </p>
-                        </div>
+                  {/* The Tooltip UI */}
+                  <div className="relative z-10 bg-white/20 backdrop-blur-md text-white text-[10px] rounded px-3 py-2 shadow-xl border border-white/20 flex flex-col gap-1 min-w-[140px] transform group-hover:scale-105 transition-transform duration-300">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-white/80 font-bold uppercase text-[8px]">
+                        Azim
+                      </span>
+                      <span className="font-bold font-mono text-white">
+                        120.0°
+                      </span>
                     </div>
+                  </div>
+
+                  {/* Caption */}
+                  <div className="absolute bottom-2 left-0 right-0 text-center">
+                    <span className="text-[9px] text-gray-500 font-mono uppercase tracking-widest">
+                      Reactive Feedback
+                    </span>
+                  </div>
                 </div>
 
-                {/* Telemetry Overlay */}
-                <div className="space-y-4">
-                    <h4 className="text-lg font-bold text-white">Survey Data Panel</h4>
-                    <p className="text-xs text-gray-400 leading-relaxed">
-                        Comprehensive metrics for the currently viewed area or active survey segment.
+                <div className="grid gap-3 mt-4">
+                  <div className="bg-white/5 p-3 rounded-lg border border-white/5">
+                    <span className="text-[10px] font-bold text-gray-400 block mb-1">
+                      AZIM (Azimuth)
+                    </span>
+                    <p className="text-[10px] text-gray-300">
+                      The compass bearing (0-360°) from your last point to the
+                      cursor location. Essential for orienteering.
                     </p>
-
-                    <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 relative overflow-hidden">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <div className="flex justify-between border-b border-white/10 pb-1">
-                                    <span className="text-[10px] text-blue-300">Lat</span>
-                                    <span className="text-[10px] font-mono text-white">-6.68397 <span className="text-gray-500 text-[9px]">(6°41'2.30" S)</span></span>
-                                </div>
-                                <div className="flex justify-between border-b border-white/10 pb-1">
-                                    <span className="text-[10px] text-blue-300">Lng</span>
-                                    <span className="text-[10px] font-mono text-white">106.97216 <span className="text-gray-500 text-[9px]">(106°58'19.76" E)</span></span>
-                                </div>
-                                <div className="flex justify-between border-b border-white/10 pb-1">
-                                    <span className="text-[10px] text-blue-300">Elev</span>
-                                    <span className="text-[10px] font-mono text-yellow-300">1214.3 mdpl</span>
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <div className="flex justify-between border-b border-white/10 pb-1">
-                                    <span className="text-[10px] text-blue-300">Pitch</span>
-                                    <span className="text-[10px] font-mono text-white">0.0°</span>
-                                </div>
-                                <div className="flex justify-between border-b border-white/10 pb-1">
-                                    <span className="text-[10px] text-blue-300">Bearing</span>
-                                    <span className="text-[10px] font-mono text-white">0.0°</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="mt-4 bg-white/5 rounded-lg p-3 border border-white/10">
-                            <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                                <div>
-                                    <span className="text-[9px] text-gray-500 font-bold block">AZIMUTH</span>
-                                    <span className="text-xs font-mono text-yellow-400 font-bold">120.0°</span>
-                                </div>
-                                <div>
-                                    <span className="text-[9px] text-gray-500 font-bold block">BACK AZIMUTH</span>
-                                    <span className="text-xs font-mono text-yellow-400 font-bold">300.0°</span>
-                                </div>
-                                <div>
-                                    <span className="text-[9px] text-gray-500 font-bold block">HORIZ DIST</span>
-                                    <span className="text-xs font-mono text-blue-300 font-bold">110.8 m</span>
-                                </div>
-                                <div>
-                                    <span className="text-[9px] text-gray-500 font-bold block">SLOPE</span>
-                                    <span className="text-xs font-mono text-red-400 font-bold">18.7% <span className="text-gray-500 font-normal text-[9px]">(10.6°)</span></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-3 mt-4">
-                        <div className="bg-white/5 p-3 rounded-lg border border-white/5">
-                            <span className="text-[10px] font-bold text-gray-400 block mb-1">Back Azimuth</span>
-                            <p className="text-[10px] text-gray-300">
-                                The reverse bearing (opposite direction) of the current line. Useful for verifying return paths.
-                            </p>
-                        </div>
-                        <div className="bg-white/5 p-3 rounded-lg border border-white/5">
-                            <span className="text-[10px] font-bold text-gray-400 block mb-1">Slope % (Deg)</span>
-                            <p className="text-[10px] text-gray-300">
-                                Gradient steepness. Shown in percentage for grade and degrees (°) for angle. Red values indicate &gt;15% steepness.
-                            </p>
-                        </div>
-                        <div className="bg-white/5 p-3 rounded-lg border border-white/5">
-                            <span className="text-[10px] font-bold text-gray-400 block mb-1">Pitch</span>
-                            <p className="text-[10px] text-gray-300">
-                                Camera tilt angle (0-60°). 0° is top-down view, while higher values provide a 3D perspective view.
-                            </p>
-                        </div>
-                        <div className="bg-white/5 p-3 rounded-lg border border-white/5">
-                            <span className="text-[10px] font-bold text-gray-400 block mb-1">Bearing</span>
-                            <p className="text-[10px] text-gray-300">
-                                Current camera heading/direction relative to North (0°). Rotates as you orbit the map.
-                            </p>
-                        </div>
-                    </div>
+                  </div>
                 </div>
+              </div>
+
+              {/* Telemetry Overlay */}
+              <div className="space-y-4">
+                <h4 className="text-lg font-bold text-white">
+                  Survey Data Panel
+                </h4>
+                <p className="text-xs text-gray-400 leading-relaxed">
+                  Comprehensive metrics for the currently viewed area or active
+                  survey segment.
+                </p>
+
+                <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 relative overflow-hidden">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between border-b border-white/10 pb-1">
+                        <span className="text-[10px] text-blue-300">Lat</span>
+                        <span className="text-[10px] font-mono text-white">
+                          -6.68397{" "}
+                          <span className="text-gray-500 text-[9px]">
+                            (6°41'2.30" S)
+                          </span>
+                        </span>
+                      </div>
+                      <div className="flex justify-between border-b border-white/10 pb-1">
+                        <span className="text-[10px] text-blue-300">Lng</span>
+                        <span className="text-[10px] font-mono text-white">
+                          106.97216{" "}
+                          <span className="text-gray-500 text-[9px]">
+                            (106°58'19.76" E)
+                          </span>
+                        </span>
+                      </div>
+                      <div className="flex justify-between border-b border-white/10 pb-1">
+                        <span className="text-[10px] text-blue-300">Elev</span>
+                        <span className="text-[10px] font-mono text-yellow-300">
+                          1214.3 mdpl
+                        </span>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between border-b border-white/10 pb-1">
+                        <span className="text-[10px] text-blue-300">Pitch</span>
+                        <span className="text-[10px] font-mono text-white">
+                          0.0°
+                        </span>
+                      </div>
+                      <div className="flex justify-between border-b border-white/10 pb-1">
+                        <span className="text-[10px] text-blue-300">
+                          Bearing
+                        </span>
+                        <span className="text-[10px] font-mono text-white">
+                          0.0°
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 bg-white/5 rounded-lg p-3 border border-white/10">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                      <div>
+                        <span className="text-[9px] text-gray-500 font-bold block">
+                          AZIMUTH
+                        </span>
+                        <span className="text-xs font-mono text-yellow-400 font-bold">
+                          120.0°
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[9px] text-gray-500 font-bold block">
+                          BACK AZIMUTH
+                        </span>
+                        <span className="text-xs font-mono text-yellow-400 font-bold">
+                          300.0°
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[9px] text-gray-500 font-bold block">
+                          HORIZ DIST
+                        </span>
+                        <span className="text-xs font-mono text-blue-300 font-bold">
+                          110.8 m
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[9px] text-gray-500 font-bold block">
+                          SLOPE
+                        </span>
+                        <span className="text-xs font-mono text-red-400 font-bold">
+                          18.7%{" "}
+                          <span className="text-gray-500 font-normal text-[9px]">
+                            (10.6°)
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 mt-4">
+                  <div className="bg-white/5 p-3 rounded-lg border border-white/5">
+                    <span className="text-[10px] font-bold text-gray-400 block mb-1">
+                      Back Azimuth
+                    </span>
+                    <p className="text-[10px] text-gray-300">
+                      The reverse bearing (opposite direction) of the current
+                      line. Useful for verifying return paths.
+                    </p>
+                  </div>
+                  <div className="bg-white/5 p-3 rounded-lg border border-white/5">
+                    <span className="text-[10px] font-bold text-gray-400 block mb-1">
+                      Slope % (Deg)
+                    </span>
+                    <p className="text-[10px] text-gray-300">
+                      Gradient steepness. Shown in percentage for grade and
+                      degrees (°) for angle. Red values indicate &gt;15%
+                      steepness.
+                    </p>
+                  </div>
+                  <div className="bg-white/5 p-3 rounded-lg border border-white/5">
+                    <span className="text-[10px] font-bold text-gray-400 block mb-1">
+                      Pitch
+                    </span>
+                    <p className="text-[10px] text-gray-300">
+                      Camera tilt angle (0-60°). 0° is top-down view, while
+                      higher values provide a 3D perspective view.
+                    </p>
+                  </div>
+                  <div className="bg-white/5 p-3 rounded-lg border border-white/5">
+                    <span className="text-[10px] font-bold text-gray-400 block mb-1">
+                      Bearing
+                    </span>
+                    <p className="text-[10px] text-gray-300">
+                      Current camera heading/direction relative to North (0°).
+                      Rotates as you orbit the map.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </section>
 
           {/* Pricing & Plans */}
           <section className="space-y-8 pt-8 border-t border-white/5">
             <div className="text-center max-w-2xl mx-auto space-y-3">
-                 <h3 className="text-2xl font-bold text-white">Pricing & Plans</h3>
-                 <p className="text-sm text-gray-400">Flexible options for individual users and professional teams.</p>
+              <h3 className="text-2xl font-bold text-white">Pricing & Plans</h3>
+              <p className="text-sm text-gray-400">
+                Flexible options for individual users and professional teams.
+              </p>
             </div>
-            
+
             <div className="grid md:grid-cols-3 gap-6">
-                {/* Free Plan */}
-                <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-6 flex flex-col hover:border-white/20 transition-all duration-300">
-                  <div className="mb-4">
-                     <span className="text-xs font-bold px-2 py-1 bg-gray-800 text-gray-300 rounded uppercase tracking-wider">Starter</span>
-                  </div>
-                  <h4 className="text-2xl font-bold text-white mb-1">Free</h4>
-                  <p className="text-xs text-gray-400 mb-6">Basic exploration tools</p>
-                  
-                  <ul className="space-y-3 mb-8 flex-1">
-                      <li className="flex items-center gap-2 text-xs text-gray-300">
-                          <span className="w-1.5 h-1.5 rounded-full bg-gray-500"></span> 1 MB Max Download
-                      </li>
-                      <li className="flex items-center gap-2 text-xs text-gray-300">
-                          <span className="w-1.5 h-1.5 rounded-full bg-gray-500"></span> 1 Offline Maps
-                      </li>
-                      <li className="flex items-center gap-2 text-xs text-gray-300">
-                          <span className="w-1.5 h-1.5 rounded-full bg-gray-500"></span> 2 Saved Surveys
-                      </li>
-                      <li className="flex items-center gap-2 text-xs text-gray-500 line-through decoration-gray-600">
-                          <span className="w-1.5 h-1.5 rounded-full bg-red-900/50"></span> No GPS Tracking
-                      </li>
-                  </ul>
-
-                  <a href="mailto:contact@jcdigital.co.id?subject=Account Request: Landscape360 Starter Plan&body=Dear Admin,%0D%0A%0D%0AI hope this message finds you well.%0D%0A%0D%0AI would like to request the creation of a Starter (Free) account for the Landscape360 platform.%0D%0A%0D%0APlease let me know if any further information is required from my side.%0D%0A%0D%0AThank you,%0D%0A[Your Name]" className="block w-full py-2 text-center rounded-lg bg-white/5 hover:bg-white/10 text-xs font-bold text-white border border-white/10 transition-colors">
-                      Request Account
-                  </a>
+              {/* Free Plan */}
+              <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-6 flex flex-col hover:border-white/20 transition-all duration-300">
+                <div className="mb-4">
+                  <span className="text-xs font-bold px-2 py-1 bg-gray-800 text-gray-300 rounded uppercase tracking-wider">
+                    Starter
+                  </span>
                 </div>
+                <h4 className="text-2xl font-bold text-white mb-1">Free</h4>
+                <p className="text-xs text-gray-400 mb-6">
+                  Basic exploration tools
+                </p>
 
-                {/* Pro Plan */}
-                <div className="bg-gradient-to-b from-blue-900/20 to-[#0A0A0A] border border-blue-500/30 rounded-xl p-6 flex flex-col relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-500/20 transition-all"></div>
-                  <div className="mb-4 flex items-center justify-between">
-                     <span className="text-xs font-bold px-2 py-1 bg-blue-500/20 text-blue-400 rounded uppercase tracking-wider border border-blue-500/20">Recommended</span>
-                     <span className="text-[10px] font-bold px-2 py-1 bg-red-500/20 text-red-400 rounded uppercase tracking-wider border border-red-500/20 animate-pulse">Promo</span>
-                  </div>
-                  <div className="flex items-end gap-2 mb-1">
-                      <span className="text-sm text-gray-500 line-through decoration-red-500/50 decoration-1">Rp 85.000</span>
-                  </div>
-                  <h4 className="text-2xl font-bold text-white mb-1">Rp 55.000<span className="text-sm font-normal text-gray-500">/bln</span></h4>
-                  <p className="text-xs text-gray-400 mb-6">For field professionals</p>
-                  
-                  <ul className="space-y-3 mb-8 flex-1">
-                      <li className="flex items-center gap-2 text-xs text-gray-200">
-                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> 10 MB Max Download
-                      </li>
-                      <li className="flex items-center gap-2 text-xs text-gray-200">
-                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> 3 Offline Maps
-                      </li>
-                      <li className="flex items-center gap-2 text-xs text-gray-200">
-                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> 4 Saved Surveys
-                      </li>
-                       <li className="flex items-center gap-2 text-xs text-gray-200">
-                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> High-Res Export
-                      </li>
-                      <li className="flex items-center gap-2 text-xs text-white font-bold">
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span> GPS Broadcast
-                      </li>
-                  </ul>
-                  
-                  <a href="mailto:contact@jcdigital.co.id?subject=Request Upgrade to Pro Plan" className="block w-full py-2 text-center rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-colors">
-                      Upgrade to Pro
-                  </a>
+                <ul className="space-y-3 mb-8 flex-1">
+                  <li className="flex items-center gap-2 text-xs text-gray-300">
+                    <span className="w-1.5 h-1.5 rounded-full bg-gray-500"></span>{" "}
+                    1 MB Max Download
+                  </li>
+                  <li className="flex items-center gap-2 text-xs text-gray-300">
+                    <span className="w-1.5 h-1.5 rounded-full bg-gray-500"></span>{" "}
+                    1 Offline Maps
+                  </li>
+                  <li className="flex items-center gap-2 text-xs text-gray-300">
+                    <span className="w-1.5 h-1.5 rounded-full bg-gray-500"></span>{" "}
+                    2 Saved Surveys
+                  </li>
+                  <li className="flex items-center gap-2 text-xs text-gray-500 line-through decoration-gray-600">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-900/50"></span>{" "}
+                    No GPS Tracking
+                  </li>
+                </ul>
+
+                <a
+                  href="mailto:contact@jcdigital.co.id?subject=Account Request: Landscape360 Starter Plan&body=Dear Admin,%0D%0A%0D%0AI hope this message finds you well.%0D%0A%0D%0AI would like to request the creation of a Starter (Free) account for the Landscape360 platform.%0D%0A%0D%0APlease let me know if any further information is required from my side.%0D%0A%0D%0AThank you,%0D%0A[Your Name]"
+                  className="block w-full py-2 text-center rounded-lg bg-white/5 hover:bg-white/10 text-xs font-bold text-white border border-white/10 transition-colors"
+                >
+                  Request Account
+                </a>
+              </div>
+
+              {/* Pro Plan */}
+              <div className="bg-gradient-to-b from-blue-900/20 to-[#0A0A0A] border border-blue-500/30 rounded-xl p-6 flex flex-col relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-500/20 transition-all"></div>
+                <div className="mb-4 flex items-center justify-between">
+                  <span className="text-xs font-bold px-2 py-1 bg-blue-500/20 text-blue-400 rounded uppercase tracking-wider border border-blue-500/20">
+                    Recommended
+                  </span>
+                  <span className="text-[10px] font-bold px-2 py-1 bg-red-500/20 text-red-400 rounded uppercase tracking-wider border border-red-500/20 animate-pulse">
+                    Promo
+                  </span>
                 </div>
-
-                {/* Enterprise Plan */}
-                <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-6 flex flex-col hover:border-cyan-500/30 transition-all duration-300">
-                  <div className="mb-4 flex items-center justify-between">
-                     <span className="text-xs font-bold px-2 py-1 bg-cyan-900/30 text-cyan-400 rounded uppercase tracking-wider border border-cyan-500/20">Enterprise</span>
-                     <span className="text-[10px] font-bold px-2 py-1 bg-red-500/20 text-red-400 rounded uppercase tracking-wider border border-red-500/20 animate-pulse">Promo</span>
-                  </div>
-                  <div className="flex items-end gap-2 mb-1">
-                      <span className="text-sm text-gray-500 line-through decoration-red-500/50 decoration-1">Rp 165.000</span>
-                  </div>
-                  <h4 className="text-2xl font-bold text-white mb-1">Rp 110.000<span className="text-sm font-normal text-gray-500">/bln</span></h4>
-                  <p className="text-xs text-gray-400 mb-6">Maximum power & support</p>
-                  
-                  <ul className="space-y-3 mb-8 flex-1">
-                      <li className="flex items-center gap-2 text-xs text-gray-300">
-                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span> 25 MB Max Download
-                      </li>
-                      <li className="flex items-center gap-2 text-xs text-gray-300">
-                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span> 10 Offline Maps
-                      </li>
-                      <li className="flex items-center gap-2 text-xs text-gray-300">
-                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span> 10 Saved Surveys
-                      </li>
-                      <li className="flex items-center gap-2 text-xs text-white font-bold">
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span> Realtime Monitoring
-                      </li>
-                      <li className="flex items-center gap-2 text-xs text-gray-300">
-                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span> 24/7 Priority Support
-                      </li>
-                  </ul>
-
-                   <a href="mailto:contact@jcdigital.co.id?subject=Subscription Upgrade: Landscape360 Enterprise Plan&body=Dear Admin,%0D%0A%0D%0AI hope this message finds you well.%0D%0A%0D%0AWe are interested in upgrading our organization's access to the Landscape360 Enterprise Plan to leverage the Realtime Monitoring and dedicated support features.%0D%0A%0D%0APlease contact us to arrange the upgrade and discuss any specific requirements.%0D%0A%0D%0ABest regards,%0D%0A[Your Name/Organization]" className="block w-full py-2 text-center rounded-lg bg-white/5 hover:bg-white/10 text-xs font-bold text-white border border-white/10 transition-colors">
-                      Upgrade to Enterprise
-                  </a>
+                <div className="flex items-end gap-2 mb-1">
+                  <span className="text-sm text-gray-500 line-through decoration-red-500/50 decoration-1">
+                    Rp 85.000
+                  </span>
                 </div>
+                <h4 className="text-2xl font-bold text-white mb-1">
+                  Rp 55.000
+                  <span className="text-sm font-normal text-gray-500">
+                    /bln
+                  </span>
+                </h4>
+                <p className="text-xs text-gray-400 mb-6">
+                  For field professionals
+                </p>
+
+                <ul className="space-y-3 mb-8 flex-1">
+                  <li className="flex items-center gap-2 text-xs text-gray-200">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>{" "}
+                    10 MB Max Download
+                  </li>
+                  <li className="flex items-center gap-2 text-xs text-gray-200">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>{" "}
+                    3 Offline Maps
+                  </li>
+                  <li className="flex items-center gap-2 text-xs text-gray-200">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>{" "}
+                    4 Saved Surveys
+                  </li>
+                  <li className="flex items-center gap-2 text-xs text-gray-200">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>{" "}
+                    High-Res Export
+                  </li>
+                  <li className="flex items-center gap-2 text-xs text-white font-bold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span>{" "}
+                    GPS Broadcast
+                  </li>
+                </ul>
+
+                <a
+                  href="mailto:contact@jcdigital.co.id?subject=Request Upgrade to Pro Plan"
+                  className="block w-full py-2 text-center rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-colors"
+                >
+                  Upgrade to Pro
+                </a>
+              </div>
+
+              {/* Enterprise Plan */}
+              <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-6 flex flex-col hover:border-cyan-500/30 transition-all duration-300">
+                <div className="mb-4 flex items-center justify-between">
+                  <span className="text-xs font-bold px-2 py-1 bg-cyan-900/30 text-cyan-400 rounded uppercase tracking-wider border border-cyan-500/20">
+                    Enterprise
+                  </span>
+                  <span className="text-[10px] font-bold px-2 py-1 bg-red-500/20 text-red-400 rounded uppercase tracking-wider border border-red-500/20 animate-pulse">
+                    Promo
+                  </span>
+                </div>
+                <div className="flex items-end gap-2 mb-1">
+                  <span className="text-sm text-gray-500 line-through decoration-red-500/50 decoration-1">
+                    Rp 165.000
+                  </span>
+                </div>
+                <h4 className="text-2xl font-bold text-white mb-1">
+                  Rp 110.000
+                  <span className="text-sm font-normal text-gray-500">
+                    /bln
+                  </span>
+                </h4>
+                <p className="text-xs text-gray-400 mb-6">
+                  Maximum power & support
+                </p>
+
+                <ul className="space-y-3 mb-8 flex-1">
+                  <li className="flex items-center gap-2 text-xs text-gray-300">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>{" "}
+                    25 MB Max Download
+                  </li>
+                  <li className="flex items-center gap-2 text-xs text-gray-300">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>{" "}
+                    10 Offline Maps
+                  </li>
+                  <li className="flex items-center gap-2 text-xs text-gray-300">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>{" "}
+                    10 Saved Surveys
+                  </li>
+                  <li className="flex items-center gap-2 text-xs text-white font-bold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span>{" "}
+                    Realtime Monitoring
+                  </li>
+                  <li className="flex items-center gap-2 text-xs text-gray-300">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>{" "}
+                    24/7 Priority Support
+                  </li>
+                </ul>
+
+                <a
+                  href="mailto:contact@jcdigital.co.id?subject=Subscription Upgrade: Landscape360 Enterprise Plan&body=Dear Admin,%0D%0A%0D%0AI hope this message finds you well.%0D%0A%0D%0AWe are interested in upgrading our organization's access to the Landscape360 Enterprise Plan to leverage the Realtime Monitoring and dedicated support features.%0D%0A%0D%0APlease contact us to arrange the upgrade and discuss any specific requirements.%0D%0A%0D%0ABest regards,%0D%0A[Your Name/Organization]"
+                  className="block w-full py-2 text-center rounded-lg bg-white/5 hover:bg-white/10 text-xs font-bold text-white border border-white/10 transition-colors"
+                >
+                  Upgrade to Enterprise
+                </a>
+              </div>
             </div>
           </section>
 
