@@ -656,7 +656,7 @@ const MapBoxContainerComponent = ({
         )}
         
         {/* User Location Indicator */}
-        <UserLocationMarker />
+        <UserLocationMarker initialLocation={initialLocation} />
 
         {/* Custom Navigation Controls */}
         <NavigationControls 
