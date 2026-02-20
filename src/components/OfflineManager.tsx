@@ -424,9 +424,10 @@ export const OfflineManager = ({ onClose, onBack }: { onClose: () => void, onBac
                     </div>
                     
                     <div className="space-y-2">
-                        <h3 className="text-xl font-bold text-white tracking-tight">Hapus Peta Offline?</h3>
+                        <h3 className="text-xl font-bold text-white tracking-tight">Delete Offline Map?</h3>
                         <p className="text-xs text-gray-400 leading-relaxed px-2">
-                            Tindakan ini tidak dapat dibatalkan. Peta ini akan dihapus secara permanen dari perangkat dan cloud.
+                            This action cannot be undone. The map will be
+                            permanently deleted from your device and cloud.
                         </p>
                     </div>
 
@@ -440,13 +441,13 @@ export const OfflineManager = ({ onClose, onBack }: { onClose: () => void, onBac
                             }}
                             className="cursor-pointer w-full py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-red-600/30 transition-all active:scale-[0.98] border border-red-400/20"
                         >
-                            Hapus Permanen
+                            Delete Permanently
                         </button>
                         <button
                             onClick={() => setDeleteConfirmId(null)}
                             className="cursor-pointer w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition-all active:scale-[0.98]"
                         >
-                            Batalkan
+                            Cancel
                         </button>
                     </div>
                 </div>
