@@ -49,5 +49,104 @@
       "type": "Point",
       "coordinates": [107.00683, -6.73614]
     }
+  },
+  {
+    "id": "place.4",
+    "type": "Feature",
+    "place_type": ["mountain", "custom"],
+    "relevance": 1,
+    "properties": { "mapbox_id": null, "wikidata": null },
+    "text": "Gunung Salak",
+    "place_name": "Gunung Salak - Jawa Barat",
+    "center": [106.7300, -6.7200],
+    "geometry": { "type": "Point", "coordinates": [106.7300, -6.7200] }
+  },
+  {
+    "id": "place.5",
+    "type": "Feature",
+    "place_type": ["mountain", "custom"],
+    "relevance": 1,
+    "properties": { "mapbox_id": null, "wikidata": null },
+    "text": "Gunung Ciremai",
+    "place_name": "Gunung Ciremai - Jawa Barat",
+    "center": [108.4000, -6.8900],
+    "geometry": { "type": "Point", "coordinates": [108.4000, -6.8900] }
+  },
+  {
+    "id": "place.6",
+    "type": "Feature",
+    "place_type": ["mountain", "custom"],
+    "relevance": 1,
+    "properties": { "mapbox_id": null, "wikidata": null },
+    "text": "Gunung Slamet",
+    "place_name": "Gunung Slamet - Jawa Tengah",
+    "center": [109.2167, -7.2422],
+    "geometry": { "type": "Point", "coordinates": [109.2167, -7.2422] }
+  },
+  {
+    "id": "place.7",
+    "type": "Feature",
+    "place_type": ["mountain", "custom"],
+    "relevance": 1,
+    "properties": { "mapbox_id": null, "wikidata": null },
+    "text": "Gunung Merapi",
+    "place_name": "Gunung Merapi - Jawa Tengah/Yogyakarta",
+    "center": [110.4400, -7.5400],
+    "geometry": { "type": "Point", "coordinates": [110.4400, -7.5400] }
+  },
+  {
+    "id": "place.8",
+    "type": "Feature",
+    "place_type": ["mountain", "custom"],
+    "relevance": 1,
+    "properties": { "mapbox_id": null, "wikidata": null },
+    "text": "Gunung Merbabu",
+    "place_name": "Gunung Merbabu - Jawa Tengah",
+    "center": [110.4500, -7.4500],
+    "geometry": { "type": "Point", "coordinates": [110.4500, -7.4500] }
+  },
+  {
+    "id": "place.9",
+    "type": "Feature",
+    "place_type": ["mountain", "custom"],
+    "relevance": 1,
+    "properties": { "mapbox_id": null, "wikidata": null },
+    "text": "Gunung Lawu",
+    "place_name": "Gunung Lawu - Jawa Tengah/Jawa Timur",
+    "center": [111.1900, -7.6200],
+    "geometry": { "type": "Point", "coordinates": [111.1900, -7.6200] }
+  },
+  {
+    "id": "place.10",
+    "type": "Feature",
+    "place_type": ["mountain", "custom"],
+    "relevance": 1,
+    "properties": { "mapbox_id": null, "wikidata": null },
+    "text": "Gunung Semeru",
+    "place_name": "Gunung Semeru - Jawa Timur",
+    "center": [112.9200, -8.1080],
+    "geometry": { "type": "Point", "coordinates": [112.9200, -8.1080] }
+  },
+  {
+    "id": "place.11",
+    "type": "Feature",
+    "place_type": ["mountain", "custom"],
+    "relevance": 1,
+    "properties": { "mapbox_id": null, "wikidata": null },
+    "text": "Gunung Bromo",
+    "place_name": "Gunung Bromo - Jawa Timur",
+    "center": [112.9530, -7.9425],
+    "geometry": { "type": "Point", "coordinates": [112.9530, -7.9425] }
+  },
+  {
+    "id": "place.12",
+    "type": "Feature",
+    "place_type": ["mountain", "custom"],
+    "relevance": 1,
+    "properties": { "mapbox_id": null, "wikidata": null },
+    "text": "Gunung Ijen",
+    "place_name": "Gunung Ijen - Jawa Timur",
+    "center": [114.2420, -8.0580],
+    "geometry": { "type": "Point", "coordinates": [114.2420, -8.0580] }
   }
 ]
