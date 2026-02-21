@@ -110,14 +110,14 @@ describe('ControlPanel', () => {
     expect(mockSetActiveView).toHaveBeenCalledWith('2D');
   });
 
-  it('should show "Start GPS Monitoring" and Binoculars icon for Enterprise Monitor', () => {
+  it('should show "Team Monitor" and Binoculars icon for Enterprise Monitor', () => {
     renderComponent();
-    expect(screen.getByText('Start GPS Monitoring')).toBeInTheDocument();
+    expect(screen.getByText('Team Monitor')).toBeInTheDocument();
     expect(screen.getByTestId('icon-binoculars')).toBeInTheDocument();
     expect(screen.queryByTestId('icon-navigation')).not.toBeInTheDocument();
   });
 
-  it('should show "Start GPS Tracking" and Navigation icon for Pro User (Not Monitor)', () => {
+  it('should show "GPS Tracking" and Navigation icon for Pro User (Not Monitor)', () => {
     (useSurveyStore as any).mockReturnValue({
       isPlotMode: false,
       togglePlotMode: vi.fn(),
@@ -127,34 +127,41 @@ describe('ControlPanel', () => {
     });
 
     renderComponent();
-    expect(screen.getByText('Start GPS Tracking')).toBeInTheDocument();
+    expect(screen.getByText('GPS Tracking')).toBeInTheDocument();
     expect(screen.getByTestId('icon-navigation')).toBeInTheDocument();
     expect(screen.queryByTestId('icon-binoculars')).not.toBeInTheDocument();
   });
 
-  it('should show "Start GPS Monitoring" but Navigation icon if Monitor is NOT Enterprise (Logic check)', () => {
-    // According to the code: userRole === 'monitor360' && subscriptionStatus === 'Enterprise' ? Binoculars : Navigation
-    // So a Monitor with 'Pro' plan should see Navigation icon and "Start GPS Tracking" text?
-    // Let's check code logic again:
-    // Text: (userRole === 'monitor360' && subscriptionStatus === 'Enterprise' ? "Start GPS Monitoring" : "Start GPS Tracking")
-    // Icon: same condition.
-    
+  it('should show "Team Monitor" and Binoculars icon if Monitor AND Enterprise', () => {
     (useSurveyStore as any).mockReturnValue({
-      isPlotMode: false,
-      togglePlotMode: vi.fn(),
-      user: { id: 'user3' },
-      subscriptionStatus: 'Pro',
-      userRole: 'monitor360'
+      user: { id: 'monitor', email: 'monitor@app.com' },
+      userRole: 'monitor360',
+      subscriptionStatus: 'Enterprise', // Enterprise
     });
 
     renderComponent();
-    expect(screen.getByText('Start GPS Tracking')).toBeInTheDocument(); // Fallback text
+    expect(screen.getByText('Team Monitor')).toBeInTheDocument();
+    expect(screen.getByTestId('icon-binoculars')).toBeInTheDocument();
+  });
+
+  it('should show "GPS Tracking" but Navigation icon if Monitor is NOT Enterprise (Logic check)', () => {
+    // Logic: If Monitor but Free/Pro -> Fallback to GPS Tracking UI (though functionality might be disabled/limited by useEffect)
+    // The component renders "GPS Tracking" unless (Monitor && Enterprise)
+    (useSurveyStore as any).mockReturnValue({
+        user: { id: 'monitor', email: 'monitor@app.com' },
+        userRole: 'monitor360',
+        subscriptionStatus: 'Pro', // Not Enterprise
+    });
+
+    renderComponent();
+    expect(screen.getByText('GPS Tracking')).toBeInTheDocument(); // Fallback text
     expect(screen.getByTestId('icon-navigation')).toBeInTheDocument(); // Fallback icon
   });
 
-  it('should toggle GPS Tracking on click', () => {
+  it('should toggle Tracking/Monitoring on click', () => {
     renderComponent();
-    fireEvent.click(screen.getByText('Start GPS Monitoring'));
+    // Default mock is Enterprise Monitor -> "Team Monitor"
+    fireEvent.click(screen.getByText('Team Monitor'));
     expect(mockToggleLiveTracking).toHaveBeenCalled();
   });
 
