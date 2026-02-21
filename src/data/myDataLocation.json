@@ -8,12 +8,12 @@
       "mapbox_id": null,
       "wikidata": null
     },
-    "text": "Sekretariat Makopala UBL",
-    "place_name": "Sekretariat Makopala UBL",
-    "center": [106.74697, -6.23345],
+    "text": "Sekretariat Makopala - Univ. Budi Luhur",
+    "place_name": "Sekretariat Makopala",
+    "center": [106.74699, -6.23403],
     "geometry": {
       "type": "Point",
-      "coordinates": [106.74697, -6.23345]
+      "coordinates": [106.74699, -6.23403]
     }
   },
   {
@@ -201,6 +201,108 @@
     "geometry": {
       "type": "Point",
       "coordinates": [106.73339, -6.71596]
+    }
+  },
+  {
+    "id": "13",
+    "type": "Feature",
+    "place_type": ["mountain", "custom"],
+    "relevance": 1,
+    "properties": {
+      "mapbox_id": null,
+      "wikidata": null
+    },
+    "text": "875 mdpl",
+    "place_name": "Gunung Batu Jonggol",
+    "center": [107.05315, -6.60350],
+    "geometry": {
+      "type": "Point",
+      "coordinates": [107.05315, -6.60350]
+    }
+  },
+  {
+    "id": "14",
+    "type": "Feature",
+    "place_type": ["basecamp", "custom"],
+    "relevance": 1,
+    "properties": {
+      "mapbox_id": null,
+      "wikidata": null
+    },
+    "text": "Basecamp Pendakian via Sukamakmur",
+    "place_name": "BC Gunung Batu Jonggol via Sukamakmur",
+    "center": [107.04903, -6.60372],
+    "geometry": {
+      "type": "Point",
+      "coordinates": [107.04903, -6.60372]
+    }
+  },
+  {
+    "id": "15",
+    "type": "Feature",
+    "place_type": ["mountain", "custom"],
+    "relevance": 1,
+    "properties": {
+      "mapbox_id": null,
+      "wikidata": null
+    },
+    "text": "1.291 mdpl",
+    "place_name": "Gunung Sanggabuana",
+    "center": [107.22063, -6.59049],
+    "geometry": {
+      "type": "Point",
+      "coordinates": [107.22063, -6.59049]
+    }
+  },
+    {
+    "id": "14",
+    "type": "Feature",
+    "place_type": ["basecamp", "custom"],
+    "relevance": 1,
+    "properties": {
+      "mapbox_id": null,
+      "wikidata": null
+    },
+    "text": "Pos Tiket Pendakian via Mekarbuana",
+    "place_name": "BC Gunung Sanggabuana via Mekarbuana",
+    "center": [107.22704, -6.57182],
+    "geometry": {
+      "type": "Point",
+      "coordinates": [107.22704, -6.57182]
+    }
+  },
+  {
+    "id": "15",
+    "type": "Feature",
+    "place_type": ["mountain", "custom"],
+    "relevance": 1,
+    "properties": {
+      "mapbox_id": null,
+      "wikidata": null
+    },
+    "text": "673 mdpl",
+    "place_name": "Gunung Lembu",
+    "center": [107.34027, -6.56148],
+    "geometry": {
+      "type": "Point",
+      "coordinates": [107.34027, -6.56148]
+    }
+  },
+    {
+    "id": "14",
+    "type": "Feature",
+    "place_type": ["basecamp", "custom"],
+    "relevance": 1,
+    "properties": {
+      "mapbox_id": null,
+      "wikidata": null
+    },
+    "text": "Pos Tiket Pendakian via Sukatani",
+    "place_name": "BC Gunung Lembu via Sukatani",
+    "center": [107.34100, -6.57317],
+    "geometry": {
+      "type": "Point",
+      "coordinates": [107.34100, -6.57317]
     }
   }
 ]
