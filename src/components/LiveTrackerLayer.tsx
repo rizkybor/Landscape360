@@ -196,6 +196,10 @@ export const LiveTrackerLayer = ({ mapRef }: { mapRef?: React.RefObject<MapRef |
   const { trackers, selectedTrackerId, selectTracker, isLiveTrackingEnabled } = useTrackerStore();
   const [terrainElevation, setTerrainElevation] = useState<number | null>(null);
   
+  useEffect(() => {
+    console.log("LiveTrackerLayer Mounted. Trackers count:", Object.keys(trackers).length);
+  }, [trackers]);
+
   // Initialize Service (Start Simulation/Connection)
   useTrackerService();
 

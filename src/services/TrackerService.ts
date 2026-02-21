@@ -357,6 +357,11 @@ export const useTrackerService = () => {
         (position) => {
           const { latitude, longitude, altitude, speed } = position.coords;
 
+          if (!user || !user.id) {
+             console.error("User ID missing, skipping tracker update");
+             return;
+          }
+
           const trackerId =
             user.email?.split('@')[0] ||
             user.id.slice(0, 8);
