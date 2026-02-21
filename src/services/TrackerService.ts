@@ -109,6 +109,28 @@ export const useTrackerService = () => {
   const latestPacketRef = useRef<TrackerPacket | null>(null);
   const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Throttling ref for UI updates
+  const pendingUpdatesRef = useRef<TrackerPacket[]>([]);
+
+  // Batch process updates to prevent UI freezing with 200+ users
+  useEffect(() => {
+      if (!isLiveTrackingEnabled) return;
+
+      const batchInterval = setInterval(() => {
+          if (pendingUpdatesRef.current.length === 0) return;
+
+          // Process all pending updates in one go (React 18 auto-batching helps here)
+          // Limit to processing 50 packets per tick to avoid dropping frames
+          const batch = pendingUpdatesRef.current.splice(0, 50);
+          
+          batch.forEach(packet => {
+              addOrUpdateTracker(packet);
+          });
+      }, 200); // 5 updates per second max
+
+      return () => clearInterval(batchInterval);
+  }, [isLiveTrackingEnabled, addOrUpdateTracker]);
+
   // --- SMART RECONNECT: OFFLINE BUFFER HANDLING ---
   const flushBuffer = async () => {
       if (!navigator.onLine) return;
@@ -200,7 +222,8 @@ export const useTrackerService = () => {
 
               // Prevent self-update echo
               if (packet.user_id !== myTrackerId) {
-                addOrUpdateTracker(packet);
+                // Buffer the update instead of applying immediately
+                pendingUpdatesRef.current.push(packet);
               }
             }
           }
@@ -257,23 +280,32 @@ export const useTrackerService = () => {
 
     if (isSimulationEnabled) {
 
-      const mockUsers = [
-        { id: 'RANGER-01' },
-        { id: 'CLIMBER-A' },
-        { id: 'CLIMBER-B' },
-        { id: 'RESCUE-01' },
-        { id: 'LOGISTIC' },
-      ];
+      // Load Test: 200 Users
+      const mockUsers = Array.from({ length: 200 }, (_, i) => ({ 
+          id: `USER-${String(i + 1).padStart(3, '0')}` 
+      }));
 
       // Initial Render
       mockUsers.forEach((user, idx) => {
-        const packet = generateBackAndForthPacket(user.id, idx * 20000);
+        const packet = generateBackAndForthPacket(user.id, idx * 200);
         addOrUpdateTracker(packet);
       });
 
       intervalRef.current = setInterval(() => {
+        // Update all users every interval
         mockUsers.forEach((user, idx) => {
-          const packet = generateBackAndForthPacket(user.id, idx * 20000);
+          const packet = generateBackAndForthPacket(user.id, idx * 200);
+          // For simulation, we can also buffer to test the throttle
+          // But usually simulation runs on the same client, so direct update is fine for self-test
+          // However, to test the throttling logic, we should probably push to pendingUpdatesRef if we want to simulate "incoming" data
+          // But pendingUpdatesRef is inside the hook scope, so we can access it.
+          
+          // Let's use addOrUpdateTracker directly here to ensure the simulation *generates* the load on the store
+          // effectively acting as if the throttle allowed it through, OR we can push to pendingUpdatesRef to test that too.
+          // Since we want to test "Rendering" performance of 200 users, we should update the store.
+          // If we use pendingUpdatesRef, we test the throttle mechanism.
+          
+          // Let's use direct update for simulation to force maximum load on the renderer.
           addOrUpdateTracker(packet);
         });
       }, TRACKER_CONFIG.UPDATE_INTERVAL_MS);

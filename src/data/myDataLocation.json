@@ -202,5 +202,56 @@
       "type": "Point",
       "coordinates": [106.73339, -6.71596]
     }
+  },
+  {
+    "id": "13",
+    "type": "Feature",
+    "place_type": ["mountain", "custom"],
+    "relevance": 1,
+    "properties": {
+      "mapbox_id": null,
+      "wikidata": null
+    },
+    "text": "3.078 mdpl",
+    "place_name": "Gunung Cereme (TNGC)",
+    "center": [108.40688, -6.89300],
+    "geometry": {
+      "type": "Point",
+      "coordinates": [108.40688, -6.89300]
+    }
+  },
+    {
+    "id": "14",
+    "type": "Feature",
+    "place_type": ["basecamp", "custom"],
+    "relevance": 1,
+    "properties": {
+      "mapbox_id": null,
+      "wikidata": null
+    },
+    "text": "Basecamp Pendakian via Linggarjati",
+    "place_name": "BC Cereme (TNGC) via Linggarjati",
+    "center": [108.46896, -6.88085],
+    "geometry": {
+      "type": "Point",
+      "coordinates": [108.46896, -6.88085]
+    }
+  },
+      {
+    "id": "15",
+    "type": "Feature",
+    "place_type": ["basecamp", "custom"],
+    "relevance": 1,
+    "properties": {
+      "mapbox_id": null,
+      "wikidata": null
+    },
+    "text": "Basecamp Pendakian via Apuy",
+    "place_name": "BC Cereme (TNGC) via Apuy",
+    "center": [108.35836, -6.91198],
+    "geometry": {
+      "type": "Point",
+      "coordinates": [108.35836, -6.91198]  
+    }
   }
 ]
