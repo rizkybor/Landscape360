@@ -234,15 +234,13 @@ export const SearchPanel = () => {
                   <MapPin
                     size={16}
                     className={`mt-0.5 shrink-0 ${
-                      res.place_type.includes("custom")
-                        ? "text-purple-400"
-                        : res.place_type.includes("poi")
-                          ? "text-green-400"
-                          : res.place_type.includes("mountain")
-                            ? "text-yellow-400"
-                            : res.place_type.includes("basecamp")
-                              ? "text-blue-400"
-                              : "text-gray-500 group-hover:text-blue-400"
+                      res.place_type.includes("poi")
+                        ? "text-green-400"
+                        : res.place_type.includes("mountain")
+                          ? "text-yellow-400"
+                          : res.place_type.includes("basecamp")
+                            ? "text-blue-400"
+                            : "text-gray-500 group-hover:text-blue-400"
                     }`}
                   />
                   <div>
