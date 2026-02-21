@@ -98,10 +98,19 @@ export const DocsPage = ({ onBack }: Props) => {
                 Master the terrain with the ultimate engine for outdoor
                 exploration. Engineered for{" "}
                 <span className="text-blue-200">
-                  mountaineers and wilderness experts
+                  Mountaineers and Wilderness Experts
                 </span>{" "}
                 who demand absolute precision in navigation, real-time tracking,
-                and comprehensive terrain intelligence.
+                and comprehensive terrain intelligence. <br />
+                <br />
+                Built upon a meticulously curated POI dataset.{" "}
+                <span className="text-blue-200">
+                  Compiled from real hiking experiences, field observations,
+                  community knowledge, and verified official sources.
+                </span>{" "}
+                This platform empowers you to Explore without Limits, Guided by
+                Precision, delivering trusted, data-driven insights for safer
+                and smarter adventures.
               </p>
               <div className="flex flex-wrap justify-center gap-2 mt-4">
                 <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">
@@ -222,7 +231,11 @@ export const DocsPage = ({ onBack }: Props) => {
                     Data Source & Attribution (POIs){" "}
                   </h4>
                   <p className="text-xs text-gray-400 leading-relaxed">
-                    This POI dataset is originally compiled and curated from multiple sources, including personal hiking experiences and field observations, shared knowledge from fellow hikers and local communities, and cross-verification with official and trusted websites.
+                    This POI dataset is originally compiled and curated from
+                    multiple sources, including personal hiking experiences and
+                    field observations, shared knowledge from fellow hikers and
+                    local communities, and cross-verification with official and
+                    trusted websites.
                   </p>
                 </div>
               </div>
