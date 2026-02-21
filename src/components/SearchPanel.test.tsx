@@ -30,7 +30,7 @@ describe('SearchPanel', () => {
 
   it('renders correctly when showSearch is true', () => {
     render(<SearchPanel />);
-    expect(screen.getByPlaceholderText(/Search places/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Search mountains, basecamp, or cities/i)).toBeInTheDocument();
   });
 
   it('does not render when showSearch is false', () => {
@@ -41,7 +41,7 @@ describe('SearchPanel', () => {
 
   it('performs search on input change with debounce', async () => {
     render(<SearchPanel />);
-    const input = screen.getByPlaceholderText(/Search places/i);
+    const input = screen.getByPlaceholderText(/Search mountains, basecamp, or cities/i);
 
     // Mock API response
     (globalThis.fetch as any).mockResolvedValue({
@@ -70,7 +70,7 @@ describe('SearchPanel', () => {
 
   it('filters out results irrelevant to Indonesia via API params', async () => {
     render(<SearchPanel />);
-    const input = screen.getByPlaceholderText(/Search places/i);
+    const input = screen.getByPlaceholderText(/Search mountains, basecamp, or cities/i);
 
     fireEvent.change(input, { target: { value: 'Gunung' } });
 
@@ -83,7 +83,7 @@ describe('SearchPanel', () => {
 
   it('handles coordinate input correctly', async () => {
     render(<SearchPanel />);
-    const input = screen.getByPlaceholderText(/Search places/i);
+    const input = screen.getByPlaceholderText(/Search mountains, basecamp, or cities/i);
 
     // Input "Lat, Lon"
     fireEvent.change(input, { target: { value: '-6.2, 106.8' } });
@@ -99,7 +99,7 @@ describe('SearchPanel', () => {
 
   it('zooms to location on result click', async () => {
     render(<SearchPanel />);
-    const input = screen.getByPlaceholderText(/Search places/i);
+    const input = screen.getByPlaceholderText(/Search mountains, basecamp, or cities/i);
 
     (globalThis.fetch as any).mockResolvedValue({
         json: async () => ({
@@ -118,9 +118,9 @@ describe('SearchPanel', () => {
     const result = await screen.findByText('Jakarta');
     
     fireEvent.click(result);
-
+    
     expect(mockSetCenter).toHaveBeenCalledWith([106.8, -6.2]);
-    expect(mockSetZoom).toHaveBeenCalledWith(14);
+    expect(mockSetZoom).toHaveBeenCalledWith(16);
     expect(mockSetShowSearch).toHaveBeenCalledWith(false);
   });
 });

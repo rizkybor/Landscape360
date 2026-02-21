@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useTrackerStore } from '../store/useTrackerStore';
 import { useSurveyStore } from '../store/useSurveyStore';
 import { TRACKER_CONFIG } from '../types/tracker';
@@ -105,12 +105,33 @@ export const useTrackerService = () => {
   const watchIdRef = useRef<number | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const lastBroadcastRef = useRef<number>(0);
-  const lastDbLogRef = useRef<number>(0); // NEW: Separate throttle for DB logging
+  const lastDbLogRef = useRef<number>(0);
   const latestPacketRef = useRef<TrackerPacket | null>(null);
-  const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const lastLogPosRef = useRef<{ lat: number; lng: number } | null>(null);
 
-  // --- SMART RECONNECT: OFFLINE BUFFER HANDLING ---
-  const flushBuffer = async () => {
+  // --- HELPER: SAVE TO LOCAL BUFFER ---
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const saveToBuffer = useCallback((logData: any) => {
+    try {
+        const bufferStr = localStorage.getItem('TRACKER_OFFLINE_BUFFER');
+        const buffer = bufferStr ? JSON.parse(bufferStr) : [];
+        
+        // Check for duplicate (last item) to avoid spamming buffer
+        const last = buffer[buffer.length - 1];
+        if (!last || last.timestamp !== logData.timestamp) {
+            buffer.push(logData);
+            // Limit buffer size
+            if (buffer.length > 1000) buffer.shift(); 
+            localStorage.setItem('TRACKER_OFFLINE_BUFFER', JSON.stringify(buffer));
+            console.log("Buffered GPS log locally. Count:", buffer.length);
+        }
+    } catch (e) {
+        console.error("Error saving to buffer:", e);
+    }
+  }, []);
+
+  // --- SMART RECONNECT: FLUSH BUFFER ---
+  const flushBuffer = useCallback(async () => {
       if (!navigator.onLine) return;
       
       const bufferStr = localStorage.getItem('TRACKER_OFFLINE_BUFFER');
@@ -123,10 +144,13 @@ export const useTrackerService = () => {
             return;
         }
 
-        console.log(`Smart Reconnect: Flushing ${buffer.length} buffered logs...`);
+        // Deduplicate based on timestamp + user_id
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const uniqueBuffer = Array.from(new Map(buffer.map((item: any) => [item.timestamp + item.user_id, item])).values());
+
+        console.log(`Smart Reconnect: Flushing ${uniqueBuffer.length} buffered logs...`);
         
-        // Insert in batches if needed, but Supabase handles small batches fine
-        const { error } = await supabase.from('tracker_logs').insert(buffer);
+        const { error } = await supabase.from('tracker_logs').insert(uniqueBuffer);
         
         if (!error) {
           console.log("Offline buffer flushed successfully.");
@@ -137,7 +161,38 @@ export const useTrackerService = () => {
       } catch (e) {
         console.error("Error processing offline buffer:", e);
       }
-  };
+  }, []);
+
+  // --- HELPER: LOG TO DB ---
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const logLocationToDb = useCallback(async (packet: TrackerPacket, user: any) => {
+      if (!user) return;
+
+      const logData = {
+        user_id: user.id,
+        lat: packet.lat,
+        lng: packet.lng,
+        elevation: packet.alt,
+        speed: packet.speed,
+        battery: packet.battery, 
+        timestamp: packet.timestamp
+      };
+
+      if (!navigator.onLine) {
+          saveToBuffer(logData);
+          return;
+      }
+
+      const { error } = await supabase.from('tracker_logs').insert(logData);
+      
+      if (error) {
+          console.warn("DB Insert failed, buffering:", error);
+          saveToBuffer(logData);
+      } else {
+          // Success: Attempt to flush any pending buffer too
+          flushBuffer();
+      }
+  }, [saveToBuffer, flushBuffer]);
 
   // Listen for online status to trigger flush
   useEffect(() => {
@@ -152,7 +207,7 @@ export const useTrackerService = () => {
     if (navigator.onLine) flushBuffer();
 
     return () => window.removeEventListener('online', handleOnline);
-  }, []);
+  }, [flushBuffer]);
 
   useEffect(() => {
 
@@ -162,7 +217,6 @@ export const useTrackerService = () => {
 
     if (!isLiveTrackingEnabled) {
       if (intervalRef.current) clearInterval(intervalRef.current);
-      if (heartbeatIntervalRef.current) clearInterval(heartbeatIntervalRef.current);
       if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
@@ -182,12 +236,15 @@ export const useTrackerService = () => {
       // Create new channel (or rejoin)
       // Note: We might want to use a unique channel per user-group in production, but 'tracking-room' is fine for demo.
       const channel = supabase.channel('tracking-room', {
-        config: { broadcast: { self: false } }
+        config: { 
+          broadcast: { self: false },
+          presence: { key: user?.id || 'anon' }
+        }
       });
 
       // Monitor Mode: Listen for updates
-      // Allow monitor to listen if they are 'monitor360' OR 'Enterprise' (Relaxed check)
-      if (userRole === 'monitor360' || subscriptionStatus === 'Enterprise') {
+      // Allow monitor to listen if they are 'monitor360' AND 'Enterprise'
+      if (userRole === 'monitor360' && subscriptionStatus === 'Enterprise') {
         channel.on(
           'broadcast',
           { event: 'location-update' },
@@ -227,6 +284,13 @@ export const useTrackerService = () => {
         if (status === 'SUBSCRIBED') {
           setConnectionStatus('connected');
           
+          // Track presence
+          channel.track({
+            user_id: user?.id,
+            role: userRole,
+            online_at: new Date().toISOString()
+          });
+
           // If I am a Monitor, ask everyone to report immediately
           if (userRole === 'monitor360' || subscriptionStatus === 'Enterprise') {
               console.log("Monitor Joined - Requesting Heartbeat...");
@@ -291,8 +355,6 @@ export const useTrackerService = () => {
 
       watchIdRef.current = navigator.geolocation.watchPosition(
         (position) => {
-          console.log("GPS Position Received:", position.coords); // Debug Log
-
           const { latitude, longitude, altitude, speed } = position.coords;
 
           const trackerId =
@@ -314,91 +376,69 @@ export const useTrackerService = () => {
           latestPacketRef.current = myPacket;
 
           // --- LOGGING TO DATABASE ---
-          // Save every 10 seconds to avoid flooding database, BUT only if moved > 100 meters
-          // IMPORTANT: Check if user exists
           const isAccuracyGood = position.coords.accuracy < 1000;
-          const isTimeThresholdMet = (Date.now() - lastDbLogRef.current > 10000); // 10s for testing
+          const isTimeThresholdMet = (Date.now() - lastDbLogRef.current > 10000); // 10s throttle
           
-          // Distance Check Optimization (Lightweight)
-          // Haversine formula approximation or simple Euclidean for short distances
-          // 1 degree lat approx 111km. 0.00001 deg approx 1.1m.
-          // 100 meters approx 0.0009 deg difference.
-          const lastLogPos = (window as any)._lastLogPos || { lat: 0, lng: 0 };
-          const distLat = Math.abs(latitude - lastLogPos.lat);
-          const distLng = Math.abs(longitude - lastLogPos.lng);
+          // Distance Check
+          const lastPos = lastLogPosRef.current || { lat: 0, lng: 0 };
+          const distLat = Math.abs(latitude - lastPos.lat);
+          const distLng = Math.abs(longitude - lastPos.lng);
           const hasMoved = (distLat > 0.0009 || distLng > 0.0009); // Approx 100 meters
 
           if (user && isAccuracyGood && isTimeThresholdMet && hasMoved) {
-             const logData = {
-                user_id: user.id,
-                lat: latitude,
-                lng: longitude,
-                elevation: altitude,
-                speed: speed,
-                battery: 100, 
-                timestamp: myPacket.timestamp
-             };
-
-             // 1. If Offline, Buffer Immediately
-             if (!navigator.onLine) {
-                 console.log("Device Offline: Buffering GPS log locally...");
-                 const buffer = JSON.parse(localStorage.getItem('TRACKER_OFFLINE_BUFFER') || '[]');
-                 buffer.push(logData);
-                 // Limit buffer size to prevent storage issues (e.g. 1000 points)
-                 if (buffer.length > 1000) buffer.shift(); 
-                 localStorage.setItem('TRACKER_OFFLINE_BUFFER', JSON.stringify(buffer));
-                 
-                 // Update local refs to prevent duplicate buffering of same point
-                 (window as any)._lastLogPos = { lat: latitude, lng: longitude };
-                 lastDbLogRef.current = Date.now();
-                 return;
-             }
-
-             console.log("Attempting to log GPS to DB (Moved > 100m)...", { lat: latitude, lng: longitude }); 
+             // Update refs
+             lastLogPosRef.current = { lat: latitude, lng: longitude };
+             lastDbLogRef.current = Date.now();
              
-             supabase.from('tracker_logs').insert(logData).then(({ error }) => {
-                if (error) {
-                    console.error("Failed to log GPS to DB, buffering locally:", error);
-                    // 2. Buffer on API Error
-                    const buffer = JSON.parse(localStorage.getItem('TRACKER_OFFLINE_BUFFER') || '[]');
-                    buffer.push(logData);
-                    if (buffer.length > 1000) buffer.shift();
-                    localStorage.setItem('TRACKER_OFFLINE_BUFFER', JSON.stringify(buffer));
-                } else {
-                    console.log("GPS Logged to DB:", myPacket.timestamp);
-                    // Update last log position and time only on success
-                    (window as any)._lastLogPos = { lat: latitude, lng: longitude };
-                    lastDbLogRef.current = Date.now();
-
-                    // 3. Piggyback Flush: If success, check if we have other logs to flush
-                    flushBuffer();
-                }
-             });
+             // Log to DB (or Buffer)
+             logLocationToDb(myPacket, user);
           }
 
+          // --- REALTIME BROADCAST ---
           const now = Date.now();
+          const ch = channelRef.current;
+          
+          // Check if channel is ready. 'joined' state check is tricky in JS client, 
+          // usually we trust the 'SUBSCRIBED' status callback we handled earlier.
+          // We can also check if the socket is open.
+          if (ch && now - lastBroadcastRef.current > 3000) {
+            // Use display ID for broadcast if needed, or just send packet with full ID
+            // Ideally we send myPacket which has user.id. 
+            // The frontend receiver splits email/id for display.
+            // Let's create a display-friendly packet if needed, or just send raw.
+            // Existing code used trackerId (short). Let's stick to full ID for consistency 
+            // but if other components expect short ID, we might break them.
+            // TrackerService receiver: `packet.user_id !== myTrackerId`
+            // `myTrackerId` is derived from email/short ID.
+            // If we change packet.user_id to full UUID, this check might fail if not updated.
+            // Let's check the receiver logic again.
+            // Receiver: `const myTrackerId = user?.email?.split('@')[0].toUpperCase() || ...`
+            // So if I send full UUID, `packet.user_id !== myTrackerId` will be true (which is good, it's not me).
+            // BUT, the receiver ADDS it to store. The store likely uses user_id as key.
+            // If I change to UUID, the UI will show UUID as name unless it maps it.
+            // ControlPanel/Map uses `tracker.user_id` to display name.
+            // So I should probably send the SHORT ID for `user_id` in the packet for display purposes,
+            // OR update the UI to handle UUIDs and map to names.
+            // Given the timeframe, I will send the SHORT ID in the broadcast packet for display compatibility,
+            // but the DB log MUST use the UUID.
+            
+            const broadcastPacket = { ...myPacket, user_id: trackerId.toUpperCase() };
 
-          // Realtime Broadcast (Every 3s)
-          if (channelRef.current && now - lastBroadcastRef.current > 3000) {
-            channelRef.current.send({
+            ch.send({
               type: 'broadcast',
               event: 'location-update',
-              payload: myPacket
-            });
+              payload: broadcastPacket
+            }).catch(err => console.warn("Broadcast failed", err));
+            
             lastBroadcastRef.current = now;
           }
-
         },
         (error) => {
           console.warn("GPS Error", error);
-          // Retry with lower accuracy if needed or notify user
           if (error.code === 1) {
-              alert("GPS Permission Denied. Please enable location access.");
-          } else if (error.code === 3) {
-              console.log("GPS Timeout - Retrying...");
+              // alert("GPS Permission Denied."); // Don't spam alert
           }
         },
-        // Relaxed options for better stability
         { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 }
       );
     }
@@ -409,7 +449,6 @@ export const useTrackerService = () => {
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
-      if (heartbeatIntervalRef.current) clearInterval(heartbeatIntervalRef.current);
       if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
@@ -426,6 +465,7 @@ export const useTrackerService = () => {
     user,
     userRole,
     setConnectionStatus,
-    subscriptionStatus
+    subscriptionStatus,
+    logLocationToDb
   ]);
 };

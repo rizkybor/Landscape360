@@ -55,6 +55,7 @@ describe('useTrackerService', () => {
             return mockChannel;
         }),
         send: vi.fn().mockResolvedValue('ok'),
+        track: vi.fn().mockResolvedValue('ok'),
         state: 'joined'
     };
     (supabase.channel as any).mockReturnValue(mockChannel);
@@ -104,7 +105,8 @@ describe('useTrackerService', () => {
     // Let's check the specific call arguments.
     
     const calls = mockChannel.on.mock.calls;
-    const locationUpdateCall = calls.find((call: any[]) => call[1]?.event === 'location-update');
+    // Check if any call has event 'location-update'
+    const locationUpdateCall = calls.find((call: any[]) => call[1] && call[1].event === 'location-update');
     
     expect(locationUpdateCall).toBeUndefined();
   });
