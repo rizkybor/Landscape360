@@ -125,11 +125,19 @@ export const SearchPanel = () => {
             const isNotWater = !loc.type || loc.type.toLowerCase() !== "water";
             return matchesName && isNotWater;
           })
-          .map((loc) => ({
-            ...loc,
-            place_type: [...loc.place_type, "custom"],
-            text: loc.text,
-          }));
+          .map((loc) => {
+            const baseTypes = Array.isArray(loc.place_type)
+              ? loc.place_type
+              : loc.place_type
+              ? [loc.place_type]
+              : [];
+
+            return {
+              ...loc,
+              place_type: [...baseTypes, "custom"],
+              text: loc.text,
+            };
+          });
       }
 
       // Remote Search
