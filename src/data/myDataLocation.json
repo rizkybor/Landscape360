@@ -255,7 +255,7 @@
     }
   },
     {
-    "id": "14",
+    "id": "16",
     "type": "Feature",
     "place_type": ["basecamp", "custom"],
     "relevance": 1,
@@ -272,7 +272,7 @@
     }
   },
   {
-    "id": "15",
+    "id": "17",
     "type": "Feature",
     "place_type": ["mountain", "custom"],
     "relevance": 1,
@@ -289,7 +289,7 @@
     }
   },
     {
-    "id": "14",
+    "id": "18",
     "type": "Feature",
     "place_type": ["basecamp", "custom"],
     "relevance": 1,
