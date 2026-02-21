@@ -661,7 +661,7 @@ const MapBoxContainerComponent = ({
         )}
 
         {/* Map Synchronization Logic (Restored to component) */}
-        
+
         {/* NEW: Live GPS Tracker Layer (Lazy Loaded & Feature Flagged) */}
         {import.meta.env.VITE_ENABLE_GPS_TRACKER === "true" && (
           <ErrorBoundary fallback={null}>
@@ -690,6 +690,7 @@ const MapBoxContainerComponent = ({
                 id: location.id,
                 place_name: location.place_name,
                 isMountain: location.place_type.includes("mountain"),
+                isWater: location.place_type.includes("water"),
               },
             })),
           }}
@@ -745,6 +746,7 @@ const MapBoxContainerComponent = ({
           myDataLocation.map((location) => {
             const [longitude, latitude] = location.center;
             const isMountain = location.place_type.includes("mountain");
+            const isWater = location.place_type.includes("water");
 
             return (
               <Marker
@@ -769,22 +771,34 @@ const MapBoxContainerComponent = ({
                 }}
               >
                 <div className="group relative cursor-pointer">
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black/80 backdrop-blur-sm text-white text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 border border-white/20">
-                    {location.place_name}
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-white/80 backdrop-blur-sm text-black text-[11px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 border border-white/20">
+                    {isMountain
+                      ? `${location.place_name}, ${location.text}`
+                      : isWater
+                        ? `${location.place_name} (${location.text})`
+                        : `${location.place_name}`}
                     <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-black/80"></div>
                   </div>
 
                   <div className="transform transition-all duration-300 ease-out group-hover:scale-110">
                     {isMountain ? (
-                      <div className="w-10 h-10 rounded-full bg-yellow-50 flex items-center justify-center shadow-md hover:shadow-lg border border-yellow-200 backdrop-blur-sm">
+                      <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shadow-md hover:shadow-lg border border-red-300 backdrop-blur-sm">
                         <img
                           src="/mountain.svg"
                           alt="Mountain"
                           className="w-5 h-5 object-contain"
                         />
                       </div>
+                    ) : isWater ? (
+                      <div className="w-10 h-10 rounded-full bg-blue-60 flex items-center justify-center shadow-md hover:shadow-lg border border-blue-200 backdrop-blur-sm">
+                        <img
+                          src="/water.svg"
+                          alt="Water"
+                          className="w-5 h-5 object-contain"
+                        />
+                      </div>
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center shadow-md hover:shadow-lg border border-blue-200 backdrop-blur-sm">
+                      <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center shadow-md hover:shadow-lg border border-green-200 backdrop-blur-sm">
                         <img
                           src="/house.svg"
                           alt="Location"
