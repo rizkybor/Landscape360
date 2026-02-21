@@ -196,7 +196,7 @@ export const SearchPanel = () => {
           ) : query && (
             <button 
               onClick={() => { setQuery(""); setResults([]); inputRef.current?.focus(); }}
-              className="text-slate-400 hover:text-white transition-colors"
+              className="text-slate-400 hover:text-white transition-colors cursor-pointer"
             >
               <X size={20} />
             </button>
@@ -218,7 +218,7 @@ export const SearchPanel = () => {
                   <li key={res.id}>
                     <button
                       onClick={() => handleSelect(res)}
-                      className="w-full text-left px-4 py-3 hover:bg-slate-800/50 transition-colors flex items-center gap-4 group border-l-2 border-transparent hover:border-blue-500"
+                      className="cursor-pointer w-full text-left px-4 py-3 hover:bg-slate-800/50 transition-colors flex items-center gap-4 group border-l-2 border-transparent hover:border-blue-500"
                     >
                       <div className={`
                         w-10 h-10 rounded-full flex items-center justify-center shrink-0
@@ -278,7 +278,7 @@ export const SearchPanel = () => {
                   <button
                     key={idx}
                     onClick={() => { setQuery(item.name); performSearch(item.name); }}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-slate-800/30 hover:bg-slate-800 border border-slate-700/30 hover:border-slate-600 transition-all text-left group"
+                    className="cursor-pointer flex items-center gap-3 p-3 rounded-xl bg-slate-800/30 hover:bg-slate-800 border border-slate-700/30 hover:border-slate-600 transition-all text-left group"
                   >
                     <div className={`
                       w-8 h-8 rounded-lg flex items-center justify-center shrink-0
