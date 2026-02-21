@@ -48,6 +48,7 @@ describe('Online/Offline Tracker Mode', () => {
         return mockChannel;
       }),
       send: vi.fn().mockResolvedValue('ok'),
+      track: vi.fn().mockResolvedValue('ok'),
       state: 'joined'
     };
     (supabase.channel as any).mockReturnValue(mockChannel);

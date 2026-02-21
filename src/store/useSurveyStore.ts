@@ -108,26 +108,49 @@ export const useSurveyStore = create<SurveyState>()(
 
   loadUserProfile: async () => {
     const { user } = get();
-    // If no user, status is Free
     if (!user) {
-        return;
+      return;
     }
-    
-    const { data, error } = await supabase
+
+    let profileData: { status_subscribe?: string | null; status_user?: string | null } | null = null;
+
+    const byId = await supabase
       .from('profiles')
       .select('status_subscribe, status_user')
       .eq('id', user.id)
-      .single();
-      
-    if (error) {
-        console.warn("Could not fetch user profile (offline?), using cached:", get().subscriptionStatus);
-        return;
+      .maybeSingle();
+
+    if (!byId.error && byId.data) {
+      profileData = byId.data;
+    } else if (user.email) {
+      const byEmail = await supabase
+        .from('profiles')
+        .select('status_subscribe, status_user')
+        .eq('email', user.email)
+        .maybeSingle();
+
+      if (!byEmail.error && byEmail.data) {
+        profileData = byEmail.data;
+      }
     }
-      
-    if (data) {
-      set({ 
-        subscriptionStatus: (data.status_subscribe as 'Free' | 'Pro' | 'Enterprise') || 'Free',
-        userRole: (data.status_user as 'pengguna360' | 'monitor360') || 'pengguna360'
+
+    if (!profileData && user.email === 'monitoring@landscape360.app') {
+      set({
+        subscriptionStatus: 'Enterprise',
+        userRole: 'monitor360',
+      });
+      return;
+    }
+
+    if (profileData) {
+      const nextSubscription =
+        (profileData.status_subscribe as 'Free' | 'Pro' | 'Enterprise') || 'Free';
+      const nextRole =
+        (profileData.status_user as 'pengguna360' | 'monitor360') || 'pengguna360';
+
+      set({
+        subscriptionStatus: nextSubscription,
+        userRole: nextRole,
       });
     }
   },
