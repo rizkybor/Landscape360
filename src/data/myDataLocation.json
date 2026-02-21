@@ -179,7 +179,7 @@
       "wikidata": null
     },
     "text": "2.211 mdpl",
-    "place_name": "Gunung Salak 1 (TNGHS)",
+    "place_name": "Gunung Salak 2 (TNGHS)",
     "center": [106.72826, -6.70161],
     "geometry": {
       "type": "Point",
@@ -196,7 +196,7 @@
       "wikidata": null
     },
     "text": "2.180 mdpl",
-    "place_name": "Gunung Salak 2 (TNGHS)",
+    "place_name": "Gunung Salak 1 (TNGHS)",
     "center": [106.73339, -6.71596],
     "geometry": {
       "type": "Point",
@@ -205,6 +205,40 @@
   },
   {
     "id": "13",
+    "type": "Feature",
+    "place_type": ["water", "custom"],
+    "relevance": 1,
+    "properties": {
+      "mapbox_id": null,
+      "wikidata": null
+    },
+    "text": "Permanent",
+    "place_name": "Sungai",
+    "center": [106.71259, -6.72038],
+    "geometry": {
+      "type": "Point",
+      "coordinates": [106.71259, -6.72038]
+    }
+  },
+  {
+    "id": "14",
+    "type": "Feature",
+    "place_type": ["water", "custom"],
+    "relevance": 1,
+    "properties": {
+      "mapbox_id": null,
+      "wikidata": null
+    },
+    "text": "Seasonal",
+    "place_name": "Sungai",
+    "center": [106.70751, -6.72923],
+    "geometry": {
+      "type": "Point",
+      "coordinates": [106.70751, -6.72923]
+    }
+  },
+  {
+    "id": "15",
     "type": "Feature",
     "place_type": ["mountain", "custom"],
     "relevance": 1,
@@ -221,7 +255,7 @@
     }
   },
   {
-    "id": "14",
+    "id": "16",
     "type": "Feature",
     "place_type": ["basecamp", "custom"],
     "relevance": 1,
@@ -238,7 +272,7 @@
     }
   },
   {
-    "id": "15",
+    "id": "17",
     "type": "Feature",
     "place_type": ["mountain", "custom"],
     "relevance": 1,
@@ -255,7 +289,7 @@
     }
   },
     {
-    "id": "16",
+    "id": "18",
     "type": "Feature",
     "place_type": ["basecamp", "custom"],
     "relevance": 1,
@@ -272,7 +306,7 @@
     }
   },
   {
-    "id": "17",
+    "id": "19",
     "type": "Feature",
     "place_type": ["mountain", "custom"],
     "relevance": 1,
@@ -289,7 +323,7 @@
     }
   },
     {
-    "id": "18",
+    "id": "20",
     "type": "Feature",
     "place_type": ["basecamp", "custom"],
     "relevance": 1,
