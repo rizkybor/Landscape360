@@ -786,27 +786,27 @@ const MapBoxContainerComponent = ({
 
                   <div className="transform transition-all duration-300 ease-out group-hover:scale-110">
                     {isMountain ? (
-                      <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shadow-md hover:shadow-lg border border-red-300 backdrop-blur-sm">
+                      <div className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center shadow-md hover:shadow-lg border border-white backdrop-blur-sm">
                         <img
                           src="/mountain.svg"
                           alt="Mountain"
-                          className="w-5 h-5 object-contain"
+                          className="w-6 h-6 object-contain invert brightness-0"
                         />
                       </div>
                     ) : isWater ? (
-                      <div className="w-10 h-10 rounded-full bg-blue-60 flex items-center justify-center shadow-md hover:shadow-lg border border-blue-200 backdrop-blur-sm">
+                      <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center shadow-md hover:shadow-lg border border-white backdrop-blur-sm">
                         <img
                           src="/water.svg"
                           alt="Water"
-                          className="w-5 h-5 object-contain"
+                          className="w-6 h-6 object-contain invert brightness-0"
                         />
                       </div>
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center shadow-md hover:shadow-lg border border-green-200 backdrop-blur-sm">
+                      <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center shadow-md hover:shadow-lg border border-white backdrop-blur-sm">
                         <img
                           src="/house.svg"
                           alt="Location"
-                          className="w-5 h-5 object-contain"
+                          className="w-6 h-6 object-contain invert brightness-0"
                         />
                       </div>
                     )}

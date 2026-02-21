@@ -5,6 +5,7 @@ import type { TrackerPacket, TrackerState } from '../types/tracker';
 interface TrackerStore {
   trackers: Record<string, TrackerState>;
   addOrUpdateTracker: (packet: TrackerPacket) => void;
+  addOrUpdateTrackers: (packets: TrackerPacket[]) => void; // Batch update support
   removeTracker: (userId: string) => void;
   clearAll: () => void;
   selectedTrackerId: string | null;
@@ -20,7 +21,7 @@ interface TrackerStore {
   setConnectionStatus: (status: 'disconnected' | 'connecting' | 'connected' | 'error') => void;
 }
 
-export const useTrackerStore = create<TrackerStore>((set) => ({
+export const useTrackerStore = create<TrackerStore>((set, get) => ({
   trackers: {},
   selectedTrackerId: null,
   isLiveTrackingEnabled: false,
@@ -29,36 +30,41 @@ export const useTrackerStore = create<TrackerStore>((set) => ({
   connectionStatus: 'disconnected',
 
   addOrUpdateTracker: (packet) => {
+    get().addOrUpdateTrackers([packet]);
+  },
+
+  addOrUpdateTrackers: (packets: TrackerPacket[]) => {
     set((state) => {
       const now = Date.now();
-      const userId = packet.user_id;
-      const existing = state.trackers[userId];
-
-      let history = existing ? [...existing.history] : [];
+      const newTrackers = { ...state.trackers };
       
-      // Add new point to history
-      history.push({
-        lat: packet.lat,
-        lng: packet.lng,
-        timestamp: packet.timestamp
+      packets.forEach(packet => {
+          const userId = packet.user_id;
+          const existing = newTrackers[userId];
+          
+          let history = existing ? [...existing.history] : [];
+          
+          // Add new point to history
+          history.push({
+            lat: packet.lat,
+            lng: packet.lng,
+            timestamp: packet.timestamp
+          });
+          
+          // Maintain buffer limit
+          if (history.length > TRACKER_CONFIG.MAX_HISTORY_POINTS) {
+            history = history.slice(-TRACKER_CONFIG.MAX_HISTORY_POINTS);
+          }
+          
+          newTrackers[userId] = {
+             latestPacket: packet,
+             history,
+             lastUpdate: now,
+             isOffline: false
+          };
       });
 
-      // Maintain buffer limit
-      if (history.length > TRACKER_CONFIG.MAX_HISTORY_POINTS) {
-        history = history.slice(-TRACKER_CONFIG.MAX_HISTORY_POINTS);
-      }
-
-      return {
-        trackers: {
-          ...state.trackers,
-          [userId]: {
-            latestPacket: packet,
-            history,
-            lastUpdate: now,
-            isOffline: false,
-          }
-        }
-      };
+      return { trackers: newTrackers };
     });
   },
 

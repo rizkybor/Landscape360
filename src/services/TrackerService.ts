@@ -94,6 +94,7 @@ const generateBackAndForthPacket = (
 
 export const useTrackerService = () => {
   const addOrUpdateTracker = useTrackerStore(s => s.addOrUpdateTracker);
+  const addOrUpdateTrackers = useTrackerStore(s => s.addOrUpdateTrackers); // NEW: Batch update
   const isLiveTrackingEnabled = useTrackerStore(s => s.isLiveTrackingEnabled);
   const isSimulationEnabled = useTrackerStore(s => s.isSimulationEnabled);
   const isLocalBroadcastEnabled = useTrackerStore(s => s.isLocalBroadcastEnabled);
@@ -119,13 +120,11 @@ export const useTrackerService = () => {
       const batchInterval = setInterval(() => {
           if (pendingUpdatesRef.current.length === 0) return;
 
-          // Process all pending updates in one go (React 18 auto-batching helps here)
-          // Limit to processing 50 packets per tick to avoid dropping frames
-          const batch = pendingUpdatesRef.current.splice(0, 50);
+          // Process all pending updates in one go
+          // Limit to processing 100 packets per tick to avoid dropping frames
+          const batch = pendingUpdatesRef.current.splice(0, 100);
           
-          batch.forEach(packet => {
-              addOrUpdateTracker(packet);
-          });
+          addOrUpdateTrackers(batch);
       }, 200); // 5 updates per second max
 
       return () => clearInterval(batchInterval);
@@ -293,21 +292,12 @@ export const useTrackerService = () => {
 
       intervalRef.current = setInterval(() => {
         // Update all users every interval
-        mockUsers.forEach((user, idx) => {
-          const packet = generateBackAndForthPacket(user.id, idx * 200);
-          // For simulation, we can also buffer to test the throttle
-          // But usually simulation runs on the same client, so direct update is fine for self-test
-          // However, to test the throttling logic, we should probably push to pendingUpdatesRef if we want to simulate "incoming" data
-          // But pendingUpdatesRef is inside the hook scope, so we can access it.
-          
-          // Let's use addOrUpdateTracker directly here to ensure the simulation *generates* the load on the store
-          // effectively acting as if the throttle allowed it through, OR we can push to pendingUpdatesRef to test that too.
-          // Since we want to test "Rendering" performance of 200 users, we should update the store.
-          // If we use pendingUpdatesRef, we test the throttle mechanism.
-          
-          // Let's use direct update for simulation to force maximum load on the renderer.
-          addOrUpdateTracker(packet);
+        const packets = mockUsers.map((user, idx) => {
+          return generateBackAndForthPacket(user.id, idx * 200);
         });
+
+        // Use batch update to prevent UI freeze
+        addOrUpdateTrackers(packets);
       }, TRACKER_CONFIG.UPDATE_INTERVAL_MS);
 
     } else {
