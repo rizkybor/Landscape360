@@ -128,7 +128,11 @@ export const ControlPanel = () => {
 
     // Check if the target is a range slider or its container
     const target = e.target as HTMLElement;
-    if (target.closest('input[type="range"]') || target.closest('.overflow-x-auto')) return;
+    if (
+      target.closest('input[type="range"]') ||
+      target.closest(".overflow-x-auto")
+    )
+      return;
 
     touchStart.current = e.targetTouches[0].clientY;
     setIsDragging(true);
@@ -138,7 +142,11 @@ export const ControlPanel = () => {
     if (!isMobile || touchStart.current === null || !isDragging) return;
 
     const target = e.target as HTMLElement;
-    if (target.closest('input[type="range"]') || target.closest('.overflow-x-auto')) return;
+    if (
+      target.closest('input[type="range"]') ||
+      target.closest(".overflow-x-auto")
+    )
+      return;
 
     const currentY = e.targetTouches[0].clientY;
     const diff = currentY - touchStart.current;
@@ -212,7 +220,7 @@ export const ControlPanel = () => {
     const handleMove = (e: MouseEvent) => {
       // Throttle joystick updates
       if (rafId) cancelAnimationFrame(rafId);
-      
+
       rafId = requestAnimationFrame(() => {
         const sensitivity = 0.2;
         setBearing(bearing + e.movementX * sensitivity);
@@ -240,8 +248,8 @@ export const ControlPanel = () => {
     // Debounce resize
     let timeoutId: NodeJS.Timeout;
     const onResize = () => {
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => setIsMobile(window.innerWidth < 768), 100);
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => setIsMobile(window.innerWidth < 768), 100);
     };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
@@ -371,28 +379,78 @@ export const ControlPanel = () => {
               </label>
 
               {/* Tools Carousel for Mobile, Grid for Desktop */}
-              <div className={`gap-3 ${isMobile ? "flex overflow-x-auto pb-4 -mx-4 px-4 snap-x snap-mandatory scrollbar-hide" : "grid grid-cols-1"}`}>
-              
+              <div
+                className={`gap-3 ${isMobile ? "flex overflow-x-auto pb-4 -mx-4 px-4 snap-x snap-mandatory scrollbar-hide" : "grid grid-cols-1"}`}
+              >
+                
+                {/* Search Toggle */}
+                <button
+                  onClick={() => setShowSearch(!showSearch)}
+                  className={`${isMobile ? "flex-none w-28 snap-center h-full" : "col-span-1 w-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
+                    showSearch
+                      ? "bg-blue-900/20 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.15)]"
+                      : "bg-white/5 border-white/10 hover:bg-white/10"
+                  } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
+                >
+                  <div
+                    className={`p-2 rounded-lg transition-colors ${
+                      showSearch
+                        ? "bg-blue-500 text-white shadow-lg shadow-blue-500/40"
+                        : "bg-white/10 text-gray-400 group-hover:text-white"
+                    } ${isMobile ? "mb-1" : ""}`}
+                  >
+                    <Search size={isMobile ? 18 : 16} />
+                  </div>
+
+                  <div className="flex-1">
+                    <div
+                      className={`font-bold transition-colors ${
+                        showSearch ? "text-white" : "text-gray-300"
+                      } ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
+                    >
+                      Search
+                    </div>
+
+                    {!isMobile && (
+                      <div
+                        className={`text-[10px] ${
+                          showSearch ? "text-blue-200" : "text-gray-500"
+                        }`}
+                      >
+                        {showSearch ? "Active" : "Location"}
+                      </div>
+                    )}
+                  </div>
+                </button>
+
                 {/* Navigator Mode */}
                 <button
                   onClick={togglePlotMode}
                   className={`${isMobile ? "flex-none w-28 snap-center h-full" : "col-span-1 w-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
-                    isPlotMode 
-                      ? "bg-yellow-900/20 border-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.1)]" 
+                    isPlotMode
+                      ? "bg-yellow-900/20 border-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.1)]"
                       : "bg-white/5 border-white/10 hover:bg-white/10"
                   } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
                 >
-                  <div className={`p-2 rounded-lg transition-colors ${
-                    isPlotMode ? "bg-yellow-500 text-black shadow-lg shadow-yellow-500/40" : "bg-white/10 text-gray-400 group-hover:text-white"
-                  } ${isMobile ? "mb-1" : ""}`}>
+                  <div
+                    className={`p-2 rounded-lg transition-colors ${
+                      isPlotMode
+                        ? "bg-yellow-500 text-black shadow-lg shadow-yellow-500/40"
+                        : "bg-white/10 text-gray-400 group-hover:text-white"
+                    } ${isMobile ? "mb-1" : ""}`}
+                  >
                     <Ruler size={isMobile ? 18 : 16} />
                   </div>
                   <div className="flex-1">
-                    <div className={`font-bold transition-colors ${isPlotMode ? "text-white" : "text-gray-300"} ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}>
+                    <div
+                      className={`font-bold transition-colors ${isPlotMode ? "text-white" : "text-gray-300"} ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
+                    >
                       Navigator
                     </div>
                     {!isMobile && (
-                      <div className={`text-[10px] ${isPlotMode ? "text-yellow-200" : "text-gray-500"}`}>
+                      <div
+                        className={`text-[10px] ${isPlotMode ? "text-yellow-200" : "text-gray-500"}`}
+                      >
                         {isPlotMode ? "Active" : "Tools"}
                       </div>
                     )}
@@ -403,22 +461,30 @@ export const ControlPanel = () => {
                 <button
                   onClick={() => setShowWeather(!showWeather)}
                   className={`${isMobile ? "flex-none w-28 snap-center h-full" : "col-span-1 w-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
-                    showWeather 
-                      ? "bg-cyan-900/20 border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.1)]" 
+                    showWeather
+                      ? "bg-cyan-900/20 border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.1)]"
                       : "bg-white/5 border-white/10 hover:bg-white/10"
                   } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
                 >
-                  <div className={`p-2 rounded-lg transition-colors ${
-                    showWeather ? "bg-cyan-600 text-white shadow-lg shadow-cyan-500/40" : "bg-white/10 text-gray-400 group-hover:text-white"
-                  } ${isMobile ? "mb-1" : ""}`}>
+                  <div
+                    className={`p-2 rounded-lg transition-colors ${
+                      showWeather
+                        ? "bg-cyan-600 text-white shadow-lg shadow-cyan-500/40"
+                        : "bg-white/10 text-gray-400 group-hover:text-white"
+                    } ${isMobile ? "mb-1" : ""}`}
+                  >
                     <CloudSun size={isMobile ? 18 : 16} />
                   </div>
                   <div className="flex-1">
-                    <div className={`font-bold transition-colors ${showWeather ? "text-white" : "text-gray-300"} ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}>
+                    <div
+                      className={`font-bold transition-colors ${showWeather ? "text-white" : "text-gray-300"} ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
+                    >
                       Weather
                     </div>
                     {!isMobile && (
-                      <div className={`text-[10px] ${showWeather ? "text-cyan-200" : "text-gray-500"}`}>
+                      <div
+                        className={`text-[10px] ${showWeather ? "text-cyan-200" : "text-gray-500"}`}
+                      >
                         {showWeather ? "Visible" : "Hidden"}
                       </div>
                     )}
@@ -429,22 +495,30 @@ export const ControlPanel = () => {
                 <button
                   onClick={() => setShowCustomLocations(!showCustomLocations)}
                   className={`${isMobile ? "flex-none w-28 snap-center h-full" : "col-span-1 w-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
-                    showCustomLocations 
-                      ? "bg-purple-900/20 border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.1)]" 
+                    showCustomLocations
+                      ? "bg-purple-900/20 border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.1)]"
                       : "bg-white/5 border-white/10 hover:bg-white/10"
                   } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
                 >
-                  <div className={`p-2 rounded-lg transition-colors ${
-                    showCustomLocations ? "bg-purple-600 text-white shadow-lg shadow-purple-500/40" : "bg-white/10 text-gray-400 group-hover:text-white"
-                  } ${isMobile ? "mb-1" : ""}`}>
+                  <div
+                    className={`p-2 rounded-lg transition-colors ${
+                      showCustomLocations
+                        ? "bg-purple-600 text-white shadow-lg shadow-purple-500/40"
+                        : "bg-white/10 text-gray-400 group-hover:text-white"
+                    } ${isMobile ? "mb-1" : ""}`}
+                  >
                     <MapPin size={isMobile ? 18 : 16} />
                   </div>
                   <div className="flex-1">
-                    <div className={`font-bold transition-colors ${showCustomLocations ? "text-white" : "text-gray-300"} ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}>
+                    <div
+                      className={`font-bold transition-colors ${showCustomLocations ? "text-white" : "text-gray-300"} ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
+                    >
                       {isMobile ? "POIs" : "Point Of Interest"}
                     </div>
                     {!isMobile && (
-                      <div className={`text-[10px] ${showCustomLocations ? "text-purple-200" : "text-gray-500"}`}>
+                      <div
+                        className={`text-[10px] ${showCustomLocations ? "text-purple-200" : "text-gray-500"}`}
+                      >
                         {showCustomLocations ? "Visible" : "Hidden"}
                       </div>
                     )}
@@ -453,57 +527,94 @@ export const ControlPanel = () => {
 
                 {/* Live Tracking Toggle */}
                 {import.meta.env.VITE_ENABLE_GPS_TRACKER === "true" && user && (
-                  <div className={`${isMobile ? "flex-none w-28 snap-center" : "w-full col-span-1"}`}>
+                  <div
+                    className={`${isMobile ? "flex-none w-28 snap-center" : "w-full col-span-1"}`}
+                  >
                     {subscriptionStatus === "Free" ? (
                       <button
                         disabled
                         className={`w-full flex items-center ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"} rounded-xl border border-white/5 bg-white/5 opacity-60 cursor-not-allowed group`}
                       >
-                        <div className={`p-2 rounded-lg bg-gray-500/10 text-gray-500 ${isMobile ? "mb-1" : ""}`}>
+                        <div
+                          className={`p-2 rounded-lg bg-gray-500/10 text-gray-500 ${isMobile ? "mb-1" : ""}`}
+                        >
                           <Lock size={isMobile ? 18 : 16} />
                         </div>
                         <div className="flex-1">
-                          <div className={`font-bold text-gray-400 ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}>
+                          <div
+                            className={`font-bold text-gray-400 ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
+                          >
                             {isMobile ? "GPS" : "GPS Tracking"}
                           </div>
-                          {!isMobile && <div className="text-[10px] text-gray-600">Upgrade to Pro</div>}
+                          {!isMobile && (
+                            <div className="text-[10px] text-gray-600">
+                              Upgrade to Pro
+                            </div>
+                          )}
                         </div>
                       </button>
                     ) : (
-                      <div className={`rounded-xl border transition-all duration-300 h-full ${
-                        isLiveTrackingEnabled 
-                          ? userRole === "monitor360" && subscriptionStatus === "Enterprise"
-                            ? "bg-blue-900/20 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.15)]"
-                            : "bg-green-900/20 border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.15)]"
-                          : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20"
-                      }`}>
+                      <div
+                        className={`rounded-xl border transition-all duration-300 h-full ${
+                          isLiveTrackingEnabled
+                            ? userRole === "monitor360" &&
+                              subscriptionStatus === "Enterprise"
+                              ? "bg-blue-900/20 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.15)]"
+                              : "bg-green-900/20 border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.15)]"
+                            : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20"
+                        }`}
+                      >
                         <button
                           onClick={toggleLiveTracking}
                           className={`w-full flex items-center cursor-pointer ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
                         >
-                          <div className={`p-2 rounded-lg transition-colors ${
-                            isLiveTrackingEnabled
-                              ? userRole === "monitor360"
-                                ? "bg-blue-500 text-white shadow-lg shadow-blue-500/40"
-                                : "bg-green-500 text-white shadow-lg shadow-green-500/40"
-                              : "bg-white/10 text-gray-400 group-hover:text-white"
-                          } ${isMobile ? "mb-1" : ""}`}>
-                            {userRole === "monitor360" && subscriptionStatus === "Enterprise" ? (
-                              <Binoculars size={isMobile ? 18 : 16} className={isLiveTrackingEnabled ? "animate-pulse" : ""} />
+                          <div
+                            className={`p-2 rounded-lg transition-colors ${
+                              isLiveTrackingEnabled
+                                ? userRole === "monitor360"
+                                  ? "bg-blue-500 text-white shadow-lg shadow-blue-500/40"
+                                  : "bg-green-500 text-white shadow-lg shadow-green-500/40"
+                                : "bg-white/10 text-gray-400 group-hover:text-white"
+                            } ${isMobile ? "mb-1" : ""}`}
+                          >
+                            {userRole === "monitor360" &&
+                            subscriptionStatus === "Enterprise" ? (
+                              <Binoculars
+                                size={isMobile ? 18 : 16}
+                                className={
+                                  isLiveTrackingEnabled ? "animate-pulse" : ""
+                                }
+                              />
                             ) : (
-                              <Navigation size={isMobile ? 18 : 16} className={isLiveTrackingEnabled ? "animate-spin" : ""} />
+                              <Navigation
+                                size={isMobile ? 18 : 16}
+                                className={
+                                  isLiveTrackingEnabled ? "animate-spin" : ""
+                                }
+                              />
                             )}
                           </div>
-                          
+
                           <div className="flex-1">
-                            <div className={`font-bold transition-colors ${isLiveTrackingEnabled ? "text-white" : "text-gray-300"} ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}>
-                              {userRole === "monitor360" && subscriptionStatus === "Enterprise" 
-                                ? (isMobile ? "Monitor" : "Team Monitor")
-                                : (isMobile ? "GPS" : "GPS Tracking")}
+                            <div
+                              className={`font-bold transition-colors ${isLiveTrackingEnabled ? "text-white" : "text-gray-300"} ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
+                            >
+                              {userRole === "monitor360" &&
+                              subscriptionStatus === "Enterprise"
+                                ? isMobile
+                                  ? "Monitor"
+                                  : "Team Monitor"
+                                : isMobile
+                                  ? "GPS"
+                                  : "GPS Tracking"}
                             </div>
                             {!isMobile && (
-                              <div className={`text-[10px] flex items-center gap-1.5 ${isLiveTrackingEnabled ? "text-blue-200" : "text-gray-500"}`}>
-                                <span className={`w-1.5 h-1.5 rounded-full ${isLiveTrackingEnabled ? "bg-green-400 animate-pulse" : "bg-gray-600"}`} />
+                              <div
+                                className={`text-[10px] flex items-center gap-1.5 ${isLiveTrackingEnabled ? "text-blue-200" : "text-gray-500"}`}
+                              >
+                                <span
+                                  className={`w-1.5 h-1.5 rounded-full ${isLiveTrackingEnabled ? "bg-green-400 animate-pulse" : "bg-gray-600"}`}
+                                />
                                 {isLiveTrackingEnabled ? "Active" : "Inactive"}
                               </div>
                             )}
@@ -519,81 +630,141 @@ export const ControlPanel = () => {
               {isLiveTrackingEnabled && !isMobile && (
                 <div className="px-3 pb-3 pt-1 space-y-2 border-t border-white/5 mt-1">
                   {/* Monitor Status */}
-                  {userRole === "monitor360" && subscriptionStatus === "Enterprise" && (
-                    <div className={`text-[10px] py-1.5 px-2 rounded-lg flex items-center justify-between ${
-                        connectionStatus === "connected" ? "bg-green-500/10 text-green-300" : "bg-red-500/10 text-red-300"
-                    }`}>
-                      <span className="flex items-center gap-1.5">
-                        <span className={`w-1.5 h-1.5 rounded-full ${connectionStatus === "connected" ? "bg-green-400" : "bg-red-400"}`} />
-                        {connectionStatus === "connected" ? "Online" : "Offline"}
-                      </span>
-                      <span>{Object.keys(trackers).length} Users</span>
-                    </div>
-                  )}
+                  {userRole === "monitor360" &&
+                    subscriptionStatus === "Enterprise" && (
+                      <div
+                        className={`text-[10px] py-1.5 px-2 rounded-lg flex items-center justify-between ${
+                          connectionStatus === "connected"
+                            ? "bg-green-500/10 text-green-300"
+                            : "bg-red-500/10 text-red-300"
+                        }`}
+                      >
+                        <span className="flex items-center gap-1.5">
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${connectionStatus === "connected" ? "bg-green-400" : "bg-red-400"}`}
+                          />
+                          {connectionStatus === "connected"
+                            ? "Online"
+                            : "Offline"}
+                        </span>
+                        <span>{Object.keys(trackers).length} Users</span>
+                      </div>
+                    )}
 
                   {/* Simulation Toggle */}
                   {userRole === "monitor360" && (
-                    <div className="flex items-center justify-between group cursor-pointer" onClick={toggleSimulation}>
-                      <label className="text-[10px] text-gray-400 cursor-pointer group-hover:text-gray-300">Simulate Data</label>
-                      <div className={`w-7 h-3.5 rounded-full p-0.5 transition-colors ${isSimulationEnabled ? "bg-blue-500" : "bg-gray-700"}`}>
-                        <div className={`w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-transform ${isSimulationEnabled ? "translate-x-3.5" : ""}`} />
+                    <div
+                      className="flex items-center justify-between group cursor-pointer"
+                      onClick={toggleSimulation}
+                    >
+                      <label className="text-[10px] text-gray-400 cursor-pointer group-hover:text-gray-300">
+                        Simulate Data
+                      </label>
+                      <div
+                        className={`w-7 h-3.5 rounded-full p-0.5 transition-colors ${isSimulationEnabled ? "bg-blue-500" : "bg-gray-700"}`}
+                      >
+                        <div
+                          className={`w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-transform ${isSimulationEnabled ? "translate-x-3.5" : ""}`}
+                        />
                       </div>
                     </div>
                   )}
 
                   {/* Broadcast Toggle */}
                   {userRole === "pengguna360" && (
-                    <div className="flex items-center justify-between group cursor-pointer" onClick={toggleLocalBroadcast}>
+                    <div
+                      className="flex items-center justify-between group cursor-pointer"
+                      onClick={toggleLocalBroadcast}
+                    >
                       <label className="text-[10px] text-gray-400 cursor-pointer group-hover:text-gray-300 flex items-center gap-1.5">
                         Broadcast Location
-                        {isLocalBroadcastEnabled && <Wifi size={10} className="text-green-400 animate-pulse" />}
+                        {isLocalBroadcastEnabled && (
+                          <Wifi
+                            size={10}
+                            className="text-green-400 animate-pulse"
+                          />
+                        )}
                       </label>
-                      <div className={`w-7 h-3.5 rounded-full p-0.5 transition-colors ${isLocalBroadcastEnabled ? "bg-green-500" : "bg-gray-700"}`}>
-                        <div className={`w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-transform ${isLocalBroadcastEnabled ? "translate-x-3.5" : ""}`} />
+                      <div
+                        className={`w-7 h-3.5 rounded-full p-0.5 transition-colors ${isLocalBroadcastEnabled ? "bg-green-500" : "bg-gray-700"}`}
+                      >
+                        <div
+                          className={`w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-transform ${isLocalBroadcastEnabled ? "translate-x-3.5" : ""}`}
+                        />
                       </div>
                     </div>
                   )}
                 </div>
               )}
-              
+
               {/* Mobile-optimized Advanced Controls Container */}
               {isLiveTrackingEnabled && isMobile && (
                 <div className="mt-2 px-3 py-2 rounded-lg border border-white/5 bg-white/5 space-y-2">
-                    {/* Monitor Status */}
-                    {userRole === "monitor360" && subscriptionStatus === "Enterprise" && (
-                      <div className={`text-[10px] py-1.5 px-2 rounded-lg flex items-center justify-between ${
-                          connectionStatus === "connected" ? "bg-green-500/10 text-green-300" : "bg-red-500/10 text-red-300"
-                      }`}>
+                  {/* Monitor Status */}
+                  {userRole === "monitor360" &&
+                    subscriptionStatus === "Enterprise" && (
+                      <div
+                        className={`text-[10px] py-1.5 px-2 rounded-lg flex items-center justify-between ${
+                          connectionStatus === "connected"
+                            ? "bg-green-500/10 text-green-300"
+                            : "bg-red-500/10 text-red-300"
+                        }`}
+                      >
                         <span className="flex items-center gap-1.5">
-                          <span className={`w-1.5 h-1.5 rounded-full ${connectionStatus === "connected" ? "bg-green-400" : "bg-red-400"}`} />
-                          {connectionStatus === "connected" ? "Online" : "Offline"}
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${connectionStatus === "connected" ? "bg-green-400" : "bg-red-400"}`}
+                          />
+                          {connectionStatus === "connected"
+                            ? "Online"
+                            : "Offline"}
                         </span>
                         <span>{Object.keys(trackers).length} Users</span>
                       </div>
                     )}
 
-                    {/* Simulation Toggle */}
-                    {userRole === "monitor360" && (
-                      <div className="flex items-center justify-between group cursor-pointer" onClick={toggleSimulation}>
-                        <label className="text-[10px] text-gray-400 cursor-pointer group-hover:text-gray-300">Simulate Data</label>
-                        <div className={`w-7 h-3.5 rounded-full p-0.5 transition-colors ${isSimulationEnabled ? "bg-blue-500" : "bg-gray-700"}`}>
-                          <div className={`w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-transform ${isSimulationEnabled ? "translate-x-3.5" : ""}`} />
-                        </div>
+                  {/* Simulation Toggle */}
+                  {userRole === "monitor360" && (
+                    <div
+                      className="flex items-center justify-between group cursor-pointer"
+                      onClick={toggleSimulation}
+                    >
+                      <label className="text-[10px] text-gray-400 cursor-pointer group-hover:text-gray-300">
+                        Simulate Data
+                      </label>
+                      <div
+                        className={`w-7 h-3.5 rounded-full p-0.5 transition-colors ${isSimulationEnabled ? "bg-blue-500" : "bg-gray-700"}`}
+                      >
+                        <div
+                          className={`w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-transform ${isSimulationEnabled ? "translate-x-3.5" : ""}`}
+                        />
                       </div>
-                    )}
+                    </div>
+                  )}
 
-                    {/* Broadcast Toggle */}
-                    {userRole === "pengguna360" && (
-                      <div className="flex items-center justify-between group cursor-pointer" onClick={toggleLocalBroadcast}>
-                        <label className="text-[10px] text-gray-400 cursor-pointer group-hover:text-gray-300 flex items-center gap-1.5">
-                          Broadcast Location
-                          {isLocalBroadcastEnabled && <Wifi size={10} className="text-green-400 animate-pulse" />}
-                        </label>
-                        <div className={`w-7 h-3.5 rounded-full p-0.5 transition-colors ${isLocalBroadcastEnabled ? "bg-green-500" : "bg-gray-700"}`}>
-                          <div className={`w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-transform ${isLocalBroadcastEnabled ? "translate-x-3.5" : ""}`} />
-                        </div>
+                  {/* Broadcast Toggle */}
+                  {userRole === "pengguna360" && (
+                    <div
+                      className="flex items-center justify-between group cursor-pointer"
+                      onClick={toggleLocalBroadcast}
+                    >
+                      <label className="text-[10px] text-gray-400 cursor-pointer group-hover:text-gray-300 flex items-center gap-1.5">
+                        Broadcast Location
+                        {isLocalBroadcastEnabled && (
+                          <Wifi
+                            size={10}
+                            className="text-green-400 animate-pulse"
+                          />
+                        )}
+                      </label>
+                      <div
+                        className={`w-7 h-3.5 rounded-full p-0.5 transition-colors ${isLocalBroadcastEnabled ? "bg-green-500" : "bg-gray-700"}`}
+                      >
+                        <div
+                          className={`w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-transform ${isLocalBroadcastEnabled ? "translate-x-3.5" : ""}`}
+                        />
                       </div>
-                    )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -602,43 +773,47 @@ export const ControlPanel = () => {
 
         <div
           className={`p-3 flex justify-between items-center border-b border-white/30 transition-all duration-300 touch-none cursor-pointer ${
-            isTerrainScrolled ? "bg-yellow-500 shadow-lg shadow-black/50" : "bg-yellow-500/70"
+            isTerrainScrolled
+              ? "bg-yellow-500 shadow-lg shadow-black/50"
+              : "bg-yellow-500/70"
           }`}
           onClick={() => {
-             // Toggle terrain controls visibility (Mobile & Desktop)
-             setIsTerrainControlsOpen(!isTerrainControlsOpen);
+            // Toggle terrain controls visibility (Mobile & Desktop)
+            setIsTerrainControlsOpen(!isTerrainControlsOpen);
           }}
         >
           <h6 className="font-bold flex items-center gap-1 text-xs text-black-400 tracking-wider">
             <Activity size={12} className="text-black-400" />
-            TERRAIN CONTROLS {isTerrainControlsOpen && <small className="opacity-70 font-normal normal-case">(Scroll for more)</small>}
+            TERRAIN CONTROLS{" "}
+            {isTerrainControlsOpen && (
+              <small className="opacity-70 font-normal normal-case">
+                (Scroll for more)
+              </small>
+            )}
           </h6>
-          
+
           {/* Chevron Indicator for Minimize/Expand */}
           <div className="text-black-400 bg-black/10 rounded p-0.5">
-             {isTerrainControlsOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            {isTerrainControlsOpen ? (
+              <ChevronUp size={16} />
+            ) : (
+              <ChevronDown size={16} />
+            )}
           </div>
         </div>
 
         {/* Scrollable Content Container with Collapsible State */}
-        <div 
-            className={`overflow-y-auto custom-scrollbar transition-all duration-300 ease-in-out ${
-                !isTerrainControlsOpen ? "max-h-0 opacity-0 overflow-hidden" : "max-h-[60vh] md:max-h-[50vh] opacity-100 p-4 space-y-4"
-            }`}
-            onScroll={(e) => {
-                const target = e.target as HTMLDivElement;
-                setIsTerrainScrolled(target.scrollTop > 10);
-            }}
+        <div
+          className={`overflow-y-auto custom-scrollbar transition-all duration-300 ease-in-out ${
+            !isTerrainControlsOpen
+              ? "max-h-0 opacity-0 overflow-hidden"
+              : "max-h-[60vh] md:max-h-[50vh] opacity-100 p-4 space-y-4"
+          }`}
+          onScroll={(e) => {
+            const target = e.target as HTMLDivElement;
+            setIsTerrainScrolled(target.scrollTop > 10);
+          }}
         >
-          {/* Search Toggle */}
-          <button
-            onClick={() => setShowSearch(!showSearch)}
-            className={`cursor-pointer w-full flex items-center justify-center gap-2 py-3 md:py-2 text-xs font-bold rounded transition-colors ${showSearch ? "bg-blue-500 text-white shadow-lg shadow-blue-500/50" : "bg-white/20 hover:bg-white/30 text-blue-200 border border-blue-500/30"}`}
-          >
-            <Search size={14} />
-            {showSearch ? "Hide Search" : "Search Location"}
-          </button>
-
           {/* Map Style Selector */}
           <div>
             <label className="text-xs text-gray-300 mb-2 block font-semibold border-b border-white/10 pb-1">
