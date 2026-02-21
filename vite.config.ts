@@ -1,43 +1,8 @@
 /// <reference types="vitest" />
-import { defineConfig, type Plugin } from 'vite'
+import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
-
-const inlineCss = (): Plugin => {
-  return {
-    name: 'inline-css',
-    apply: 'build',
-    enforce: 'post',
-    transformIndexHtml: {
-      order: 'post',
-      handler(html, ctx) {
-        if (!ctx.bundle) return html
-        
-        const cssAssets = Object.keys(ctx.bundle).filter(key => key.endsWith('.css'))
-        let newHtml = html
-        
-        for (const cssFile of cssAssets) {
-          const chunk = ctx.bundle[cssFile]
-          if (chunk.type === 'asset' && typeof chunk.source === 'string') {
-            // Only inline if the CSS file is explicitly linked in the HTML
-            const linkRegex = new RegExp(`<link[^>]*href=["']\\/?${cssFile}["'][^>]*>`, 'g')
-            if (linkRegex.test(newHtml)) {
-              newHtml = newHtml.replace(linkRegex, '')
-              newHtml = newHtml.replace(
-                '</head>', 
-                `<style>${chunk.source}</style></head>`
-              )
-              // Only delete from bundle if we inlined it
-              delete ctx.bundle[cssFile]
-            }
-          }
-        }
-        return newHtml
-      }
-    }
-  }
-}
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -103,10 +68,9 @@ export default defineConfig({
         type: 'module',
       }
     }),
-    inlineCss()
   ],
   build: {
-    sourcemap: false, // Disable sourcemaps for production
+    sourcemap: true, // Enable sourcemaps for debugging production issues
     rollupOptions: {
       output: {
         manualChunks: {
