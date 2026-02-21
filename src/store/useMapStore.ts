@@ -21,6 +21,7 @@ interface MapState {
   gridStep: number | 'auto';
   showSearch: boolean;
   showWeather: boolean;
+  showCustomLocations: boolean;
   mapStyle: string;
   flyToDestination: { center: [number, number]; zoom: number; duration?: number } | null;
   
@@ -38,6 +39,7 @@ interface MapState {
   setShowGridDMS: (show: boolean) => void;
   setShowSearch: (show: boolean) => void;
   setShowWeather: (show: boolean) => void;
+  setShowCustomLocations: (show: boolean) => void;
   setMapStyle: (style: string) => void;
   setActiveView: (view: '2D' | '3D') => void;
   setMouseControlMode: (mode: 'camera' | 'map') => void;
@@ -71,6 +73,7 @@ export const useMapStore = create<MapState>()(
       gridStep: 'auto',
       showSearch: false,
       showWeather: false,
+      showCustomLocations: true,
       mapStyle: 'mapbox://styles/mapbox/satellite-streets-v12',
       flyToDestination: null,
 
@@ -88,6 +91,7 @@ export const useMapStore = create<MapState>()(
       setShowGridDMS: (showGridDMS) => set({ showGridDMS }),
       setShowSearch: (showSearch) => set({ showSearch }),
       setShowWeather: (showWeather) => set({ showWeather }),
+      setShowCustomLocations: (showCustomLocations) => set({ showCustomLocations }),
       setMapStyle: (mapStyle) => set({ mapStyle }),
       setActiveView: (activeView) => set({ activeView }),
       setMouseControlMode: (mouseControlMode) => set({ mouseControlMode }),
@@ -123,6 +127,7 @@ export const useMapStore = create<MapState>()(
         gridOpacity: state.gridOpacity,
         gridStep: state.gridStep,
         showWeather: state.showWeather,
+        showCustomLocations: state.showCustomLocations,
         contourInterval: state.contourInterval,
         elevationExaggeration: state.elevationExaggeration,
         opacity: state.opacity,

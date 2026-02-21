@@ -62,6 +62,7 @@ const MapBoxContainerComponent = ({
     interactionMode,
     addRegionPoint,
     showContours,
+    showCustomLocations,
     mapStyle,
     setCenter,
     setZoom,
@@ -675,74 +676,77 @@ const MapBoxContainerComponent = ({
         <UserLocationMarker initialLocation={initialLocation} />
 
         {/* Custom Location Markers - GeoJSON + Cluster */}
-        <Source
-          id="custom-locations"
-          type="geojson"
-          data={{
-            type: "FeatureCollection",
-            features: myDataLocation.map((location) => ({
-              type: "Feature",
-              geometry: {
-                type: "Point",
-                coordinates: location.center,
-              },
-              properties: {
-                id: location.id,
-                place_name: location.place_name,
-                isMountain: location.place_type.includes("mountain"),
-                isWater: location.place_type.includes("water"),
-              },
-            })),
-          }}
-          cluster={true}
-          clusterRadius={50}
-          clusterMaxZoom={14}
-        >
-          {/* Cluster circles */}
-          <Layer
-            id="custom-clusters"
-            type="circle"
-            filter={["has", "point_count"]}
-            paint={{
-              "circle-color": [
-                "step",
-                ["get", "point_count"],
-                "#60a5fa",
-                50,
-                "#2563eb",
-                200,
-                "#1d4ed8",
-              ],
-              "circle-radius": [
-                "step",
-                ["get", "point_count"],
-                16,
-                50,
-                22,
-                200,
-                28,
-              ],
-              "circle-opacity": 0.9,
+        {showCustomLocations && (
+          <Source
+            id="custom-locations"
+            type="geojson"
+            data={{
+              type: "FeatureCollection",
+              features: myDataLocation.map((location) => ({
+                type: "Feature",
+                geometry: {
+                  type: "Point",
+                  coordinates: location.center,
+                },
+                properties: {
+                  id: location.id,
+                  place_name: location.place_name,
+                  isMountain: location.place_type.includes("mountain"),
+                  isWater: location.place_type.includes("water"),
+                },
+              })),
             }}
-          />
-          {/* Cluster labels */}
-          <Layer
-            id="custom-cluster-count"
-            type="symbol"
-            filter={["has", "point_count"]}
-            layout={{
-              "text-field": "{point_count_abbreviated}",
-              "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
-              "text-size": 12,
-            }}
-            paint={{
-              "text-color": "#ffffff",
-            }}
-          />
-        </Source>
+            cluster={true}
+            clusterRadius={50}
+            clusterMaxZoom={14}
+          >
+            {/* Cluster circles */}
+            <Layer
+              id="custom-clusters"
+              type="circle"
+              filter={["has", "point_count"]}
+              paint={{
+                "circle-color": [
+                  "step",
+                  ["get", "point_count"],
+                  "#60a5fa",
+                  50,
+                  "#2563eb",
+                  200,
+                  "#1d4ed8",
+                ],
+                "circle-radius": [
+                  "step",
+                  ["get", "point_count"],
+                  16,
+                  50,
+                  22,
+                  200,
+                  28,
+                ],
+                "circle-opacity": 0.9,
+              }}
+            />
+            {/* Cluster labels */}
+            <Layer
+              id="custom-cluster-count"
+              type="symbol"
+              filter={["has", "point_count"]}
+              layout={{
+                "text-field": "{point_count_abbreviated}",
+                "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
+                "text-size": 12,
+              }}
+              paint={{
+                "text-color": "#ffffff",
+              }}
+            />
+          </Source>
+        )}
 
         {/* Unclustered points with SVG icons via React Marker */}
-        {zoom >= 10 &&
+        {showCustomLocations &&
+          zoom >= 10 &&
           myDataLocation.map((location) => {
             const [longitude, latitude] = location.center;
             const isMountain = location.place_type.includes("mountain");
