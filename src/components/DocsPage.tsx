@@ -26,7 +26,7 @@ interface Props {
 export const DocsPage = ({ onBack }: Props) => {
   return (
     <div className="h-screen bg-[#050505] text-white font-sans overflow-hidden flex flex-col">
-      <SEO 
+      <SEO
         title="Documentation & Guide"
         description="Learn how to use Landscape 360, 3D map navigation, contour analysis, and other advanced features."
       />
@@ -197,7 +197,7 @@ export const DocsPage = ({ onBack }: Props) => {
                 </div>
               </div>
 
-              <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 flex gap-4 items-start group hover:border-green-500/30 transition-all">
+              <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 flex gap-4 items-start group hover:border-purple-500/30 transition-all">
                 <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center text-green-400 shrink-0">
                   <Navigation size={16} />
                 </div>
@@ -209,6 +209,20 @@ export const DocsPage = ({ onBack }: Props) => {
                     Click the <strong>GPS Icon</strong> to broadcast your
                     location (Pro) or monitor field teams (Enterprise). Includes
                     Smart Reconnect.
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 flex gap-4 items-start group hover:border-green-500/30 transition-all">
+                <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 shrink-0">
+                  <Map size={16} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-white mb-1">
+                    Data Source & Attribution (POIs){" "}
+                  </h4>
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    This POI dataset is originally compiled and curated from multiple sources, including personal hiking experiences and field observations, shared knowledge from fellow hikers and local communities, and cross-verification with official and trusted websites.
                   </p>
                 </div>
               </div>

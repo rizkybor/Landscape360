@@ -22,6 +22,7 @@ import {
   Navigation,
   Lock,
   Binoculars,
+  MapPin,
 } from "lucide-react";
 import geoportalLogo from "../assets/geoportal360.png";
 import streetsView from "../assets/Street-View.png";
@@ -57,6 +58,8 @@ export const ControlPanel = () => {
     setShowSearch,
     showWeather,
     setShowWeather,
+    showCustomLocations,
+    setShowCustomLocations,
     mapStyle,
     setMapStyle,
   } = useMapStore();
@@ -122,7 +125,7 @@ export const ControlPanel = () => {
 
     // Check if the target is a range slider or its container
     const target = e.target as HTMLElement;
-    if (target.closest('input[type="range"]')) return;
+    if (target.closest('input[type="range"]') || target.closest('.overflow-x-auto')) return;
 
     touchStart.current = e.targetTouches[0].clientY;
     setIsDragging(true);
@@ -132,7 +135,7 @@ export const ControlPanel = () => {
     if (!isMobile || touchStart.current === null || !isDragging) return;
 
     const target = e.target as HTMLElement;
-    if (target.closest('input[type="range"]')) return;
+    if (target.closest('input[type="range"]') || target.closest('.overflow-x-auto')) return;
 
     const currentY = e.targetTouches[0].clientY;
     const diff = currentY - touchStart.current;
@@ -181,6 +184,7 @@ export const ControlPanel = () => {
     },
   ];
 
+  // Optimize Image Preloading (Only once)
   useEffect(() => {
     mapStyles.forEach((style) => {
       const img = new Image();
@@ -188,6 +192,7 @@ export const ControlPanel = () => {
     });
   }, []);
 
+  // Optimize Event Listeners (Passive)
   useEffect(() => {
     if (!isJoystickDragging) return;
 
@@ -202,7 +207,7 @@ export const ControlPanel = () => {
       document.body.style.cursor = "";
     };
 
-    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("mousemove", handleMove, { passive: true });
     window.addEventListener("mouseup", handleUp);
 
     return () => {
@@ -340,11 +345,11 @@ export const ControlPanel = () => {
                 Tools & Exploration
               </label>
 
-            {/* Tools Grid for Mobile */}
-            <div className={`grid gap-3 ${isMobile ? "grid-cols-3" : "grid-cols-1"}`}>
+            {/* Tools Carousel for Mobile, Grid for Desktop */}
+            <div className={`gap-3 ${isMobile ? "flex overflow-x-auto pb-4 -mx-4 px-4 snap-x snap-mandatory scrollbar-hide" : "grid grid-cols-1"}`}>
               {/* Live Tracking Toggle */}
               {import.meta.env.VITE_ENABLE_GPS_TRACKER === "true" && user && (
-                <div className={`col-span-1 ${isMobile ? "" : "w-full"}`}>
+                <div className={`${isMobile ? "flex-none w-28 snap-center" : "w-full col-span-1"}`}>
                   {subscriptionStatus === "Free" ? (
                     <button
                       disabled
@@ -408,7 +413,7 @@ export const ControlPanel = () => {
               {/* Navigator Mode */}
               <button
                 onClick={togglePlotMode}
-                className={`col-span-1 w-full flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
+                className={`${isMobile ? "flex-none w-28 snap-center h-full" : "col-span-1 w-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
                   isPlotMode 
                     ? "bg-yellow-900/20 border-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.1)]" 
                     : "bg-white/5 border-white/10 hover:bg-white/10"
@@ -434,7 +439,7 @@ export const ControlPanel = () => {
               {/* Weather Toggle */}
               <button
                 onClick={() => setShowWeather(!showWeather)}
-                className={`col-span-1 w-full flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
+                className={`${isMobile ? "flex-none w-28 snap-center h-full" : "col-span-1 w-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
                   showWeather 
                     ? "bg-cyan-900/20 border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.1)]" 
                     : "bg-white/5 border-white/10 hover:bg-white/10"
@@ -452,6 +457,32 @@ export const ControlPanel = () => {
                   {!isMobile && (
                     <div className={`text-[10px] ${showWeather ? "text-cyan-200" : "text-gray-500"}`}>
                       {showWeather ? "Visible" : "Hidden"}
+                    </div>
+                  )}
+                </div>
+              </button>
+
+              {/* Show Locations Toggle */}
+              <button
+                onClick={() => setShowCustomLocations(!showCustomLocations)}
+                className={`${isMobile ? "flex-none w-28 snap-center h-full" : "col-span-1 w-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
+                  showCustomLocations 
+                    ? "bg-purple-900/20 border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.1)]" 
+                    : "bg-white/5 border-white/10 hover:bg-white/10"
+                } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
+              >
+                <div className={`p-2 rounded-lg transition-colors ${
+                  showCustomLocations ? "bg-purple-600 text-white shadow-lg shadow-purple-500/40" : "bg-white/10 text-gray-400 group-hover:text-white"
+                } ${isMobile ? "mb-1" : ""}`}>
+                  <MapPin size={isMobile ? 18 : 16} />
+                </div>
+                <div className="flex-1">
+                  <div className={`font-bold transition-colors ${showCustomLocations ? "text-white" : "text-gray-300"} ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}>
+                    {isMobile ? "POIs" : "Point Of Interest"}
+                  </div>
+                  {!isMobile && (
+                    <div className={`text-[10px] ${showCustomLocations ? "text-purple-200" : "text-gray-500"}`}>
+                      {showCustomLocations ? "Visible" : "Hidden"}
                     </div>
                   )}
                 </div>

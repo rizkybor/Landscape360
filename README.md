@@ -20,6 +20,8 @@
 - **Multi-Style Maps**: Switch between **Streets** (Vector), **Outdoors** (Topo), and **Satellite Streets** (Imagery) for versatile context.
 - **Split-Screen Mode**: Compare 2D and 3D perspectives side-by-side with synchronized camera movement.
 - **Map Controller**: Intuitive Zoom In/Out buttons and simplified gesture controls for desktop and mobile.
+- **Data Source & Attribution (POIs) **: Toggleable POI (Points of Interest) layer built from independently curated GeoJSON data. Supports clustering for large datasets to ensure optimal map performance and clarity..
+- **Carousel UI (Mobile)**: Optimized "Tools & Exploration" panel with horizontal swipe interaction for better usability on small screens.
 
 ### 📍 Navigation & Survey
 - **Instant Geolocation**: "Start Your Journey" feature with pre-emptive GPS fetching and zero-delay jump logic.
@@ -32,12 +34,15 @@
 
 ### ⚡ Performance & Offline
 - **PWA Support**: Fully offline-capable using Service Workers and IndexedDB.
+  - **Smart Caching**: `StaleWhileRevalidate` for map styles/fonts and `CacheFirst` for static assets (30 days).
+  - **Offline Navigation**: SPA fallback ensures app loads even without internet.
 - **Offline Maps**: Download map regions for use in remote areas without internet connection.
 - **Mobile Optimization**:
   - Adaptive pixel ratio (max 1.5x) for battery saving.
   - Reduced polygon count and simplified shaders for 3D markers on mobile devices.
   - Optimized `backdrop-blur` effects to reduce GPU load.
-- **State Persistence**: User preferences (Map Style, View Mode, Camera Position) are automatically saved via `Zustand` middleware.
+  - **Passive Event Listeners**: Improved scroll performance and touch interaction.
+- **State Persistence**: User preferences (Map Style, View Mode, Camera Position, Custom Locations visibility) are automatically saved via `Zustand` middleware.
 
 ## 💎 Subscription Plans & User Roles
 
