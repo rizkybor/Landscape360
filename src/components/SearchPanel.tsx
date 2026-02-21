@@ -158,12 +158,14 @@ export const SearchPanel = () => {
       // Merge: Custom Results FIRST, then Mapbox Results
       // Deduplicate results based on id or coordinates
       const seen = new Set();
-      const finalResults = [...customResults, ...mapboxResults].filter(item => {
-        const key = item.id || `${item.center[0]},${item.center[1]}`;
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      });
+      const finalResults = [...customResults, ...mapboxResults].filter(
+        (item) => {
+          const key = item.id || `${item.center[0]},${item.center[1]}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        },
+      );
 
       setResults(finalResults);
     } catch (error) {
@@ -231,7 +233,17 @@ export const SearchPanel = () => {
                 >
                   <MapPin
                     size={16}
-                    className={`mt-0.5 shrink-0 ${res.place_type.includes("custom") ? "text-green-400" : res.place_type.includes("poi") ? "text-purple-400" : "text-gray-500 group-hover:text-blue-400"}`}
+                    className={`mt-0.5 shrink-0 ${
+                      res.place_type.includes("custom")
+                        ? "text-purple-400"
+                        : res.place_type.includes("poi")
+                          ? "text-green-400"
+                          : res.place_type.includes("mountain")
+                            ? "text-yellow-400"
+                            : res.place_type.includes("basecamp")
+                              ? "text-blue-400"
+                              : "text-gray-500 group-hover:text-blue-400"
+                    }`}
                   />
                   <div>
                     <p className="text-xs font-bold text-gray-200 group-hover:text-white flex items-center gap-2">
