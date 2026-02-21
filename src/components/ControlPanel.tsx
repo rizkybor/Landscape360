@@ -347,69 +347,7 @@ export const ControlPanel = () => {
 
             {/* Tools Carousel for Mobile, Grid for Desktop */}
             <div className={`gap-3 ${isMobile ? "flex overflow-x-auto pb-4 -mx-4 px-4 snap-x snap-mandatory scrollbar-hide" : "grid grid-cols-1"}`}>
-              {/* Live Tracking Toggle */}
-              {import.meta.env.VITE_ENABLE_GPS_TRACKER === "true" && user && (
-                <div className={`${isMobile ? "flex-none w-28 snap-center" : "w-full col-span-1"}`}>
-                  {subscriptionStatus === "Free" ? (
-                    <button
-                      disabled
-                      className={`w-full flex items-center ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"} rounded-xl border border-white/5 bg-white/5 opacity-60 cursor-not-allowed group`}
-                    >
-                      <div className={`p-2 rounded-lg bg-gray-500/10 text-gray-500 ${isMobile ? "mb-1" : ""}`}>
-                        <Lock size={isMobile ? 18 : 16} />
-                      </div>
-                      <div className="flex-1">
-                        <div className={`font-bold text-gray-400 ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}>
-                          {isMobile ? "GPS" : "GPS Tracking"}
-                        </div>
-                        {!isMobile && <div className="text-[10px] text-gray-600">Upgrade to Pro</div>}
-                      </div>
-                    </button>
-                  ) : (
-                    <div className={`rounded-xl border transition-all duration-300 h-full ${
-                      isLiveTrackingEnabled 
-                        ? userRole === "monitor360" && subscriptionStatus === "Enterprise"
-                          ? "bg-blue-900/20 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.15)]"
-                          : "bg-green-900/20 border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.15)]"
-                        : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20"
-                    }`}>
-                      <button
-                        onClick={toggleLiveTracking}
-                        className={`w-full flex items-center cursor-pointer ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
-                      >
-                        <div className={`p-2 rounded-lg transition-colors ${
-                          isLiveTrackingEnabled
-                            ? userRole === "monitor360"
-                              ? "bg-blue-500 text-white shadow-lg shadow-blue-500/40"
-                              : "bg-green-500 text-white shadow-lg shadow-green-500/40"
-                            : "bg-white/10 text-gray-400 group-hover:text-white"
-                        } ${isMobile ? "mb-1" : ""}`}>
-                          {userRole === "monitor360" && subscriptionStatus === "Enterprise" ? (
-                            <Binoculars size={isMobile ? 18 : 16} className={isLiveTrackingEnabled ? "animate-pulse" : ""} />
-                          ) : (
-                            <Navigation size={isMobile ? 18 : 16} className={isLiveTrackingEnabled ? "animate-spin" : ""} />
-                          )}
-                        </div>
-                        
-                        <div className="flex-1">
-                          <div className={`font-bold transition-colors ${isLiveTrackingEnabled ? "text-white" : "text-gray-300"} ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}>
-                            {userRole === "monitor360" && subscriptionStatus === "Enterprise" 
-                              ? (isMobile ? "Monitor" : "Team Monitor")
-                              : (isMobile ? "GPS" : "GPS Tracking")}
-                          </div>
-                          {!isMobile && (
-                            <div className={`text-[10px] flex items-center gap-1.5 ${isLiveTrackingEnabled ? "text-blue-200" : "text-gray-500"}`}>
-                              <span className={`w-1.5 h-1.5 rounded-full ${isLiveTrackingEnabled ? "bg-green-400 animate-pulse" : "bg-gray-600"}`} />
-                              {isLiveTrackingEnabled ? "Active" : "Inactive"}
-                            </div>
-                          )}
-                        </div>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-
+             
               {/* Navigator Mode */}
               <button
                 onClick={togglePlotMode}
@@ -487,6 +425,69 @@ export const ControlPanel = () => {
                   )}
                 </div>
               </button>
+
+               {/* Live Tracking Toggle */}
+              {import.meta.env.VITE_ENABLE_GPS_TRACKER === "true" && user && (
+                <div className={`${isMobile ? "flex-none w-28 snap-center" : "w-full col-span-1"}`}>
+                  {subscriptionStatus === "Free" ? (
+                    <button
+                      disabled
+                      className={`w-full flex items-center ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"} rounded-xl border border-white/5 bg-white/5 opacity-60 cursor-not-allowed group`}
+                    >
+                      <div className={`p-2 rounded-lg bg-gray-500/10 text-gray-500 ${isMobile ? "mb-1" : ""}`}>
+                        <Lock size={isMobile ? 18 : 16} />
+                      </div>
+                      <div className="flex-1">
+                        <div className={`font-bold text-gray-400 ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}>
+                          {isMobile ? "GPS" : "GPS Tracking"}
+                        </div>
+                        {!isMobile && <div className="text-[10px] text-gray-600">Upgrade to Pro</div>}
+                      </div>
+                    </button>
+                  ) : (
+                    <div className={`rounded-xl border transition-all duration-300 h-full ${
+                      isLiveTrackingEnabled 
+                        ? userRole === "monitor360" && subscriptionStatus === "Enterprise"
+                          ? "bg-blue-900/20 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.15)]"
+                          : "bg-green-900/20 border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.15)]"
+                        : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20"
+                    }`}>
+                      <button
+                        onClick={toggleLiveTracking}
+                        className={`w-full flex items-center cursor-pointer ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
+                      >
+                        <div className={`p-2 rounded-lg transition-colors ${
+                          isLiveTrackingEnabled
+                            ? userRole === "monitor360"
+                              ? "bg-blue-500 text-white shadow-lg shadow-blue-500/40"
+                              : "bg-green-500 text-white shadow-lg shadow-green-500/40"
+                            : "bg-white/10 text-gray-400 group-hover:text-white"
+                        } ${isMobile ? "mb-1" : ""}`}>
+                          {userRole === "monitor360" && subscriptionStatus === "Enterprise" ? (
+                            <Binoculars size={isMobile ? 18 : 16} className={isLiveTrackingEnabled ? "animate-pulse" : ""} />
+                          ) : (
+                            <Navigation size={isMobile ? 18 : 16} className={isLiveTrackingEnabled ? "animate-spin" : ""} />
+                          )}
+                        </div>
+                        
+                        <div className="flex-1">
+                          <div className={`font-bold transition-colors ${isLiveTrackingEnabled ? "text-white" : "text-gray-300"} ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}>
+                            {userRole === "monitor360" && subscriptionStatus === "Enterprise" 
+                              ? (isMobile ? "Monitor" : "Team Monitor")
+                              : (isMobile ? "GPS" : "GPS Tracking")}
+                          </div>
+                          {!isMobile && (
+                            <div className={`text-[10px] flex items-center gap-1.5 ${isLiveTrackingEnabled ? "text-blue-200" : "text-gray-500"}`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${isLiveTrackingEnabled ? "bg-green-400 animate-pulse" : "bg-gray-600"}`} />
+                              {isLiveTrackingEnabled ? "Active" : "Inactive"}
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Advanced Controls (Simulation/Broadcast) - Moved outside grid for better mobile layout */}
