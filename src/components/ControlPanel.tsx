@@ -616,7 +616,7 @@ export const ControlPanel = () => {
           
           {/* Chevron Indicator for Minimize/Expand */}
           <div className="text-black-400 bg-black/10 rounded p-0.5">
-             {isTerrainControlsOpen ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+             {isTerrainControlsOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </div>
         </div>
 
