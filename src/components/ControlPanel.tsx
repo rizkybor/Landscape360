@@ -196,13 +196,21 @@ export const ControlPanel = () => {
   useEffect(() => {
     if (!isJoystickDragging) return;
 
+    let rafId: number;
+
     const handleMove = (e: MouseEvent) => {
-      const sensitivity = 0.2;
-      setBearing(bearing + e.movementX * sensitivity);
-      setPitch(Math.min(85, Math.max(0, pitch + e.movementY * sensitivity)));
+      // Throttle joystick updates
+      if (rafId) cancelAnimationFrame(rafId);
+      
+      rafId = requestAnimationFrame(() => {
+        const sensitivity = 0.2;
+        setBearing(bearing + e.movementX * sensitivity);
+        setPitch(Math.min(85, Math.max(0, pitch + e.movementY * sensitivity)));
+      });
     };
 
     const handleUp = () => {
+      if (rafId) cancelAnimationFrame(rafId);
       setIsJoystickDragging(false);
       document.body.style.cursor = "";
     };
@@ -213,11 +221,17 @@ export const ControlPanel = () => {
     return () => {
       window.removeEventListener("mousemove", handleMove);
       window.removeEventListener("mouseup", handleUp);
+      if (rafId) cancelAnimationFrame(rafId);
     };
   }, [isJoystickDragging, bearing, pitch, setBearing, setPitch]);
 
   useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth < 768);
+    // Debounce resize
+    let timeoutId: NodeJS.Timeout;
+    const onResize = () => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => setIsMobile(window.innerWidth < 768), 100);
+    };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);

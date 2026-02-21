@@ -112,21 +112,30 @@ export const useTrackerService = () => {
   // --- HELPER: SAVE TO LOCAL BUFFER ---
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const saveToBuffer = useCallback((logData: any) => {
-    try {
-        const bufferStr = localStorage.getItem('TRACKER_OFFLINE_BUFFER');
-        const buffer = bufferStr ? JSON.parse(bufferStr) : [];
-        
-        // Check for duplicate (last item) to avoid spamming buffer
-        const last = buffer[buffer.length - 1];
-        if (!last || last.timestamp !== logData.timestamp) {
-            buffer.push(logData);
-            // Limit buffer size
-            if (buffer.length > 1000) buffer.shift(); 
-            localStorage.setItem('TRACKER_OFFLINE_BUFFER', JSON.stringify(buffer));
-            console.log("Buffered GPS log locally. Count:", buffer.length);
+    // Use requestIdleCallback if available to avoid blocking main thread
+    const saveTask = () => {
+        try {
+            const bufferStr = localStorage.getItem('TRACKER_OFFLINE_BUFFER');
+            const buffer = bufferStr ? JSON.parse(bufferStr) : [];
+            
+            // Check for duplicate (last item) to avoid spamming buffer
+            const last = buffer[buffer.length - 1];
+            if (!last || last.timestamp !== logData.timestamp) {
+                buffer.push(logData);
+                // Limit buffer size
+                if (buffer.length > 1000) buffer.shift(); 
+                localStorage.setItem('TRACKER_OFFLINE_BUFFER', JSON.stringify(buffer));
+                console.log("Buffered GPS log locally. Count:", buffer.length);
+            }
+        } catch (e) {
+            console.error("Error saving to buffer:", e);
         }
-    } catch (e) {
-        console.error("Error saving to buffer:", e);
+    };
+
+    if ('requestIdleCallback' in window) {
+        (window as any).requestIdleCallback(saveTask);
+    } else {
+        setTimeout(saveTask, 0);
     }
   }, []);
 
@@ -134,33 +143,39 @@ export const useTrackerService = () => {
   const flushBuffer = useCallback(async () => {
       if (!navigator.onLine) return;
       
-      const bufferStr = localStorage.getItem('TRACKER_OFFLINE_BUFFER');
-      if (!bufferStr) return;
+      const flushTask = async () => {
+          const bufferStr = localStorage.getItem('TRACKER_OFFLINE_BUFFER');
+          if (!bufferStr) return;
 
-      try {
-        const buffer = JSON.parse(bufferStr);
-        if (!Array.isArray(buffer) || buffer.length === 0) {
-            localStorage.removeItem('TRACKER_OFFLINE_BUFFER');
-            return;
-        }
+          try {
+            const buffer = JSON.parse(bufferStr);
+            if (!Array.isArray(buffer) || buffer.length === 0) {
+                localStorage.removeItem('TRACKER_OFFLINE_BUFFER');
+                return;
+            }
 
-        // Deduplicate based on timestamp + user_id
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const uniqueBuffer = Array.from(new Map(buffer.map((item: any) => [item.timestamp + item.user_id, item])).values());
+            // Deduplicate based on timestamp + user_id
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const uniqueBuffer = Array.from(new Map(buffer.map((item: any) => [item.timestamp + item.user_id, item])).values());
 
-        console.log(`Smart Reconnect: Flushing ${uniqueBuffer.length} buffered logs...`);
-        
-        const { error } = await supabase.from('tracker_logs').insert(uniqueBuffer);
-        
-        if (!error) {
-          console.log("Offline buffer flushed successfully.");
-          localStorage.removeItem('TRACKER_OFFLINE_BUFFER');
-        } else {
-          console.error("Failed to flush offline buffer:", error);
-        }
-      } catch (e) {
-        console.error("Error processing offline buffer:", e);
-      }
+            console.log(`Smart Reconnect: Flushing ${uniqueBuffer.length} buffered logs...`);
+            
+            const { error } = await supabase.from('tracker_logs').insert(uniqueBuffer);
+            
+            if (!error) {
+              console.log("Offline buffer flushed successfully.");
+              localStorage.removeItem('TRACKER_OFFLINE_BUFFER');
+            } else {
+              console.error("Failed to flush offline buffer:", error);
+            }
+          } catch (e) {
+            console.error("Error processing offline buffer:", e);
+          }
+      };
+      
+      // Execute flush without blocking UI
+      setTimeout(flushTask, 100);
+
   }, []);
 
   // --- HELPER: LOG TO DB ---
