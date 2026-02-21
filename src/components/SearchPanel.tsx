@@ -186,7 +186,7 @@ export const SearchPanel = () => {
           <input
             ref={inputRef}
             type="text"
-            placeholder="Search mountains, cities, or coordinates..."
+            placeholder="Search mountains, basecamp, or cities..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="flex-1 bg-transparent border-none outline-none text-white text-lg placeholder-slate-500 font-medium"
@@ -305,7 +305,7 @@ export const SearchPanel = () => {
               <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
               Mapbox Geocoding
             </span>
-            <span className="hidden sm:inline">Coordinates supported (Lat, Lon)</span>
+            {/* <span className="hidden sm:inline">Coordinates supported (Lat, Lon)</span> */}
           </div>
           <div className="font-mono">
             {results.length} results
