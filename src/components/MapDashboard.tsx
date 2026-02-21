@@ -5,7 +5,11 @@ import { Split, Maximize } from "lucide-react";
 import { SEO } from "./SEO";
 import type { MapRef } from "react-map-gl/mapbox";
 
-export const MapDashboard = ({ initialLocation }: { initialLocation?: [number, number] | null }) => {
+export const MapDashboard = ({
+  initialLocation,
+}: {
+  initialLocation?: [number, number] | null;
+}) => {
   const [isSplitScreen, setIsSplitScreen] = useState(false);
 
   const mainMapRef = useRef<MapRef | null>(null);
@@ -31,10 +35,10 @@ export const MapDashboard = ({ initialLocation }: { initialLocation?: [number, n
             />
             {/* Sync Indicator */}
             <div className="absolute bottom-4 right-4 z-20 transition-opacity pointer-events-none opacity-0 group-hover:opacity-100 md:opacity-100">
-                <span className="text-[10px] font-mono text-blue-300 bg-blue-900/50 border border-blue-500/30 px-2 py-1 rounded flex items-center gap-1 backdrop-blur-md shadow-lg">
-                    <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
-                    SYNC ACTIVE
-                </span>
+              <span className="text-[10px] font-mono text-blue-300 bg-blue-900/50 border border-blue-500/30 px-2 py-1 rounded flex items-center gap-1 backdrop-blur-md shadow-lg">
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+                SYNC ACTIVE
+              </span>
             </div>
           </div>
 
@@ -53,8 +57,8 @@ export const MapDashboard = ({ initialLocation }: { initialLocation?: [number, n
           </div>
         </div>
       ) : (
-        <MapBoxContainer 
-          mapRef={mainMapRef} 
+        <MapBoxContainer
+          mapRef={mainMapRef}
           initialLocation={initialLocation}
         />
       )}
@@ -71,9 +75,10 @@ export const MapDashboard = ({ initialLocation }: { initialLocation?: [number, n
           transition-all duration-300
           hover:bg-white/20 hover:scale-105 hover:border-white/40
           active:scale-95
-          ${isSplitScreen 
-            ? 'bottom-8 left-1/2 -translate-x-1/2 md:bottom-8 md:left-8 md:translate-x-0 bg-blue-600/80 border-blue-400/50 hover:bg-blue-600' 
-            : 'bottom-17 md:bottom-4 left-4 md:left-8'
+          ${
+            isSplitScreen
+              ? "bottom-8 left-1/2 -translate-x-1/2 md:bottom-8 md:left-8 md:translate-x-0 bg-blue-600/80 border-blue-400/50 hover:bg-blue-600"
+              : "bottom-8 left-1/2 -translate-x-1/2 md:bottom-4 md:left-8 md:translate-x-0"
           }
         `}
         title={isSplitScreen ? "Exit Split Screen" : "Enter Split Screen"}
