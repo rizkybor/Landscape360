@@ -189,7 +189,7 @@ export const WeatherWidget = () => {
         transition-all duration-300
         
         /* Mobile: Top Full Width */
-        top-20 left-4 right-4 w-auto
+        top-2 left-4 right-4 w-auto
         
         /* Desktop: Fixed Right Sidebar (Adjusted to avoid overlapping with top-right icons) */
         md:top-4 md:right-18 md:left-auto md:w-64
