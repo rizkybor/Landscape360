@@ -197,7 +197,7 @@ export const DocsPage = ({ onBack }: Props) => {
                 </div>
               </div>
 
-              <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 flex gap-4 items-start group hover:border-purple-500/30 transition-all">
+              <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 flex gap-4 items-start group hover:border-green-500/30 transition-all">
                 <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center text-green-400 shrink-0">
                   <Navigation size={16} />
                 </div>
@@ -213,7 +213,7 @@ export const DocsPage = ({ onBack }: Props) => {
                 </div>
               </div>
 
-              <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 flex gap-4 items-start group hover:border-green-500/30 transition-all">
+              <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 flex gap-4 items-start group hover:border-purple-500/30 transition-all">
                 <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 shrink-0">
                   <Map size={16} />
                 </div>
