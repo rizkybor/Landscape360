@@ -209,51 +209,61 @@ const MapBoxContainerComponent = ({
     const map = mapRef.current?.getMap();
     if (!map) return;
 
-    const c = map.getCenter();
-    const z = map.getZoom();
-    const p = map.getPitch();
-    const b = map.getBearing();
+    // Use requestAnimationFrame to sync visual updates without blocking main thread
+    let rafId: number;
 
-    // Epsilon for float comparison
-    const EPS = 0.001;
-    const centerDiff =
-      Math.abs(c.lng - center[0]) + Math.abs(c.lat - center[1]);
-    const zoomDiff = Math.abs(z - zoom);
-    const pitchDiff = Math.abs(p - pitch);
-    const bearingDiff = Math.abs(b - bearing);
+    const syncMap = () => {
+        const c = map.getCenter();
+        const z = map.getZoom();
+        const p = map.getPitch();
+        const b = map.getBearing();
 
-    if (
-      centerDiff > EPS ||
-      zoomDiff > EPS ||
-      pitchDiff > EPS ||
-      bearingDiff > EPS
-    ) {
-      if (!map.isStyleLoaded()) return;
+        // Epsilon for float comparison
+        const EPS = 0.001;
+        const centerDiff =
+          Math.abs(c.lng - center[0]) + Math.abs(c.lat - center[1]);
+        const zoomDiff = Math.abs(z - zoom);
+        const pitchDiff = Math.abs(p - pitch);
+        const bearingDiff = Math.abs(b - bearing);
 
-      // CRITICAL: Don't interrupt programmatic animations or user interactions
-      // This was missing in the split-out component causing jitter
-      if (isFlying.current || isInteracting.current) return;
+        if (
+          centerDiff > EPS ||
+          zoomDiff > EPS ||
+          pitchDiff > EPS ||
+          bearingDiff > EPS
+        ) {
+          if (!map.isStyleLoaded()) return;
 
-      // Dynamic duration logic
-      const isModeSwitch = Math.abs(pitchDiff) > 40;
-      const isSmallChange =
-        centerDiff < 0.01 && zoomDiff < 0.1 && pitchDiff < 5 && bearingDiff < 5;
-      const duration = isModeSwitch ? 1500 : isSmallChange ? 0 : 400;
+          // CRITICAL: Don't interrupt programmatic animations or user interactions
+          if (isFlying.current || isInteracting.current) return;
 
-      map.easeTo({
-        center: center,
-        zoom: zoom,
-        pitch: mode === "3D" ? pitch : 0,
-        bearing: bearing,
-        duration: duration,
-        easing: (t) =>
-          isModeSwitch
-            ? t < 0.5
-              ? 4 * t * t * t
-              : 1 - Math.pow(-2 * t + 2, 3) / 2
-            : t * (2 - t),
-      });
-    }
+          // Dynamic duration logic
+          const isModeSwitch = Math.abs(pitchDiff) > 40;
+          const isSmallChange =
+            centerDiff < 0.01 && zoomDiff < 0.1 && pitchDiff < 5 && bearingDiff < 5;
+          const duration = isModeSwitch ? 1500 : isSmallChange ? 0 : 400;
+
+          map.easeTo({
+            center: center,
+            zoom: zoom,
+            pitch: mode === "3D" ? pitch : 0,
+            bearing: bearing,
+            duration: duration,
+            easing: (t) =>
+              isModeSwitch
+                ? t < 0.5
+                  ? 4 * t * t * t
+                  : 1 - Math.pow(-2 * t + 2, 3) / 2
+                : t * (2 - t),
+          });
+        }
+    };
+
+    rafId = requestAnimationFrame(syncMap);
+
+    return () => {
+        cancelAnimationFrame(rafId);
+    };
   }, [center, zoom, pitch, bearing, mode, mapRef]);
 
   // Sync Terrain Exaggeration (Restored)

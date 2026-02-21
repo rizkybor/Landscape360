@@ -96,7 +96,13 @@ const InterpolatedMarker = memo(({ packet, onClick }: { packet: TrackerPacket; o
   // Determine status: Online, Idle (Stationary), Offline
   // 1. Offline: No update for > 5 minutes (Truly offline)
   // Optimization: Pre-calculate date object to avoid double instantiation
-  const packetTime = new Date(packet.timestamp).getTime();
+  // Fix: packet.timestamp can be undefined in simulation sometimes? Ensure it exists.
+  // Optimization: Use ref for current time to avoid re-render loop, but we need re-render for status update.
+  // 'setTick' handles the re-render trigger every 5s.
+  
+  const packetTime = useMemo(() => new Date(packet.timestamp || Date.now()).getTime(), [packet.timestamp]);
+  // Use a 'now' state that updates less frequently? No, Date.now() is cheap.
+  // But calculating status inside render is fine as long as we don't cause side effects.
   const timeDiff = Date.now() - packetTime;
   const isOffline = timeDiff > 5 * 60 * 1000; // 5 minutes threshold
   
