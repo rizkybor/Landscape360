@@ -19,7 +19,7 @@ export const MapDashboard = ({ initialLocation }: { initialLocation?: [number, n
         <div className="flex flex-col md:flex-row w-full h-full">
           {/* Left/Top Panel (2D) */}
           <div className="w-full h-[40%] md:w-1/2 md:h-full border-b-2 md:border-b-0 md:border-r-2 border-gray-800 relative group transition-all duration-300 ease-in-out">
-            <div className="absolute top-4 left-4 z-20 bg-black/60 text-white px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-md border border-white/10 flex items-center gap-2 shadow-lg pointer-events-none select-none">
+            <div className="absolute top-4 right-16 md:right-20 z-20 bg-black/60 text-white px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-md border border-white/10 flex items-center gap-2 shadow-lg pointer-events-none select-none">
               <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
               2D Topo
             </div>
@@ -73,7 +73,7 @@ export const MapDashboard = ({ initialLocation }: { initialLocation?: [number, n
           active:scale-95
           ${isSplitScreen 
             ? 'bottom-8 left-1/2 -translate-x-1/2 md:bottom-8 md:left-8 md:translate-x-0 bg-blue-600/80 border-blue-400/50 hover:bg-blue-600' 
-            : 'bottom-24 md:bottom-8 left-4 md:left-8'
+            : 'bottom-17 md:bottom-4 left-4 md:left-8'
           }
         `}
         title={isSplitScreen ? "Exit Split Screen" : "Enter Split Screen"}
