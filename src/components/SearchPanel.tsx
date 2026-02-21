@@ -248,7 +248,7 @@ export const SearchPanel = () => {
                           </span>
                           {res.place_type.includes("custom") && (
                             <span className="text-[9px] bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded font-bold border border-purple-500/30">
-                              VERIFIED
+                              VERIFIED - OFFICIAL360
                             </span>
                           )}
                         </div>
