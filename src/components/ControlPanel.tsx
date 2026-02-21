@@ -513,7 +513,7 @@ export const ControlPanel = () => {
                     <div
                       className={`font-bold transition-colors ${showCustomLocations ? "text-white" : "text-gray-300"} ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
                     >
-                      {isMobile ? "POIs" : "Point Of Interest"}
+                      {isMobile ? "POIs" : "Point of Interest"}
                     </div>
                     {!isMobile && (
                       <div
