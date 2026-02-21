@@ -5,9 +5,8 @@ import { useTrackerStore } from '../store/useTrackerStore';
 import { useTrackerService } from '../services/TrackerService';
 import { TRACKER_CONFIG } from '../types/tracker';
 import type { TrackerPacket } from '../types/tracker';
-import { Signal, WifiOff, MapPin, Mountain } from 'lucide-react';
+import { Signal, WifiOff, MapPin, Mountain, X } from 'lucide-react';
 import type { LineLayer } from 'mapbox-gl';
-import { X } from 'lucide-react';
 import { TrackerHistoryViewer } from './TrackerHistoryViewer';
 
 // --- HELPER: Generate Consistent Color from String ---
@@ -153,6 +152,7 @@ const InterpolatedMarker = memo(({ packet, onClick }: { packet: TrackerPacket; o
         {isIdle && (
              <div 
                className="absolute -inset-1 rounded-full border-2 border-dashed border-amber-500 opacity-80"
+               style={{ backgroundColor: markerBg }} // Use user color bg instead of border only for clearer viz
              />
         )}
 
@@ -181,7 +181,7 @@ const InterpolatedMarker = memo(({ packet, onClick }: { packet: TrackerPacket; o
             <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-xl whitespace-nowrap z-50 border border-slate-700 animate-in fade-in zoom-in-95 duration-200">
               {packet.user_id}
               <div className="text-[9px] font-normal text-slate-400 mt-0.5 uppercase tracking-wide">
-                  {isOffline ? 'OFFLINE' : (isIdle ? 'IDLE (STATIONARY)' : 'ONLINE (MOVING)')}
+                {isOffline ? 'OFFLINE' : (isIdle ? 'IDLE (STATIONARY)' : 'ONLINE (MOVING)')}
               </div>
               {/* Tooltip Arrow */}
               <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-900 rotate-45 border-b border-r border-slate-700"></div>
@@ -246,7 +246,8 @@ export const LiveTrackerLayer = ({ mapRef }: { mapRef?: React.RefObject<MapRef |
           user_id: t.latestPacket.user_id,
           // Use unique user color if selected, otherwise standard gray
           color: t.latestPacket.user_id === selectedTrackerId ? stringToColor(t.latestPacket.user_id) : '#94a3b8',
-          opacity: t.latestPacket.user_id === selectedTrackerId ? 1 : 0.4
+          opacity: t.latestPacket.user_id === selectedTrackerId ? 1 : 0.4,
+          width: t.latestPacket.user_id === selectedTrackerId ? 4 : 2
         }
       }))
     };
@@ -285,7 +286,7 @@ export const LiveTrackerLayer = ({ mapRef }: { mapRef?: React.RefObject<MapRef |
         </Source>
       )}
 
-      {/* 2. Realtime Markers */}
+      {/* 2. Realtime Markers (Interpolated DOM) */}
       {activeTrackers.map((tracker) => (
         <InterpolatedMarker 
           key={tracker.latestPacket.user_id}
