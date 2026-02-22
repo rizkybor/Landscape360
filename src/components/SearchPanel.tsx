@@ -279,9 +279,9 @@ export const SearchPanel = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {[
                   { name: "Gunung Gede", type: "mountain" },
-                  { name: "Gunung Semeru", type: "mountain" },
-                  { name: "Basecamp Cibodas", type: "basecamp" },
-                  { name: "Ranu Kumbolo", type: "poi" },
+                  // { name: "Gunung Semeru", type: "mountain" },
+                  { name: "Sekretariat Makopala", type: "basecamp" },
+                  // { name: "Ranu Kumbolo", type: "poi" },
                 ].map((item, idx) => (
                   <button
                     key={idx}

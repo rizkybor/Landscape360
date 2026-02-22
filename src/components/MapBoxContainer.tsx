@@ -213,56 +213,59 @@ const MapBoxContainerComponent = ({
     let rafId: number;
 
     const syncMap = () => {
-        const c = map.getCenter();
-        const z = map.getZoom();
-        const p = map.getPitch();
-        const b = map.getBearing();
+      const c = map.getCenter();
+      const z = map.getZoom();
+      const p = map.getPitch();
+      const b = map.getBearing();
 
-        // Epsilon for float comparison
-        const EPS = 0.001;
-        const centerDiff =
-          Math.abs(c.lng - center[0]) + Math.abs(c.lat - center[1]);
-        const zoomDiff = Math.abs(z - zoom);
-        const pitchDiff = Math.abs(p - pitch);
-        const bearingDiff = Math.abs(b - bearing);
+      // Epsilon for float comparison
+      const EPS = 0.001;
+      const centerDiff =
+        Math.abs(c.lng - center[0]) + Math.abs(c.lat - center[1]);
+      const zoomDiff = Math.abs(z - zoom);
+      const pitchDiff = Math.abs(p - pitch);
+      const bearingDiff = Math.abs(b - bearing);
 
-        if (
-          centerDiff > EPS ||
-          zoomDiff > EPS ||
-          pitchDiff > EPS ||
-          bearingDiff > EPS
-        ) {
-          if (!map.isStyleLoaded()) return;
+      if (
+        centerDiff > EPS ||
+        zoomDiff > EPS ||
+        pitchDiff > EPS ||
+        bearingDiff > EPS
+      ) {
+        if (!map.isStyleLoaded()) return;
 
-          // CRITICAL: Don't interrupt programmatic animations or user interactions
-          if (isFlying.current || isInteracting.current) return;
+        // CRITICAL: Don't interrupt programmatic animations or user interactions
+        if (isFlying.current || isInteracting.current) return;
 
-          // Dynamic duration logic
-          const isModeSwitch = Math.abs(pitchDiff) > 40;
-          const isSmallChange =
-            centerDiff < 0.01 && zoomDiff < 0.1 && pitchDiff < 5 && bearingDiff < 5;
-          const duration = isModeSwitch ? 1500 : isSmallChange ? 0 : 400;
+        // Dynamic duration logic
+        const isModeSwitch = Math.abs(pitchDiff) > 40;
+        const isSmallChange =
+          centerDiff < 0.01 &&
+          zoomDiff < 0.1 &&
+          pitchDiff < 5 &&
+          bearingDiff < 5;
+        const duration = isModeSwitch ? 1500 : isSmallChange ? 0 : 400;
 
-          map.easeTo({
-            center: center,
-            zoom: zoom,
-            pitch: mode === "3D" ? pitch : 0,
-            bearing: bearing,
-            duration: duration,
-            easing: (t) =>
-              isModeSwitch
-                ? t < 0.5
-                  ? 4 * t * t * t
-                  : 1 - Math.pow(-2 * t + 2, 3) / 2
-                : t * (2 - t),
-          });
-        }
+        map.easeTo({
+          center: center,
+          zoom: zoom,
+          pitch: mode === "3D" ? pitch : 0,
+          bearing: bearing,
+          duration: duration,
+          easing: (t) =>
+            isModeSwitch
+              ? t < 0.5
+                ? 4 * t * t * t
+                : 1 - Math.pow(-2 * t + 2, 3) / 2
+              : t * (2 - t),
+        });
+      }
     };
 
     rafId = requestAnimationFrame(syncMap);
 
     return () => {
-        cancelAnimationFrame(rafId);
+      cancelAnimationFrame(rafId);
     };
   }, [center, zoom, pitch, bearing, mode, mapRef]);
 
@@ -760,6 +763,9 @@ const MapBoxContainerComponent = ({
           myDataLocation.map((location) => {
             const [longitude, latitude] = location.center;
             const isMountain = location.place_type.includes("mountain");
+            const isCliff = location.place_type.includes("cliff");
+            const isCave = location.place_type.includes("cave");
+            const isRiver = location.place_type.includes("river");
             const isWater = location.place_type.includes("water");
 
             return (
@@ -786,7 +792,7 @@ const MapBoxContainerComponent = ({
               >
                 <div className="group relative cursor-pointer">
                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-white/80 backdrop-blur-sm text-black text-[11px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 border border-white/20">
-                    {isMountain
+                    {isMountain || isCliff || isCave || isRiver
                       ? `${location.place_name}, ${location.text}`
                       : isWater
                         ? `${location.place_name} (${location.text})`
@@ -796,11 +802,35 @@ const MapBoxContainerComponent = ({
 
                   <div className="transform transition-all duration-300 ease-out group-hover:scale-110">
                     {isMountain ? (
-                      <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shadow-md hover:shadow-lg border border-red-300 backdrop-blur-sm">
+                      <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center shadow-md hover:shadow-lg border border-green-300 backdrop-blur-sm">
                         <img
                           src="/mountain.svg"
                           alt="Mountain"
-                          className="w-5 h-5 object-contain"
+                          className="w-10 h-10 object-contain"
+                        />
+                      </div>
+                    ) : isCliff ? (
+                      <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shadow-md hover:shadow-lg border border-red-300 backdrop-blur-sm">
+                        <img
+                          src="/cliff.svg"
+                          alt="Cliff"
+                          className="w-10 h-10 object-contain"
+                        />
+                      </div>
+                    ) : isCave ? (
+                      <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center shadow-md hover:shadow-lg border border-orange-300 backdrop-blur-sm">
+                        <img
+                          src="/cave.svg"
+                          alt="Cave"
+                          className="w-10 h-10 object-contain"
+                        />
+                      </div>
+                    ) : isRiver ? (
+                      <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center shadow-md hover:shadow-lg border border-blue-300 backdrop-blur-sm">
+                        <img
+                          src="/river.svg"
+                          alt="River"
+                          className="w-10 h-10 object-contain"
                         />
                       </div>
                     ) : isWater ? (
@@ -812,7 +842,7 @@ const MapBoxContainerComponent = ({
                         />
                       </div>
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center shadow-md hover:shadow-lg border border-green-200 backdrop-blur-sm">
+                      <div className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center shadow-md hover:shadow-lg border border-purple-300 backdrop-blur-sm">
                         <img
                           src="/house.svg"
                           alt="Location"

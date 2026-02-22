@@ -248,10 +248,10 @@
     },
     "text": "875 mdpl",
     "place_name": "Gunung Batu Jonggol",
-    "center": [107.05315, -6.60350],
+    "center": [107.05315, -6.6035],
     "geometry": {
       "type": "Point",
-      "coordinates": [107.05315, -6.60350]
+      "coordinates": [107.05315, -6.6035]
     }
   },
   {
@@ -288,7 +288,7 @@
       "coordinates": [107.22063, -6.59049]
     }
   },
-    {
+  {
     "id": "18",
     "type": "Feature",
     "place_type": ["basecamp", "custom"],
@@ -322,7 +322,7 @@
       "coordinates": [107.34027, -6.56148]
     }
   },
-    {
+  {
     "id": "20",
     "type": "Feature",
     "place_type": ["basecamp", "custom"],
@@ -333,10 +333,78 @@
     },
     "text": "Pos Tiket Pendakian via Sukatani",
     "place_name": "BC Gunung Lembu via Sukatani",
-    "center": [107.34100, -6.57317],
+    "center": [107.341, -6.57317],
     "geometry": {
       "type": "Point",
-      "coordinates": [107.34100, -6.57317]
+      "coordinates": [107.341, -6.57317]
+    }
+  },
+  {
+    "id": "21",
+    "type": "Feature",
+    "place_type": ["cliff", "custom"],
+    "relevance": 1,
+    "properties": {
+      "mapbox_id": null,
+      "wikidata": null
+    },
+    "text": "650 mdpl",
+    "place_name": "Tebing Parang",
+    "center": [107.34620, -6.58816],
+    "geometry": {
+      "type": "Point",
+      "coordinates": [107.34620, -6.58816]
+    }
+  },
+  {
+    "id": "22",
+    "type": "Feature",
+    "place_type": ["cave", "custom"],
+    "relevance": 1,
+    "properties": {
+      "mapbox_id": null,
+      "wikidata": null
+    },
+    "text": "-",
+    "place_name": "Gua Citamiang",
+    "center": [106.93012, -6.51773],
+    "geometry": {
+      "type": "Point",
+      "coordinates": [106.93012, -6.51773]
+    }
+  },
+  {
+    "id": "23",
+    "type": "Feature",
+    "place_type": ["cave", "custom"],
+    "relevance": 1,
+    "properties": {
+      "mapbox_id": null,
+      "wikidata": null
+    },
+    "text": "-",
+    "place_name": "Goa Ciasem",
+    "center": [106.93106, -6.52156],
+    "geometry": {
+      "type": "Point",
+      "coordinates": [106.93106, -6.52156]
+    }
+  },
+  {
+    "id": "24",
+    "type": "Feature",
+    "place_type": ["cliff", "custom"],
+    "relevance": 1,
+    "properties": {
+      "mapbox_id": null,
+      "wikidata": null
+    },
+    "text": "403 mdpl",
+    "place_name": "Tebing Jeger",
+    "center": [106.93633, -6.52188],
+    "geometry": {
+      "type": "Point",
+      "coordinates": [106.93633, -6.52188]
     }
   }
 ]
