@@ -398,12 +398,12 @@ export const SurveyorPanel = () => {
             </div>
           ) : (
             <div className="p-8 text-center">
-              <p className="text-xs text-gray-500 mb-4">No surveys yet</p>
+              <p className="text-xs text-gray-500 mb-4">No surveys/markers yet</p>
               <button
                 onClick={createGroup}
                 className="w-full py-2 bg-blue-600 text-white rounded-lg text-xs font-bold shadow-lg shadow-blue-600/30"
               >
-                Create First Survey
+                Create First Survey/Markers
               </button>
             </div>
           )}

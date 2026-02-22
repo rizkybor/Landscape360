@@ -10,6 +10,7 @@ import {
   LogIn,
   LogOut,
   FolderOpen,
+  Footprints,
   Plus,
   Loader2,
   WifiOff,
@@ -155,16 +156,24 @@ export const AuthControl = () => {
     } catch (err: any) {
       // Improve error message for common cases
       let errorMessage = err.message;
-      
+
       // Handle Rate Limiting (Brute Force Protection)
-      if (err.status === 429 || err.message.toLowerCase().includes("too many requests")) {
-        errorMessage = "Too many attempts. Please wait a few minutes before trying again.";
+      if (
+        err.status === 429 ||
+        err.message.toLowerCase().includes("too many requests")
+      ) {
+        errorMessage =
+          "Too many attempts. Please wait a few minutes before trying again.";
       }
       // Handle Invalid Credentials
-      else if (err.message.includes("Invalid login credentials") && isLoginView) {
-        errorMessage = "Invalid credentials. Have you registered this account yet?";
+      else if (
+        err.message.includes("Invalid login credentials") &&
+        isLoginView
+      ) {
+        errorMessage =
+          "Invalid credentials. Have you registered this account yet?";
       }
-      
+
       setMessage({ type: "error", text: errorMessage });
     } finally {
       setLoading(false);
@@ -606,7 +615,7 @@ export const AuthControl = () => {
                         <div className="grid grid-cols-2 gap-2">
                           <div className="bg-white/5 rounded-lg p-2 border border-white/5">
                             <div className="text-[9px] text-gray-500 uppercase font-bold mb-1">
-                              Maps Downloaded
+                              Offline Maps
                             </div>
                             <div className="flex items-end justify-between">
                               <span
@@ -629,7 +638,7 @@ export const AuthControl = () => {
                           </div>
                           <div className="bg-white/5 rounded-lg p-2 border border-white/5">
                             <div className="text-[9px] text-gray-500 uppercase font-bold mb-1">
-                              Saved Surveys
+                              Surveys / Markers
                             </div>
                             <div className="flex items-end justify-between">
                               <span
@@ -689,12 +698,12 @@ export const AuthControl = () => {
                   </button>
                 </div>
 
-                {/* Menu List */}
-                <div className="space-y-1 mb-6">
+                {/* Survey / Marker Lists */}
+                <div className="space-y-1 mb-3">
                   <div className="p-3">
                     <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
                       <FolderOpen size={12} />
-                      Survey Lists
+                      Survey / Marker Lists
                     </div>
                     <div className="space-y-1 max-h-32 overflow-y-auto custom-scrollbar">
                       {isSyncing && savedSurveys.length === 0 ? (
@@ -747,6 +756,71 @@ export const AuthControl = () => {
                           </div>
                         ))
                       )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tracking Recorder List */}
+                <div className="space-y-1 mb-3">
+                  <div className="p-3">
+                    <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                      <Footprints size={12} />
+                      Tracking Lists
+                    </div>
+                    <div className="space-y-1 max-h-32 overflow-y-auto custom-scrollbar">
+                      <p className="text-[10px] text-gray-500 italic">
+                        Coming Soon (under development)
+                      </p>
+                      {/* {isSyncing && savedSurveys.length === 0 ? (
+                        <div className="flex items-center gap-2 py-2">
+                          <Loader2
+                            size={12}
+                            className="animate-spin text-blue-400"
+                          />
+                          <span className="text-[10px] text-gray-500">
+                            Loading surveys...
+                          </span>
+                        </div>
+                      ) : savedSurveys.length === 0 ? (
+                        <div className="text-[10px] text-gray-600 italic">
+                          No saved surveys found
+                        </div>
+                      ) : (
+                        savedSurveys.map((survey) => (
+                          <div
+                            key={survey.id}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs group transition-colors ${currentSurveyId === survey.id ? "bg-blue-600/20 text-blue-300 border border-blue-500/20" : "hover:bg-white/5 text-gray-400 hover:text-gray-200"}`}
+                          >
+                            <button
+                              onClick={() => {
+                                loadSurvey(survey.id);
+                                setShowMenu(false);
+                              }}
+                              className="cursor-pointer flex-1 text-left truncate mr-2"
+                            >
+                              <span className="block truncate">
+                                {survey.name}
+                              </span>
+                              <span className="text-[9px] opacity-50 block">
+                                {new Date(
+                                  survey.updated_at,
+                                ).toLocaleDateString()}
+                              </span>
+                            </button>
+
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeleteConfirmId(survey.id);
+                              }}
+                              className="cursor-pointer p-2 md:p-1.5 hover:bg-red-500/20 text-gray-500 hover:text-red-400 rounded transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100 flex-shrink-0"
+                              title="Delete Survey"
+                            >
+                              <Trash2 size={14} className="md:w-3 md:h-3" />
+                            </button>
+                          </div>
+                        ))
+                      )} */}
                     </div>
                   </div>
                 </div>
