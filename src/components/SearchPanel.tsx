@@ -311,7 +311,7 @@ export const SearchPanel = () => {
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-              Mapbox Geocoding
+              Landscape 360
             </span>
             {/* <span className="hidden sm:inline">Coordinates supported (Lat, Lon)</span> */}
           </div>
