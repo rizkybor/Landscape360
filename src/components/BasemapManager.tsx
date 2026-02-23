@@ -59,7 +59,7 @@ export const BasemapManager = ({ onClose, onZoomToLayer }: { onClose: () => void
               </p>
               <button 
                 onClick={onClose}
-                className="px-6 py-2.5 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-bold transition-colors border border-white/10"
+                className="cursor-pointer px-6 py-2.5 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-bold transition-colors border border-white/10"
               >
                   Close Panel
               </button>
@@ -108,7 +108,7 @@ export const BasemapManager = ({ onClose, onZoomToLayer }: { onClose: () => void
             <Layers className="text-blue-400" size={20} />
             <h2 className="font-bold text-sm uppercase tracking-wider">Custom Basemaps</h2>
         </div>
-        <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+        <button onClick={onClose} className="cursor-pointer text-gray-400 hover:text-white transition-colors">
             <X size={20} />
         </button>
       </div>
@@ -229,19 +229,19 @@ export const BasemapManager = ({ onClose, onZoomToLayer }: { onClose: () => void
                 <div className="flex gap-2">
                     <button 
                         onClick={() => { setShowManualInput(false); setPendingGeoreferenceFile(null); }}
-                        className="flex-1 py-1.5 bg-white/5 hover:bg-white/10 rounded text-xs transition-colors"
+                        className="cursor-pointer flex-1 py-1.5 bg-white/5 hover:bg-white/10 rounded text-xs transition-colors"
                     >
                         Cancel
                     </button>
                     <button 
                         onClick={() => startGeoreferencing('A4_LANDSCAPE')}
-                        className="flex-1 py-1.5 bg-indigo-600 hover:bg-indigo-500 rounded text-xs font-bold transition-colors flex items-center justify-center gap-1"
+                        className="cursor-pointer flex-1 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 rounded text-xs font-bold transition-colors flex items-center justify-center gap-1"
                     >
-                        <ScanEye size={12} /> Pick on Map
+                        Pick on Map
                     </button>
                     <button 
                         onClick={handleManualUpload}
-                        className="flex-1 py-1.5 bg-blue-600 hover:bg-blue-500 rounded text-xs font-bold transition-colors"
+                        className="cursor-pointer flex-1 py-1.5 bg-blue-600 hover:bg-blue-500 rounded text-xs font-bold transition-colors"
                     >
                         Upload
                     </button>
@@ -278,7 +278,7 @@ export const BasemapManager = ({ onClose, onZoomToLayer }: { onClose: () => void
                           {onZoomToLayer && map.bounds && (
                             <button 
                               onClick={() => onZoomToLayer(map.bounds)}
-                              className="p-1.5 rounded-md bg-white/5 text-gray-500 hover:text-blue-400 transition-colors"
+                              className="cursor-pointer p-1.5 rounded-md bg-white/5 text-gray-500 hover:text-blue-400 transition-colors"
                               title="Zoom to Layer"
                             >
                                 <ScanEye size={14} />
@@ -286,7 +286,7 @@ export const BasemapManager = ({ onClose, onZoomToLayer }: { onClose: () => void
                           )}
                           <button 
                             onClick={() => toggleBasemap(map.id, !map.is_active)}
-                            className={`p-1.5 rounded-md transition-colors ${map.is_active ? "bg-blue-500/20 text-blue-400" : "bg-white/5 text-gray-500 hover:text-white"}`}
+                            className={`cursor-pointer p-1.5 rounded-md transition-colors ${map.is_active ? "bg-blue-500/20 text-blue-400" : "bg-white/5 text-gray-500 hover:text-white"}`}
                             title={map.is_active ? "Hide Layer" : "Show Layer"}
                           >
                               {map.is_active ? <Eye size={14} /> : <EyeOff size={14} />}
@@ -295,7 +295,7 @@ export const BasemapManager = ({ onClose, onZoomToLayer }: { onClose: () => void
                             onClick={() => {
                                 setDeleteConfirmationId(map.id);
                             }}
-                            className="p-1.5 rounded-md bg-white/5 text-gray-500 hover:text-red-400 transition-colors"
+                            className="cursor-pointer p-1.5 rounded-md bg-white/5 text-gray-500 hover:text-red-400 transition-colors"
                             title="Delete"
                           >
                               <Trash2 size={14} />
@@ -307,7 +307,7 @@ export const BasemapManager = ({ onClose, onZoomToLayer }: { onClose: () => void
                                 setEditingBasemapId(map.id);
                                 startGeoreferencing('A4_LANDSCAPE', map.bounds);
                             }}
-                            className="p-1.5 rounded-md bg-white/5 text-gray-500 hover:text-indigo-400 transition-colors"
+                            className="cursor-pointer p-1.5 rounded-md bg-white/5 text-gray-500 hover:text-indigo-400 transition-colors"
                             title="Adjust Georeference"
                           >
                               <Settings size={14} />
@@ -358,7 +358,7 @@ export const BasemapManager = ({ onClose, onZoomToLayer }: { onClose: () => void
                     <div className="flex gap-3 w-full mt-2">
                         <button 
                             onClick={() => setDeleteConfirmationId(null)}
-                            className="flex-1 py-2.5 bg-white/5 hover:bg-white/10 text-white text-sm font-medium rounded-xl transition-colors cursor-pointer"
+                            className="cursor-pointer flex-1 py-2.5 bg-white/5 hover:bg-white/10 text-white text-sm font-medium rounded-xl transition-colors cursor-pointer"
                         >
                             Cancel
                         </button>
@@ -367,7 +367,7 @@ export const BasemapManager = ({ onClose, onZoomToLayer }: { onClose: () => void
                                 if (deleteConfirmationId) deleteBasemap(deleteConfirmationId);
                                 setDeleteConfirmationId(null);
                             }}
-                            className="flex-1 py-2.5 bg-red-600 hover:bg-red-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-red-500/20 transition-all active:scale-[0.98] cursor-pointer"
+                            className="cursor-pointer flex-1 py-2.5 bg-red-600 hover:bg-red-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-red-500/20 transition-all active:scale-[0.98] cursor-pointer"
                         >
                             Delete
                         </button>
