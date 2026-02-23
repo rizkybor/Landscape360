@@ -6,7 +6,7 @@ import React, {
   useEffect,
   Suspense,
 } from "react";
-import Map, { Source, Layer, Marker } from "react-map-gl/mapbox";
+import Map, { Source, Layer, Marker, Popup } from "react-map-gl/mapbox";
 import type { MapRef, MapMouseEvent } from "react-map-gl/mapbox";
 import { useMapStore } from "../store/useMapStore";
 import { ThreeScene } from "./ThreeScene";
@@ -75,6 +75,129 @@ const MapBoxContainerComponent = ({
 
   const mode = overrideViewMode || activeView;
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [selectedLocation, setSelectedLocation] = useState<any | null>(null);
+  const [isPopupVisible, setIsPopupVisible] = useState(false);
+
+  // Handle popup visibility animation
+  useEffect(() => {
+    let rafId: number;
+    if (selectedLocation) {
+      // Small delay to allow mounting before fading in
+      rafId = requestAnimationFrame(() => setIsPopupVisible(true));
+    } else {
+      setIsPopupVisible(false);
+    }
+    return () => cancelAnimationFrame(rafId);
+  }, [selectedLocation]);
+
+  const shouldShowMarkers = showCustomLocations && zoom >= 10;
+
+  const locationMarkers = React.useMemo(() => {
+    if (!shouldShowMarkers) return null;
+
+    return myDataLocation.map((location) => {
+      const [longitude, latitude] = location.center;
+      const isMountain = location.place_type.includes("mountain");
+      const isCliff = location.place_type.includes("cliff");
+      const isCave = location.place_type.includes("cave");
+      const isRiver = location.place_type.includes("river");
+      const isWater = location.place_type.includes("water");
+
+      return (
+        <Marker
+          key={location.id}
+          longitude={longitude}
+          latitude={latitude}
+          anchor="bottom"
+          onClick={(e) => {
+            e.originalEvent.stopPropagation();
+
+            if (selectedLocation?.id === location.id) {
+              setIsPopupVisible(false);
+              setTimeout(() => setSelectedLocation(null), 300);
+            } else {
+              setSelectedLocation(location);
+
+              const map = mapRef.current?.getMap();
+              if (map) {
+                map.flyTo({
+                  center: [longitude, latitude],
+                  zoom: 16,
+                  essential: true,
+                });
+
+                setCenter([longitude, latitude]);
+                setZoom(16);
+              }
+            }
+          }}
+        >
+          <div className="group relative cursor-pointer">
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-white/80 backdrop-blur-sm text-black text-[11px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 border border-white/20">
+              {isMountain || isCliff || isCave || isRiver
+                ? `${location.place_name}, ${location.text}`
+                : isWater
+                  ? `${location.place_name} (${location.text})`
+                  : `${location.place_name}`}
+              <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-black/80"></div>
+            </div>
+
+            <div className="transform transition-all duration-300 ease-out group-hover:scale-110">
+              {isMountain ? (
+                <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center shadow-md hover:shadow-lg border border-green-300 backdrop-blur-sm">
+                  <img
+                    src="/mountain.svg"
+                    alt="Mountain"
+                    className="w-10 h-10 object-contain"
+                  />
+                </div>
+              ) : isCliff ? (
+                <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shadow-md hover:shadow-lg border border-red-300 backdrop-blur-sm">
+                  <img
+                    src="/cliff.svg"
+                    alt="Cliff"
+                    className="w-10 h-10 object-contain"
+                  />
+                </div>
+              ) : isCave ? (
+                <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center shadow-md hover:shadow-lg border border-orange-300 backdrop-blur-sm">
+                  <img
+                    src="/cave.svg"
+                    alt="Cave"
+                    className="w-10 h-10 object-contain"
+                  />
+                </div>
+              ) : isRiver ? (
+                <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center shadow-md hover:shadow-lg border border-blue-300 backdrop-blur-sm">
+                  <img
+                    src="/river.svg"
+                    alt="River"
+                    className="w-10 h-10 object-contain"
+                  />
+                </div>
+              ) : isWater ? (
+                <div className="w-10 h-10 rounded-full bg-blue-60 flex items-center justify-center shadow-md hover:shadow-lg border border-blue-200 backdrop-blur-sm">
+                  <img
+                    src="/water.svg"
+                    alt="Water"
+                    className="w-5 h-5 object-contain"
+                  />
+                </div>
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center shadow-md hover:shadow-lg border border-purple-300 backdrop-blur-sm">
+                  <img
+                    src="/house.svg"
+                    alt="Location"
+                    className="w-5 h-5 object-contain"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </Marker>
+      );
+    });
+  }, [shouldShowMarkers, selectedLocation?.id, setCenter, setZoom, mapRef]);
 
   useEffect(() => {
     const handleOnline = () => setIsOffline(false);
@@ -758,111 +881,91 @@ const MapBoxContainerComponent = ({
         )}
 
         {/* Unclustered points with SVG icons via React Marker */}
-        {showCustomLocations &&
-          zoom >= 10 &&
-          myDataLocation.map((location) => {
-            const [longitude, latitude] = location.center;
-            const isMountain = location.place_type.includes("mountain");
-            const isCliff = location.place_type.includes("cliff");
-            const isCave = location.place_type.includes("cave");
-            const isRiver = location.place_type.includes("river");
-            const isWater = location.place_type.includes("water");
+        {locationMarkers}
 
-            return (
-              <Marker
-                key={location.id}
-                longitude={longitude}
-                latitude={latitude}
-                anchor="bottom"
-                onClick={(e) => {
-                  e.originalEvent.stopPropagation();
-
-                  const map = mapRef.current?.getMap();
-                  if (map) {
-                    map.flyTo({
-                      center: [longitude, latitude],
-                      zoom: 16,
-                      essential: true,
-                    });
-
-                    setCenter([longitude, latitude]);
-                    setZoom(16);
-                  }
-                }}
-              >
-                <div className="group relative cursor-pointer">
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-white/80 backdrop-blur-sm text-black text-[11px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 border border-white/20">
-                    {isMountain || isCliff || isCave || isRiver
-                      ? `${location.place_name}, ${location.text}`
-                      : isWater
-                        ? `${location.place_name} (${location.text})`
-                        : `${location.place_name}`}
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-black/80"></div>
-                  </div>
-
-                  <div className="transform transition-all duration-300 ease-out group-hover:scale-110">
-                    {isMountain ? (
-                      <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center shadow-md hover:shadow-lg border border-green-300 backdrop-blur-sm">
-                        <img
-                          src="/mountain.svg"
-                          alt="Mountain"
-                          className="w-10 h-10 object-contain"
-                        />
-                      </div>
-                    ) : isCliff ? (
-                      <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shadow-md hover:shadow-lg border border-red-300 backdrop-blur-sm">
-                        <img
-                          src="/cliff.svg"
-                          alt="Cliff"
-                          className="w-10 h-10 object-contain"
-                        />
-                      </div>
-                    ) : isCave ? (
-                      <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center shadow-md hover:shadow-lg border border-orange-300 backdrop-blur-sm">
-                        <img
-                          src="/cave.svg"
-                          alt="Cave"
-                          className="w-10 h-10 object-contain"
-                        />
-                      </div>
-                    ) : isRiver ? (
-                      <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center shadow-md hover:shadow-lg border border-blue-300 backdrop-blur-sm">
-                        <img
-                          src="/river.svg"
-                          alt="River"
-                          className="w-10 h-10 object-contain"
-                        />
-                      </div>
-                    ) : isWater ? (
-                      <div className="w-10 h-10 rounded-full bg-blue-60 flex items-center justify-center shadow-md hover:shadow-lg border border-blue-200 backdrop-blur-sm">
-                        <img
-                          src="/water.svg"
-                          alt="Water"
-                          className="w-5 h-5 object-contain"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center shadow-md hover:shadow-lg border border-purple-300 backdrop-blur-sm">
-                        <img
-                          src="/house.svg"
-                          alt="Location"
-                          className="w-5 h-5 object-contain"
-                        />
-                      </div>
-                    )}
-                  </div>
+        {/* Selected Location Popup */}
+        {selectedLocation && (
+          <Popup
+            longitude={selectedLocation.center[0]}
+            latitude={selectedLocation.center[1]}
+            anchor="bottom"
+            offset={50}
+            onClose={() => {
+              setIsPopupVisible(false);
+              setTimeout(() => setSelectedLocation(null), 300); // Wait for fade out
+            }}
+            closeOnClick={false}
+            className="z-50"
+            maxWidth="300px"
+          >
+            <div
+              className={`p-1 transition-all duration-300 ease-out transform ${
+                isPopupVisible
+                  ? "opacity-100 translate-y-0 scale-100"
+                  : "opacity-0 translate-y-4 scale-95"
+              }`}
+            >
+              <div className="flex items-start gap-3 mb-2">
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                    selectedLocation.place_type.includes("mountain")
+                      ? "bg-green-100 text-green-600"
+                      : selectedLocation.place_type.includes("water")
+                        ? "bg-blue-100 text-blue-600"
+                        : "bg-purple-100 text-purple-600"
+                  }`}
+                >
+                  <img
+                    src={
+                      selectedLocation.place_type.includes("mountain")
+                        ? "/mountain.svg"
+                        : selectedLocation.place_type.includes("cliff")
+                          ? "/cliff.svg"
+                          : selectedLocation.place_type.includes("cave")
+                            ? "/cave.svg"
+                            : selectedLocation.place_type.includes("river")
+                              ? "/river.svg"
+                              : selectedLocation.place_type.includes("water")
+                                ? "/water.svg"
+                                : "/house.svg"
+                    }
+                    className="w-5 h-5 object-contain"
+                    alt=""
+                  />
                 </div>
-              </Marker>
-            );
-          })}
+                <div>
+                  <h3 className="font-bold text-sm text-gray-900 leading-tight">
+                    {selectedLocation.place_name}
+                  </h3>
+                  <p className="text-[10px] text-gray-500 font-medium mt-0.5 uppercase tracking-wide">
+                    {selectedLocation.text}
+                  </p>
+                </div>
+              </div>
+
+              {selectedLocation.properties?.wikidata && (
+                <div className="mt-2 pt-2 border-t border-gray-100 text-center">
+                  <p className="text-[10px] text-gray-400 tracking-wide line-clamp-8">
+                    Data source: Wikipedia
+                  </p>
+                  <p className="text-[11px] text-gray-500 leading-tight">
+                    {selectedLocation.properties.wikidata}
+                  </p>
+                </div>
+              )}
+            </div>
+          </Popup>
+        )}
 
         {/* Custom Navigation Controls */}
-        <NavigationControls
-          mapRef={mapRef}
-          onGeolocate={handleGeolocate}
-          bearing={bearing}
-          pitch={pitch}
-        />
+        {showControls && (
+          <NavigationControls
+            mapRef={mapRef}
+            onGeolocate={handleGeolocate}
+            bearing={bearing}
+            pitch={pitch}
+          />
+        )}
       </Map>
 
       {showControls && <ControlPanel />}
