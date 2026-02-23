@@ -9,6 +9,7 @@ import React, {
 import { BasemapManager } from "./BasemapManager";
 import { GeoreferenceTool } from "./GeoreferenceTool"; // New component
 import { useCustomBasemapStore } from "../store/useCustomBasemapStore";
+import { useSurveyStore } from "../store/useSurveyStore";
 import Map, { Source, Layer, Marker, Popup } from "react-map-gl/mapbox";
 import type { MapRef, MapMouseEvent } from "react-map-gl/mapbox";
 import { useMapStore } from "../store/useMapStore";
@@ -81,10 +82,13 @@ const MapBoxContainerComponent = ({
   const [selectedLocation, setSelectedLocation] = useState<any | null>(null);
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   const { basemaps, loadBasemaps, layerOpacities, isManagerOpen, toggleManager } = useCustomBasemapStore();
+  const { user } = useSurveyStore();
 
   useEffect(() => {
-    loadBasemaps();
-  }, [loadBasemaps]);
+    if (user) {
+        loadBasemaps();
+    }
+  }, [loadBasemaps, user]);
 
   // Handle popup visibility animation
   useEffect(() => {

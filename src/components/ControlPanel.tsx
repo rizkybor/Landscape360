@@ -529,8 +529,8 @@ export const ControlPanel = () => {
                   </div>
                 </button>
 
-                {/* Custom Basemaps Toggle (Pro/Enterprise Only) */}
-                {(subscriptionStatus === "Pro" || subscriptionStatus === "Enterprise") && (
+                {/* Custom Basemaps Toggle (Enterprise + Monitor360 Only) */}
+                {(userRole === "monitor360" && subscriptionStatus === "Enterprise") && (
                   <button
                     onClick={toggleManager}
                     className={`${isMobile ? "flex-none w-28 snap-center h-full" : "col-span-1 w-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
@@ -1427,6 +1427,11 @@ const GetStartedModal = ({
                 icon: <Navigation size={18} />,
                 title: "GPS Tracking & Monitoring",
                 desc: "Click the GPS button to broadcast your location or monitor teams (Enterprise). Features Smart Reconnect for signal loss.",
+              },
+              {
+                icon: <Layers size={18} />,
+                title: "Custom Basemaps",
+                desc: "Upload your own GeoTIFF/GeoPDF maps as overlays. Supports manual georeferencing and opacity control. (Enterprise & Monitor360 only)",
               },
             ].map((item, i) => (
               <div key={i} className="flex gap-4 group">

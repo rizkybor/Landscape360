@@ -38,6 +38,7 @@ interface CustomBasemapState {
   isUploading: boolean;
   uploadProgress: number;
   errorMessage: string | null;
+  totalUsage: number; // Bytes
   
   isManagerOpen: boolean;
   toggleManager: () => void;
@@ -64,12 +65,15 @@ interface CustomBasemapState {
   setEditingBasemapId: (id: string | null) => void;
 }
 
+const MAX_STORAGE_LIMIT = 5 * 1024 * 1024; // 5MB
+
 export const useCustomBasemapStore = create<CustomBasemapState>((set, get) => ({
   basemaps: [],
   isLoading: false,
   isUploading: false,
   uploadProgress: 0,
   errorMessage: null,
+  totalUsage: 0,
   layerOpacities: {},
   isManagerOpen: false,
   toggleManager: () => set((state) => ({ isManagerOpen: !state.isManagerOpen })),
@@ -125,6 +129,7 @@ export const useCustomBasemapStore = create<CustomBasemapState>((set, get) => ({
     const { data, error } = await supabase
       .from('custom_basemaps')
       .select('*')
+      .eq('user_id', user.id) // Explicitly filter by user_id
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -150,7 +155,9 @@ export const useCustomBasemapStore = create<CustomBasemapState>((set, get) => ({
         return b;
     }));
 
-    set({ basemaps: basemapsWithUrls, isLoading: false });
+    const totalUsage = basemapsWithUrls.reduce((acc, curr) => acc + (curr.file_size || 0), 0);
+
+    set({ basemaps: basemapsWithUrls, totalUsage, isLoading: false });
   },
 
   uploadBasemap: async (file: File, manualBounds) => {
@@ -158,6 +165,13 @@ export const useCustomBasemapStore = create<CustomBasemapState>((set, get) => ({
     if (!user) return;
 
     // Client-side Validation
+    const { totalUsage } = get();
+
+    if (totalUsage >= MAX_STORAGE_LIMIT) {
+        set({ errorMessage: 'Storage limit reached (5MB). Please delete existing maps.' });
+        return;
+    }
+
     if (file.size > 150 * 1024 * 1024) {
         set({ errorMessage: 'File size exceeds 150MB limit.' });
         return;
@@ -180,6 +194,7 @@ export const useCustomBasemapStore = create<CustomBasemapState>((set, get) => ({
         let width;
         let height;
         let imageBlob: Blob;
+        let canvas: HTMLCanvasElement;
 
         // Max dimension for mobile optimization (e.g., 2500px)
         // This keeps memory usage low while maintaining decent quality
@@ -245,8 +260,6 @@ export const useCustomBasemapStore = create<CustomBasemapState>((set, get) => ({
             };
 
             // Convert GeoTIFF to PNG Blob for Mapbox compatibility
-            const rasters = await image.readRasters();
-            const canvas = document.createElement('canvas');
             
             // Calculate scale to fit max dimension
             let scale = 1;
@@ -257,43 +270,51 @@ export const useCustomBasemapStore = create<CustomBasemapState>((set, get) => ({
             const targetWidth = Math.round(width * scale);
             const targetHeight = Math.round(height * scale);
 
+            canvas = document.createElement('canvas');
             canvas.width = targetWidth;
             canvas.height = targetHeight;
             const ctx = canvas.getContext('2d');
             
             if (ctx) {
-                // We need to render to an offscreen canvas first at full resolution (or sample it?)
-                // Actually, reading rasters gives us the raw data. We can just skip pixels?
-                // Or render full size then downscale. Rendering full size to canvas might crash if too big.
-                // Safest is to sample or just render if not HUGE.
-                // 150MB TIFF might be 10k x 10k. That's 100MP. Canvas limit is usually around 4k-8k depending on browser.
-                // 10k x 10k RGBA is 400MB raw.
-                // Let's try simple nearest neighbor subsampling if scaling down significantly?
-                // Or just render full if < 4000px, else skip?
+                // Optimize: Try to read rasters at target resolution directly
+                // This saves memory and time if supported by underlying geotiff library
+                const rasters = await image.readRasters({ width: targetWidth, height: targetHeight });
                 
-                // Simplified approach: Render to ImageData at full res (risk of OOM on low-end), then draw to scaled canvas?
-                // No, ImageData must match canvas size.
-                
-                // If scaling down, we should skip pixels in the loop.
-                // Simple nearest neighbor downscaling
                 const imageData = ctx.createImageData(targetWidth, targetHeight);
                 const data = imageData.data;
                 const [r, g, b, a] = rasters as any; // Type assertion
 
-                for (let y = 0; y < targetHeight; y++) {
-                    for (let x = 0; x < targetWidth; x++) {
-                        // Map target coordinate to source coordinate
-                        const srcX = Math.floor(x / scale);
-                        const srcY = Math.floor(y / scale);
-                        const srcIdx = srcY * width + srcX;
-                        const dstIdx = (y * targetWidth + x) * 4;
-                        
-                        data[dstIdx] = r ? r[srcIdx] : 0;
-                        data[dstIdx + 1] = g ? g[srcIdx] : 0;
-                        data[dstIdx + 2] = b ? b[srcIdx] : 0;
-                        data[dstIdx + 3] = a ? a[srcIdx] : 255;
+                // Check if rasters were actually resized or full size
+                const rasterSize = r ? r.length : 0;
+                
+                if (rasterSize === targetWidth * targetHeight) {
+                    // Fast path: Direct copy
+                    for (let i = 0; i < rasterSize; i++) {
+                        const idx = i * 4;
+                        data[idx] = r ? r[i] : 0;
+                        data[idx + 1] = g ? g[i] : 0;
+                        data[idx + 2] = b ? b[i] : 0;
+                        data[idx + 3] = a ? a[i] : 255;
+                    }
+                } else {
+                    // Fallback: Manual downsampling (nearest neighbor)
+                    // The rasters are full size (width * height)
+                    for (let y = 0; y < targetHeight; y++) {
+                        for (let x = 0; x < targetWidth; x++) {
+                            // Map target coordinate to source coordinate
+                            const srcX = Math.floor(x / scale);
+                            const srcY = Math.floor(y / scale);
+                            const srcIdx = srcY * width + srcX;
+                            const dstIdx = (y * targetWidth + x) * 4;
+                            
+                            data[dstIdx] = r ? r[srcIdx] : 0;
+                            data[dstIdx + 1] = g ? g[srcIdx] : 0;
+                            data[dstIdx + 2] = b ? b[srcIdx] : 0;
+                            data[dstIdx + 3] = a ? a[srcIdx] : 255;
+                        }
                     }
                 }
+                
                 ctx.putImageData(imageData, 0, 0);
                 
                 imageBlob = await new Promise<Blob>((resolve, reject) => {
@@ -329,7 +350,7 @@ export const useCustomBasemapStore = create<CustomBasemapState>((set, get) => ({
             }
 
             // Render PDF page to Canvas
-            const canvas = document.createElement('canvas');
+            canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
             canvas.width = width;
             canvas.height = height;
@@ -380,6 +401,82 @@ export const useCustomBasemapStore = create<CustomBasemapState>((set, get) => ({
             // throw new Error("GeoPDF structure parsing requires server-side GDAL processing. Please use GeoTIFF for instant client-side preview.");
         } else {
              throw new Error("Unsupported file format.");
+        }
+
+        // Check Storage Quota with processed file size
+        // If file is too big, try to compress
+        let quality = 0.8;
+        let attempt = 0;
+        const MAX_ATTEMPTS = 3;
+        
+        while (totalUsage + imageBlob.size > MAX_STORAGE_LIMIT && attempt < MAX_ATTEMPTS) {
+            console.log(`Image size ${imageBlob.size} exceeds limit. Attempting compression q=${quality - 0.2}...`);
+            quality -= 0.2;
+            attempt++;
+            
+            // Re-compress
+            imageBlob = await new Promise<Blob>((resolve, reject) => {
+                canvas.toBlob((blob) => {
+                    if (blob) resolve(blob);
+                    else reject(new Error("Compression failed"));
+                }, 'image/png', quality); // Standard PNG doesn't support quality param in all browsers, but some do. 
+                // Actually image/jpeg supports quality, image/png usually doesn't.
+                // Mapbox supports JPEG raster sources? Yes.
+                // But transparency is lost with JPEG.
+                // We need transparency for basemaps (usually).
+                // If we stick to PNG, we can't control quality much via toBlob in standard spec.
+                // But we can resize.
+            });
+            
+            // If PNG, changing quality param might not do anything.
+            // We should resize if it's PNG.
+        }
+        
+        // Revised approach for PNG resizing
+        if (totalUsage + imageBlob.size > MAX_STORAGE_LIMIT) {
+             // If still too big, we must resize the canvas
+             // Calculate target ratio
+             
+             let currentWidth = canvas.width;
+             let currentHeight = canvas.height;
+             let currentBlob = imageBlob;
+             
+             while (totalUsage + currentBlob.size > MAX_STORAGE_LIMIT && currentWidth > 500) {
+                 const newWidth = Math.floor(currentWidth * 0.7); // Reduce by 30%
+                 const newHeight = Math.floor(currentHeight * 0.7);
+                 
+                 console.log(`Resizing to ${newWidth}x${newHeight} to fit quota...`);
+                 
+                 const tempCanvas = document.createElement('canvas');
+                 tempCanvas.width = newWidth;
+                 tempCanvas.height = newHeight;
+                 const tCtx = tempCanvas.getContext('2d');
+                 if (!tCtx) break;
+                 
+                 tCtx.drawImage(canvas, 0, 0, newWidth, newHeight);
+                 
+                 const newBlob = await new Promise<Blob | null>(r => tempCanvas.toBlob(r, 'image/png'));
+                 if (newBlob) {
+                     currentBlob = newBlob;
+                     currentWidth = newWidth;
+                     currentHeight = newHeight;
+                     // Update original canvas for metadata
+                     // We shouldn't update original canvas if we want to loop, but for next iteration we need source.
+                     // Actually, drawing from original 'canvas' (high res) to tempCanvas is better quality.
+                     // But we update currentWidth to break loop.
+                 } else {
+                     break;
+                 }
+             }
+             imageBlob = currentBlob;
+             // Update dimensions for metadata
+             width = currentWidth;
+             height = currentHeight;
+        }
+
+        if (totalUsage + imageBlob.size > MAX_STORAGE_LIMIT) {
+            const availableMB = ((MAX_STORAGE_LIMIT - totalUsage) / 1024 / 1024).toFixed(2);
+            throw new Error(`Optimized map size (${(imageBlob.size / 1024 / 1024).toFixed(2)} MB) still exceeds available storage (${availableMB} MB). Please delete other maps or use a simpler file.`);
         }
 
         // Upload File (Use the PNG Blob instead of original file for display compatibility)
@@ -482,7 +579,8 @@ export const useCustomBasemapStore = create<CustomBasemapState>((set, get) => ({
     }
 
     set((state) => ({
-        basemaps: state.basemaps.filter(map => map.id !== id)
+        basemaps: state.basemaps.filter(map => map.id !== id),
+        totalUsage: state.totalUsage - (b.file_size || 0)
     }));
   },
 
