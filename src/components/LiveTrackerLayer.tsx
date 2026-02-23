@@ -199,7 +199,7 @@ const InterpolatedMarker = memo(({ packet, onClick }: { packet: TrackerPacket; o
 });
 
 export const LiveTrackerLayer = ({ mapRef }: { mapRef?: React.RefObject<MapRef | null> }) => {
-  const { trackers, selectedTrackerId, selectTracker, isLiveTrackingEnabled } = useTrackerStore();
+  const { trackers, selectedTrackerId, selectTracker, isLiveTrackingEnabled, viewingSession, isSessionVisible } = useTrackerStore();
   const [terrainElevation, setTerrainElevation] = useState<number | null>(null);
   
   useEffect(() => {
@@ -262,10 +262,46 @@ export const LiveTrackerLayer = ({ mapRef }: { mapRef?: React.RefObject<MapRef |
     };
   }, [trackers, selectedTrackerId, isLiveTrackingEnabled]);
 
-  if (!isLiveTrackingEnabled) return null;
+  // Generate GeoJSON for Viewing Session (Recalled History)
+  const sessionGeoJSON = useMemo(() => {
+    if (!viewingSession || viewingSession.length < 2) return null;
+
+    return {
+      type: 'FeatureCollection',
+      features: [{
+        type: 'Feature',
+        geometry: {
+          type: 'LineString',
+          coordinates: viewingSession.map(p => [p.lng, p.lat])
+        },
+        properties: {
+          user_id: viewingSession[0]?.user_id || 'session',
+          color: '#3b82f6', // Solid Blue
+          opacity: 0.8
+        }
+      }]
+    };
+  }, [viewingSession]);
+
+  if (!isLiveTrackingEnabled && !viewingSession) return null;
 
   const activeTrackers = Object.values(trackers);
   const selectedTracker = selectedTrackerId ? trackers[selectedTrackerId] : null;
+
+  const sessionLayerStyle: LineLayer = {
+    id: 'tracker-session-line',
+    source: 'tracker-session-source',
+    type: 'line',
+    paint: {
+      'line-color': '#3b82f6',
+      'line-width': 4,
+      'line-opacity': 0.8,
+    },
+    layout: {
+      'line-cap': 'round',
+      'line-join': 'round'
+    }
+  };
 
   const trailLayerStyle: LineLayer = {
     id: 'tracker-trails',
@@ -287,6 +323,47 @@ export const LiveTrackerLayer = ({ mapRef }: { mapRef?: React.RefObject<MapRef |
     <>
       {/* History Viewer Button & Panel */}
       <TrackerHistoryViewer />
+
+      {/* 0. Viewing Session Layer (Recalled) */}
+      {sessionGeoJSON && (
+        <Source id="tracker-session-source" type="geojson" data={sessionGeoJSON as any}>
+            <Layer 
+                {...sessionLayerStyle} 
+                paint={{
+                    ...sessionLayerStyle.paint,
+                    'line-opacity': isSessionVisible ? 0.8 : 0
+                }}
+            />
+            {/* Start Point */}
+            <Layer
+                id="session-start-point"
+                type="circle"
+                paint={{
+                    'circle-radius': 6,
+                    'circle-color': '#22c55e', // Green
+                    'circle-stroke-width': 2,
+                    'circle-stroke-color': '#fff',
+                    'circle-opacity': isSessionVisible ? 1 : 0,
+                    'circle-stroke-opacity': isSessionVisible ? 1 : 0
+                }}
+                filter={['==', '$type', 'Point']}
+            />
+            {/* End Point */}
+             <Layer
+                id="session-end-point"
+                type="circle"
+                paint={{
+                    'circle-radius': 6,
+                    'circle-color': '#ef4444', // Red
+                    'circle-stroke-width': 2,
+                    'circle-stroke-color': '#fff',
+                    'circle-opacity': isSessionVisible ? 1 : 0,
+                    'circle-stroke-opacity': isSessionVisible ? 1 : 0
+                }}
+                filter={['==', '$type', 'Point']}
+            />
+        </Source>
+      )}
 
       {/* 1. Trails Layer */}
       {trailsGeoJSON && (

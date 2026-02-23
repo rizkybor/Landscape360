@@ -1,16 +1,19 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useSurveyStore } from "../store/useSurveyStore";
+import { useTrackerStore } from "../store/useTrackerStore";
 import {
   X,
   History,
   RefreshCw,
   Trash2,
   FileDown,
+  Calendar,
+  Map as MapIcon,
+  List,
+  Eye,
+  EyeOff
 } from "lucide-react";
-// Removed static imports to optimize bundle size
-// import jsPDF from "jspdf";
-// import "jspdf-autotable";
 
 interface TrackerLog {
   id: string;
@@ -20,7 +23,17 @@ interface TrackerLog {
   elevation: number;
   speed: number;
   timestamp: string;
-  profiles?: { email: string } | null; // Added manual profile mapping
+  profiles?: { email: string } | null;
+}
+
+// Session Summary Type
+interface SessionSummary {
+    date: string;
+    count: number;
+    startTime: string;
+    endTime: string;
+    user_id: string;
+    email?: string;
 }
 
 const toDMS = (deg: number, isLat: boolean): string => {
@@ -36,8 +49,13 @@ const toDMS = (deg: number, isLat: boolean): string => {
 };
 
 export const TrackerHistoryViewer = () => {
-  const { user, userRole } = useSurveyStore();
+  const { user, userRole, subscriptionStatus } = useSurveyStore();
+  const { setViewingSession, viewingSession, isSessionVisible, setSessionVisible } = useTrackerStore();
+  
   const [isOpen, setIsOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'sessions' | 'logs'>('sessions');
+  const [sessions, setSessions] = useState<SessionSummary[]>([]);
+  
   const [logs, setLogs] = useState<TrackerLog[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [page, setPage] = useState(0);
@@ -49,6 +67,111 @@ export const TrackerHistoryViewer = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState<string | null>(null);
   const LIMIT = 20;
+
+  // Access Control Logic
+  const canAccess = useMemo(() => {
+      if (userRole === 'monitor360' && subscriptionStatus === 'Enterprise') return true;
+      if (userRole === 'pengguna360' && subscriptionStatus === 'Pro') return true;
+      return false;
+  }, [userRole, subscriptionStatus]);
+
+  if (!canAccess || !user) return null;
+
+  // --- Session Logic ---
+  
+  const [sessionPage, setSessionPage] = useState(0);
+  const [hasMoreSessions, setHasMoreSessions] = useState(true);
+  const SESSION_LIMIT = 20;
+
+  // Fetch Sessions (Grouped by Date using RPC)
+  const fetchSessions = useCallback(async (isLoadMore = false) => {
+      setIsLoading(true);
+      try {
+          // Use RPC function for server-side grouping and pagination
+          const { data, error } = await supabase.rpc('get_tracker_sessions', {
+             p_user_id: userRole === 'monitor360' && selectedUserFilter !== 'all' ? selectedUserFilter : null,
+             p_limit: SESSION_LIMIT,
+             p_offset: isLoadMore ? (sessionPage + 1) * SESSION_LIMIT : 0
+          });
+
+          if (error) throw error;
+
+          if (!data || data.length === 0) {
+              if (!isLoadMore) setSessions([]);
+              setHasMoreSessions(false);
+              return;
+          }
+
+          if (data.length < SESSION_LIMIT) {
+              setHasMoreSessions(false);
+          } else {
+              setHasMoreSessions(true);
+          }
+
+          // Fetch profiles for users in sessions
+          const uniqueUserIds = Array.from(new Set(data.map((s: any) => s.user_id)));
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("id, email")
+            .in("id", uniqueUserIds);
+            
+          const profileMap = new Map();
+          profileData?.forEach((p: any) => profileMap.set(p.id, p));
+
+          const sessionList = data.map((s: any) => ({
+              date: s.session_date,
+              count: s.point_count,
+              startTime: s.start_time,
+              endTime: s.end_time,
+              user_id: s.user_id,
+              email: profileMap.get(s.user_id)?.email
+          }));
+
+          setSessions(prev => isLoadMore ? [...prev, ...sessionList] : sessionList);
+          // if (isLoadMore) setSessionPage(prev => prev + 1); // Removed: handled by handleScroll -> useEffect
+
+      } catch (err) {
+          console.error("Error fetching sessions:", err);
+      } finally {
+          setIsLoading(false);
+      }
+  }, [user, userRole, selectedUserFilter, sessionPage]);
+
+  // Load Session to Map
+  const handleLoadSession = async (session: SessionSummary) => {
+      setIsLoading(true);
+      try {
+          // Fetch full points for this session (Day)
+          // We add a buffer to the day range to be safe
+          const startOfDay = `${session.date}T00:00:00`;
+          const endOfDay = `${session.date}T23:59:59`;
+
+          const { data, error } = await supabase
+            .from("tracker_logs")
+            .select("*")
+            .eq("user_id", session.user_id)
+            .gte("timestamp", startOfDay)
+            .lte("timestamp", endOfDay)
+            .order("timestamp", { ascending: true });
+
+          if (error) throw error;
+
+          if (data && data.length > 0) {
+              // @ts-ignore - Map supabase types to TrackerPacket
+              setViewingSession(data);
+              setIsOpen(false); // Close panel to view map
+          } else {
+              alert("No points found for this session.");
+          }
+      } catch (err) {
+          console.error("Failed to load session:", err);
+          alert("Failed to load session data.");
+      } finally {
+          setIsLoading(false);
+      }
+  };
+
+  // --- Original Log Logic ---
 
   // Export PDF Function (Optimized - Fetches Full Data)
   const exportPDF = async () => {
@@ -340,21 +463,50 @@ export const TrackerHistoryViewer = () => {
   useEffect(() => {
     setPage(0);
     setHasMore(true);
-    fetchLogs(false);
-  }, [selectedUserFilter]);
+    setSessionPage(0);
+    setHasMoreSessions(true);
+    if (viewMode === 'sessions') {
+        fetchSessions(false);
+    } else {
+        fetchLogs(false);
+    }
+  }, [selectedUserFilter, viewMode]);
 
   // Load More when page changes (scrolling)
   useEffect(() => {
-      if (page > 0) {
+      if (page > 0 && viewMode === 'logs') {
           fetchLogs(true);
       }
-  }, [page]);
+  }, [page, viewMode]);
+
+  // Load More Sessions
+  useEffect(() => {
+      if (sessionPage > 0 && viewMode === 'sessions') {
+          // This useEffect might be redundant if we call fetchSessions directly in handleScroll, 
+          // but sticking to the pattern: state change triggers fetch
+          fetchSessions(true);
+      }
+  }, [sessionPage, viewMode]);
 
   // Infinite Scroll Handler
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
       const { scrollTop, clientHeight, scrollHeight } = e.currentTarget;
-      if (scrollHeight - scrollTop <= clientHeight + 50 && !isLoading && hasMore) {
-          setPage(prev => prev + 1);
+      if (scrollHeight - scrollTop <= clientHeight + 50 && !isLoading) {
+          if (viewMode === 'logs' && hasMore) {
+              setPage(prev => prev + 1);
+          } else if (viewMode === 'sessions' && hasMoreSessions) {
+              // Note: sessionPage is incremented AFTER fetch success in fetchSessions to avoid race conditions 
+              // or we can increment here. 
+              // Current pattern: fetchLogs increments page in handleScroll -> useEffect calls fetch.
+              // fetchSessions logic I wrote: "if (isLoadMore) setSessionPage(prev => prev + 1);" INSIDE fetchSessions.
+              // This is conflicting. Let's align them.
+              
+              // REFACTOR: Let's use the same pattern as Logs.
+              // Increment page here, and let useEffect trigger fetch.
+              // BUT fetchSessions implementation above uses sessionPage for offset calculation.
+              // So we should increment it here.
+              setSessionPage(prev => prev + 1); // This will trigger useEffect
+          }
       }
   };
 
@@ -367,9 +519,9 @@ export const TrackerHistoryViewer = () => {
         <button
           onClick={() => setIsOpen(true)}
           className="cursor-pointer w-[40px] h-[40px] bg-white rounded-xl shadow-[0_0_0_2px_rgba(0,0,0,0.1)] flex items-center justify-center text-slate-700 hover:bg-slate-50 active:bg-slate-100 transition-colors border border-slate-300/50"
-          title="View Tracking History"
+          title="Tracking Lists"
         >
-          <History size={16} strokeWidth={2.5} />
+          <List size={16} strokeWidth={2.5} />
         </button>
       </div>
 
@@ -394,24 +546,45 @@ export const TrackerHistoryViewer = () => {
             </div>
             <div>
               <h2 className="font-bold text-slate-800 text-sm md:text-base">
-                Tracking History
+                Tracking Lists
               </h2>
               <p className="text-xs text-slate-500">
                 {userRole === "monitor360"
                   ? "Monitoring All Units"
-                  : "Your Movement Logs"}
+                  : "Your Movement History"}
               </p>
             </div>
           </div>
 
           {/* Controls Group: Refresh + Filter */}
           <div className="flex items-center gap-2">
+            
+            {/* View Mode Toggle */}
+            <div className="flex bg-slate-100 p-0.5 rounded-lg mr-2">
+                <button
+                    onClick={() => setViewMode('sessions')}
+                    className={`cursor-pointer px-2 py-1 text-[10px] font-bold rounded-md transition-all ${viewMode === 'sessions' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                    Sessions
+                </button>
+                <button
+                    onClick={() => setViewMode('logs')}
+                    className={`cursor-pointer px-2 py-1 text-[10px] font-bold rounded-md transition-all ${viewMode === 'logs' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                    Logs
+                </button>
+            </div>
+
             {/* Manual Refresh Button */}
             <button
               onClick={() => {
-                  setPage(0);
-                  setHasMore(true);
-                  fetchLogs(false);
+                  if (viewMode === 'sessions') {
+                      fetchSessions();
+                  } else {
+                      setPage(0);
+                      setHasMore(true);
+                      fetchLogs(false);
+                  }
               }}
               className="cursor-pointer p-1.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-blue-600 transition-colors"
               title="Refresh Data"
@@ -423,7 +596,7 @@ export const TrackerHistoryViewer = () => {
             </button>
             
             {/* Export PDF (Monitor Only) */}
-            {userRole === "monitor360" && (
+            {userRole === "monitor360" && viewMode === 'logs' && (
                 <button
                     onClick={exportPDF}
                     disabled={isExporting}
@@ -472,7 +645,95 @@ export const TrackerHistoryViewer = () => {
             style={{ height: '350px' }} // Approx height for 5-6 rows
             onScroll={handleScroll}
         >
-          {isLoading && logs.length === 0 ? (
+          {/* --- SESSIONS VIEW --- */}
+          {viewMode === 'sessions' && (
+              <div className="p-2 space-y-2">
+                  {/* Clear View Button if Session Active */}
+                  {viewingSession && (
+                      <div className="mb-2 p-3 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-blue-700">
+                              <MapIcon size={16} />
+                              <span className="text-xs font-bold">Currently Viewing Session on Map</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {/* Show/Hide Toggle */}
+                            <button
+                                onClick={() => setSessionVisible(!isSessionVisible)}
+                                className="p-1.5 bg-white text-blue-600 rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors"
+                                title={isSessionVisible ? "Hide Path" : "Show Path"}
+                            >
+                                {isSessionVisible ? <Eye size={14} /> : <EyeOff size={14} />}
+                            </button>
+                            {/* Clear Button */}
+                            <button 
+                                onClick={() => setViewingSession(null)}
+                                className="px-3 py-1.5 bg-white text-blue-600 text-xs font-bold rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors"
+                            >
+                                Clear Map
+                            </button>
+                          </div>
+                      </div>
+                  )}
+
+                  {isLoading && sessions.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center h-40 text-slate-400 gap-2">
+                          <RefreshCw size={24} className="animate-spin" />
+                          <span className="text-xs">Loading sessions...</span>
+                      </div>
+                  ) : sessions.length === 0 ? (
+                      <div className="text-center py-8 text-slate-400">
+                          <Calendar size={32} className="mx-auto mb-2 opacity-20" />
+                          <p className="text-xs">No recorded sessions found.</p>
+                      </div>
+                  ) : (
+                      sessions.map((session, idx) => (
+                          <div key={idx} className="bg-white border border-slate-100 rounded-xl p-3 hover:border-blue-200 transition-all shadow-sm hover:shadow-md group">
+                              <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                      <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex flex-col items-center justify-center border border-indigo-100">
+                                          <span className="text-[10px] font-bold uppercase">{new Date(session.date).toLocaleString('en-US', { month: 'short' })}</span>
+                                          <span className="text-sm font-bold leading-none">{new Date(session.date).getDate()}</span>
+                                      </div>
+                                      <div>
+                                          <h4 className="text-sm font-bold text-slate-800">
+                                              {session.email ? session.email.split('@')[0] : 'User Session'}
+                                          </h4>
+                                          <div className="flex items-center gap-2 text-[10px] text-slate-500">
+                                              <span>{new Date(session.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - {new Date(session.endTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                              <span>•</span>
+                                              <span>{session.count} points</span>
+                                          </div>
+                                      </div>
+                                  </div>
+                                  <button 
+                                    onClick={() => handleLoadSession(session)}
+                                    className="cursor-pointer p-2 rounded-full bg-slate-50 text-slate-400 group-hover:bg-blue-500 group-hover:text-white transition-colors"
+                                    title="View on Map"
+                                  >
+                                      <Eye size={18} />
+                                  </button>
+                              </div>
+                          </div>
+                      ))
+                  )}
+                  {/* Loading Indicator for Infinite Scroll */}
+              {isLoading && sessions.length > 0 && (
+                  <div className="p-4 flex justify-center items-center text-slate-400 gap-2 text-xs">
+                      <RefreshCw size={14} className="animate-spin" /> Loading more...
+                  </div>
+              )}
+              
+              {!hasMoreSessions && sessions.length > 0 && (
+                  <div className="p-4 text-center text-[10px] text-slate-300 uppercase tracking-widest font-medium">
+                      No more sessions
+                  </div>
+              )}
+          </div>
+          )}
+
+          {/* --- LOGS VIEW (Original) --- */}
+          {viewMode === 'logs' && (
+            isLoading && logs.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-2">
               <RefreshCw size={24} className="animate-spin" />
               <span className="text-xs">Loading data...</span>
@@ -591,7 +852,7 @@ export const TrackerHistoryViewer = () => {
                   </div>
               )}
             </div>
-          )}
+          ))}
         </div>
       </div>
       {/* Custom Delete Confirmation Modal */}

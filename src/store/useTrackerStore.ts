@@ -18,6 +18,12 @@ interface TrackerStore {
   toggleLocalBroadcast: () => void;
   connectionStatus: 'disconnected' | 'connecting' | 'connected' | 'error';
   setConnectionStatus: (status: 'disconnected' | 'connecting' | 'connected' | 'error') => void;
+  
+  // Session Playback
+  viewingSession: TrackerPacket[] | null;
+  setViewingSession: (packets: TrackerPacket[] | null) => void;
+  isSessionVisible: boolean;
+  setSessionVisible: (visible: boolean) => void;
 }
 
 export const useTrackerStore = create<TrackerStore>((set) => ({
@@ -27,6 +33,8 @@ export const useTrackerStore = create<TrackerStore>((set) => ({
   isSimulationEnabled: false,
   isLocalBroadcastEnabled: false,
   connectionStatus: 'disconnected',
+  viewingSession: null,
+  isSessionVisible: true,
 
   addOrUpdateTracker: (packet) => {
     set((state) => {
@@ -78,4 +86,6 @@ export const useTrackerStore = create<TrackerStore>((set) => ({
   toggleSimulation: () => set((state) => ({ isSimulationEnabled: !state.isSimulationEnabled })),
   toggleLocalBroadcast: () => set((state) => ({ isLocalBroadcastEnabled: !state.isLocalBroadcastEnabled })),
   setConnectionStatus: (status) => set({ connectionStatus: status }),
+  setViewingSession: (packets) => set({ viewingSession: packets, isSessionVisible: true }),
+  setSessionVisible: (visible) => set({ isSessionVisible: visible }),
 }));
