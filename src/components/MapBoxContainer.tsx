@@ -6,6 +6,9 @@ import React, {
   useEffect,
   Suspense,
 } from "react";
+import { BasemapManager } from "./BasemapManager";
+import { GeoreferenceTool } from "./GeoreferenceTool"; // New component
+import { useCustomBasemapStore } from "../store/useCustomBasemapStore";
 import Map, { Source, Layer, Marker, Popup } from "react-map-gl/mapbox";
 import type { MapRef, MapMouseEvent } from "react-map-gl/mapbox";
 import { useMapStore } from "../store/useMapStore";
@@ -77,6 +80,11 @@ const MapBoxContainerComponent = ({
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [selectedLocation, setSelectedLocation] = useState<any | null>(null);
   const [isPopupVisible, setIsPopupVisible] = useState(false);
+  const { basemaps, loadBasemaps, layerOpacities, isManagerOpen, toggleManager } = useCustomBasemapStore();
+
+  useEffect(() => {
+    loadBasemaps();
+  }, [loadBasemaps]);
 
   // Handle popup visibility animation
   useEffect(() => {
@@ -754,6 +762,8 @@ const MapBoxContainerComponent = ({
         }
         reuseMaps
       >
+        {/* Mapbox 3D Terrain & Sky */}
+
         <Source
           id="mapbox-dem"
           type="raster-dem"
@@ -957,7 +967,39 @@ const MapBoxContainerComponent = ({
           </Popup>
         )}
 
-        {/* Custom Navigation Controls */}
+      {/* Custom Basemaps Layers - Rendered last to be ON TOP */}
+      {basemaps.map((map) => {
+        if (!map.is_active || !map.image_url || !map.bounds) return null;
+
+        return (
+          <Source
+            key={map.id}
+            id={`source-${map.id}`}
+            type="image"
+            url={map.image_url}
+            coordinates={[
+              [map.bounds.west, map.bounds.north], // Top Left
+              [map.bounds.east, map.bounds.north], // Top Right
+              [map.bounds.east, map.bounds.south], // Bottom Right
+              [map.bounds.west, map.bounds.south], // Bottom Left
+            ]}
+          >
+            <Layer
+              id={`layer-${map.id}`}
+              type="raster"
+              paint={{ 
+                "raster-opacity": layerOpacities[map.id] ?? 1,
+                "raster-fade-duration": 300 
+              }}
+            />
+          </Source>
+        );
+      })}
+
+      {/* Georeferencing Tool */}
+      <GeoreferenceTool />
+
+      {/* Custom Navigation Controls */}
         {showControls && (
           <NavigationControls
             mapRef={mapRef}
@@ -1006,6 +1048,24 @@ const MapBoxContainerComponent = ({
       {showControls && <SurveyorPanel />}
       {showControls && <SearchPanel />}
       {showControls && <WeatherWidget />}
+      {/* Custom Basemap Manager */}
+      {isManagerOpen && (
+        <BasemapManager 
+          onClose={toggleManager} 
+          onZoomToLayer={(bounds) => {
+            const map = mapRef.current?.getMap();
+            if (map && bounds) {
+              map.fitBounds(
+                [
+                  [bounds.west, bounds.south],
+                  [bounds.east, bounds.north]
+                ],
+                { padding: 50, animate: true, duration: 1500 }
+              );
+            }
+          }}
+        />
+      )}
     </div>
   );
 };

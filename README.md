@@ -19,6 +19,11 @@
 - **Dynamic Contours**: Real-time client-side contour generation using `Turf.js` based on viewport elevation data.
 - **Multi-Style Maps**: Switch between **Streets** (Vector), **Outdoors** (Topo), and **Satellite Streets** (Imagery) for versatile context.
 - **Split-Screen Mode**: Compare 2D and 3D perspectives side-by-side with synchronized camera movement.
+- **Custom Basemaps (Pro/Enterprise)**:
+  - **Upload Support**: Import **GeoTIFF** and **GeoPDF** files (max 150MB) as georeferenced overlays.
+  - **Auto-Reprojection**: Automatic conversion of projected coordinates (e.g., UTM) to WGS84 using `proj4`.
+  - **Interactive Georeferencing**: Visual "Pick on Map" tool with drag/resize/rotate controls for PDF/Image alignment.
+  - **Performance Optimized**: Client-side downscaling (max 2500px) and PNG conversion for fast, bandwidth-efficient mobile rendering.
 - **Map Controller**: Intuitive Zoom In/Out buttons and simplified gesture controls for desktop and mobile.
 - **Data Source & Attribution (POIs) **: Toggleable POI (Points of Interest) layer built from independently curated GeoJSON data. Supports clustering for large datasets to ensure optimal map performance and clarity..
 - **Carousel UI (Mobile)**: Optimized "Tools & Exploration" panel with horizontal swipe interaction for better usability on small screens.
