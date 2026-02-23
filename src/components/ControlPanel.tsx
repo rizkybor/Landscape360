@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useMapStore } from "../store/useMapStore";
 import { useSurveyStore } from "../store/useSurveyStore";
 import { useTrackerStore } from "../store/useTrackerStore"; // Import Tracker Store
+import { useCustomBasemapStore } from "../store/useCustomBasemapStore";
 import { AuthControl } from "./AuthControl";
 import mapboxgl from "mapbox-gl";
 import type { MapRef } from "react-map-gl/mapbox";
@@ -23,6 +24,7 @@ import {
   Lock,
   Binoculars,
   MapPin,
+  Layers,
 } from "lucide-react";
 import geoportalLogo from "../assets/geoportal360.png";
 import streetsView from "../assets/Street-View.png";
@@ -77,6 +79,8 @@ export const ControlPanel = () => {
     connectionStatus,
     trackers,
   } = useTrackerStore();
+
+  const { isManagerOpen, toggleManager } = useCustomBasemapStore();
 
   // Auto-stop tracking/monitoring when user logs out or role changes to incompatible state
   useEffect(() => {
@@ -524,6 +528,46 @@ export const ControlPanel = () => {
                     )}
                   </div>
                 </button>
+
+                {/* Custom Basemaps Toggle (Pro/Enterprise Only) */}
+                {(subscriptionStatus === "Pro" || subscriptionStatus === "Enterprise") && (
+                  <button
+                    onClick={toggleManager}
+                    className={`${isMobile ? "flex-none w-28 snap-center h-full" : "col-span-1 w-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
+                      isManagerOpen
+                        ? "bg-indigo-900/20 border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.1)]"
+                        : "bg-white/5 border-white/10 hover:bg-white/10"
+                    } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
+                  >
+                    <div
+                      className={`p-2 rounded-lg transition-colors ${
+                        isManagerOpen
+                          ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/40"
+                          : "bg-white/10 text-gray-400 group-hover:text-white"
+                      } ${isMobile ? "mb-1" : ""}`}
+                    >
+                      <Layers size={isMobile ? 18 : 16} />
+                    </div>
+                    <div className="flex-1">
+                      <div
+                        className={`font-bold transition-colors ${
+                          isManagerOpen ? "text-white" : "text-gray-300"
+                        } ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
+                      >
+                        Basemaps
+                      </div>
+                      {!isMobile && (
+                        <div
+                          className={`text-[10px] ${
+                            isManagerOpen ? "text-indigo-200" : "text-gray-500"
+                          }`}
+                        >
+                          {isManagerOpen ? "Managing" : "Custom Layers"}
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                )}
 
                 {/* Live Tracking Toggle */}
                 {import.meta.env.VITE_ENABLE_GPS_TRACKER === "true" && user && (
