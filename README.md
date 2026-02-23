@@ -19,7 +19,8 @@
 - **Dynamic Contours**: Real-time client-side contour generation using `Turf.js` based on viewport elevation data.
 - **Multi-Style Maps**: Switch between **Streets** (Vector), **Outdoors** (Topo), and **Satellite Streets** (Imagery) for versatile context.
 - **Split-Screen Mode**: Compare 2D and 3D perspectives side-by-side with synchronized camera movement.
-- **Custom Basemaps (Pro/Enterprise)**:
+- **Custom Basemaps (Enterprise Only)**:
+  - **Exclusive Access**: Available only for **Enterprise** users with **`monitor360`** role.
   - **Upload Support**: Import **GeoTIFF** and **GeoPDF** files (max 150MB) as georeferenced overlays.
   - **Auto-Reprojection**: Automatic conversion of projected coordinates (e.g., UTM) to WGS84 using `proj4`.
   - **Interactive Georeferencing**: Visual "Pick on Map" tool with drag/resize/rotate controls for PDF/Image alignment.
@@ -58,13 +59,14 @@ Landscape 360 offers flexible plans tailored to your needs, integrated with a Ro
 | **Max Download Size** | 1 MB | 10 MB | 25 MB |
 | **Offline Maps** | 1 Region | 3 Regions | 10 Regions |
 | **Saved Surveys** | 2 Surveys | 4 Surveys | 10 Surveys |
+| **Custom Basemaps** | ❌ Disabled | ❌ Disabled | ✅ **Full Access** (Requires `monitor360`) |
 | **GPS Tracking** | ❌ Disabled | ✅ Broadcast & View Self | ✅ Broadcast & View Self |
 | **Realtime Monitoring** | ❌ Disabled | ❌ Disabled | ✅ **Monitor All Users** (Requires `monitor360` Role) |
 | **Support** | Community | Priority | 24/7 Dedicated |
 
 ### 🔐 User Roles
 - **`pengguna360`**: Standard user. Can track their own location and broadcast it (if Pro/Enterprise).
-- **`monitor360`**: Command center role. Can monitor all active users on the map in real-time. **Requires Enterprise Subscription.**
+- **`monitor360`**: Command center role. Can monitor all active users on the map in real-time and upload/manage **Custom Basemaps**. **Requires Enterprise Subscription.**
 
 > **Note:** GPS Tracking & Monitoring features require an active internet connection. Offline buffering (Smart Reconnect) is available for temporary signal loss.
 

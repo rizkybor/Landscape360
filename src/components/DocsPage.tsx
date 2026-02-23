@@ -222,6 +222,21 @@ export const DocsPage = ({ onBack }: Props) => {
                 </div>
               </div>
 
+              <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 flex gap-4 items-start group hover:border-indigo-500/30 transition-all">
+                <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 shrink-0">
+                  <Layers size={16} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-white mb-1">
+                    Custom Basemaps
+                  </h4>
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    Upload and overlay your own <strong>GeoTIFF/GeoPDF</strong> maps.
+                    Manually adjust alignment with the visual georeference tool.
+                  </p>
+                </div>
+              </div>
+
               <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 flex gap-4 items-start group hover:border-purple-500/30 transition-all">
                 <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 shrink-0">
                   <Map size={16} />
@@ -1191,6 +1206,93 @@ export const DocsPage = ({ onBack }: Props) => {
             </div>
           </section>
 
+          {/* Custom Basemaps */}
+          <section className="space-y-8 pt-8 border-t border-white/5">
+            <div className="flex items-center gap-3 text-white mb-6">
+              <div className="p-2 bg-indigo-500/10 rounded-lg border border-indigo-500/20">
+                <Layers className="w-5 h-5 text-indigo-400" />
+              </div>
+              <h3 className="text-2xl font-bold">Custom Basemaps Manager</h3>
+              <span className="px-2 py-1 rounded bg-indigo-500/20 text-[10px] text-indigo-400 font-bold uppercase border border-indigo-500/30">
+                Enterprise
+              </span>
+            </div>
+
+            <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-6 relative overflow-hidden group hover:border-indigo-500/30 transition-all duration-300">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+
+              <div className="grid md:grid-cols-2 gap-6 relative z-10">
+                <div className="space-y-4">
+                  <h4 className="text-lg font-bold text-white">
+                    Bring Your Own Maps
+                  </h4>
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    Upload high-resolution <strong>GeoTIFF</strong> or{" "}
+                    <strong>GeoPDF</strong> files to overlay on the 3D terrain.
+                    Ideal for project-specific site plans, historical maps, or
+                    drone orthomosaics.
+                  </p>
+
+                  <div className="space-y-3 pt-2">
+                    <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg border border-white/5">
+                      <div className="mt-0.5 text-indigo-400 font-bold text-[10px]">
+                        01
+                      </div>
+                      <div>
+                        <strong className="text-white text-xs block">
+                          Visual Georeferencing
+                        </strong>
+                        <p className="text-[10px] text-gray-400">
+                          Interactive tool to manually position, scale, and
+                          rotate non-georeferenced PDFs or images directly on
+                          the map canvas.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg border border-white/5">
+                      <div className="mt-0.5 text-indigo-400 font-bold text-[10px]">
+                        02
+                      </div>
+                      <div>
+                        <strong className="text-white text-xs block">
+                          Auto-Reprojection
+                        </strong>
+                        <p className="text-[10px] text-gray-400">
+                          Automatic detection and reprojection of GeoTIFFs to
+                          WGS84 coordinate system for seamless integration.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-indigo-900/10 rounded-lg border border-indigo-500/20 p-4 flex flex-col justify-center">
+                  <div className="space-y-2 mb-4">
+                    <div className="flex justify-between items-center text-xs text-indigo-200">
+                      <span>Supported Formats</span>
+                      <span className="font-bold">GeoTIFF, GeoPDF</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs text-indigo-200">
+                      <span>Max Resolution</span>
+                      <span className="font-bold">2500px (Optimized)</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs text-indigo-200">
+                      <span>Storage</span>
+                      <span className="font-bold">5 MB Limit (Cloud)</span>
+                    </div>
+                  </div>
+
+                  <div className="mt-auto p-3 rounded bg-indigo-500/10 border border-indigo-500/20">
+                    <p className="text-[10px] text-indigo-300 italic text-center">
+                      "Essential for cross-referencing official survey data with
+                      real-world terrain features."
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
           {/* Pricing & Plans */}
           <section className="space-y-8 pt-8 border-t border-white/5">
             <div className="text-center max-w-2xl mx-auto space-y-3">
@@ -1338,6 +1440,10 @@ export const DocsPage = ({ onBack }: Props) => {
                   <li className="flex items-center gap-2 text-xs text-white font-bold">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span>{" "}
                     Realtime Monitoring
+                  </li>
+                  <li className="flex items-center gap-2 text-xs text-white font-bold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span>{" "}
+                    Custom Basemaps (5MB)
                   </li>
                   <li className="flex items-center gap-2 text-xs text-gray-300">
                     <span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>{" "}

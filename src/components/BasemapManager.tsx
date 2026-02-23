@@ -5,7 +5,7 @@ import { useCustomBasemapStore } from "../store/useCustomBasemapStore";
 import { Upload, X, Map as MapIcon, Eye, EyeOff, Trash2, AlertCircle, Loader2, Layers, ScanEye, Settings } from "lucide-react";
 
 export const BasemapManager = ({ onClose, onZoomToLayer }: { onClose: () => void; onZoomToLayer?: (bounds: any) => void }) => {
-  const { subscriptionStatus } = useSurveyStore();
+  const { subscriptionStatus, userRole } = useSurveyStore();
   const { 
     basemaps, 
     uploadBasemap, 
@@ -20,13 +20,19 @@ export const BasemapManager = ({ onClose, onZoomToLayer }: { onClose: () => void
     setTempBounds,
     pendingGeoreferenceFile,
     setPendingGeoreferenceFile,
-    setEditingBasemapId
+    setEditingBasemapId,
+    totalUsage
   } = useCustomBasemapStore();
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [showManualInput, setShowManualInput] = useState(false);
+  const [deleteConfirmationId, setDeleteConfirmationId] = useState<string | null>(null);
   const [manualBounds, setManualBounds] = useState({ north: -6.1, south: -6.2, east: 106.9, west: 106.8 });
+
+  const MAX_STORAGE = 5 * 1024 * 1024;
+  const usagePercentage = (totalUsage / MAX_STORAGE) * 100;
+  const isQuotaFull = totalUsage >= MAX_STORAGE;
 
   // Restore state if returning from georeferencing
   useState(() => {
@@ -39,21 +45,23 @@ export const BasemapManager = ({ onClose, onZoomToLayer }: { onClose: () => void
   });
 
   // Access Control
-  const canAccess = subscriptionStatus === "Pro" || subscriptionStatus === "Enterprise";
+  const canAccess = userRole === 'monitor360' && subscriptionStatus === 'Enterprise';
 
   if (!canAccess) {
       return (
-          <div className="p-4 text-center">
-              <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-2" />
-              <h3 className="text-lg font-bold text-white mb-1">Feature Locked</h3>
-              <p className="text-sm text-gray-400 mb-4">
-                  Custom Basemaps are available for Pro and Enterprise plans only.
+          <div className="fixed z-50 inset-y-0 right-0 w-full md:w-80 bg-[#0f172a] text-white shadow-2xl border-l border-white/10 flex flex-col items-center justify-center p-6">
+              <AlertCircle className="w-16 h-16 text-yellow-500 mb-4" />
+              <h3 className="text-xl font-bold text-white mb-2">Feature Locked</h3>
+              <p className="text-sm text-gray-400 mb-6 text-center leading-relaxed">
+                  Custom Basemaps are exclusively available for <br/>
+                  <span className="text-white font-bold">Enterprise</span> users with <br/>
+                  <span className="text-blue-400 font-bold">Monitoring360</span> access.
               </p>
               <button 
                 onClick={onClose}
-                className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-bold transition-colors"
+                className="px-6 py-2.5 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-bold transition-colors border border-white/10"
               >
-                  Close
+                  Close Panel
               </button>
           </div>
       );
@@ -105,6 +113,22 @@ export const BasemapManager = ({ onClose, onZoomToLayer }: { onClose: () => void
         </button>
       </div>
 
+      {/* Storage Quota Indicator */}
+      <div className="px-4 pt-4 pb-2">
+          <div className="flex justify-between text-[10px] text-gray-400 mb-1">
+              <span>Storage Usage</span>
+              <span className={isQuotaFull ? "text-red-400 font-bold" : "text-blue-300"}>
+                  {(totalUsage / 1024 / 1024).toFixed(2)} MB / 5 MB
+              </span>
+          </div>
+          <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden border border-white/5">
+              <div 
+                className={`h-full rounded-full transition-all duration-500 ${isQuotaFull ? "bg-red-500" : "bg-blue-500"}`}
+                style={{ width: `${Math.min(usagePercentage, 100)}%` }}
+              ></div>
+          </div>
+      </div>
+
       {/* Upload Area */}
       <div className="p-4">
           {!showManualInput ? (
@@ -112,12 +136,12 @@ export const BasemapManager = ({ onClose, onZoomToLayer }: { onClose: () => void
             className={`
                 border-2 border-dashed rounded-xl p-6 text-center transition-all duration-200 cursor-pointer
                 ${isDragOver ? "border-blue-500 bg-blue-500/10" : "border-white/10 hover:border-white/30 bg-white/5"}
-                ${isUploading ? "opacity-50 pointer-events-none" : ""}
+                ${isUploading || isQuotaFull ? "opacity-50 pointer-events-none" : ""}
             `}
             onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
             onDragLeave={() => setIsDragOver(false)}
             onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => !isQuotaFull && fileInputRef.current?.click()}
           >
               <input 
                 type="file" 
@@ -125,12 +149,23 @@ export const BasemapManager = ({ onClose, onZoomToLayer }: { onClose: () => void
                 className="hidden" 
                 accept=".tif,.tiff,.pdf"
                 onChange={handleFileSelect}
+                disabled={isUploading || isQuotaFull}
               />
               
               {isUploading ? (
                   <div className="flex flex-col items-center gap-2">
                       <Loader2 className="animate-spin text-blue-400" size={32} />
                       <span className="text-sm font-medium text-blue-300">Uploading & Processing...</span>
+                  </div>
+              ) : isQuotaFull ? (
+                  <div className="flex flex-col items-center gap-2">
+                      <AlertCircle className="text-red-400" size={32} />
+                      <span className="text-sm font-bold text-red-300">
+                          Storage Limit Reached
+                      </span>
+                      <span className="text-[10px] text-gray-500 text-center max-w-[200px]">
+                          Delete existing maps to free up space.
+                      </span>
                   </div>
               ) : (
                   <div className="flex flex-col items-center gap-2">
@@ -139,7 +174,7 @@ export const BasemapManager = ({ onClose, onZoomToLayer }: { onClose: () => void
                           Click or Drag File here
                       </span>
                       <span className="text-[10px] text-gray-500 text-center max-w-[200px]">
-                          Supported: GeoTIFF (.tif) or GeoPDF. Max 150MB. WGS84 Required.
+                          Supported: GeoTIFF (.tif) or GeoPDF. Max 150MB (Original Size). WGS84 Required.
                       </span>
                   </div>
               )}
@@ -258,7 +293,7 @@ export const BasemapManager = ({ onClose, onZoomToLayer }: { onClose: () => void
                           </button>
                           <button 
                             onClick={() => {
-                                if (confirm("Delete this basemap?")) deleteBasemap(map.id);
+                                setDeleteConfirmationId(map.id);
                             }}
                             className="p-1.5 rounded-md bg-white/5 text-gray-500 hover:text-red-400 transition-colors"
                             title="Delete"
@@ -281,7 +316,7 @@ export const BasemapManager = ({ onClose, onZoomToLayer }: { onClose: () => void
                   </div>
 
                   <div className="flex items-center justify-between text-[10px] text-gray-500 mb-2">
-                      <span>{(map.file_size / 1024 / 1024).toFixed(2)} MB</span>
+                      <span>{(map.file_size / 1024 / 1024).toFixed(2)} MB (convert size by 360)</span>
                       <span>{new Date(map.created_at).toLocaleDateString()}</span>
                   </div>
 
@@ -306,6 +341,41 @@ export const BasemapManager = ({ onClose, onZoomToLayer }: { onClose: () => void
               </div>
           ))}
       </div>
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmationId && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className="bg-[#1e293b] border border-white/10 rounded-2xl shadow-2xl max-w-sm w-full p-6 transform transition-all scale-100 opacity-100 animate-in fade-in zoom-in-95 duration-200">
+                <div className="flex flex-col items-center text-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center">
+                        <Trash2 size={24} className="text-red-500" />
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-bold text-white mb-1">Delete Basemap?</h3>
+                        <p className="text-sm text-gray-400">
+                            Are you sure you want to delete <span className="text-white font-medium">"{basemaps.find(b => b.id === deleteConfirmationId)?.name}"</span>? This action cannot be undone.
+                        </p>
+                    </div>
+                    <div className="flex gap-3 w-full mt-2">
+                        <button 
+                            onClick={() => setDeleteConfirmationId(null)}
+                            className="flex-1 py-2.5 bg-white/5 hover:bg-white/10 text-white text-sm font-medium rounded-xl transition-colors cursor-pointer"
+                        >
+                            Cancel
+                        </button>
+                        <button 
+                            onClick={() => {
+                                if (deleteConfirmationId) deleteBasemap(deleteConfirmationId);
+                                setDeleteConfirmationId(null);
+                            }}
+                            className="flex-1 py-2.5 bg-red-600 hover:bg-red-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-red-500/20 transition-all active:scale-[0.98] cursor-pointer"
+                        >
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 };
