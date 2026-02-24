@@ -291,109 +291,154 @@ export const SurveyorPanel = () => {
                 </button>
               </div>
 
-              {/* Points List */}
-              <div className="space-y-3 mb-4">
-                {activeGroup.points.map((p, idx) => (
-                  <div
-                    key={p.id}
-                    className="relative pl-4 border-l-2 border-yellow-500/50"
-                  >
-                    <div className="flex justify-between items-start">
-                      {editingPointId === p.id ? (
-                        <div className="flex gap-1 flex-1 mr-2">
-                          <input
-                            autoFocus
-                            value={tempPointName}
-                            onChange={(e) => setTempPointName(e.target.value)}
-                            onBlur={() => savePointName(activeGroup.id, p.id)}
-                            onKeyDown={(e) =>
-                              e.key === "Enter" &&
-                              savePointName(activeGroup.id, p.id)
-                            }
-                            className="bg-white/10 border border-yellow-500/50 rounded px-2 py-0.5 text-[10px] w-full text-white outline-none"
-                          />
-                          <button
-                            onClick={() => savePointName(activeGroup.id, p.id)}
-                            className="text-green-400 p-1 hover:bg-white/10 rounded cursor-pointer"
-                          >
-                            <Check size={12} />
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 group/point-name">
-                          <span
-                            className={`text-[10px] font-bold uppercase tracking-tighter truncate max-w-[100px] ${p.name ? "text-indigo-300" : "text-yellow-200/70"}`}
-                          >
-                            {p.name || `Point ${idx + 1}`}
-                          </span>
-                          <button
-                            onClick={() => startEditingPoint(p, idx)}
-                            className="text-gray-500 hover:text-white transition-colors"
-                          >
-                            <Edit2 size={10} />
-                          </button>
-                        </div>
-                      )}
-
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => copyCoords(p)}
-                          className="cursor-pointer p-1 rounded text-gray-400 hover:bg-white/10
-   active:scale-70 transition-all active:ring-2 active:ring-blue-400/50"
-                          title="Copy Coordinates"
-                        >
-                          <Copy size={10} />
-                        </button>
-                        <button
-                          onClick={() => removePoint(activeGroup.id, p.id)}
-                          className="cursor-pointer p-1 hover:bg-red-500/20 text-red-400/70 rounded"
-                          title="Remove Point"
-                        >
-                          <X size={10} />
-                        </button>
-                      </div>
-                    </div>
-                    <div className="text-[10px] text-gray-300 grid grid-cols-1 gap-1">
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Lat:</span>
-                        <span>
-                          {p.lat.toFixed(5)} ({toDMS(p.lat, true)})
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Lng:</span>
-                        <span>
-                          {p.lng.toFixed(5)} ({toDMS(p.lng, false)})
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Elev:</span>
-                        <span>{p.elevation.toFixed(1)} mdpl</span>
-                      </div>
-                    </div>
-
-                    {idx < activeGroup.points.length - 1 && (
-                      <div className="mt-2 bg-white/5 p-2 rounded border border-white/10 shadow-inner">
-                        <DataCard p1={p} p2={activeGroup.points[idx + 1]} />
-                      </div>
-                    )}
-                  </div>
-                ))}
+              {/* Section Header */}
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-1 h-3 bg-blue-500 rounded"></div>
+                <h2 className="font-bold text-xs text-white uppercase tracking-wider">
+                  Survey Data Points
+                </h2>
               </div>
 
-              {activeGroup.points.length > 0 ? (
+              {/* Table Header */}
+              <div className="flex bg-gray-800/80 text-[8px] text-gray-400 p-2 rounded-t border-b border-gray-700 uppercase tracking-wider font-semibold">
+                <div className="w-4">#</div>
+                <div className="flex-1 pl-2">Point Name</div>
+                <div className="w-16 text-right">Coords</div>
+              </div>
+
+              {/* Table Body */}
+              <div className="bg-black/20 rounded-b min-h-[100px] border border-white/5 border-t-0 p-1">
+                {activeGroup.points.length > 0 ? (
+                  <div className="space-y-3">
+                    {activeGroup.points.map((p, idx) => (
+                      <div
+                        key={p.id}
+                        className="relative pl-3 border-l-2 border-yellow-500/50 pt-1"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="text-[10px] text-gray-500 font-mono w-4 shrink-0">
+                            {idx + 1}
+                          </div>
+                          {editingPointId === p.id ? (
+                            <div className="flex gap-1 flex-1 mr-2 min-w-0">
+                              <input
+                                autoFocus
+                                value={tempPointName}
+                                onChange={(e) =>
+                                  setTempPointName(e.target.value)
+                                }
+                                onBlur={() =>
+                                  savePointName(activeGroup.id, p.id)
+                                }
+                                onKeyDown={(e) =>
+                                  e.key === "Enter" &&
+                                  savePointName(activeGroup.id, p.id)
+                                }
+                                className="bg-white/10 border border-yellow-500/50 rounded px-1 py-0.5 text-[10px] w-full text-white outline-none"
+                              />
+                              <button
+                                onClick={() =>
+                                  savePointName(activeGroup.id, p.id)
+                                }
+                                className="text-green-400 p-1 hover:bg-white/10 rounded cursor-pointer shrink-0"
+                              >
+                                <Check size={12} />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2 group/point-name flex-1 min-w-0">
+                              <span
+                                className={`text-[10px] font-bold uppercase tracking-tighter truncate ${p.name ? "text-indigo-300" : "text-yellow-200/70"}`}
+                              >
+                                {p.name || `Point ${idx + 1}`}
+                              </span>
+                              <button
+                                onClick={() => startEditingPoint(p, idx)}
+                                className="text-gray-500 hover:text-white transition-colors shrink-0"
+                              >
+                                <Edit2 size={10} />
+                              </button>
+                            </div>
+                          )}
+
+                          <div className="flex gap-1 shrink-0 ml-1">
+                            <button
+                              onClick={() => copyCoords(p)}
+                              className="cursor-pointer p-1 rounded text-gray-400 hover:bg-white/10 active:scale-70 transition-all"
+                              title="Copy Coordinates"
+                            >
+                              <Copy size={10} />
+                            </button>
+                            <button
+                              onClick={() => removePoint(activeGroup.id, p.id)}
+                              className="cursor-pointer p-1 hover:bg-red-500/20 text-red-400/70 rounded"
+                              title="Remove Point"
+                            >
+                              <X size={10} />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="text-[9px] text-gray-400 font-mono mt-1 pl-4">
+                          <div>
+                            {p.lat.toFixed(5)}, {p.lng.toFixed(5)}
+                          </div>
+                          <div className="text-yellow-500/80">
+                            {p.elevation.toFixed(1)} m
+                          </div>
+                        </div>
+
+                        {idx < activeGroup.points.length - 1 && (
+                          <div className="mt-2 ml-4 bg-white/5 p-1.5 rounded border border-white/10 shadow-inner">
+                            <DataCard
+                              p1={p}
+                              p2={activeGroup.points[idx + 1]}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-8 opacity-60">
+                    <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center mb-3 border border-gray-700">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-gray-400"
+                      >
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                      </svg>
+                    </div>
+                    <div className="text-center">
+                      <h4 className="text-white font-bold text-xs mb-1">
+                        No Survey Data Available
+                      </h4>
+                      <p className="text-[10px] text-gray-500 max-w-[150px] mx-auto leading-tight">
+                        {isPlotMode
+                          ? "Click anywhere on the map to add your first point"
+                          : "Start Plotting to begin your survey"}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {activeGroup.points.length > 0 && (
                 <button
                   onClick={() => clearPoints(activeGroup.id)}
                   className="w-full py-2 bg-red-600/10 hover:bg-red-600/20 text-red-400/80 text-[10px] rounded border border-red-500/20 transition-colors mt-4"
                 >
                   Clear Points
                 </button>
-              ) : (
-                <div className="text-center text-[10px] text-gray-500 py-8 italic">
-                  {isPlotMode
-                    ? "Click on map to add points"
-                    : "Start Plotting to add points"}
-                </div>
               )}
             </div>
           ) : (

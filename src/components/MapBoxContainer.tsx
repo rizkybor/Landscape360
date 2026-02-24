@@ -288,13 +288,14 @@ const MapBoxContainerComponent = ({
     }, 100);
   }, [setCenter, setZoom, setPitch, setBearing, setBounds, mode, mapRef]);
 
+  // Detect mobile device for initial configuration
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
-
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   // Throttle store updates to prevent UI lag on mobile
   const lastStoreUpdate = useRef(0);
@@ -719,7 +720,9 @@ const MapBoxContainerComponent = ({
       <Map
         ref={mapRef}
         mapboxAccessToken={MAPBOX_TOKEN}
-        preserveDrawingBuffer={true} // CRITICAL: Required for html2canvas/export to capture map image
+        // PERFORMANCE: Disable preserveDrawingBuffer on mobile to save memory (prevents force close)
+        // Trade-off: Screenshot/Canvas export won't work on mobile, but native OS screenshot works fine.
+        preserveDrawingBuffer={!isMobile} 
         initialViewState={{
           longitude: center[0],
           latitude: center[1],
@@ -727,6 +730,16 @@ const MapBoxContainerComponent = ({
           pitch: mode === "3D" ? pitch : 0,
           bearing: bearing,
         }}
+        // PERFORMANCE: Limit pixel ratio on high-DPI mobile screens (Retina/OLED)
+        // Rendering 3x/4x on mobile kills GPU. Cap at 2x or 1.5x.
+        // Note: react-map-gl passes extra props to mapbox-gl constructor if not in its prop types? 
+        // Actually, we might need to handle this carefully.
+        // Mapbox GL JS default is window.devicePixelRatio.
+        // We can't easily change it via prop in react-map-gl v7 without 'mapLib' or custom logic, 
+        // but let's try setting it if supported, otherwise rely on CSS scaling.
+        // actually, react-map-gl doesn't expose pixelRatio in MapProps. 
+        // We can force it via style or just rely on disabling heavy features.
+        
         minZoom={2}
         maxZoom={20}
         onMoveStart={handleMoveStart}
@@ -747,13 +760,17 @@ const MapBoxContainerComponent = ({
         antialias={!isMobile} // Disable antialiasing on mobile for performance
         style={{ width: "100%", height: "100%" }}
         mapStyle={mapStyle}
-        terrain={{
-          source: "mapbox-dem",
-          exaggeration: mode === "3D" ? elevationExaggeration : 0.0001, // Keep a tiny value in 2D to enable elevation queries
-        }}
+        terrain={
+          // PERFORMANCE: Only load terrain source if strictly needed (3D mode) or on Desktop
+          // Mobile 2D mode should avoid loading terrain tiles to save bandwidth/memory
+          (mode === "3D" || !isMobile) ? {
+            source: "mapbox-dem",
+            exaggeration: mode === "3D" ? elevationExaggeration : 0.0001, 
+          } : undefined
+        }
         maxPitch={85}
         fog={
-          mode === "3D"
+          mode === "3D" && !isMobile // Disable fog on mobile for performance
             ? ({
                 range: [0.5, 10],
                 color: "white",
