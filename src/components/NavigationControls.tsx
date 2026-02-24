@@ -379,18 +379,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         overlay.innerHTML = `
             <!-- Top Header -->
             <div style="display: flex; justify-content: space-between; align-items: start;">
-                <div style="display: flex; align-items: center; gap: ${16 * scale}px; background: rgba(0,0,0,0.6); padding: ${16 * scale}px ${24 * scale}px; border-radius: ${16 * scale}px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.15);">
-                    <img src="${geoportalLogo}" style="width: ${48 * scale}px; height: ${48 * scale}px; object-fit: contain;" />
-                    <div>
-                        <h1 style="color: white; font-family: 'Inter', sans-serif; font-weight: 800; font-size: ${24 * scale}px; line-height: 1; margin: 0; letter-spacing: -0.02em;">Landscape 360</h1>
-                        <p style="color: #60a5fa; font-family: 'Inter', monospace; font-size: ${12 * scale}px; margin: ${4 * scale}px 0 0 0; letter-spacing: 0.1em; text-transform: uppercase;">Professional Survey Report</p>
-                    </div>
-                </div>
-                
-                <div style="background: rgba(0,0,0,0.6); padding: ${12 * scale}px ${20 * scale}px; border-radius: ${12 * scale}px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.15); text-align: right;">
-                    <div style="color: white; font-family: 'Inter', monospace; font-size: ${14 * scale}px; font-weight: bold;">${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
-                    <div style="color: #9ca3af; font-family: 'Inter', monospace; font-size: ${12 * scale}px;">${new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</div>
-                </div>
+               
             </div>
 
             <!-- Bottom Footer -->
