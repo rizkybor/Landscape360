@@ -6,6 +6,7 @@ import {
   formatDegrees,
   formatDistance,
   toDMS,
+  toUTM
 } from "../utils/surveyUtils";
 import {
   Trash2,
@@ -169,8 +170,6 @@ export const SurveyorPanel = () => {
         </h3>
 
         <div className="flex gap-1 md:gap-2 items-center">
-        
-
           {user && (
             <button
               onClick={() => saveCurrentSurvey()}
@@ -379,20 +378,56 @@ export const SurveyorPanel = () => {
                           </div>
                         </div>
                         <div className="text-[9px] text-gray-400 font-mono mt-1 pl-4">
-                          <div>
-                            {p.lat.toFixed(5)}, {p.lng.toFixed(5)}
+                          {/* <div>
+                            {p.lat.toFixed(5)} ({toDMS(p.lat, true)}), {p.lng.toFixed(5)} ({toDMS(p.lng, false)})
                           </div>
                           <div className="text-yellow-500/80">
                             {p.elevation.toFixed(1)} m
+                          </div> */}
+                          {/* Koordinat Geografis */}
+                          <div className="flex justify-between items-start">
+                            <span className="text-green-200 uppercase tracking-wide">
+                              DMS
+                            </span>
+                            <span className="text-green-200 text-right">
+                              {toDMS(p.lat, true)}, {toDMS(p.lng, false)}
+                            </span>
+                          </div>
+
+                          {/* Koordinat UTM (Decimal) */}
+                          <div className="flex justify-between items-start">
+                            <span className="text-blue-300 uppercase tracking-wide">
+                              UTM
+                            </span>
+                            <span className="text-blue-300 text-right">
+                              {toUTM(p.lat, p.lng)}
+                            </span>
+                          </div>
+
+                          {/* Koordinat UTM (Decimal) */}
+                          <div className="flex justify-between items-start">
+                            <span className="text-yellow-400 uppercase tracking-wide">
+                              DD
+                            </span>
+                            <span className="text-yellow-400 text-right">
+                              {p.lat.toFixed(5)}, {p.lng.toFixed(5)}
+                            </span>
+                          </div>
+
+                          {/* Elevation */}
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-400 uppercase tracking-wide">
+                              Elev
+                            </span>
+                            <span className="text-gray-400 font-semibold text-right">
+                              {p.elevation.toFixed(1)} m
+                            </span>
                           </div>
                         </div>
 
                         {idx < activeGroup.points.length - 1 && (
                           <div className="mt-2 ml-4 bg-white/5 p-1.5 rounded border border-white/10 shadow-inner">
-                            <DataCard
-                              p1={p}
-                              p2={activeGroup.points[idx + 1]}
-                            />
+                            <DataCard p1={p} p2={activeGroup.points[idx + 1]} />
                           </div>
                         )}
                       </div>
@@ -443,7 +478,9 @@ export const SurveyorPanel = () => {
             </div>
           ) : (
             <div className="p-8 text-center">
-              <p className="text-xs text-gray-500 mb-4">No surveys/markers yet</p>
+              <p className="text-xs text-gray-500 mb-4">
+                No surveys/markers yet
+              </p>
               <button
                 onClick={createGroup}
                 className="w-full py-2 bg-blue-600 text-white rounded-lg text-xs font-bold shadow-lg shadow-blue-600/30"
