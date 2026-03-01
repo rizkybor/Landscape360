@@ -934,20 +934,9 @@ export const AuthControl = () => {
                         Enterprise
                       </span>
                     </div>
-                    <div className="flex items-end gap-2 mb-1">
-                      <span className="text-xs text-gray-500 line-through decoration-red-500/50 decoration-1">
-                        Rp 165.000
-                      </span>
-                    </div>
-                    <h3 className="text-xl font-bold text-white mb-1">
-                      Rp 110.000
-                      <span className="text-xs font-normal text-gray-500">
-                        /bln
-                      </span>
+                    <h3 className="text-xl font-bold text-white mb-6">
+                      Available Upon Request
                     </h3>
-                    <p className="text-xs text-gray-400 mb-6">
-                      Maximum power & support
-                    </p>
 
                     <ul className="space-y-2 text-xs text-gray-300 mb-6 flex-1">
                       <li className="flex gap-2">
