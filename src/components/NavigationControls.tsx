@@ -875,7 +875,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                         <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">View Settings</span>
                         <button 
                             onClick={() => setShowCompassMenu(false)}
-                            className="text-gray-400 hover:text-white transition-colors"
+                            className="cursor-pointer text-gray-400 hover:text-white transition-colors"
                         >
                             <X size={16} />
                         </button>
@@ -924,7 +924,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                     {/* Reset Button */}
                     <button
                         onClick={handleResetNorth}
-                        className="w-full py-2 text-xs font-bold text-blue-400 hover:text-blue-300 hover:bg-white/5 rounded-lg transition-colors text-right"
+                        className="cursor-pointer w-full py-2 flex items-center justify-center text-xs font-bold text-blue-400 hover:text-blue-300 hover:bg-white/5 rounded-lg transition-colors text-right"
                     >
                         Reset to north
                     </button>
