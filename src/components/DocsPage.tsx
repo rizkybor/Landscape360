@@ -1405,24 +1405,10 @@ export const DocsPage = ({ onBack }: Props) => {
                   <span className="text-xs font-bold px-2 py-1 bg-cyan-900/30 text-cyan-400 rounded uppercase tracking-wider border border-cyan-500/20">
                     Enterprise
                   </span>
-                  <span className="text-[10px] font-bold px-2 py-1 bg-red-500/20 text-red-400 rounded uppercase tracking-wider border border-red-500/20 animate-pulse">
-                    Promo
-                  </span>
-                </div>
-                <div className="flex items-end gap-2 mb-1">
-                  <span className="text-sm text-gray-500 line-through decoration-red-500/50 decoration-1">
-                    Rp 165.000
-                  </span>
-                </div>
-                <h4 className="text-2xl font-bold text-white mb-1">
-                  Rp 110.000
-                  <span className="text-sm font-normal text-gray-500">
-                    /bln
-                  </span>
+                </div>   
+                <h4 className="text-2xl font-bold text-white mb-6">
+                  Available Upon Request
                 </h4>
-                <p className="text-xs text-gray-400 mb-6">
-                  Maximum power & support
-                </p>
 
                 <ul className="space-y-3 mb-8 flex-1">
                   <li className="flex items-center gap-2 text-xs text-gray-300">
