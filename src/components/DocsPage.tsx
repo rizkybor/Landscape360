@@ -1359,7 +1359,7 @@ export const DocsPage = ({ onBack }: Props) => {
                   </span>
                 </div>
                 <h4 className="text-2xl font-bold text-white mb-1">
-                  Rp 55.000
+                  Rp 10.000
                   <span className="text-sm font-normal text-gray-500">
                     /bln
                   </span>

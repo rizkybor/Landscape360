@@ -883,7 +883,7 @@ export const AuthControl = () => {
                       </span>
                     </div>
                     <h3 className="text-xl font-bold text-white mb-1">
-                      Rp 55.000
+                      Rp 10.000
                       <span className="text-xs font-normal text-gray-500">
                         /bln
                       </span>
