@@ -101,7 +101,7 @@ describe('RegionDrawingOverlay', () => {
     expect(explanation).toHaveTextContent(/is limited to/i);
     
     // Check Prices
-    expect(screen.getByText('Rp 55.000')).toBeInTheDocument();
+    expect(screen.getByText('Rp 10.000')).toBeInTheDocument();
     expect(screen.getByText('Rp 110.000')).toBeInTheDocument();
 
     // Check default selection

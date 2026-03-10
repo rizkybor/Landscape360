@@ -309,7 +309,7 @@ export const RegionDrawingOverlay = () => {
                              {selectedUpgradePlan === 'Pro' && <div className="absolute top-2 right-2 w-2 h-2 bg-blue-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>}
                              <div className="text-left">
                                  <div className="text-xs font-bold text-blue-400 mb-1">PRO PLAN</div>
-                                 <div className="text-lg font-bold text-white mb-1">Rp 55.000<span className="text-[10px] text-gray-400 font-normal">/bln</span></div>
+                                 <div className="text-lg font-bold text-white mb-1">Rp 10.000<span className="text-[10px] text-gray-400 font-normal">/bln</span></div>
                                  <div className="text-[10px] text-gray-400">Up to 10 MB / download</div>
                              </div>
                          </button>
