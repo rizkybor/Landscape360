@@ -596,6 +596,9 @@ export const DocsPage = ({ onBack }: Props) => {
                   <span className="px-2 py-1 rounded bg-green-500/20 text-[10px] text-green-400 font-bold uppercase border border-green-500/30">
                     Live Now
                   </span>
+                  <span className="px-2 py-1 rounded bg-green-500/20 text-[10px] text-green-400 font-bold uppercase border border-green-500/30">
+                    Pro
+                  </span>
                 </div>
 
                 <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-6 relative overflow-hidden group hover:border-green-500/30 transition-all duration-300">

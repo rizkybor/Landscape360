@@ -1387,11 +1387,6 @@ const GetStartedModal = ({
                 desc: "Toggle contours and adjust exaggeration to visualize elevation details.",
               },
               {
-                icon: <Wifi size={18} />,
-                title: "Offline Maps",
-                desc: "Download map areas for use without internet connection. Perfect for remote field surveys.",
-              },
-              {
                 icon: <Download size={18} />,
                 title: "Export & Capture",
                 desc: (
@@ -1424,13 +1419,18 @@ const GetStartedModal = ({
                 desc: "Enter Navigator Mode to plot points and measure Azimuth/Back-Azimuth.",
               },
               {
+                icon: <Wifi size={18} />,
+                title: "Offline Maps [Pro Account]",
+                desc: "Download map areas for use without internet connection. Perfect for remote field surveys.",
+              },
+              {
                 icon: <Navigation size={18} />,
-                title: "GPS Tracking & Monitoring",
+                title: "GPS Tracking & Monitoring [Enterprise Account]",
                 desc: "Click the GPS button to broadcast your location or monitor teams (Enterprise). Features Smart Reconnect for signal loss.",
               },
               {
                 icon: <Layers size={18} />,
-                title: "Custom Basemaps",
+                title: "Custom Basemaps [Enterprise Account]",
                 desc: "Upload your own GeoTIFF/GeoPDF maps as overlays. Supports manual georeferencing and opacity control. (Enterprise & Monitor360 only)",
               },
             ].map((item, i) => (
