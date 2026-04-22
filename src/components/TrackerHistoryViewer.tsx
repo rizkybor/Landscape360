@@ -26,14 +26,15 @@ interface TrackerLog {
   profiles?: { email: string } | null;
 }
 
-// Session Summary Type
-interface SessionSummary {
-    date: string;
-    count: number;
-    startTime: string;
-    endTime: string;
-    user_id: string;
-    email?: string;
+interface ActivitySummary {
+  session_id: string;
+  user_id: string;
+  started_at: string;
+  ended_at: string | null;
+  distance_m: number;
+  point_count: number;
+  last_point_at: string | null;
+  email?: string;
 }
 
 const toDMS = (deg: number, isLat: boolean): string => {
@@ -53,8 +54,8 @@ export const TrackerHistoryViewer = () => {
   const { setViewingSession, viewingSession, isSessionVisible, setSessionVisible } = useTrackerStore();
   
   const [isOpen, setIsOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'sessions' | 'logs'>('sessions');
-  const [sessions, setSessions] = useState<SessionSummary[]>([]);
+  const [viewMode, setViewMode] = useState<'activities' | 'logs'>('activities');
+  const [activities, setActivities] = useState<ActivitySummary[]>([]);
   
   const [logs, setLogs] = useState<TrackerLog[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -77,38 +78,35 @@ export const TrackerHistoryViewer = () => {
 
   if (!canAccess || !user) return null;
 
-  // --- Session Logic ---
+  // --- Activity Logic ---
   
-  const [sessionPage, setSessionPage] = useState(0);
-  const [hasMoreSessions, setHasMoreSessions] = useState(true);
-  const SESSION_LIMIT = 20;
+  const [activityPage, setActivityPage] = useState(0);
+  const [hasMoreActivities, setHasMoreActivities] = useState(true);
+  const ACTIVITY_LIMIT = 20;
 
-  // Fetch Sessions (Grouped by Date using RPC)
-  const fetchSessions = useCallback(async (isLoadMore = false) => {
+  const fetchActivities = useCallback(async (isLoadMore = false) => {
       setIsLoading(true);
       try {
-          // Use RPC function for server-side grouping and pagination
-          const { data, error } = await supabase.rpc('get_tracker_sessions', {
+          const { data, error } = await supabase.rpc('get_tracker_activity_sessions', {
              p_user_id: userRole === 'monitor360' && selectedUserFilter !== 'all' ? selectedUserFilter : null,
-             p_limit: SESSION_LIMIT,
-             p_offset: isLoadMore ? (sessionPage + 1) * SESSION_LIMIT : 0
+             p_limit: ACTIVITY_LIMIT,
+             p_offset: isLoadMore ? (activityPage + 1) * ACTIVITY_LIMIT : 0
           });
 
           if (error) throw error;
 
           if (!data || data.length === 0) {
-              if (!isLoadMore) setSessions([]);
-              setHasMoreSessions(false);
+              if (!isLoadMore) setActivities([]);
+              setHasMoreActivities(false);
               return;
           }
 
-          if (data.length < SESSION_LIMIT) {
-              setHasMoreSessions(false);
+          if (data.length < ACTIVITY_LIMIT) {
+              setHasMoreActivities(false);
           } else {
-              setHasMoreSessions(true);
+              setHasMoreActivities(true);
           }
 
-          // Fetch profiles for users in sessions
           const uniqueUserIds = Array.from(new Set(data.map((s: any) => s.user_id)));
           const { data: profileData } = await supabase
             .from("profiles")
@@ -118,54 +116,57 @@ export const TrackerHistoryViewer = () => {
           const profileMap = new Map();
           profileData?.forEach((p: any) => profileMap.set(p.id, p));
 
-          const sessionList = data.map((s: any) => ({
-              date: s.session_date,
-              count: s.point_count,
-              startTime: s.start_time,
-              endTime: s.end_time,
-              user_id: s.user_id,
-              email: profileMap.get(s.user_id)?.email
+          const activityList: ActivitySummary[] = data.map((s: any) => ({
+            session_id: s.session_id,
+            user_id: s.user_id,
+            started_at: s.started_at,
+            ended_at: s.ended_at,
+            distance_m: Number(s.distance_m || 0),
+            point_count: Number(s.point_count || 0),
+            last_point_at: s.last_point_at,
+            email: profileMap.get(s.user_id)?.email
           }));
 
-          setSessions(prev => isLoadMore ? [...prev, ...sessionList] : sessionList);
-          // if (isLoadMore) setSessionPage(prev => prev + 1); // Removed: handled by handleScroll -> useEffect
+          setActivities(prev => isLoadMore ? [...prev, ...activityList] : activityList);
 
       } catch (err) {
-          console.error("Error fetching sessions:", err);
+          console.error("Error fetching activities:", err);
       } finally {
           setIsLoading(false);
       }
-  }, [user, userRole, selectedUserFilter, sessionPage]);
+  }, [userRole, selectedUserFilter, activityPage]);
 
-  // Load Session to Map
-  const handleLoadSession = async (session: SessionSummary) => {
+  const handleLoadActivity = async (activity: ActivitySummary) => {
       setIsLoading(true);
       try {
-          // Fetch full points for this session (Day)
-          // We add a buffer to the day range to be safe
-          const startOfDay = `${session.date}T00:00:00`;
-          const endOfDay = `${session.date}T23:59:59`;
-
           const { data, error } = await supabase
             .from("tracker_logs")
             .select("*")
-            .eq("user_id", session.user_id)
-            .gte("timestamp", startOfDay)
-            .lte("timestamp", endOfDay)
+            .eq("session_id", activity.session_id)
+            .eq("user_id", activity.user_id)
             .order("timestamp", { ascending: true });
 
           if (error) throw error;
 
           if (data && data.length > 0) {
-              // @ts-ignore - Map supabase types to TrackerPacket
-              setViewingSession(data);
+              const packets = data.map((row: any) => ({
+                user_id: String(row.user_id),
+                lat: row.lat,
+                lng: row.lng,
+                alt: row.elevation || 0,
+                speed: row.speed || 0,
+                battery: row.battery ?? 100,
+                timestamp: row.timestamp,
+                status: 'active'
+              }));
+              setViewingSession(packets as any);
               setIsOpen(false); // Close panel to view map
           } else {
-              alert("No points found for this session.");
+              alert("No points found for this activity.");
           }
       } catch (err) {
-          console.error("Failed to load session:", err);
-          alert("Failed to load session data.");
+          console.error("Failed to load activity:", err);
+          alert("Failed to load activity data.");
       } finally {
           setIsLoading(false);
       }
@@ -463,10 +464,10 @@ export const TrackerHistoryViewer = () => {
   useEffect(() => {
     setPage(0);
     setHasMore(true);
-    setSessionPage(0);
-    setHasMoreSessions(true);
-    if (viewMode === 'sessions') {
-        fetchSessions(false);
+    setActivityPage(0);
+    setHasMoreActivities(true);
+    if (viewMode === 'activities') {
+        fetchActivities(false);
     } else {
         fetchLogs(false);
     }
@@ -481,12 +482,10 @@ export const TrackerHistoryViewer = () => {
 
   // Load More Sessions
   useEffect(() => {
-      if (sessionPage > 0 && viewMode === 'sessions') {
-          // This useEffect might be redundant if we call fetchSessions directly in handleScroll, 
-          // but sticking to the pattern: state change triggers fetch
-          fetchSessions(true);
+      if (activityPage > 0 && viewMode === 'activities') {
+          fetchActivities(true);
       }
-  }, [sessionPage, viewMode]);
+  }, [activityPage, viewMode]);
 
   // Infinite Scroll Handler
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -494,18 +493,8 @@ export const TrackerHistoryViewer = () => {
       if (scrollHeight - scrollTop <= clientHeight + 50 && !isLoading) {
           if (viewMode === 'logs' && hasMore) {
               setPage(prev => prev + 1);
-          } else if (viewMode === 'sessions' && hasMoreSessions) {
-              // Note: sessionPage is incremented AFTER fetch success in fetchSessions to avoid race conditions 
-              // or we can increment here. 
-              // Current pattern: fetchLogs increments page in handleScroll -> useEffect calls fetch.
-              // fetchSessions logic I wrote: "if (isLoadMore) setSessionPage(prev => prev + 1);" INSIDE fetchSessions.
-              // This is conflicting. Let's align them.
-              
-              // REFACTOR: Let's use the same pattern as Logs.
-              // Increment page here, and let useEffect trigger fetch.
-              // BUT fetchSessions implementation above uses sessionPage for offset calculation.
-              // So we should increment it here.
-              setSessionPage(prev => prev + 1); // This will trigger useEffect
+          } else if (viewMode === 'activities' && hasMoreActivities) {
+              setActivityPage(prev => prev + 1);
           }
       }
   };
@@ -562,10 +551,10 @@ export const TrackerHistoryViewer = () => {
             {/* View Mode Toggle */}
             <div className="flex bg-slate-100 p-0.5 rounded-lg mr-2">
                 <button
-                    onClick={() => setViewMode('sessions')}
-                    className={`cursor-pointer px-2 py-1 text-[10px] font-bold rounded-md transition-all ${viewMode === 'sessions' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                    onClick={() => setViewMode('activities')}
+                    className={`cursor-pointer px-2 py-1 text-[10px] font-bold rounded-md transition-all ${viewMode === 'activities' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                 >
-                    Sessions
+                    Activities
                 </button>
                 <button
                     onClick={() => setViewMode('logs')}
@@ -578,8 +567,8 @@ export const TrackerHistoryViewer = () => {
             {/* Manual Refresh Button */}
             <button
               onClick={() => {
-                  if (viewMode === 'sessions') {
-                      fetchSessions();
+                  if (viewMode === 'activities') {
+                      fetchActivities();
                   } else {
                       setPage(0);
                       setHasMore(true);
@@ -645,8 +634,8 @@ export const TrackerHistoryViewer = () => {
             style={{ height: '350px' }} // Approx height for 5-6 rows
             onScroll={handleScroll}
         >
-          {/* --- SESSIONS VIEW --- */}
-          {viewMode === 'sessions' && (
+          {/* --- ACTIVITIES VIEW --- */}
+          {viewMode === 'activities' && (
               <div className="p-2 space-y-2">
                   {/* Clear View Button if Session Active */}
                   {viewingSession && (
@@ -675,38 +664,47 @@ export const TrackerHistoryViewer = () => {
                       </div>
                   )}
 
-                  {isLoading && sessions.length === 0 ? (
+                  {isLoading && activities.length === 0 ? (
                       <div className="flex flex-col items-center justify-center h-40 text-slate-400 gap-2">
                           <RefreshCw size={24} className="animate-spin" />
-                          <span className="text-xs">Loading sessions...</span>
+                          <span className="text-xs">Loading activities...</span>
                       </div>
-                  ) : sessions.length === 0 ? (
+                  ) : activities.length === 0 ? (
                       <div className="text-center py-8 text-slate-400">
                           <Calendar size={32} className="mx-auto mb-2 opacity-20" />
-                          <p className="text-xs">No recorded sessions found.</p>
+                          <p className="text-xs">No recorded activities found.</p>
                       </div>
                   ) : (
-                      sessions.map((session, idx) => (
+                      activities.map((activity, idx) => (
                           <div key={idx} className="bg-white border border-slate-100 rounded-xl p-3 hover:border-blue-200 transition-all shadow-sm hover:shadow-md group">
                               <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-3">
                                       <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex flex-col items-center justify-center border border-indigo-100">
-                                          <span className="text-[10px] font-bold uppercase">{new Date(session.date).toLocaleString('en-US', { month: 'short' })}</span>
-                                          <span className="text-sm font-bold leading-none">{new Date(session.date).getDate()}</span>
+                                          <span className="text-[10px] font-bold uppercase">{new Date(activity.started_at).toLocaleString('en-US', { month: 'short' })}</span>
+                                          <span className="text-sm font-bold leading-none">{new Date(activity.started_at).getDate()}</span>
                                       </div>
                                       <div>
                                           <h4 className="text-sm font-bold text-slate-800">
-                                              {session.email ? session.email.split('@')[0] : 'User Session'}
+                                              {activity.email ? activity.email.split('@')[0] : 'Activity'}
                                           </h4>
                                           <div className="flex items-center gap-2 text-[10px] text-slate-500">
-                                              <span>{new Date(session.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - {new Date(session.endTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                              <span>
+                                                {new Date(activity.started_at).toLocaleTimeString([], { hour: '2-digit', minute:'2-digit' })}
+                                                {activity.ended_at ? ` - ${new Date(activity.ended_at).toLocaleTimeString([], { hour: '2-digit', minute:'2-digit' })}` : ''}
+                                              </span>
                                               <span>•</span>
-                                              <span>{session.count} points</span>
+                                              <span>{activity.point_count} points</span>
+                                              {activity.distance_m > 0 && (
+                                                <>
+                                                  <span>•</span>
+                                                  <span>{(activity.distance_m / 1000).toFixed(2)} km</span>
+                                                </>
+                                              )}
                                           </div>
                                       </div>
                                   </div>
                                   <button 
-                                    onClick={() => handleLoadSession(session)}
+                                    onClick={() => handleLoadActivity(activity)}
                                     className="cursor-pointer p-2 rounded-full bg-slate-50 text-slate-400 group-hover:bg-blue-500 group-hover:text-white transition-colors"
                                     title="View on Map"
                                   >
@@ -717,15 +715,15 @@ export const TrackerHistoryViewer = () => {
                       ))
                   )}
                   {/* Loading Indicator for Infinite Scroll */}
-              {isLoading && sessions.length > 0 && (
+              {isLoading && activities.length > 0 && (
                   <div className="p-4 flex justify-center items-center text-slate-400 gap-2 text-xs">
                       <RefreshCw size={14} className="animate-spin" /> Loading more...
                   </div>
               )}
               
-              {!hasMoreSessions && sessions.length > 0 && (
+              {!hasMoreActivities && activities.length > 0 && (
                   <div className="p-4 text-center text-[10px] text-slate-300 uppercase tracking-widest font-medium">
-                      No more sessions
+                      No more activities
                   </div>
               )}
           </div>

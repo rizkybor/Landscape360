@@ -25,6 +25,8 @@ import {
   Binoculars,
   MapPin,
   Layers,
+  Play,
+  Square,
 } from "lucide-react";
 import geoportalLogo from "../assets/geoportal360.png";
 import streetsView from "../assets/Street-View.png";
@@ -78,6 +80,14 @@ export const ControlPanel = () => {
     toggleLocalBroadcast,
     connectionStatus,
     trackers,
+    isActivityRecording,
+    activitySessionId,
+    activityStartedAt,
+    activityEndedAt,
+    activityDistanceM,
+    activityPointCount,
+    startActivity,
+    stopActivity,
   } = useTrackerStore();
 
   const { isManagerOpen, toggleManager } = useCustomBasemapStore();
@@ -116,10 +126,33 @@ export const ControlPanel = () => {
 
   const [showGetStarted, setShowGetStarted] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [activityNow, setActivityNow] = useState(() => Date.now());
   const [isJoystickDragging, setIsJoystickDragging] = useState(false);
   const [isOpen, setIsOpen] = useState(true);
   const [isTerrainScrolled, setIsTerrainScrolled] = useState(false);
   const [isTerrainControlsOpen, setIsTerrainControlsOpen] = useState(false);
+
+  const canRecordActivity =
+    Boolean(user) &&
+    userRole === "pengguna360" &&
+    subscriptionStatus === "Pro";
+  const isActivityPendingSave =
+    !isActivityRecording && Boolean(activitySessionId && activityEndedAt);
+
+  const formatDuration = (seconds: number) => {
+    const s = Math.max(0, Math.floor(seconds));
+    const hh = Math.floor(s / 3600);
+    const mm = Math.floor((s % 3600) / 60);
+    const ss = s % 60;
+    if (hh > 0) return `${hh}:${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
+    return `${mm}:${String(ss).padStart(2, "0")}`;
+  };
+
+  useEffect(() => {
+    if (!isActivityRecording) return;
+    const id = setInterval(() => setActivityNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [isActivityRecording]);
 
   // Swipe Down to Close Logic (Mobile)
   const touchStart = useRef<number | null>(null);
@@ -738,6 +771,56 @@ export const ControlPanel = () => {
                       </div>
                     </div>
                   )}
+
+                  {canRecordActivity && (
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-gray-400">
+                          Record Activity
+                        </span>
+                        <span className={`text-[10px] ${isActivityRecording ? "text-green-300" : isActivityPendingSave ? "text-amber-300" : "text-gray-500"}`}>
+                          {isActivityRecording ? "Recording" : isActivityPendingSave ? "Saving..." : "Ready"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="text-[10px] text-gray-300 font-mono tabular-nums">
+                          {activityStartedAt
+                            ? formatDuration((activityNow - activityStartedAt) / 1000)
+                            : "0:00"}
+                        </div>
+                        <div className="text-[10px] text-gray-400 tabular-nums">
+                          {(activityDistanceM / 1000).toFixed(2)} km
+                        </div>
+                        <div className="text-[10px] text-gray-500 tabular-nums">
+                          {activityPointCount} pts
+                        </div>
+                        {!isActivityRecording ? (
+                          <button
+                            disabled={isActivityPendingSave}
+                            onClick={() => {
+                              if (!isLiveTrackingEnabled) setLiveTracking(true);
+                              if (!isLocalBroadcastEnabled) toggleLocalBroadcast();
+                              startActivity();
+                            }}
+                            className="cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-green-500/15 text-green-200 border border-green-500/25 hover:bg-green-500/25 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                            title="Start Activity"
+                          >
+                            <Play size={12} />
+                            <span className="text-[10px] font-bold">Start</span>
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => stopActivity()}
+                            className="cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-red-500/15 text-red-200 border border-red-500/25 hover:bg-red-500/25 transition-colors"
+                            title="Stop Activity"
+                          >
+                            <Square size={12} />
+                            <span className="text-[10px] font-bold">Stop</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -806,6 +889,50 @@ export const ControlPanel = () => {
                         <div
                           className={`w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-transform ${isLocalBroadcastEnabled ? "translate-x-3.5" : ""}`}
                         />
+                      </div>
+                    </div>
+                  )}
+
+                  {canRecordActivity && (
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-gray-400">
+                          Record Activity
+                        </span>
+                        <span className={`text-[10px] ${isActivityRecording ? "text-green-300" : isActivityPendingSave ? "text-amber-300" : "text-gray-500"}`}>
+                          {isActivityRecording ? "Recording" : isActivityPendingSave ? "Saving..." : "Ready"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="text-[10px] text-gray-300 font-mono tabular-nums">
+                          {activityStartedAt
+                            ? formatDuration((activityNow - activityStartedAt) / 1000)
+                            : "0:00"}
+                        </div>
+                        {!isActivityRecording ? (
+                          <button
+                            disabled={isActivityPendingSave}
+                            onClick={() => {
+                              if (!isLiveTrackingEnabled) setLiveTracking(true);
+                              if (!isLocalBroadcastEnabled) toggleLocalBroadcast();
+                              startActivity();
+                            }}
+                            className="cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-green-500/15 text-green-200 border border-green-500/25 hover:bg-green-500/25 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                            title="Start Activity"
+                          >
+                            <Play size={12} />
+                            <span className="text-[10px] font-bold">Start</span>
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => stopActivity()}
+                            className="cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-red-500/15 text-red-200 border border-red-500/25 hover:bg-red-500/25 transition-colors"
+                            title="Stop Activity"
+                          >
+                            <Square size={12} />
+                            <span className="text-[10px] font-bold">Stop</span>
+                          </button>
+                        )}
                       </div>
                     </div>
                   )}
