@@ -6,6 +6,11 @@ import type { TrackerPacket } from '../types/tracker';
 import { supabase } from '../lib/supabaseClient';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
+type WakeLockSentinel = {
+  released: boolean;
+  release: () => Promise<void>;
+};
+
 /* ======================================================
    ROUTE CONFIG (MULTI WAYPOINT)
 ====================================================== */
@@ -108,6 +113,11 @@ export const useTrackerService = () => {
   const lastDbLogRef = useRef<number>(0);
   const latestPacketRef = useRef<TrackerPacket | null>(null);
   const lastLogPosRef = useRef<{ lat: number; lng: number } | null>(null);
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+  const lastGpsFixAtRef = useRef<number>(0);
+  const gpsWatchdogRef = useRef<NodeJS.Timeout | null>(null);
+  const startLocalWatchRef = useRef<(() => void) | null>(null);
+  const restartLocalWatchRef = useRef<(() => void) | null>(null);
 
   // --- HELPER: SAVE TO LOCAL BUFFER ---
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -224,6 +234,73 @@ export const useTrackerService = () => {
     return () => window.removeEventListener('online', handleOnline);
   }, [flushBuffer]);
 
+  const releaseWakeLock = useCallback(async () => {
+    const sentinel = wakeLockRef.current;
+    wakeLockRef.current = null;
+    if (!sentinel) return;
+    try {
+      await sentinel.release();
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const requestWakeLock = useCallback(async () => {
+    if (document.visibilityState !== 'visible') return;
+    if (wakeLockRef.current && !wakeLockRef.current.released) return;
+    try {
+      const wakeLock = (navigator as any)?.wakeLock;
+      if (!wakeLock?.request) return;
+      const sentinel = (await wakeLock.request('screen')) as WakeLockSentinel;
+      wakeLockRef.current = sentinel;
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isLiveTrackingEnabled) return;
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        requestWakeLock();
+        flushBuffer();
+
+        const now = Date.now();
+        if (isLocalBroadcastEnabled && user && now - lastGpsFixAtRef.current > 90_000) {
+          restartLocalWatchRef.current?.();
+        } else if (isLocalBroadcastEnabled && user && watchIdRef.current === null) {
+          startLocalWatchRef.current?.();
+        }
+      } else {
+        releaseWakeLock();
+      }
+    };
+
+    const handlePageHide = () => {
+      releaseWakeLock();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('pageshow', handleVisibility);
+    window.addEventListener('pagehide', handlePageHide);
+    handleVisibility();
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('pageshow', handleVisibility);
+      window.removeEventListener('pagehide', handlePageHide);
+      releaseWakeLock();
+    };
+  }, [
+    flushBuffer,
+    isLiveTrackingEnabled,
+    isLocalBroadcastEnabled,
+    releaseWakeLock,
+    requestWakeLock,
+    user
+  ]);
+
   useEffect(() => {
 
     /* ==============================
@@ -233,6 +310,12 @@ export const useTrackerService = () => {
     if (!isLiveTrackingEnabled) {
       if (intervalRef.current) clearInterval(intervalRef.current);
       if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+      if (gpsWatchdogRef.current) clearInterval(gpsWatchdogRef.current);
+      gpsWatchdogRef.current = null;
+      startLocalWatchRef.current = null;
+      restartLocalWatchRef.current = null;
+      releaseWakeLock();
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
@@ -307,7 +390,7 @@ export const useTrackerService = () => {
           });
 
           // If I am a Monitor, ask everyone to report immediately
-          if (userRole === 'monitor360' || subscriptionStatus === 'Enterprise') {
+          if (userRole === 'monitor360' && subscriptionStatus === 'Enterprise') {
               console.log("Monitor Joined - Requesting Heartbeat...");
               channel.send({
                   type: 'broadcast',
@@ -320,7 +403,6 @@ export const useTrackerService = () => {
           setConnectionStatus('error');
         }
       });
-
       channelRef.current = channel;
     } else {
         // Channel already exists, but check if we need to re-subscribe due to role change?
@@ -368,8 +450,12 @@ export const useTrackerService = () => {
     if (isLocalBroadcastEnabled && navigator.geolocation && user) {
       console.log("Starting Local GPS Broadcast..."); // Debug Log
 
-      watchIdRef.current = navigator.geolocation.watchPosition(
-        (position) => {
+      const startLocalWatch = () => {
+        if (!navigator.geolocation || !user) return;
+        if (watchIdRef.current !== null) return;
+
+        watchIdRef.current = navigator.geolocation.watchPosition(
+          (position) => {
           const { latitude, longitude, altitude, speed } = position.coords;
 
           if (!user || !user.id) {
@@ -394,6 +480,7 @@ export const useTrackerService = () => {
 
           addOrUpdateTracker(myPacket);
           latestPacketRef.current = myPacket;
+          lastGpsFixAtRef.current = Date.now();
 
           // --- LOGGING TO DATABASE ---
           const isAccuracyGood = position.coords.accuracy < 1000;
@@ -452,15 +539,39 @@ export const useTrackerService = () => {
             
             lastBroadcastRef.current = now;
           }
-        },
-        (error) => {
+          },
+          (error) => {
           console.warn("GPS Error", error);
           if (error.code === 1) {
               // alert("GPS Permission Denied."); // Don't spam alert
           }
-        },
-        { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 }
-      );
+          },
+          { enableHighAccuracy: true, maximumAge: 3000, timeout: 20000 }
+        );
+      };
+
+      const restartLocalWatch = () => {
+        if (!navigator.geolocation) return;
+        if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+        startLocalWatch();
+      };
+
+      startLocalWatchRef.current = startLocalWatch;
+      restartLocalWatchRef.current = restartLocalWatch;
+      startLocalWatch();
+      requestWakeLock();
+
+      if (!gpsWatchdogRef.current) {
+        gpsWatchdogRef.current = setInterval(() => {
+          if (!isLiveTrackingEnabled || !isLocalBroadcastEnabled) return;
+          if (!user) return;
+          const now = Date.now();
+          if (lastGpsFixAtRef.current && now - lastGpsFixAtRef.current > 90_000) {
+            restartLocalWatch();
+          }
+        }, 30_000);
+      }
     }
 
     /* ==============================
@@ -470,6 +581,12 @@ export const useTrackerService = () => {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
       if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+      if (gpsWatchdogRef.current) clearInterval(gpsWatchdogRef.current);
+      gpsWatchdogRef.current = null;
+      startLocalWatchRef.current = null;
+      restartLocalWatchRef.current = null;
+      releaseWakeLock();
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
@@ -486,6 +603,8 @@ export const useTrackerService = () => {
     userRole,
     setConnectionStatus,
     subscriptionStatus,
-    logLocationToDb
+    logLocationToDb,
+    releaseWakeLock,
+    requestWakeLock
   ]);
 };
