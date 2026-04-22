@@ -24,6 +24,18 @@ interface TrackerStore {
   setViewingSession: (packets: TrackerPacket[] | null) => void;
   isSessionVisible: boolean;
   setSessionVisible: (visible: boolean) => void;
+
+  isActivityRecording: boolean;
+  activitySessionId: string | null;
+  activityStartedAt: number | null;
+  activityEndedAt: number | null;
+  activityDistanceM: number;
+  activityPointCount: number;
+  startActivity: () => { sessionId: string; startedAt: number };
+  stopActivity: () => void;
+  clearActivity: () => void;
+  setActivityStats: (distanceM: number, pointCount: number) => void;
+  hydrateActivity: () => void;
 }
 
 export const useTrackerStore = create<TrackerStore>((set) => ({
@@ -35,6 +47,12 @@ export const useTrackerStore = create<TrackerStore>((set) => ({
   connectionStatus: 'disconnected',
   viewingSession: null,
   isSessionVisible: true,
+  isActivityRecording: false,
+  activitySessionId: null,
+  activityStartedAt: null,
+  activityEndedAt: null,
+  activityDistanceM: 0,
+  activityPointCount: 0,
 
   addOrUpdateTracker: (packet) => {
     set((state) => {
@@ -88,4 +106,109 @@ export const useTrackerStore = create<TrackerStore>((set) => ({
   setConnectionStatus: (status) => set({ connectionStatus: status }),
   setViewingSession: (packets) => set({ viewingSession: packets, isSessionVisible: true }),
   setSessionVisible: (visible) => set({ isSessionVisible: visible }),
+
+  startActivity: () => {
+    const sessionId = crypto.randomUUID();
+    const startedAt = Date.now();
+    const payload = JSON.stringify({ sessionId, startedAt });
+    localStorage.setItem('L360_ACTIVITY_ACTIVE', payload);
+    set({
+      isActivityRecording: true,
+      activitySessionId: sessionId,
+      activityStartedAt: startedAt,
+      activityEndedAt: null,
+      activityDistanceM: 0,
+      activityPointCount: 0
+    });
+    return { sessionId, startedAt };
+  },
+
+  stopActivity: () => {
+    const endedAt = Date.now();
+    set((state) => {
+      if (!state.activitySessionId || !state.activityStartedAt) {
+        localStorage.removeItem('L360_ACTIVITY_ACTIVE');
+        localStorage.removeItem('L360_ACTIVITY_PENDING_END');
+        return {
+          isActivityRecording: false,
+          activitySessionId: null,
+          activityStartedAt: null,
+          activityEndedAt: null
+        };
+      }
+
+      localStorage.removeItem('L360_ACTIVITY_ACTIVE');
+      localStorage.setItem(
+        'L360_ACTIVITY_PENDING_END',
+        JSON.stringify({
+          sessionId: state.activitySessionId,
+          startedAt: state.activityStartedAt,
+          endedAt,
+          distanceM: state.activityDistanceM,
+          pointCount: state.activityPointCount
+        })
+      );
+
+      return {
+        isActivityRecording: false,
+        activityEndedAt: endedAt
+      };
+    });
+  },
+
+  clearActivity: () => {
+    localStorage.removeItem('L360_ACTIVITY_ACTIVE');
+    localStorage.removeItem('L360_ACTIVITY_PENDING_END');
+    set({
+      isActivityRecording: false,
+      activitySessionId: null,
+      activityStartedAt: null,
+      activityEndedAt: null,
+      activityDistanceM: 0,
+      activityPointCount: 0
+    });
+  },
+
+  setActivityStats: (distanceM, pointCount) => set({ activityDistanceM: distanceM, activityPointCount: pointCount }),
+
+  hydrateActivity: () => {
+    try {
+      const raw = localStorage.getItem('L360_ACTIVITY_ACTIVE');
+      if (raw) {
+        const parsed = JSON.parse(raw) as { sessionId?: string; startedAt?: number };
+        if (parsed?.sessionId && parsed?.startedAt) {
+          set({
+            isActivityRecording: true,
+            activitySessionId: parsed.sessionId,
+            activityStartedAt: parsed.startedAt,
+            activityEndedAt: null
+          });
+        }
+      }
+
+      const pending = localStorage.getItem('L360_ACTIVITY_PENDING_END');
+      if (pending) {
+        const parsed = JSON.parse(pending) as {
+          sessionId?: string;
+          startedAt?: number;
+          endedAt?: number;
+          distanceM?: number;
+          pointCount?: number;
+        };
+        if (parsed?.sessionId && parsed?.startedAt && parsed?.endedAt) {
+          set({
+            isActivityRecording: false,
+            activitySessionId: parsed.sessionId,
+            activityStartedAt: parsed.startedAt,
+            activityEndedAt: parsed.endedAt,
+            activityDistanceM: typeof parsed.distanceM === 'number' ? parsed.distanceM : 0,
+            activityPointCount: typeof parsed.pointCount === 'number' ? parsed.pointCount : 0
+          });
+        }
+      }
+    } catch {
+      localStorage.removeItem('L360_ACTIVITY_ACTIVE');
+      localStorage.removeItem('L360_ACTIVITY_PENDING_END');
+    }
+  }
 }));

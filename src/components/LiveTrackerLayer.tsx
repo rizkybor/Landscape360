@@ -266,20 +266,46 @@ export const LiveTrackerLayer = ({ mapRef }: { mapRef?: React.RefObject<MapRef |
   const sessionGeoJSON = useMemo(() => {
     if (!viewingSession || viewingSession.length < 2) return null;
 
+    const start = viewingSession[0];
+    const end = viewingSession[viewingSession.length - 1];
+
     return {
       type: 'FeatureCollection',
-      features: [{
-        type: 'Feature',
-        geometry: {
-          type: 'LineString',
-          coordinates: viewingSession.map(p => [p.lng, p.lat])
+      features: [
+        {
+          type: 'Feature',
+          geometry: {
+            type: 'LineString',
+            coordinates: viewingSession.map(p => [p.lng, p.lat])
+          },
+          properties: {
+            user_id: viewingSession[0]?.user_id || 'session',
+            kind: 'path',
+            color: '#3b82f6',
+            opacity: 0.8
+          }
         },
-        properties: {
-          user_id: viewingSession[0]?.user_id || 'session',
-          color: '#3b82f6', // Solid Blue
-          opacity: 0.8
+        {
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: [start.lng, start.lat]
+          },
+          properties: {
+            kind: 'start'
+          }
+        },
+        {
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: [end.lng, end.lat]
+          },
+          properties: {
+            kind: 'end'
+          }
         }
-      }]
+      ]
     };
   }, [viewingSession]);
 
@@ -346,7 +372,7 @@ export const LiveTrackerLayer = ({ mapRef }: { mapRef?: React.RefObject<MapRef |
                     'circle-opacity': isSessionVisible ? 1 : 0,
                     'circle-stroke-opacity': isSessionVisible ? 1 : 0
                 }}
-                filter={['==', '$type', 'Point']}
+                filter={['==', ['get', 'kind'], 'start']}
             />
             {/* End Point */}
              <Layer
@@ -360,7 +386,7 @@ export const LiveTrackerLayer = ({ mapRef }: { mapRef?: React.RefObject<MapRef |
                     'circle-opacity': isSessionVisible ? 1 : 0,
                     'circle-stroke-opacity': isSessionVisible ? 1 : 0
                 }}
-                filter={['==', '$type', 'Point']}
+                filter={['==', ['get', 'kind'], 'end']}
             />
         </Source>
       )}
