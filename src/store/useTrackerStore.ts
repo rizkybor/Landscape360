@@ -24,6 +24,9 @@ interface TrackerStore {
   setViewingSession: (packets: TrackerPacket[] | null) => void;
   isSessionVisible: boolean;
   setSessionVisible: (visible: boolean) => void;
+  isTrackingListsOpen: boolean;
+  setTrackingListsOpen: (open: boolean) => void;
+  toggleTrackingLists: () => void;
 
   isActivityRecording: boolean;
   activitySessionId: string | null;
@@ -47,6 +50,7 @@ export const useTrackerStore = create<TrackerStore>((set) => ({
   connectionStatus: 'disconnected',
   viewingSession: null,
   isSessionVisible: true,
+  isTrackingListsOpen: false,
   isActivityRecording: false,
   activitySessionId: null,
   activityStartedAt: null,
@@ -99,13 +103,44 @@ export const useTrackerStore = create<TrackerStore>((set) => ({
 
   selectTracker: (userId) => set({ selectedTrackerId: userId }),
 
-  toggleLiveTracking: () => set((state) => ({ isLiveTrackingEnabled: !state.isLiveTrackingEnabled })),
-  setLiveTracking: (enabled) => set({ isLiveTrackingEnabled: enabled }),
+  toggleLiveTracking: () =>
+    set((state) => {
+      const next = !state.isLiveTrackingEnabled;
+      if (next) return { isLiveTrackingEnabled: true };
+
+      if (state.isActivityRecording) {
+        return { isLiveTrackingEnabled: false, isTrackingListsOpen: false };
+      }
+
+      return {
+        isLiveTrackingEnabled: false,
+        isTrackingListsOpen: false,
+        isLocalBroadcastEnabled: false,
+        isSimulationEnabled: false,
+      };
+    }),
+  setLiveTracking: (enabled) =>
+    set((state) => {
+      if (enabled) return { isLiveTrackingEnabled: true };
+
+      if (state.isActivityRecording) {
+        return { isLiveTrackingEnabled: false, isTrackingListsOpen: false };
+      }
+
+      return {
+        isLiveTrackingEnabled: false,
+        isTrackingListsOpen: false,
+        isLocalBroadcastEnabled: false,
+        isSimulationEnabled: false,
+      };
+    }),
   toggleSimulation: () => set((state) => ({ isSimulationEnabled: !state.isSimulationEnabled })),
   toggleLocalBroadcast: () => set((state) => ({ isLocalBroadcastEnabled: !state.isLocalBroadcastEnabled })),
   setConnectionStatus: (status) => set({ connectionStatus: status }),
   setViewingSession: (packets) => set({ viewingSession: packets, isSessionVisible: true }),
   setSessionVisible: (visible) => set({ isSessionVisible: visible }),
+  setTrackingListsOpen: (open) => set({ isTrackingListsOpen: open }),
+  toggleTrackingLists: () => set((state) => ({ isTrackingListsOpen: !state.isTrackingListsOpen })),
 
   startActivity: () => {
     const sessionId = crypto.randomUUID();
