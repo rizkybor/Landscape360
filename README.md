@@ -26,12 +26,13 @@
   - **Interactive Georeferencing**: Visual "Pick on Map" tool with drag/resize/rotate controls for PDF/Image alignment.
   - **Performance Optimized**: Client-side downscaling (max 2500px) and PNG conversion for fast, bandwidth-efficient mobile rendering.
 - **Map Controller**: Intuitive Zoom In/Out buttons and simplified gesture controls for desktop and mobile.
-- **Data Source & Attribution (POIs) **: Toggleable POI (Points of Interest) layer built from independently curated GeoJSON data. Supports clustering for large datasets to ensure optimal map performance and clarity..
+- **Data Source & Attribution (POIs)**: Toggleable POI (Points of Interest) layer built from independently curated GeoJSON data. Optimized for thousands to tens of thousands of POIs using Mapbox clustering + GPU-rendered layers (no DOM marker overload), with click-to-open popup and easy close behavior.
 - **Carousel UI (Mobile)**: Optimized "Tools & Exploration" panel with horizontal swipe interaction for better usability on small screens.
 
 ### 📍 Navigation & Survey
 - **Instant Geolocation**: "Start Your Journey" feature with pre-emptive GPS fetching and zero-delay jump logic.
 - **Navigator Mode**: Precision plotting tools with real-time **Distance**, **Azimuth**, and **Slope** calculations.
+- **Route Planner**: Find the fastest route between two points on the map for **Driving (Toll / No Toll)** and **Walking** using Directions API.
 - **GPS Monitoring**: Real-time location tracking with **Smart Reconnect** technology (auto-buffer during signal loss).
 - **GPS Tracking (Strava UX)**: Record tracks seamlessly as **Activities** (Start/Stop) with real-time distance, points, and timer.
 - **Smart Offline Sync**: Tracks are buffered locally (IndexedDB) during signal loss or airplane mode, then synced seamlessly on reconnect.

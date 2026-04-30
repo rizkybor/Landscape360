@@ -222,6 +222,22 @@ export const DocsPage = ({ onBack }: Props) => {
                 </div>
               </div>
 
+              <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 flex gap-4 items-start group hover:border-cyan-500/30 transition-all">
+                <div className="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-400 shrink-0">
+                  <Map size={16} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-white mb-1">
+                    Route Planner
+                  </h4>
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    Enable <strong>Route</strong> in Tools &amp; Exploration, click the map to set
+                    start/end points, then choose <strong>Driving (Toll / No Toll)</strong> or{" "}
+                    <strong>Walking</strong> to get distance and ETA.
+                  </p>
+                </div>
+              </div>
+
               <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 flex gap-4 items-start group hover:border-indigo-500/30 transition-all">
                 <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 shrink-0">
                   <Layers size={16} />
@@ -246,11 +262,10 @@ export const DocsPage = ({ onBack }: Props) => {
                     Data Source & Attribution (POIs){" "}
                   </h4>
                   <p className="text-xs text-gray-400 leading-relaxed">
-                    This POI dataset is originally compiled and curated from
-                    multiple sources, including personal hiking experiences and
-                    field observations, shared knowledge from fellow hikers and
-                    local communities, and cross-verification with official and
-                    trusted websites.
+                    Curated POIs compiled from field observations, community knowledge,
+                    and verified sources. Optimized for large datasets via clustering
+                    and GPU-rendered layers (no heavy DOM markers). Click a POI to open details,
+                    then click the map or the close button to dismiss.
                   </p>
                 </div>
               </div>
