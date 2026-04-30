@@ -5,19 +5,17 @@ import React, {
   useCallback,
   useEffect,
   Suspense,
+  useMemo,
 } from "react";
 import { BasemapManager } from "./BasemapManager";
 import { GeoreferenceTool } from "./GeoreferenceTool"; // New component
 import { useCustomBasemapStore } from "../store/useCustomBasemapStore";
 import { useSurveyStore } from "../store/useSurveyStore";
-import Map, { Source, Layer, Marker, Popup } from "react-map-gl/mapbox";
+import MapGL, { Source, Layer, Popup } from "react-map-gl/mapbox";
 import type { MapRef, MapMouseEvent } from "react-map-gl/mapbox";
 import { useMapStore } from "../store/useMapStore";
-import { ThreeScene } from "./ThreeScene";
-import { ContourLayer } from "./ContourLayer";
-import { GridDMSLayer } from "./GridDMSLayer";
 import { ControlPanel, TelemetryOverlay } from "./ControlPanel";
-import { PlottingLayer } from "./PlottingLayer";
+import { useRouteStore } from "../store/useRouteStore";
 import { RegionSelectionLayer } from "./RegionSelectionLayer";
 import { SurveyorPanel } from "./SurveyorPanel";
 import { SearchPanel } from "./SearchPanel";
@@ -31,6 +29,36 @@ import myDataLocation from "../data/myDataLocation.json";
 const LiveTrackerLayer = React.lazy(() =>
   import("./LiveTrackerLayer").then((module) => ({
     default: module.LiveTrackerLayer,
+  })),
+);
+
+const ThreeScene = React.lazy(() =>
+  import("./ThreeScene").then((module) => ({
+    default: module.ThreeScene,
+  })),
+);
+
+const ContourLayer = React.lazy(() =>
+  import("./ContourLayer").then((module) => ({
+    default: module.ContourLayer,
+  })),
+);
+
+const GridDMSLayer = React.lazy(() =>
+  import("./GridDMSLayer").then((module) => ({
+    default: module.GridDMSLayer,
+  })),
+);
+
+const PlottingLayer = React.lazy(() =>
+  import("./PlottingLayer").then((module) => ({
+    default: module.PlottingLayer,
+  })),
+);
+
+const RoutePlannerLayer = React.lazy(() =>
+  import("./RoutePlannerLayer").then((module) => ({
+    default: module.RoutePlannerLayer,
   })),
 );
 
@@ -82,7 +110,8 @@ const MapBoxContainerComponent = ({
   const [selectedLocation, setSelectedLocation] = useState<any | null>(null);
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   const { basemaps, loadBasemaps, layerOpacities, isManagerOpen, toggleManager } = useCustomBasemapStore();
-  const { user } = useSurveyStore();
+  const { user, isPlotMode } = useSurveyStore();
+  const isRoutePlannerEnabled = useRouteStore((s) => s.isRoutePlannerEnabled);
 
   useEffect(() => {
     if (user) {
@@ -104,112 +133,44 @@ const MapBoxContainerComponent = ({
 
   const shouldShowMarkers = showCustomLocations && zoom >= 10;
 
-  const locationMarkers = React.useMemo(() => {
-    if (!shouldShowMarkers) return null;
+  const locationById = useMemo(() => {
+    return new Map(myDataLocation.map((l) => [l.id, l] as const));
+  }, []);
 
-    return myDataLocation.map((location) => {
-      const [longitude, latitude] = location.center;
-      const isMountain = location.place_type.includes("mountain");
-      const isCliff = location.place_type.includes("cliff");
-      const isCave = location.place_type.includes("cave");
-      const isRiver = location.place_type.includes("river");
-      const isWater = location.place_type.includes("water");
+  const closeSelectedLocation = useCallback(() => {
+    setIsPopupVisible(false);
+    setTimeout(() => setSelectedLocation(null), 300);
+  }, []);
 
-      return (
-        <Marker
-          key={location.id}
-          longitude={longitude}
-          latitude={latitude}
-          anchor="bottom"
-          onClick={(e) => {
-            e.originalEvent.stopPropagation();
+  const customLocationsGeoJSON = useMemo(() => {
+    return {
+      type: "FeatureCollection",
+      features: myDataLocation.map((location) => ({
+        type: "Feature",
+        geometry: {
+          type: "Point",
+          coordinates: location.center,
+        },
+        properties: {
+          id: location.id,
+          name: location.place_name,
+          kind: location.place_type.includes("mountain")
+            ? "mountain"
+            : location.place_type.includes("cliff")
+              ? "cliff"
+              : location.place_type.includes("cave")
+                ? "cave"
+                : location.place_type.includes("river")
+                  ? "river"
+                  : location.place_type.includes("water")
+                    ? "water"
+                    : "poi",
+        },
+      })),
+    } as const;
+  }, []);
 
-            if (selectedLocation?.id === location.id) {
-              setIsPopupVisible(false);
-              setTimeout(() => setSelectedLocation(null), 300);
-            } else {
-              setSelectedLocation(location);
-
-              const map = mapRef.current?.getMap();
-              if (map) {
-                map.flyTo({
-                  center: [longitude, latitude],
-                  zoom: 16,
-                  essential: true,
-                });
-
-                setCenter([longitude, latitude]);
-                setZoom(16);
-              }
-            }
-          }}
-        >
-          <div className="group relative cursor-pointer">
-            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-white/80 backdrop-blur-sm text-black text-[11px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 border border-white/20">
-              {isMountain || isCliff || isCave || isRiver
-                ? `${location.place_name}, ${location.text}`
-                : isWater
-                  ? `${location.place_name} (${location.text})`
-                  : `${location.place_name}`}
-              <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-black/80"></div>
-            </div>
-
-            <div className="transform transition-all duration-300 ease-out group-hover:scale-110">
-              {isMountain ? (
-                <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center shadow-md hover:shadow-lg border border-green-300 backdrop-blur-sm">
-                  <img
-                    src="/mountain.svg"
-                    alt="Mountain"
-                    className="w-10 h-10 object-contain"
-                  />
-                </div>
-              ) : isCliff ? (
-                <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shadow-md hover:shadow-lg border border-red-300 backdrop-blur-sm">
-                  <img
-                    src="/cliff.svg"
-                    alt="Cliff"
-                    className="w-10 h-10 object-contain"
-                  />
-                </div>
-              ) : isCave ? (
-                <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center shadow-md hover:shadow-lg border border-orange-300 backdrop-blur-sm">
-                  <img
-                    src="/cave.svg"
-                    alt="Cave"
-                    className="w-10 h-10 object-contain"
-                  />
-                </div>
-              ) : isRiver ? (
-                <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center shadow-md hover:shadow-lg border border-blue-300 backdrop-blur-sm">
-                  <img
-                    src="/river.svg"
-                    alt="River"
-                    className="w-10 h-10 object-contain"
-                  />
-                </div>
-              ) : isWater ? (
-                <div className="w-10 h-10 rounded-full bg-blue-60 flex items-center justify-center shadow-md hover:shadow-lg border border-blue-200 backdrop-blur-sm">
-                  <img
-                    src="/water.svg"
-                    alt="Water"
-                    className="w-5 h-5 object-contain"
-                  />
-                </div>
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center shadow-md hover:shadow-lg border border-purple-300 backdrop-blur-sm">
-                  <img
-                    src="/house.svg"
-                    alt="Location"
-                    className="w-5 h-5 object-contain"
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        </Marker>
-      );
-    });
-  }, [shouldShowMarkers, selectedLocation?.id, setCenter, setZoom, mapRef]);
+  const shouldHandlePOIClick = showCustomLocations && shouldShowMarkers;
 
   useEffect(() => {
     const handleOnline = () => setIsOffline(false);
@@ -427,9 +388,64 @@ const MapBoxContainerComponent = ({
         }
         const { lng, lat } = evt.lngLat;
         addRegionPoint([lng, lat]);
+        return;
+      }
+
+      if (!shouldHandlePOIClick) return;
+
+      const features = evt.features ?? [];
+      const unclustered = features.find(
+        (f) => (f as any)?.layer?.id === "custom-unclustered",
+      ) as any | undefined;
+      if (unclustered?.properties?.id) {
+        const loc = locationById.get(String(unclustered.properties.id));
+        if (loc) {
+          setSelectedLocation(loc);
+        }
+        return;
+      }
+
+      const clustered = features.find((f) => {
+        const id = (f as any)?.layer?.id;
+        return id === "custom-clusters" || id === "custom-cluster-count";
+      }) as any | undefined;
+      if (clustered?.properties?.cluster_id != null) {
+        const map = mapRef.current?.getMap();
+        const source: any = map?.getSource("custom-locations");
+        if (map && source?.getClusterExpansionZoom) {
+          const clusterId = Number(clustered.properties.cluster_id);
+          const [lng, lat] = (clustered.geometry?.coordinates ?? []) as [
+            number,
+            number,
+          ];
+          source.getClusterExpansionZoom(
+            clusterId,
+            (err: any, expansionZoom: number) => {
+              if (err) return;
+              map.easeTo({
+                center: [lng, lat],
+                zoom: expansionZoom,
+                duration: 500,
+              });
+            },
+          );
+        }
+        return;
+      }
+
+      if (selectedLocation) {
+        closeSelectedLocation();
       }
     },
-    [interactionMode, addRegionPoint],
+    [
+      interactionMode,
+      addRegionPoint,
+      shouldHandlePOIClick,
+      locationById,
+      mapRef,
+      selectedLocation,
+      closeSelectedLocation,
+    ],
   );
 
   // Auto-geolocate on mount (moved to onLoad for reliability)
@@ -717,7 +733,7 @@ const MapBoxContainerComponent = ({
 
   return (
     <div className={`relative w-full h-full ${className || ""}`}>
-      <Map
+      <MapGL
         ref={mapRef}
         mapboxAccessToken={MAPBOX_TOKEN}
         // PERFORMANCE: Disable preserveDrawingBuffer on mobile to save memory (prevents force close)
@@ -748,6 +764,11 @@ const MapBoxContainerComponent = ({
         onClick={handleMapClick}
         onLoad={handleMapLoad}
         onError={handleMapError}
+        interactiveLayerIds={
+          shouldHandlePOIClick
+            ? ["custom-unclustered", "custom-clusters", "custom-cluster-count"]
+            : undefined
+        }
         scrollZoom={true}
         dragPan={true}
         dragRotate={true} // Enable rotation on mobile
@@ -785,13 +806,15 @@ const MapBoxContainerComponent = ({
       >
         {/* Mapbox 3D Terrain & Sky */}
 
-        <Source
-          id="mapbox-dem"
-          type="raster-dem"
-          url="mapbox://mapbox.mapbox-terrain-dem-v1"
-          tileSize={512}
-          maxzoom={14}
-        />
+        {(mode === "3D" || !isMobile) && (
+          <Source
+            id="mapbox-dem"
+            type="raster-dem"
+            url="mapbox://mapbox.mapbox-terrain-dem-v1"
+            tileSize={512}
+            maxzoom={14}
+          />
+        )}
 
         {/* Sky for 3D */}
         {mode === "3D" && (
@@ -816,9 +839,17 @@ const MapBoxContainerComponent = ({
           <GridDMSLayer />
         </Suspense>
 
-        <Suspense fallback={null}>
-          <PlottingLayer />
-        </Suspense>
+        {isPlotMode && (
+          <Suspense fallback={null}>
+            <PlottingLayer />
+          </Suspense>
+        )}
+
+        {isRoutePlannerEnabled && (
+          <Suspense fallback={null}>
+            <RoutePlannerLayer mapboxToken={MAPBOX_TOKEN} />
+          </Suspense>
+        )}
 
         <RegionSelectionLayer />
 
@@ -843,30 +874,41 @@ const MapBoxContainerComponent = ({
         <UserLocationMarker initialLocation={initialLocation} />
 
         {/* Custom Location Markers - GeoJSON + Cluster */}
-        {showCustomLocations && (
+        {showCustomLocations && shouldShowMarkers && (
           <Source
             id="custom-locations"
             type="geojson"
-            data={{
-              type: "FeatureCollection",
-              features: myDataLocation.map((location) => ({
-                type: "Feature",
-                geometry: {
-                  type: "Point",
-                  coordinates: location.center,
-                },
-                properties: {
-                  id: location.id,
-                  place_name: location.place_name,
-                  isMountain: location.place_type.includes("mountain"),
-                  isWater: location.place_type.includes("water"),
-                },
-              })),
-            }}
+            data={customLocationsGeoJSON as any}
             cluster={true}
             clusterRadius={50}
             clusterMaxZoom={14}
           >
+            <Layer
+              id="custom-unclustered"
+              type="circle"
+              filter={["!", ["has", "point_count"]]}
+              paint={{
+                "circle-color": [
+                  "match",
+                  ["get", "kind"],
+                  "mountain",
+                  "#16a34a",
+                  "cliff",
+                  "#f97316",
+                  "cave",
+                  "#a855f7",
+                  "river",
+                  "#0ea5e9",
+                  "water",
+                  "#2563eb",
+                  "#7c3aed",
+                ],
+                "circle-radius": 6,
+                "circle-stroke-width": 2,
+                "circle-stroke-color": "#ffffff",
+                "circle-opacity": 0.95,
+              }}
+            />
             {/* Cluster circles */}
             <Layer
               id="custom-clusters"
@@ -911,9 +953,6 @@ const MapBoxContainerComponent = ({
           </Source>
         )}
 
-        {/* Unclustered points with SVG icons via React Marker */}
-        {locationMarkers}
-
         {/* Selected Location Popup */}
         {selectedLocation && (
           <Popup
@@ -921,11 +960,9 @@ const MapBoxContainerComponent = ({
             latitude={selectedLocation.center[1]}
             anchor="bottom"
             offset={50}
-            onClose={() => {
-              setIsPopupVisible(false);
-              setTimeout(() => setSelectedLocation(null), 300); // Wait for fade out
-            }}
-            closeOnClick={false}
+            onClose={closeSelectedLocation}
+            closeOnClick={true}
+            closeButton={true}
             className="z-50"
             maxWidth="300px"
           >
@@ -936,6 +973,15 @@ const MapBoxContainerComponent = ({
                   : "opacity-0 translate-y-4 scale-95"
               }`}
             >
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={closeSelectedLocation}
+                  className="text-[11px] font-semibold text-gray-600 hover:text-gray-900"
+                >
+                  Close
+                </button>
+              </div>
               <div className="flex items-start gap-3 mb-2">
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
@@ -1029,7 +1075,7 @@ const MapBoxContainerComponent = ({
             pitch={pitch}
           />
         )}
-      </Map>
+      </MapGL>
 
       {showControls && <ControlPanel />}
       {showControls && <TelemetryOverlay mapRef={mapRef} />}
