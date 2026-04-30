@@ -80,8 +80,6 @@ export const ControlPanel = () => {
     toggleLocalBroadcast,
     connectionStatus,
     trackers,
-    isTrackingListsOpen,
-    toggleTrackingLists,
     isActivityRecording,
     activitySessionId,
     activityStartedAt,
@@ -419,7 +417,11 @@ export const ControlPanel = () => {
 
               {/* Tools Carousel for Mobile, Grid for Desktop */}
               <div
-                className={`gap-3 ${isMobile ? "flex overflow-x-auto pb-4 -mx-4 px-4 snap-x snap-mandatory scrollbar-hide" : "grid grid-cols-1"}`}
+                className={`gap-3 ${
+                  isMobile
+                    ? "flex overflow-x-auto pb-4 -mx-4 px-4 snap-x snap-mandatory scrollbar-hide"
+                    : "grid grid-cols-1 max-h-55 overflow-y-auto pr-1"
+                }`}
               >
                 
                 {/* Search Toggle */}
@@ -775,26 +777,6 @@ export const ControlPanel = () => {
                     </div>
                   )}
 
-                  <div
-                    className="flex items-center justify-between group cursor-pointer"
-                    onClick={toggleTrackingLists}
-                  >
-                    <label className="text-[10px] text-gray-400 cursor-pointer group-hover:text-gray-300">
-                      Tracking Lists
-                    </label>
-                    <div
-                      className={`w-7 h-3.5 rounded-full p-0.5 transition-colors ${
-                        isTrackingListsOpen ? "bg-blue-500" : "bg-gray-700"
-                      }`}
-                    >
-                      <div
-                        className={`w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-transform ${
-                          isTrackingListsOpen ? "translate-x-3.5" : ""
-                        }`}
-                      />
-                    </div>
-                  </div>
-
                   {canRecordActivity && (
                     <div className="rounded-lg border border-white/10 bg-white/5 p-2">
                       <div className="flex items-center justify-between gap-3">
@@ -930,26 +912,6 @@ export const ControlPanel = () => {
                       </div>
                     </div>
                   )}
-
-                  <div
-                    className="flex items-center justify-between group cursor-pointer"
-                    onClick={toggleTrackingLists}
-                  >
-                    <label className="text-[10px] text-gray-400 cursor-pointer group-hover:text-gray-300">
-                      Tracking Lists
-                    </label>
-                    <div
-                      className={`w-7 h-3.5 rounded-full p-0.5 transition-colors ${
-                        isTrackingListsOpen ? "bg-blue-500" : "bg-gray-700"
-                      }`}
-                    >
-                      <div
-                        className={`w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-transform ${
-                          isTrackingListsOpen ? "translate-x-3.5" : ""
-                        }`}
-                      />
-                    </div>
-                  </div>
 
                   {canRecordActivity && (
                     <div className="rounded-lg border border-white/10 bg-white/5 p-2">

@@ -624,10 +624,14 @@ export const TrackerHistoryViewer = () => {
   return (
     <>
       {/* Toggle Button - Repositioned to group with Mapbox Controls (Top Right) */}
-      <div className="hidden md:flex absolute top-[270px] right-4.5 flex-col items-center gap-2 z-[20]">
+      <div className="absolute top-[270px] right-4.5 flex flex-col items-center gap-2 z-[20]">
         <button
-          onClick={() => setTrackingListsOpen(true)}
-          className="cursor-pointer w-[40px] h-[40px] bg-white rounded-xl shadow-[0_0_0_2px_rgba(0,0,0,0.1)] flex items-center justify-center text-slate-700 hover:bg-slate-50 active:bg-slate-100 transition-colors border border-slate-300/50"
+          onClick={toggleTrackingLists}
+          className={`cursor-pointer w-[40px] h-[40px] rounded-xl shadow-[0_0_0_2px_rgba(0,0,0,0.1)] flex items-center justify-center transition-colors border ${
+            isTrackingListsOpen
+              ? "bg-slate-900 text-white border-slate-900"
+              : "bg-white text-slate-700 border-slate-300/50 hover:bg-slate-50 active:bg-slate-100"
+          }`}
           title="Tracking Lists"
         >
           <List size={16} strokeWidth={2.5} />
