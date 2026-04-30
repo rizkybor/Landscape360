@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useMapStore } from "../store/useMapStore";
 import { useSurveyStore } from "../store/useSurveyStore";
 import { useTrackerStore } from "../store/useTrackerStore"; // Import Tracker Store
+import { useRouteStore } from "../store/useRouteStore";
 import { useCustomBasemapStore } from "../store/useCustomBasemapStore";
 import { AuthControl } from "./AuthControl";
 import mapboxgl from "mapbox-gl";
@@ -11,6 +12,7 @@ import {
   Activity,
   Monitor,
   Ruler,
+  Route,
   ChevronDown,
   ChevronUp,
   Search,
@@ -66,10 +68,12 @@ export const ControlPanel = () => {
     setShowCustomLocations,
     mapStyle,
     setMapStyle,
+    setInteractionMode,
   } = useMapStore();
 
-  const { isPlotMode, togglePlotMode, user, subscriptionStatus, userRole } =
+  const { isPlotMode, togglePlotMode, setPlotMode, user, subscriptionStatus, userRole } =
     useSurveyStore(); // Get userRole
+  const { isRoutePlannerEnabled, setRoutePlannerEnabled } = useRouteStore();
   const {
     isLiveTrackingEnabled,
     toggleLiveTracking,
@@ -493,6 +497,52 @@ export const ControlPanel = () => {
                         className={`text-[10px] ${isPlotMode ? "text-yellow-200" : "text-gray-500"}`}
                       >
                         {isPlotMode ? "Active" : "Tools"}
+                      </div>
+                    )}
+                  </div>
+                </button>
+
+                {/* Route Planner */}
+                <button
+                  onClick={() => {
+                    if (!isRoutePlannerEnabled) {
+                      if (isPlotMode) setPlotMode(false);
+                      setInteractionMode("default");
+                      setRoutePlannerEnabled(true);
+                      return;
+                    }
+                    setRoutePlannerEnabled(false);
+                  }}
+                  className={`${isMobile ? "flex-none w-28 snap-center h-full" : "col-span-1 w-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
+                    isRoutePlannerEnabled
+                      ? "bg-blue-900/20 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.15)]"
+                      : "bg-white/5 border-white/10 hover:bg-white/10"
+                  } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
+                >
+                  <div
+                    className={`p-2 rounded-lg transition-colors ${
+                      isRoutePlannerEnabled
+                        ? "bg-blue-500 text-white shadow-lg shadow-blue-500/40"
+                        : "bg-white/10 text-gray-400 group-hover:text-white"
+                    } ${isMobile ? "mb-1" : ""}`}
+                  >
+                    <Route size={isMobile ? 18 : 16} />
+                  </div>
+                  <div className="flex-1">
+                    <div
+                      className={`font-bold transition-colors ${
+                        isRoutePlannerEnabled ? "text-white" : "text-gray-300"
+                      } ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
+                    >
+                      Route
+                    </div>
+                    {!isMobile && (
+                      <div
+                        className={`text-[10px] ${
+                          isRoutePlannerEnabled ? "text-blue-200" : "text-gray-500"
+                        }`}
+                      >
+                        {isRoutePlannerEnabled ? "Select 2 Points" : "Directions"}
                       </div>
                     )}
                   </div>
