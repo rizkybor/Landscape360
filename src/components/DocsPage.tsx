@@ -117,7 +117,7 @@ export const DocsPage = ({ onBack }: Props) => {
                   Advanced Land Navigation
                 </span>
                 <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">
-                  Live Path Monitoring
+                  Activity Recording & GPX
                 </span>
                 <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">
                   3D Contour Visualization
@@ -200,8 +200,8 @@ export const DocsPage = ({ onBack }: Props) => {
                     Export & Share
                   </h4>
                   <p className="text-xs text-gray-400 leading-relaxed">
-                    Capture high-res snapshots (PNG/JPG) or generate PDF reports
-                    with embedded telemetry data.
+                    Capture high-res snapshots (PNG/JPG), generate PDF reports, 
+                    or download recorded Tracking Activities as <strong>GPX files</strong>.
                   </p>
                 </div>
               </div>
@@ -212,12 +212,12 @@ export const DocsPage = ({ onBack }: Props) => {
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-white mb-1">
-                    GPS Tracking
+                    Activity Tracking
                   </h4>
                   <p className="text-xs text-gray-400 leading-relaxed">
-                    Click the <strong>GPS Icon</strong> to broadcast your
-                    location (Pro) or monitor field teams (Enterprise). Includes
-                    Smart Reconnect.
+                    Click the <strong>GPS Icon</strong> to broadcast location, 
+                    use <strong>Start Activity</strong> to record trails, and sync seamlessly 
+                    even when offline.
                   </p>
                 </div>
               </div>

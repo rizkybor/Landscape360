@@ -66,6 +66,7 @@ export const TrackerHistoryViewer = () => {
   >([]);
   const [hasMore, setHasMore] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+  const [exportingGPXId, setExportingGPXId] = useState<string | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState<string | null>(null);
   const LIMIT = 20;
 
@@ -169,6 +170,116 @@ export const TrackerHistoryViewer = () => {
           alert("Failed to load activity data.");
       } finally {
           setIsLoading(false);
+      }
+  };
+
+  const exportSessionGPX = async (activity: ActivitySummary) => {
+      setExportingGPXId(activity.session_id);
+      try {
+          const { data, error } = await supabase
+            .from("tracker_logs")
+            .select("*")
+            .eq("session_id", activity.session_id)
+            .eq("user_id", activity.user_id)
+            .order("timestamp", { ascending: true });
+
+          if (error) throw error;
+
+          if (!data || data.length === 0) {
+              alert("No points found for this activity.");
+              return;
+          }
+
+          let gpx = `<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Landscape 360" xmlns="http://www.topografix.com/GPX/1/1">
+  <trk>
+    <name>Activity ${new Date(activity.started_at).toLocaleString('id-ID')}</name>
+    <trkseg>\n`;
+          
+          data.forEach((pt: any) => {
+            gpx += `      <trkpt lat="${pt.lat}" lon="${pt.lng}">
+        <ele>${pt.elevation || 0}</ele>
+        <time>${new Date(pt.timestamp).toISOString()}</time>
+      </trkpt>\n`;
+          });
+          
+          gpx += `    </trkseg>
+  </trk>
+</gpx>`;
+
+          const blob = new Blob([gpx], { type: "application/gpx+xml" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `Activity_${new Date(activity.started_at).toISOString().slice(0, 10)}.gpx`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+      } catch (err) {
+          console.error("Failed to export GPX:", err);
+          alert("Failed to export GPX data.");
+      } finally {
+          setExportingGPXId(null);
+      }
+  };
+
+  const exportAllLogsGPX = async () => {
+      setExportingGPXId('all');
+      try {
+          let query = supabase
+            .from("tracker_logs")
+            .select("id, user_id, lat, lng, elevation, speed, timestamp")
+            .order("timestamp", { ascending: true })
+            .limit(2000); // Reasonable limit for GPX export
+
+          if (userRole !== "monitor360") {
+            if (!user) return;
+            query = query.eq("user_id", user.id);
+          } else if (selectedUserFilter !== "all") {
+            query = query.eq("user_id", selectedUserFilter);
+          }
+
+          const { data, error } = await query;
+
+          if (error) throw error;
+
+          if (!data || data.length === 0) {
+              alert("No points found to export.");
+              return;
+          }
+
+          let gpx = `<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Landscape 360" xmlns="http://www.topografix.com/GPX/1/1">
+  <trk>
+    <name>Tracking Logs ${new Date().toLocaleString('id-ID')}</name>
+    <trkseg>\n`;
+          
+          data.forEach((pt: any) => {
+            gpx += `      <trkpt lat="${pt.lat}" lon="${pt.lng}">
+        <ele>${pt.elevation || 0}</ele>
+        <time>${new Date(pt.timestamp).toISOString()}</time>
+      </trkpt>\n`;
+          });
+          
+          gpx += `    </trkseg>
+  </trk>
+</gpx>`;
+
+          const blob = new Blob([gpx], { type: "application/gpx+xml" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `Tracking_Logs_${new Date().toISOString().slice(0, 10)}.gpx`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+      } catch (err) {
+          console.error("Failed to export GPX:", err);
+          alert("Failed to export GPX data.");
+      } finally {
+          setExportingGPXId(null);
       }
   };
 
@@ -586,14 +697,24 @@ export const TrackerHistoryViewer = () => {
             
             {/* Export PDF (Monitor Only) */}
             {userRole === "monitor360" && viewMode === 'logs' && (
-                <button
-                    onClick={exportPDF}
-                    disabled={isExporting}
-                    className="cursor-pointer p-1.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-red-600 transition-colors disabled:opacity-50"
-                    title="Export to PDF"
-                >
-                    <FileDown size={16} className={isExporting ? "animate-bounce" : ""} />
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                      onClick={exportPDF}
+                      disabled={isExporting}
+                      className="cursor-pointer p-1.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-red-600 transition-colors disabled:opacity-50"
+                      title="Export to PDF"
+                  >
+                      <FileDown size={16} className={isExporting ? "animate-bounce" : ""} />
+                  </button>
+                  <button
+                      onClick={exportAllLogsGPX}
+                      disabled={exportingGPXId === 'all'}
+                      className="cursor-pointer p-1.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-green-600 transition-colors disabled:opacity-50"
+                      title="Export to GPX"
+                  >
+                      <FileDown size={16} className={exportingGPXId === 'all' ? "animate-bounce" : ""} />
+                  </button>
+                </div>
             )}
 
             {/* Monitor Filter */}
@@ -703,13 +824,23 @@ export const TrackerHistoryViewer = () => {
                                           </div>
                                       </div>
                                   </div>
-                                  <button 
-                                    onClick={() => handleLoadActivity(activity)}
-                                    className="cursor-pointer p-2 rounded-full bg-slate-50 text-slate-400 group-hover:bg-blue-500 group-hover:text-white transition-colors"
-                                    title="View on Map"
-                                  >
-                                      <Eye size={18} />
-                                  </button>
+                                  <div className="flex items-center gap-1">
+                                    <button 
+                                      onClick={() => exportSessionGPX(activity)}
+                                      disabled={exportingGPXId === activity.session_id}
+                                      className="cursor-pointer p-2 rounded-full bg-slate-50 text-slate-400 hover:bg-green-500 hover:text-white transition-colors disabled:opacity-50"
+                                      title="Download GPX"
+                                    >
+                                        <FileDown size={18} className={exportingGPXId === activity.session_id ? "animate-bounce" : ""} />
+                                    </button>
+                                    <button 
+                                      onClick={() => handleLoadActivity(activity)}
+                                      className="cursor-pointer p-2 rounded-full bg-slate-50 text-slate-400 hover:bg-blue-500 hover:text-white transition-colors"
+                                      title="View on Map"
+                                    >
+                                        <Eye size={18} />
+                                    </button>
+                                  </div>
                               </div>
                           </div>
                       ))
