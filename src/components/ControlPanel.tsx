@@ -80,6 +80,8 @@ export const ControlPanel = () => {
     toggleLocalBroadcast,
     connectionStatus,
     trackers,
+    isTrackingListsOpen,
+    toggleTrackingLists,
     isActivityRecording,
     activitySessionId,
     activityStartedAt,
@@ -643,7 +645,8 @@ export const ControlPanel = () => {
                       >
                         <button
                           onClick={toggleLiveTracking}
-                          className={`w-full flex items-center cursor-pointer ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
+                          disabled={userRole === "pengguna360" && isActivityRecording}
+                          className={`w-full flex items-center cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
                         >
                           <div
                             className={`p-2 rounded-lg transition-colors ${
@@ -772,37 +775,72 @@ export const ControlPanel = () => {
                     </div>
                   )}
 
+                  <div
+                    className="flex items-center justify-between group cursor-pointer"
+                    onClick={toggleTrackingLists}
+                  >
+                    <label className="text-[10px] text-gray-400 cursor-pointer group-hover:text-gray-300">
+                      Tracking Lists
+                    </label>
+                    <div
+                      className={`w-7 h-3.5 rounded-full p-0.5 transition-colors ${
+                        isTrackingListsOpen ? "bg-blue-500" : "bg-gray-700"
+                      }`}
+                    >
+                      <div
+                        className={`w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-transform ${
+                          isTrackingListsOpen ? "translate-x-3.5" : ""
+                        }`}
+                      />
+                    </div>
+                  </div>
+
                   {canRecordActivity && (
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex flex-col">
-                        <span className="text-[10px] text-gray-400">
-                          Record Activity
-                        </span>
-                        <span className={`text-[10px] ${isActivityRecording ? "text-green-300" : isActivityPendingSave ? "text-amber-300" : "text-gray-500"}`}>
-                          {isActivityRecording ? "Recording" : isActivityPendingSave ? "Saving..." : "Ready"}
-                        </span>
+                    <div className="rounded-lg border border-white/10 bg-white/5 p-2">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] text-gray-300 font-bold">
+                            Record Activity
+                          </span>
+                          <span
+                            className={`text-[10px] ${
+                              isActivityRecording
+                                ? "text-green-300"
+                                : isActivityPendingSave
+                                  ? "text-amber-300"
+                                  : "text-gray-500"
+                            }`}
+                          >
+                            {isActivityRecording
+                              ? "Recording"
+                              : isActivityPendingSave
+                                ? "Saving..."
+                                : "Ready"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-1 rounded-md bg-black/20 text-[10px] text-gray-200 font-mono tabular-nums">
+                            {activityStartedAt
+                              ? formatDuration((activityNow - activityStartedAt) / 1000)
+                              : "0:00"}
+                          </span>
+                          <span className="px-2 py-1 rounded-md bg-black/10 text-[10px] text-gray-300 tabular-nums">
+                            {(activityDistanceM / 1000).toFixed(2)} km
+                          </span>
+                          <span className="px-2 py-1 rounded-md bg-black/10 text-[10px] text-gray-400 tabular-nums">
+                            {activityPointCount} pts
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <div className="text-[10px] text-gray-300 font-mono tabular-nums">
-                          {activityStartedAt
-                            ? formatDuration((activityNow - activityStartedAt) / 1000)
-                            : "0:00"}
-                        </div>
-                        <div className="text-[10px] text-gray-400 tabular-nums">
-                          {(activityDistanceM / 1000).toFixed(2)} km
-                        </div>
-                        <div className="text-[10px] text-gray-500 tabular-nums">
-                          {activityPointCount} pts
-                        </div>
+                      <div className="mt-2 flex justify-end">
                         {!isActivityRecording ? (
                           <button
                             disabled={isActivityPendingSave}
                             onClick={() => {
                               if (!isLiveTrackingEnabled) setLiveTracking(true);
-                              if (!isLocalBroadcastEnabled) toggleLocalBroadcast();
                               startActivity();
                             }}
-                            className="cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-green-500/15 text-green-200 border border-green-500/25 hover:bg-green-500/25 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                            className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-green-500/15 text-green-200 border border-green-500/25 hover:bg-green-500/25 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                             title="Start Activity"
                           >
                             <Play size={12} />
@@ -811,7 +849,7 @@ export const ControlPanel = () => {
                         ) : (
                           <button
                             onClick={() => stopActivity()}
-                            className="cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-red-500/15 text-red-200 border border-red-500/25 hover:bg-red-500/25 transition-colors"
+                            className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-red-500/15 text-red-200 border border-red-500/25 hover:bg-red-500/25 transition-colors"
                             title="Stop Activity"
                           >
                             <Square size={12} />
@@ -893,31 +931,72 @@ export const ControlPanel = () => {
                     </div>
                   )}
 
+                  <div
+                    className="flex items-center justify-between group cursor-pointer"
+                    onClick={toggleTrackingLists}
+                  >
+                    <label className="text-[10px] text-gray-400 cursor-pointer group-hover:text-gray-300">
+                      Tracking Lists
+                    </label>
+                    <div
+                      className={`w-7 h-3.5 rounded-full p-0.5 transition-colors ${
+                        isTrackingListsOpen ? "bg-blue-500" : "bg-gray-700"
+                      }`}
+                    >
+                      <div
+                        className={`w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-transform ${
+                          isTrackingListsOpen ? "translate-x-3.5" : ""
+                        }`}
+                      />
+                    </div>
+                  </div>
+
                   {canRecordActivity && (
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex flex-col">
-                        <span className="text-[10px] text-gray-400">
-                          Record Activity
-                        </span>
-                        <span className={`text-[10px] ${isActivityRecording ? "text-green-300" : isActivityPendingSave ? "text-amber-300" : "text-gray-500"}`}>
-                          {isActivityRecording ? "Recording" : isActivityPendingSave ? "Saving..." : "Ready"}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="text-[10px] text-gray-300 font-mono tabular-nums">
+                    <div className="rounded-lg border border-white/10 bg-white/5 p-2">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] text-gray-300 font-bold">
+                            Record Activity
+                          </span>
+                          <span
+                            className={`text-[10px] ${
+                              isActivityRecording
+                                ? "text-green-300"
+                                : isActivityPendingSave
+                                  ? "text-amber-300"
+                                  : "text-gray-500"
+                            }`}
+                          >
+                            {isActivityRecording
+                              ? "Recording"
+                              : isActivityPendingSave
+                                ? "Saving..."
+                                : "Ready"}
+                          </span>
+                        </div>
+                        <span className="px-2 py-1 rounded-md bg-black/20 text-[10px] text-gray-200 font-mono tabular-nums">
                           {activityStartedAt
                             ? formatDuration((activityNow - activityStartedAt) / 1000)
                             : "0:00"}
+                        </span>
+                      </div>
+                      <div className="mt-2 flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-1 rounded-md bg-black/10 text-[10px] text-gray-300 tabular-nums">
+                            {(activityDistanceM / 1000).toFixed(2)} km
+                          </span>
+                          <span className="px-2 py-1 rounded-md bg-black/10 text-[10px] text-gray-400 tabular-nums">
+                            {activityPointCount} pts
+                          </span>
                         </div>
                         {!isActivityRecording ? (
                           <button
                             disabled={isActivityPendingSave}
                             onClick={() => {
                               if (!isLiveTrackingEnabled) setLiveTracking(true);
-                              if (!isLocalBroadcastEnabled) toggleLocalBroadcast();
                               startActivity();
                             }}
-                            className="cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-green-500/15 text-green-200 border border-green-500/25 hover:bg-green-500/25 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                            className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-green-500/15 text-green-200 border border-green-500/25 hover:bg-green-500/25 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                             title="Start Activity"
                           >
                             <Play size={12} />
@@ -926,7 +1005,7 @@ export const ControlPanel = () => {
                         ) : (
                           <button
                             onClick={() => stopActivity()}
-                            className="cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-red-500/15 text-red-200 border border-red-500/25 hover:bg-red-500/25 transition-colors"
+                            className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-red-500/15 text-red-200 border border-red-500/25 hover:bg-red-500/25 transition-colors"
                             title="Stop Activity"
                           >
                             <Square size={12} />

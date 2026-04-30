@@ -545,9 +545,9 @@ export const useTrackerService = () => {
         flushBuffer();
 
         const now = Date.now();
-        if (isLocalBroadcastEnabled && user && now - lastGpsFixAtRef.current > 90_000) {
+        if ((isLocalBroadcastEnabled || isActivityRecording) && user && now - lastGpsFixAtRef.current > 90_000) {
           restartLocalWatchRef.current?.();
-        } else if (isLocalBroadcastEnabled && user && watchIdRef.current === null) {
+        } else if ((isLocalBroadcastEnabled || isActivityRecording) && user && watchIdRef.current === null) {
           startLocalWatchRef.current?.();
         }
       }
@@ -726,8 +726,8 @@ export const useTrackerService = () => {
        LOCAL GPS BROADCAST
     ============================== */
 
-    if (isLocalBroadcastEnabled && navigator.geolocation && user) {
-      console.log("Starting Local GPS Broadcast..."); // Debug Log
+    if ((isLocalBroadcastEnabled || isActivityRecording) && navigator.geolocation && user) {
+      console.log("Starting Local GPS Watch..."); // Debug Log
 
       const startLocalWatch = () => {
         if (!navigator.geolocation || !user) return;
@@ -818,7 +818,7 @@ export const useTrackerService = () => {
           // Check if channel is ready. 'joined' state check is tricky in JS client, 
           // usually we trust the 'SUBSCRIBED' status callback we handled earlier.
           // We can also check if the socket is open.
-          if (ch && now - lastBroadcastRef.current > 3000) {
+          if (isLocalBroadcastEnabled && ch && now - lastBroadcastRef.current > 3000) {
             // Use display ID for broadcast if needed, or just send packet with full ID
             // Ideally we send myPacket which has user.id. 
             // The frontend receiver splits email/id for display.
@@ -876,7 +876,8 @@ export const useTrackerService = () => {
 
       if (!gpsWatchdogRef.current) {
         gpsWatchdogRef.current = setInterval(() => {
-          if (!isLiveTrackingEnabled || !isLocalBroadcastEnabled) return;
+          if (!isLiveTrackingEnabled) return;
+          if (!isLocalBroadcastEnabled && !isActivityRecording) return;
           if (!user) return;
           const now = Date.now();
           if (lastGpsFixAtRef.current && now - lastGpsFixAtRef.current > 90_000) {
@@ -913,6 +914,7 @@ export const useTrackerService = () => {
     isLiveTrackingEnabled,
     isSimulationEnabled,
     isLocalBroadcastEnabled,
+    isActivityRecording,
     addOrUpdateTracker,
     user,
     userRole,

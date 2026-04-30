@@ -51,9 +51,17 @@ const toDMS = (deg: number, isLat: boolean): string => {
 
 export const TrackerHistoryViewer = () => {
   const { user, userRole, subscriptionStatus } = useSurveyStore();
-  const { setViewingSession, viewingSession, isSessionVisible, setSessionVisible } = useTrackerStore();
+  const {
+    isLiveTrackingEnabled,
+    isTrackingListsOpen,
+    setTrackingListsOpen,
+    toggleTrackingLists,
+    setViewingSession,
+    viewingSession,
+    isSessionVisible,
+    setSessionVisible,
+  } = useTrackerStore();
   
-  const [isOpen, setIsOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'activities' | 'logs'>('activities');
   const [activities, setActivities] = useState<ActivitySummary[]>([]);
   
@@ -78,6 +86,7 @@ export const TrackerHistoryViewer = () => {
   }, [userRole, subscriptionStatus]);
 
   if (!canAccess || !user) return null;
+  if (!isLiveTrackingEnabled) return null;
 
   // --- Activity Logic ---
   
@@ -161,7 +170,7 @@ export const TrackerHistoryViewer = () => {
                 status: 'active'
               }));
               setViewingSession(packets as any);
-              setIsOpen(false); // Close panel to view map
+              setTrackingListsOpen(false);
           } else {
               alert("No points found for this activity.");
           }
@@ -474,7 +483,7 @@ export const TrackerHistoryViewer = () => {
 
   // Fetch unique users for filter (Monitor only) - Decoupled Approach
   useEffect(() => {
-    if (isOpen && userRole === "monitor360") {
+    if (isTrackingListsOpen && userRole === "monitor360") {
       const fetchUsers = async () => {
         // 1. Get recent unique user_ids from logs
         const { data: logData } = await supabase
@@ -509,7 +518,7 @@ export const TrackerHistoryViewer = () => {
       };
       fetchUsers();
     }
-  }, [isOpen, userRole]);
+  }, [isTrackingListsOpen, userRole]);
 
   // Fetch Logs - Decoupled Approach & Memoized
   const fetchLogs = useCallback(async (isLoadMore = false) => {
@@ -615,9 +624,9 @@ export const TrackerHistoryViewer = () => {
   return (
     <>
       {/* Toggle Button - Repositioned to group with Mapbox Controls (Top Right) */}
-      <div className="absolute top-[270px] right-4.5 flex flex-col items-center gap-2 z-[20]">
+      <div className="hidden md:flex absolute top-[270px] right-4.5 flex-col items-center gap-2 z-[20]">
         <button
-          onClick={() => setIsOpen(true)}
+          onClick={() => setTrackingListsOpen(true)}
           className="cursor-pointer w-[40px] h-[40px] bg-white rounded-xl shadow-[0_0_0_2px_rgba(0,0,0,0.1)] flex items-center justify-center text-slate-700 hover:bg-slate-50 active:bg-slate-100 transition-colors border border-slate-300/50"
           title="Tracking Lists"
         >
@@ -627,13 +636,12 @@ export const TrackerHistoryViewer = () => {
 
       {/* Slide-Up Panel (Bottom Sheet) */}
       <div
-        className={`fixed inset-x-0 bottom-0 z-[60] bg-white shadow-[0_-5px_20px_-5px_rgba(0,0,0,0.1)] rounded-t-2xl transition-transform duration-300 ease-out transform ${isOpen ? "translate-y-0" : "translate-y-full"}`}
-        style={{ height: "auto", maxHeight: "60vh" }} // Auto height to fit content, max 60vh
+        className={`fixed inset-x-0 bottom-0 z-[60] bg-white shadow-[0_-5px_20px_-5px_rgba(0,0,0,0.1)] rounded-t-2xl transition-transform duration-300 ease-out transform h-auto max-h-[75vh] md:max-h-[60vh] ${isTrackingListsOpen ? "translate-y-0" : "translate-y-full"}`}
       >
         {/* Drag Handle (Visual Only) */}
         <div
           className="flex justify-center pt-3 pb-1"
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={toggleTrackingLists}
         >
           <div className="w-12 h-1.5 bg-slate-200 rounded-full cursor-pointer hover:bg-slate-300 transition-colors"></div>
         </div>
@@ -741,8 +749,9 @@ export const TrackerHistoryViewer = () => {
             )}
 
             <button
-              onClick={() => setIsOpen(false)}
+              onClick={() => setTrackingListsOpen(false)}
               className="cursor-pointer p-1.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
+              title="Close"
             >
               <X size={20} />
             </button>
