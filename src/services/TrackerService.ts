@@ -167,10 +167,49 @@ export const useTrackerService = () => {
     pointCount: 0
   });
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+  const workerRef = useRef<Worker | null>(null);
   const lastGpsFixAtRef = useRef<number>(0);
   const gpsWatchdogRef = useRef<NodeJS.Timeout | null>(null);
   const startLocalWatchRef = useRef<(() => void) | null>(null);
   const restartLocalWatchRef = useRef<(() => void) | null>(null);
+
+  // Inisialisasi Web Worker untuk Background Heartbeat
+  useEffect(() => {
+    const workerCode = `
+      let timer = null;
+      self.onmessage = function(e) {
+        if (e.data === 'start') {
+          if (!timer) {
+            timer = setInterval(() => {
+              self.postMessage('tick');
+            }, 5000); // Heartbeat tiap 5 detik
+          }
+        } else if (e.data === 'stop') {
+          if (timer) {
+            clearInterval(timer);
+            timer = null;
+          }
+        }
+      };
+    `;
+    const blob = new Blob([workerCode], { type: 'application/javascript' });
+    const url = URL.createObjectURL(blob);
+    const worker = new Worker(url);
+    
+    worker.onmessage = (e) => {
+      if (e.data === 'tick') {
+        // Heartbeat diterima: Memaksa main thread event loop untuk tetap berjalan.
+        // Hal ini menahan browser agar tidak men-suspend JavaScript utama terlalu cepat saat screen locked.
+      }
+    };
+    
+    workerRef.current = worker;
+
+    return () => {
+      worker.terminate();
+      URL.revokeObjectURL(url);
+    };
+  }, []);
 
   useEffect(() => {
     hydrateActivity();
@@ -511,13 +550,11 @@ export const useTrackerService = () => {
         } else if (isLocalBroadcastEnabled && user && watchIdRef.current === null) {
           startLocalWatchRef.current?.();
         }
-      } else {
-        releaseWakeLock();
       }
     };
 
     const handlePageHide = () => {
-      releaseWakeLock();
+      // Do nothing, let the browser handle it
     };
 
     document.addEventListener('visibilitychange', handleVisibility);
@@ -554,6 +591,9 @@ export const useTrackerService = () => {
       gpsWatchdogRef.current = null;
       startLocalWatchRef.current = null;
       restartLocalWatchRef.current = null;
+      
+      workerRef.current?.postMessage('stop');
+      
       releaseWakeLock();
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
@@ -831,6 +871,8 @@ export const useTrackerService = () => {
       restartLocalWatchRef.current = restartLocalWatch;
       startLocalWatch();
       requestWakeLock();
+      
+      workerRef.current?.postMessage('start');
 
       if (!gpsWatchdogRef.current) {
         gpsWatchdogRef.current = setInterval(() => {
@@ -856,6 +898,9 @@ export const useTrackerService = () => {
       gpsWatchdogRef.current = null;
       startLocalWatchRef.current = null;
       restartLocalWatchRef.current = null;
+      
+      workerRef.current?.postMessage('stop');
+      
       releaseWakeLock();
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);

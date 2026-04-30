@@ -33,6 +33,9 @@
 - **Instant Geolocation**: "Start Your Journey" feature with pre-emptive GPS fetching and zero-delay jump logic.
 - **Navigator Mode**: Precision plotting tools with real-time **Distance**, **Azimuth**, and **Slope** calculations.
 - **GPS Monitoring**: Real-time location tracking with **Smart Reconnect** technology (auto-buffer during signal loss).
+- **GPS Tracking (Strava UX)**: Record tracks seamlessly as **Activities** (Start/Stop) with real-time distance, points, and timer.
+- **Smart Offline Sync**: Tracks are buffered locally (IndexedDB) during signal loss or airplane mode, then synced seamlessly on reconnect.
+- **Activity Recall & Export**: Recall saved tracking sessions onto the map and download them as standard **GPX** files for cross-platform use.
 - **Visual Feedback**: Dynamic marker shapes (Diamond vs Circle) and colors (Indigo vs Yellow) to distinguish edited points.
 - **Optimized Controls**:
   - **Desktop**: Smooth scroll zoom (1/600 rate), inertia-based panning, and orbit controls.
@@ -62,6 +65,7 @@ Landscape 360 offers flexible plans tailored to your needs, integrated with a Ro
 | **Custom Basemaps** | ❌ Disabled | ❌ Disabled | ✅ **Full Access** (Requires `monitor360`) |
 | **GPS Tracking** | ❌ Disabled | ✅ Broadcast & View Self | ✅ Broadcast & View Self |
 | **Realtime Monitoring** | ❌ Disabled | ❌ Disabled | ✅ **Monitor All Users** (Requires `monitor360` Role) |
+| **Activity Export** | ❌ Disabled | ✅ Download GPX (Self) | ✅ Download GPX (All Users) |
 | **Support** | Community | Priority | 24/7 Dedicated |
 
 ### 🔐 User Roles
