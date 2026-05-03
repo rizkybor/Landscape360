@@ -56,9 +56,9 @@ export const ZbiotPanel = () => {
 
   const [account, setAccount] = useState("");
   const [password, setPassword] = useState("");
-  const [appType, setAppType] = useState<number>(() => {
-    const v = Number(import.meta.env.VITE_ZBIOT_APP_TYPE);
-    return Number.isFinite(v) ? v : 0;
+  const [appType, setAppType] = useState<string>(() => {
+    const v = import.meta.env.VITE_ZBIOT_APP_TYPE;
+    return typeof v === "string" && v.trim() ? v.trim() : "";
   });
 
   const [deviceFilter, setDeviceFilter] = useState("");
@@ -120,6 +120,13 @@ export const ZbiotPanel = () => {
             <div className="text-[10px] text-white/40 mt-1">
               Default: https://api.zbiot.cc/mapi
             </div>
+            {typeof window !== "undefined" &&
+            window.location?.protocol === "https:" &&
+            apiUrl.trim().startsWith("http://") ? (
+              <div className="text-[10px] text-amber-200/90 mt-1">
+                Halaman HTTPS tidak bisa memanggil API HTTP (mixed content). Gunakan HTTPS jika tersedia.
+              </div>
+            ) : null}
           </div>
 
           {!sid ? (
@@ -146,16 +153,27 @@ export const ZbiotPanel = () => {
               <div>
                 <div className="text-[11px] text-white/70 mb-1">App Type</div>
                 <input
-                  value={String(appType)}
-                  onChange={(e) => setAppType(Number(e.target.value))}
+                  value={appType}
+                  onChange={(e) => setAppType(e.target.value)}
                   className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-blue-500/50"
                   type="number"
                 />
+                <div className="text-[10px] text-white/40 mt-1">
+                  Opsional; beberapa akun/server memakainya untuk identifikasi aplikasi (channel).
+                </div>
               </div>
               <button
                 type="button"
-                onClick={() => login({ account, password, type: appType })}
-                disabled={isAuthLoading || !account.trim() || !password || !appType}
+                onClick={() => {
+                  const raw = appType.trim();
+                  const n = raw ? Number(raw) : null;
+                  login({
+                    account,
+                    password,
+                    type: raw && Number.isFinite(n as number) ? (n as number) : null,
+                  });
+                }}
+                disabled={isAuthLoading || !account.trim() || !password}
                 className="w-full rounded-xl px-3 py-2 text-xs font-bold border transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-blue-600/90 hover:bg-blue-600 border-blue-500/30 text-white"
               >
                 {isAuthLoading ? "Logging in..." : "Login"}

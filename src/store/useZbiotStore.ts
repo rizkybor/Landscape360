@@ -105,7 +105,7 @@ interface ZbiotStore {
   restoreSession: () => void;
   clearSession: () => void;
 
-  login: (args: { account: string; password: string; type: number }) => Promise<void>;
+  login: (args: { account: string; password: string; type?: number | null }) => Promise<void>;
   logout: () => Promise<void>;
 
   setActiveFamilyId: (sfamily: string | null) => void;
@@ -201,13 +201,14 @@ export const useZbiotStore = create<ZbiotStore>((set, get) => ({
     })),
 
   setApiUrl: (apiUrl) => {
-    set({ apiUrl });
+    const next = typeof apiUrl === "string" ? apiUrl.trim() : String(apiUrl);
+    set({ apiUrl: next });
     const sid = get().sid;
     const activeFamilyId = get().activeFamilyId;
     try {
       localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ apiUrl, sid, activeFamilyId }),
+        JSON.stringify({ apiUrl: next, sid, activeFamilyId }),
       );
     } catch {
       // ignore
@@ -261,6 +262,8 @@ export const useZbiotStore = create<ZbiotStore>((set, get) => ({
     const apiUrl = get().apiUrl;
     set({ isAuthLoading: true, authError: null });
     try {
+      const typeParam =
+        typeof type === "number" && Number.isFinite(type) ? type : undefined;
       const resp = await zbiotCall<any>({
         apiUrl,
         module: "user",
@@ -270,7 +273,7 @@ export const useZbiotStore = create<ZbiotStore>((set, get) => ({
           flag: "e_account_login" satisfies ZbiotLoginFlag,
           platform: "web" satisfies ZbiotPlatform,
           pwd_md5: zbiotPwdMd5(password),
-          type,
+          ...(typeof typeParam === "number" ? { type: typeParam } : {}),
           lang: "en",
         },
       });

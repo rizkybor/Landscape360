@@ -117,6 +117,15 @@ export type ZbiotResponse = {
   [k: string]: any;
 };
 
+const normalizeApiUrl = (input: string) => {
+  const raw = input.trim();
+  if (!raw) return raw;
+  if (typeof window !== "undefined" && window.location?.protocol === "https:") {
+    if (raw.startsWith("http://")) return `https://${raw.slice("http://".length)}`;
+  }
+  return raw;
+};
+
 export const zbiotCall = async <T extends ZbiotResponse = ZbiotResponse>({
   apiUrl,
   sid,
@@ -124,7 +133,7 @@ export const zbiotCall = async <T extends ZbiotResponse = ZbiotResponse>({
   func,
   params,
 }: ZbiotCallArgs): Promise<T> => {
-  const base = apiUrl ?? getDefaultZbiotApiUrl();
+  const base = normalizeApiUrl(apiUrl ?? getDefaultZbiotApiUrl());
   const url =
     sid && String(sid).trim()
       ? `${base}${base.includes("?") ? "&" : "?"}sid=${encodeURIComponent(String(sid))}`
@@ -135,13 +144,21 @@ export const zbiotCall = async <T extends ZbiotResponse = ZbiotResponse>({
   body.set("func", func);
   body.set("params", JSON.stringify(params ?? {}));
 
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-    },
-    body,
-  });
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+      },
+      body,
+    });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    throw new Error(
+      `NetworkError: gagal menghubungi ZBIoT API. Kemungkinan CORS / mixed-content / host tidak bisa diakses. (${msg})`,
+    );
+  }
 
   let json: any;
   try {
