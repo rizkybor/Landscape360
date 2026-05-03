@@ -5,6 +5,7 @@ import { useSurveyStore } from "../store/useSurveyStore";
 import { useTrackerStore } from "../store/useTrackerStore"; // Import Tracker Store
 import { useRouteStore } from "../store/useRouteStore";
 import { useCustomBasemapStore } from "../store/useCustomBasemapStore";
+import { useZbiotStore } from "../store/useZbiotStore";
 import { AuthControl } from "./AuthControl";
 import mapboxgl from "mapbox-gl";
 import type { MapRef } from "react-map-gl/mapbox";
@@ -28,6 +29,7 @@ import {
   MapPin,
   Layers,
   Play,
+  Signal,
   Square,
 } from "lucide-react";
 import geoportalLogo from "../assets/geoportal360.png";
@@ -74,6 +76,8 @@ export const ControlPanel = () => {
   const { isPlotMode, togglePlotMode, setPlotMode, user, subscriptionStatus, userRole } =
     useSurveyStore(); // Get userRole
   const { isRoutePlannerEnabled, setRoutePlannerEnabled } = useRouteStore();
+  const isZbiotEnabled = useZbiotStore((s) => s.isZbiotEnabled);
+  const setZbiotEnabled = useZbiotStore((s) => s.setZbiotEnabled);
   const {
     isLiveTrackingEnabled,
     toggleLiveTracking,
@@ -96,11 +100,18 @@ export const ControlPanel = () => {
 
   const { isManagerOpen, toggleManager } = useCustomBasemapStore();
 
+  const canUseZbiot = Boolean(user) && userRole === "monitor360";
+
   // Auto-stop tracking/monitoring when user logs out or role changes to incompatible state
   useEffect(() => {
     if (!user) {
       if (isLiveTrackingEnabled) setLiveTracking(false);
+      if (isZbiotEnabled) setZbiotEnabled(false);
       return;
+    }
+
+    if (!canUseZbiot && isZbiotEnabled) {
+      setZbiotEnabled(false);
     }
 
     // If Monitor but not Enterprise -> Stop
@@ -126,6 +137,9 @@ export const ControlPanel = () => {
     subscriptionStatus,
     isLiveTrackingEnabled,
     setLiveTracking,
+    canUseZbiot,
+    isZbiotEnabled,
+    setZbiotEnabled,
   ]);
 
   const [showGetStarted, setShowGetStarted] = useState(false);
@@ -615,6 +629,41 @@ export const ControlPanel = () => {
                     )}
                   </div>
                 </button>
+
+                {canUseZbiot && (
+                  <button
+                    onClick={() => setZbiotEnabled(!isZbiotEnabled)}
+                    className={`${isMobile ? "flex-none w-28 snap-center h-full" : "col-span-1 w-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
+                      isZbiotEnabled
+                        ? "bg-emerald-900/20 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.12)]"
+                        : "bg-white/5 border-white/10 hover:bg-white/10"
+                    } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
+                  >
+                    <div
+                      className={`p-2 rounded-lg transition-colors ${
+                        isZbiotEnabled
+                          ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/40"
+                          : "bg-white/10 text-gray-400 group-hover:text-white"
+                      } ${isMobile ? "mb-1" : ""}`}
+                    >
+                      <Signal size={isMobile ? 18 : 16} />
+                    </div>
+                    <div className="flex-1">
+                      <div
+                        className={`font-bold transition-colors ${isZbiotEnabled ? "text-white" : "text-gray-300"} ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
+                      >
+                        ZBIoT
+                      </div>
+                      {!isMobile && (
+                        <div
+                          className={`text-[10px] ${isZbiotEnabled ? "text-emerald-200" : "text-gray-500"}`}
+                        >
+                          {isZbiotEnabled ? "Monitoring" : "Devices"}
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                )}
 
                 {/* Custom Basemaps Toggle (Enterprise + Monitor360 Only) */}
                 {(userRole === "monitor360" && subscriptionStatus === "Enterprise") && (

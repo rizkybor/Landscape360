@@ -8,8 +8,7 @@ import { getTile } from './utils/offline-db'; // Custom DB for Map Tiles
 
 // 1. PRECACHE MANIFEST
 cleanupOutdatedCaches();
-// @ts-expect-error - __WB_MANIFEST is injected by Workbox
-precacheAndRoute(self.__WB_MANIFEST);
+precacheAndRoute((self as any).__WB_MANIFEST || []);
 
 // 2. LIFECYCLE
 self.addEventListener('install', () => {

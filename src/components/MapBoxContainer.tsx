@@ -22,7 +22,10 @@ import { SearchPanel } from "./SearchPanel";
 import { NavigationControls } from "./NavigationControls";
 import { UserLocationMarker } from "./UserLocationMarker";
 import { WeatherWidget } from "./WeatherWidget";
+import { ZbiotPanel } from "./ZbiotPanel";
+import { ZbiotLayer } from "./ZbiotLayer";
 import { ErrorBoundary } from "./ErrorBoundary";
+import { useZbiotStore } from "../store/useZbiotStore";
 import myDataLocation from "../data/myDataLocation.json";
 
 // Lazy Load LiveTrackerLayer
@@ -109,8 +112,9 @@ const MapBoxContainerComponent = ({
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [selectedLocation, setSelectedLocation] = useState<any | null>(null);
   const [isPopupVisible, setIsPopupVisible] = useState(false);
-  const { basemaps, loadBasemaps, layerOpacities, isManagerOpen, toggleManager } = useCustomBasemapStore();
-  const { user, isPlotMode } = useSurveyStore();
+  const { basemaps, loadBasemaps, layerOpacities, isManagerOpen, toggleManager } =
+    useCustomBasemapStore();
+  const { user, isPlotMode, userRole } = useSurveyStore();
   const isRoutePlannerEnabled = useRouteStore((s) => s.isRoutePlannerEnabled);
 
   useEffect(() => {
@@ -171,6 +175,20 @@ const MapBoxContainerComponent = ({
   }, []);
 
   const shouldHandlePOIClick = showCustomLocations && shouldShowMarkers;
+  const isZbiotEnabled = useZbiotStore((s) => s.isZbiotEnabled);
+  const setZbiotEnabled = useZbiotStore((s) => s.setZbiotEnabled);
+  const isPickingFenceCenter = useZbiotStore((s) => s.isPickingFenceCenter);
+  const setFenceCenter = useZbiotStore((s) => s.setFenceCenter);
+  const selectedZbiotSimei = useZbiotStore((s) => s.selectedSimei);
+  const setSelectedSimei = useZbiotStore((s) => s.setSelectedSimei);
+  const canUseZbiot = Boolean(user) && userRole === "monitor360";
+  const isZbiotActive = isZbiotEnabled && canUseZbiot;
+
+  useEffect(() => {
+    if (!canUseZbiot && isZbiotEnabled) {
+      setZbiotEnabled(false);
+    }
+  }, [canUseZbiot, isZbiotEnabled, setZbiotEnabled]);
 
   useEffect(() => {
     const handleOnline = () => setIsOffline(false);
@@ -381,6 +399,12 @@ const MapBoxContainerComponent = ({
 
   const handleMapClick = useCallback(
     (evt: MapMouseEvent) => {
+      if (isPickingFenceCenter) {
+        const { lng, lat } = evt.lngLat;
+        setFenceCenter({ lng, lat });
+        return;
+      }
+
       if (interactionMode === "draw_region") {
         // Check limit directly from store state to avoid subscribing component to regionPoints
         if (useMapStore.getState().regionPoints.length >= 4) {
@@ -391,9 +415,55 @@ const MapBoxContainerComponent = ({
         return;
       }
 
-      if (!shouldHandlePOIClick) return;
-
       const features = evt.features ?? [];
+
+      if (isZbiotActive) {
+        const zUnclustered = features.find(
+          (f) => (f as any)?.layer?.id === "zbiot-unclustered",
+        ) as any | undefined;
+        if (zUnclustered?.properties?.simei) {
+          setSelectedSimei(String(zUnclustered.properties.simei));
+          return;
+        }
+
+        const zClustered = features.find((f) => {
+          const id = (f as any)?.layer?.id;
+          return id === "zbiot-clusters" || id === "zbiot-cluster-count";
+        }) as any | undefined;
+        if (zClustered?.properties?.cluster_id != null) {
+          const map = mapRef.current?.getMap();
+          const source: any = map?.getSource("zbiot-devices");
+          if (map && source?.getClusterExpansionZoom) {
+            const clusterId = Number(zClustered.properties.cluster_id);
+            const [lng, lat] = (zClustered.geometry?.coordinates ?? []) as [
+              number,
+              number,
+            ];
+            source.getClusterExpansionZoom(
+              clusterId,
+              (err: any, expansionZoom: number) => {
+                if (err) return;
+                map.easeTo({
+                  center: [lng, lat],
+                  zoom: expansionZoom,
+                  duration: 500,
+                });
+              },
+            );
+          }
+          return;
+        }
+      }
+
+      if (!shouldHandlePOIClick) {
+        if (selectedLocation) {
+          closeSelectedLocation();
+        }
+        if (selectedZbiotSimei) {
+          setSelectedSimei(null);
+        }
+        return;
+      }
       const unclustered = features.find(
         (f) => (f as any)?.layer?.id === "custom-unclustered",
       ) as any | undefined;
@@ -436,15 +506,24 @@ const MapBoxContainerComponent = ({
       if (selectedLocation) {
         closeSelectedLocation();
       }
+
+      if (selectedZbiotSimei) {
+        setSelectedSimei(null);
+      }
     },
     [
+      isPickingFenceCenter,
+      setFenceCenter,
       interactionMode,
       addRegionPoint,
       shouldHandlePOIClick,
+      isZbiotActive,
       locationById,
       mapRef,
       selectedLocation,
       closeSelectedLocation,
+      selectedZbiotSimei,
+      setSelectedSimei,
     ],
   );
 
@@ -731,6 +810,17 @@ const MapBoxContainerComponent = ({
     };
   }, []);
 
+  const interactiveLayerIds = useMemo(() => {
+    const ids: string[] = [];
+    if (shouldHandlePOIClick) {
+      ids.push("custom-unclustered", "custom-clusters", "custom-cluster-count");
+    }
+    if (isZbiotActive) {
+      ids.push("zbiot-unclustered", "zbiot-clusters", "zbiot-cluster-count");
+    }
+    return ids.length ? ids : undefined;
+  }, [shouldHandlePOIClick, isZbiotActive]);
+
   return (
     <div className={`relative w-full h-full ${className || ""}`}>
       <MapGL
@@ -764,11 +854,7 @@ const MapBoxContainerComponent = ({
         onClick={handleMapClick}
         onLoad={handleMapLoad}
         onError={handleMapError}
-        interactiveLayerIds={
-          shouldHandlePOIClick
-            ? ["custom-unclustered", "custom-clusters", "custom-cluster-count"]
-            : undefined
-        }
+        interactiveLayerIds={interactiveLayerIds}
         scrollZoom={true}
         dragPan={true}
         dragRotate={true} // Enable rotation on mobile
@@ -872,6 +958,8 @@ const MapBoxContainerComponent = ({
 
         {/* User Location Indicator */}
         <UserLocationMarker initialLocation={initialLocation} />
+
+        {isZbiotActive && <ZbiotLayer mapRef={mapRef} />}
 
         {/* Custom Location Markers - GeoJSON + Cluster */}
         {showCustomLocations && shouldShowMarkers && (
@@ -1115,6 +1203,7 @@ const MapBoxContainerComponent = ({
       {showControls && <SurveyorPanel />}
       {showControls && <SearchPanel />}
       {showControls && <WeatherWidget />}
+      {showControls && isZbiotActive && <ZbiotPanel />}
       {/* Custom Basemap Manager */}
       {isManagerOpen && (
         <BasemapManager 
