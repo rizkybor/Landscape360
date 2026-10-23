@@ -330,7 +330,7 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
           ) : filteredUsers.length === 0 ? (
             <div className="py-12 text-center text-xs text-gray-500">No users found</div>
           ) : (
-            filteredUsers.map((u) => {
+            filteredUsers.map((u, index) => {
               const isSelf = u.id === currentUserId;
               const isBusy = busyId === u.id;
               return (
@@ -339,29 +339,34 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
                   className="p-3 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors"
                 >
                   <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-white truncate">{u.email}</span>
-                        {isSelf && (
-                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-300 shrink-0">
-                            You
-                          </span>
-                        )}
-                        {u.isAdmin && (
-                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-300 shrink-0">
-                            Admin
-                          </span>
-                        )}
-                        {!u.isAdmin && (
-                          <span className={`text-[9px] px-1.5 py-0.5 rounded-full border shrink-0 ${PLAN_STYLES[u.plan] ?? PLAN_STYLES.Free}`}>
-                            {u.plan}
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-[10px] text-gray-500 truncate">
-                        {u.displayName || "—"} · Joined {new Date(u.createdAt).toLocaleDateString()}
-                        {u.lastSignInAt && ` · Last login ${new Date(u.lastSignInAt).toLocaleDateString()}`}
-                      </div>
+                    <div className="flex-1 min-w-0 flex items-start gap-3">
+                      <span className="shrink-0 w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-[10px] font-mono font-bold text-gray-400">
+                        {index + 1}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-white truncate">{u.email}</span>
+                          {isSelf && (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-300 shrink-0">
+                              You
+                            </span>
+                          )}
+                          {u.isAdmin && (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-300 shrink-0">
+                              Admin
+                            </span>
+                          )}
+                          {!u.isAdmin && (
+                            <span className={`text-[9px] px-1.5 py-0.5 rounded-full border shrink-0 ${PLAN_STYLES[u.plan] ?? PLAN_STYLES.Free}`}>
+                              {u.plan}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[10px] text-gray-500 truncate">
+                          {u.displayName || "—"} · Joined {new Date(u.createdAt).toLocaleDateString()}
+                          {u.lastSignInAt && ` · Last login ${new Date(u.lastSignInAt).toLocaleDateString()}`}
+                        </div>
+                        </div>
                     </div>
 
                     <div className="flex items-center gap-1.5 shrink-0">

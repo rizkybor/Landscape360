@@ -5,12 +5,18 @@ import type { OfflineRegion } from '../store/useOfflineStore';
 import { getTilesInBounds, getMapboxTileUrl, getMapboxVectorTileUrl, getTerrainTileUrl } from '../utils/tileUtils';
 import type { Bounds } from '../utils/tileUtils';
 import { Download, Map as MapIcon, Loader2, X } from 'lucide-react';
+import { CONTACT_ADMIN_LABEL } from '../config';
 import { supabase } from '../lib/supabaseClient';
 import { useSurveyStore } from '../store/useSurveyStore';
 import { createPortal } from 'react-dom';
 import { saveTilesBulk, hasTile } from '../utils/offline-db';
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
+
+// Set to true to show upgrade plan options (plan cards + email request) again.
+// While false, limits still apply and users are directed to contact the admin instead.
+const SHOW_UPGRADE_OPTIONS = false;
+const ADMIN_CONTACT_EMAIL = 'contact@jcdigital.co.id';
 
 export const RegionDrawingOverlay = () => {
   const { 
@@ -301,6 +307,8 @@ export const RegionDrawingOverlay = () => {
                         )}
                     </p>
                     
+                    {SHOW_UPGRADE_OPTIONS && (
+                    <>
                     <div className="grid grid-cols-2 gap-3 mb-6">
                          <button
                             onClick={() => setSelectedUpgradePlan('Pro')}
@@ -330,9 +338,20 @@ export const RegionDrawingOverlay = () => {
                     <div className="text-xs text-gray-500">
                         Upgrade to <strong>{selectedUpgradePlan} Plan</strong> via email request:
                     </div>
+                    </>
+                    )}
                 </div>
 
                 <div className="flex flex-col gap-2 w-full mt-2">
+                    {!SHOW_UPGRADE_OPTIONS && (
+                    <a
+                        href={`mailto:${ADMIN_CONTACT_EMAIL}?subject=Landscape360 Offline Map Limit&body=Dear Admin,%0D%0A%0D%0AI have reached my offline map ${upgradeReason === 'size' ? 'download size' : 'count'} limit and would like to request a higher limit.%0D%0A%0D%0AMy Account Email: ${user?.email}%0D%0A%0D%0AThank you,%0D%0A[Your Name]`}
+                        className="cursor-pointer w-full py-3 text-white rounded-xl text-sm font-bold shadow-lg transition-all flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 shadow-blue-600/20"
+                    >
+                        {CONTACT_ADMIN_LABEL}
+                    </a>
+                    )}
+                    {SHOW_UPGRADE_OPTIONS && (
                     <a
                         href={selectedUpgradePlan === 'Pro' 
                             ? `mailto:contact@jcdigital.co.id?subject=Subscription Upgrade: Landscape360 Pro Plan&body=Dear Admin,%0D%0A%0D%0AI hope this message finds you well.%0D%0A%0D%0AI am writing to request an upgrade of my account to the Landscape360 Pro Plan. I am interested in utilizing the advanced field tools and GPS broadcasting features.%0D%0A%0D%0AMy Account Email: ${user?.email}%0D%0A%0D%0APlease guide me through the payment and activation process.%0D%0A%0D%0AThank you,%0D%0A[Your Name]`
@@ -341,6 +360,7 @@ export const RegionDrawingOverlay = () => {
                     >
                         Request {selectedUpgradePlan} Upgrade
                     </a>
+                    )}
                     <button
                         onClick={() => setShowUpgradePrompt(false)}
                         className="cursor-pointer w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-bold text-gray-300 transition-all"
@@ -439,7 +459,7 @@ export const RegionDrawingOverlay = () => {
                                 <div className="flex-1">
                                     <p className="text-[10px] font-bold text-yellow-500 mb-0.5">Download Limit Exceeded</p>
                                     <p className="text-[10px] text-yellow-200/70 leading-relaxed">
-                                        This area ({stats.size} MB) exceeds your {subscriptionStatus} Plan limit of {limit} MB. Please reduce the area size or upgrade your plan.
+                                        This area ({stats.size} MB) exceeds your {subscriptionStatus} Plan limit of {limit} MB. Please reduce the area size or {SHOW_UPGRADE_OPTIONS ? 'upgrade your plan' : <><strong>{CONTACT_ADMIN_LABEL}</strong> to increase your limit</>}.
                                     </p>
                                 </div>
                             </div>
@@ -449,12 +469,12 @@ export const RegionDrawingOverlay = () => {
                             disabled={isCalculating || (isOverLimit ? false : (!downloadName || stats.count > 5000))}
                             onClick={isOverLimit ? () => setShowUpgradePrompt(true) : handleDownload}
                             className={`cursor-pointer w-full py-2.5 text-white text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
-                                isOverLimit 
+                                isOverLimit
                                 ? 'bg-yellow-600 hover:bg-yellow-500 shadow-lg shadow-yellow-900/20' 
                                 : 'bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-900/20 disabled:bg-gray-800 disabled:text-gray-500'
                             }`}
                         >
-                            {isCalculating ? <Loader2 size={14} className="animate-spin" /> : (isOverLimit ? <span className="uppercase">Check Upgrade Options</span> : <><Download size={14} /> Download Region</>)}
+                            {isCalculating ? <Loader2 size={14} className="animate-spin" /> : (isOverLimit ? <span className="uppercase">{SHOW_UPGRADE_OPTIONS ? 'Check Upgrade Options' : CONTACT_ADMIN_LABEL}</span> : <><Download size={14} /> Download Region</>)}
                         </button>
                     </div>
                  )}

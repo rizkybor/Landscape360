@@ -4,6 +4,7 @@ import { useOfflineStore } from '../store/useOfflineStore';
 import type { OfflineRegion } from '../store/useOfflineStore';
 import { getTilesInBounds, getMapboxTileUrl, getTerrainTileUrl } from '../utils/tileUtils';
 import { ChevronLeft, Trash2, Map as MapIcon, WifiOff, PenTool, X } from 'lucide-react';
+import { CONTACT_ADMIN_LABEL } from '../config';
 import { supabase } from '../lib/supabaseClient';
 import { useSurveyStore } from '../store/useSurveyStore';
 import { createPortal } from 'react-dom';
@@ -335,7 +336,7 @@ export const OfflineManager = ({ onClose, onBack }: { onClose: () => void, onBac
                             <p className="text-[10px] font-bold text-red-400">Map Limit Reached</p>
                             <p className="text-[10px] text-gray-400 leading-relaxed">
                                 You have reached the maximum number of offline maps for the <strong>{subscriptionStatus} Plan</strong>. 
-                                Delete existing maps or upgrade to add more.
+                                Delete existing maps or <strong>{CONTACT_ADMIN_LABEL}</strong> to add more.
                             </p>
                         </div>
                     </div>
