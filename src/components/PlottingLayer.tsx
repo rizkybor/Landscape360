@@ -360,7 +360,7 @@ export const PlottingLayer = () => {
             >
                 <div 
                   className={`
-                    ${isMobile ? 'bg-white shadow-md' : 'bg-white/90 backdrop-blur-md shadow-lg'} rounded-lg border border-white/40 
+                    ${isMobile ? 'bg-white shadow-md' : 'bg-white/90 backdrop-blur-md shadow-lg'} rounded-lg border border-sand-200 
                     flex flex-col items-center transform transition-all duration-200 cursor-default select-none
                     ${isHovered ? 'scale-110 px-3 py-2' : (isMobile ? 'scale-100 px-2 py-1' : 'scale-100 px-2 py-0.5 hover:scale-105')}
                   `}
@@ -368,16 +368,16 @@ export const PlottingLayer = () => {
                   onMouseLeave={() => setHoveredLabelId(null)}
                   onClick={() => isMobile && setHoveredLabelId(isHovered ? null : label.id)} // Toggle on mobile tap
                 >
-                    <span className={`${isMobile ? 'text-[11px]' : 'text-[10px]'} font-extrabold text-gray-800 leading-tight drop-shadow-sm whitespace-nowrap`}>{label.text}</span>
+                    <span className={`${isMobile ? 'text-[11px]' : 'text-[10px]'} font-extrabold text-sand-300 leading-tight drop-shadow-sm whitespace-nowrap`}>{label.text}</span>
                     
                     {/* Always show subtext (Azimuth) if requested, or keep it hover only? User asked for "reactive azimuth near + icon" */}
                     {/* But this is for existing lines. Let's keep hover logic here but maybe enhance style? */}
                     {isHovered && (
                         <>
-                            <div className="h-px w-full bg-gray-200 my-1"></div>
-                            <span className="text-[9px] font-medium text-gray-500 leading-tight tracking-wide whitespace-nowrap">{label.subText}</span>
-                            <div className="h-px w-full bg-gray-200 my-1"></div>
-                            <span className="text-[9px] font-bold text-blue-600 leading-tight tracking-wide whitespace-nowrap">{label.totalDist}</span>
+                            <div className="h-px w-full bg-sand-700 my-1"></div>
+                            <span className="text-[9px] font-medium text-sand-500 leading-tight tracking-wide whitespace-nowrap">{label.subText}</span>
+                            <div className="h-px w-full bg-sand-700 my-1"></div>
+                            <span className="text-[9px] font-bold text-forest-700 leading-tight tracking-wide whitespace-nowrap">{label.totalDist}</span>
                         </>
                     )}
                 </div>
@@ -394,7 +394,7 @@ export const PlottingLayer = () => {
               offset={[15, 0]} // Offset to right of cursor
               style={{ pointerEvents: 'none', zIndex: 1000 }}
           >
-             <div className="bg-white/20 backdrop-blur-md text-white text-[10px] rounded px-2 py-1.5 shadow-xl border border-white/20 flex flex-col gap-0.5">
+             <div className="bg-white/90 backdrop-blur-md text-ink text-[10px] rounded px-2 py-1.5 shadow-xl border border-sand-200 flex flex-col gap-0.5">
                 {(() => {
                     const lastPoint = activeGroup.points[activeGroup.points.length - 1];
                     const tempPoint = { ...lastPoint, lng: cursorLocation[0], lat: cursorLocation[1], elevation: lastPoint.elevation }; 
@@ -403,11 +403,11 @@ export const PlottingLayer = () => {
                     return (
                         <>
                             <div className="flex items-center justify-between gap-3">
-                                <span className="text-white/80 font-bold uppercase text-[8px]">Azim</span>
-                                <span className="font-bold font-mono text-white">{formatDegrees(data.forwardAzimuth)}</span>
+                                <span className="text-sand-700 font-bold uppercase text-[8px]">Azim</span>
+                                <span className="font-bold font-mono text-ink">{formatDegrees(data.forwardAzimuth)}</span>
                             </div>
                             {!isMobile && (
-                                <div className="text-white/60 text-[8px] pt-0.5">Hold Space or drag to pan</div>
+                                <div className="text-sand-600 text-[8px] pt-0.5">Hold Space or drag to pan</div>
                             )}
                         </>
                     );
@@ -459,8 +459,8 @@ export const PlottingLayer = () => {
                     <div 
                       className={`
                         absolute bottom-full mb-2
-                        flex flex-col ${isMobile ? 'bg-black/90' : 'bg-black/85 backdrop-blur-md'} rounded-lg shadow-2xl 
-                        ${label.hasCustomName ? 'border-indigo-500/50' : 'border-yellow-500/30'} 
+                        flex flex-col ${isMobile ? 'bg-white/95' : 'bg-white/95 backdrop-blur-md'} rounded-lg shadow-2xl 
+                        ${label.hasCustomName ? 'border-forest-300' : 'border-gold-200'} 
                         border overflow-hidden transform transition-all duration-200 select-none
                         ${isHovered || isDragging ? 'scale-105 min-w-[140px] opacity-100' : 'scale-100 min-w-0 opacity-100'}
                         ${!isHovered && !isDragging ? 'pointer-events-none' : ''}
@@ -468,24 +468,24 @@ export const PlottingLayer = () => {
                     >
                         {/* Header */}
                         <div className={`
-                            ${label.hasCustomName ? 'bg-indigo-500/20 border-indigo-500/30' : 'bg-yellow-500/10 border-yellow-500/20'} 
+                            ${label.hasCustomName ? 'bg-forest-50 border-forest-200' : 'bg-gold-50 border-gold-200'} 
                             flex justify-between items-center
                             ${isHovered || isDragging ? 'px-2.5 py-1.5 border-b' : 'px-2 py-1 gap-2'}
                         `}>
-                            <span className={`text-[10px] font-bold ${label.hasCustomName ? 'text-indigo-300' : 'text-yellow-400'} uppercase tracking-wider whitespace-nowrap`}>{label.name}</span>
-                            <span className={`text-[9px] font-mono ${label.hasCustomName ? 'text-indigo-200' : 'text-yellow-200'} font-bold whitespace-nowrap`}>{label.elev.toFixed(1)} mdpl</span>
+                            <span className={`text-[10px] font-bold ${label.hasCustomName ? 'text-forest-700' : 'text-gold-700'} uppercase tracking-wider whitespace-nowrap`}>{label.name}</span>
+                            <span className={`text-[9px] font-mono ${label.hasCustomName ? 'text-forest-700' : 'text-gold-700'} font-bold whitespace-nowrap`}>{label.elev.toFixed(1)} mdpl</span>
                         </div>
                         
                         {/* Body - Only visible on Hover/Drag */}
                         {(isHovered || isDragging) && (
                             <div className="p-2 flex flex-col gap-1">
                                 <div className="flex justify-between items-center gap-3">
-                                    <span className="text-[8px] text-gray-500 font-bold uppercase tracking-wider">Lat</span>
-                                    <span className="text-[9px] font-mono text-gray-300">{toDMS(label.lat, true)}</span>
+                                    <span className="text-[8px] text-sand-500 font-bold uppercase tracking-wider">Lat</span>
+                                    <span className="text-[9px] font-mono text-sand-700">{toDMS(label.lat, true)}</span>
                                 </div>
                                 <div className="flex justify-between items-center gap-3">
-                                    <span className="text-[8px] text-gray-500 font-bold uppercase tracking-wider">Lng</span>
-                                    <span className="text-[9px] font-mono text-gray-300">{toDMS(label.lng, false)}</span>
+                                    <span className="text-[8px] text-sand-500 font-bold uppercase tracking-wider">Lng</span>
+                                    <span className="text-[9px] font-mono text-sand-700">{toDMS(label.lng, false)}</span>
                                 </div>
                             </div>
                         )}

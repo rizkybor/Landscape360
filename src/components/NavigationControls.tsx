@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Minus, Compass, Crosshair, Camera, Loader2, X } from "lucide-react";
 import type { MapRef } from "react-map-gl/mapbox";
-import geoportalLogo from "../assets/geoportal360.png";
+import geoportalLogo from "../assets/geoportal360.svg";
 import { useSurveyStore } from "../store/useSurveyStore";
 import { useMapStore } from "../store/useMapStore";
 import { distance, point } from "@turf/turf";
@@ -214,7 +214,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                     <img src="${geoportalLogo}" style="width: ${40 * scale}px; height: ${40 * scale}px; object-fit: contain;" />
                     <div>
                         <h1 style="color: white; font-family: 'Inter', sans-serif; font-weight: 800; font-size: ${20 * scale}px; line-height: 1; margin: 0; letter-spacing: -0.02em;">Landscape 360</h1>
-                        <p style="color: #60a5fa; font-family: 'Inter', monospace; font-size: ${10 * scale}px; margin: ${4 * scale}px 0 0 0; letter-spacing: 0.1em; text-transform: uppercase;">${isFirstPage ? 'Professional Survey Report' : 'Survey Report Continuation'}</p>
+                        <p style="color: #f2cc6c; font-family: 'Inter', monospace; font-size: ${10 * scale}px; margin: ${4 * scale}px 0 0 0; letter-spacing: 0.1em; text-transform: uppercase;">${isFirstPage ? 'Professional Survey Report' : 'Survey Report Continuation'}</p>
                     </div>
                 </div>
                 <div style="text-align: right;">
@@ -448,7 +448,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
             w.style.padding = `0 ${MARGIN}px`;
             w.innerHTML = `
                 <div style="display: flex; align-items: center; gap: ${12 * scale}px; margin-bottom: ${16 * scale}px;">
-                    <div style="width: ${4 * scale}px; height: ${24 * scale}px; background-color: #3b82f6; border-radius: 4px;"></div>
+                    <div style="width: ${4 * scale}px; height: ${24 * scale}px; background-color: #e9b640; border-radius: 4px;"></div>
                     <h2 style="font-size: ${18 * scale}px; font-weight: bold; margin: 0; color: white;">Survey Data Points</h2>
                 </div>
                 <table style="width: 100%; border-collapse: collapse; font-size: ${12 * scale}px; text-align: left;">
@@ -524,7 +524,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                 const displayName = p.name || `Point ${i + 1}`;
                 
                 tr.innerHTML = `
-                    <td style="padding: ${10 * scale}px; color: #3b82f6; font-weight: bold;">${i + 1}</td>
+                    <td style="padding: ${10 * scale}px; color: #e9b640; font-weight: bold;">${i + 1}</td>
                     <td style="padding: ${10 * scale}px; font-weight: 500; color: white;">${displayName}</td>
                     <td style="padding: ${10 * scale}px; font-family: monospace; color: #d1d5db; white-space: nowrap;">
                         ${toDMS(p.lat, true)}, ${toDMS(p.lng, false)}
@@ -777,37 +777,37 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         <button
             onClick={() => setShowExportMenu(!showExportMenu)}
             disabled={isCapturing}
-            className="bg-white/90 backdrop-blur-sm p-2.5 rounded-xl shadow-lg border border-white/20 hover:bg-white hover:text-blue-600 transition-all active:scale-95 group cursor-pointer"
+            className="bg-white/90 backdrop-blur-sm p-2.5 rounded-xl shadow-lg border border-white/20 hover:bg-white hover:text-forest-800 transition-all active:scale-95 group cursor-pointer"
             title="Take Screenshot / Export"
         >
-            {isCapturing ? <Loader2 size={20} className="animate-spin text-blue-600" /> : <Camera size={20} className="text-gray-700 group-hover:text-blue-600 transition-colors" />}
+            {isCapturing ? <Loader2 size={20} className="animate-spin text-forest-800" /> : <Camera size={20} className="text-sand-700 group-hover:text-forest-800 transition-colors" />}
         </button>
 
         {/* Dropdown Menu */}
         {showExportMenu && (
             <div className="absolute top-0 right-14 bg-white/95 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl p-2 flex flex-col gap-1 min-w-[140px] animate-in fade-in slide-in-from-right-4 z-30">
-                <div className="text-[10px] font-bold text-gray-400 px-2 py-1 uppercase tracking-wider">Export As</div>
+                <div className="text-[10px] font-bold text-sand-400 px-2 py-1 uppercase tracking-wider">Export As</div>
                 <button 
                     onClick={() => handleCapture('png')}
-                    className="cursor-pointer flex items-center justify-between px-3 py-2 text-xs font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors text-left"
+                    className="cursor-pointer flex items-center justify-between px-3 py-2 text-xs font-medium text-sand-700 hover:bg-forest-50 hover:text-forest-800 rounded-lg transition-colors text-left"
                 >
                     <span>High-Res PNG</span>
-                    <span className="text-[9px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded">HD</span>
+                    <span className="text-[9px] bg-forest-100 text-forest-800 px-1.5 py-0.5 rounded">HD</span>
                 </button>
                 <button 
                     onClick={() => handleCapture('jpg')}
-                    className="cursor-pointer flex items-center justify-between px-3 py-2 text-xs font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors text-left"
+                    className="cursor-pointer flex items-center justify-between px-3 py-2 text-xs font-medium text-sand-700 hover:bg-forest-50 hover:text-forest-800 rounded-lg transition-colors text-left"
                 >
                     <span>Compact JPG</span>
-                    <span className="text-[9px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">Light</span>
+                    <span className="text-[9px] bg-sand-100 text-sand-500 px-1.5 py-0.5 rounded">Light</span>
                 </button>
-                <div className="h-px bg-gray-200 my-0.5"></div>
+                <div className="h-px bg-sand-200 my-0.5"></div>
                 <button 
                     onClick={() => handleCapture('pdf')}
-                    className="cursor-pointer flex items-center justify-between px-3 py-2 text-xs font-medium text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors text-left"
+                    className="cursor-pointer flex items-center justify-between px-3 py-2 text-xs font-medium text-sand-700 hover:bg-brick-50 hover:text-brick-600 rounded-lg transition-colors text-left"
                 >
                     <span>Report PDF</span>
-                    <span className="text-[9px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded">Doc</span>
+                    <span className="text-[9px] bg-brick-100 text-brick-600 px-1.5 py-0.5 rounded">Doc</span>
                 </button>
             </div>
         )}
@@ -816,12 +816,12 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
       {/* Find My Location Button */}
       <button
         onClick={onGeolocate}
-        className="bg-white/90 backdrop-blur-sm p-2.5 rounded-xl shadow-lg border border-white/20 hover:bg-white hover:text-blue-600 transition-all active:scale-95 group cursor-pointer"
+        className="bg-white/90 backdrop-blur-sm p-2.5 rounded-xl shadow-lg border border-white/20 hover:bg-white hover:text-forest-800 transition-all active:scale-95 group cursor-pointer"
         title="Find My Location"
       >
         <Crosshair
           size={20}
-          className="text-gray-700 group-hover:text-blue-600 transition-colors"
+          className="text-sand-700 group-hover:text-forest-800 transition-colors"
         />
       </button>
 
@@ -830,26 +830,26 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         {/* Zoom In */}
         <button
           onClick={handleZoomIn}
-          className="p-2.5 hover:bg-gray-100 transition-colors active:bg-gray-200 border-b border-gray-200/50 cursor-pointer group first:rounded-t-xl"
+          className="p-2.5 hover:bg-sand-100 transition-colors active:bg-sand-200 border-b border-sand-200/50 cursor-pointer group first:rounded-t-xl"
           title="Zoom In"
         >
-          <Plus size={20} className="text-gray-700 group-hover:text-black transition-colors" />
+          <Plus size={20} className="text-sand-700 group-hover:text-ink transition-colors" />
         </button>
 
         {/* Zoom Out */}
         <button
           onClick={handleZoomOut}
-          className="p-2.5 hover:bg-gray-100 transition-colors active:bg-gray-200 border-b border-gray-200/50 cursor-pointer group"
+          className="p-2.5 hover:bg-sand-100 transition-colors active:bg-sand-200 border-b border-sand-200/50 cursor-pointer group"
           title="Zoom Out"
         >
-          <Minus size={20} className="text-gray-700 group-hover:text-black transition-colors" />
+          <Minus size={20} className="text-sand-700 group-hover:text-ink transition-colors" />
         </button>
 
         {/* Reset Bearing / Compass Menu */}
         <div className="relative compass-menu-container">
             <button
             onClick={() => setShowCompassMenu(!showCompassMenu)}
-            className="p-2.5 hover:bg-gray-100 transition-colors active:bg-gray-200 group cursor-pointer relative w-full last:rounded-b-xl"
+            className="p-2.5 hover:bg-sand-100 transition-colors active:bg-sand-200 group cursor-pointer relative w-full last:rounded-b-xl"
             title="Compass Control"
             >
             <div
@@ -858,11 +858,11 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
             >
                 <Compass
                 size={20}
-                className={`text-gray-700 group-hover:text-blue-600 transition-colors ${bearing !== 0 ? "text-blue-600" : ""}`}
+                className={`text-sand-700 group-hover:text-forest-800 transition-colors ${bearing !== 0 ? "text-forest-800" : ""}`}
                 style={{ transform: "rotate(-45deg)" }}
                 />
                 {/* North Indicator "N" */}
-                <span className="absolute -top-1 left-1/2 -translate-x-1/2 text-[8px] font-bold text-red-500 bg-white/80 rounded-full px-0.5 leading-none shadow-sm z-10">
+                <span className="absolute -top-1 left-1/2 -translate-x-1/2 text-[8px] font-bold text-brick-500 bg-white/80 rounded-full px-0.5 leading-none shadow-sm z-10">
                 N
                 </span>
             </div>
@@ -870,12 +870,12 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
 
             {/* Compass Popover Menu */}
             {showCompassMenu && (
-                <div className="absolute top-0 right-12 bg-[#1f2937] border border-gray-700 rounded-xl shadow-2xl p-4 w-[240px] animate-in fade-in slide-in-from-right-4 z-50 text-white">
+                <div className="absolute top-0 right-12 bg-white border border-sand-700 rounded-xl shadow-2xl p-4 w-[240px] animate-in fade-in slide-in-from-right-4 z-50 text-white">
                     <div className="flex justify-between items-center mb-4">
-                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">View Settings</span>
+                        <span className="text-xs font-bold text-sand-400 uppercase tracking-wider">View Settings</span>
                         <button 
                             onClick={() => setShowCompassMenu(false)}
-                            className="cursor-pointer text-gray-400 hover:text-white transition-colors"
+                            className="cursor-pointer text-sand-400 hover:text-white transition-colors"
                         >
                             <X size={16} />
                         </button>
@@ -885,7 +885,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                     <div className="mb-4">
                         <div className="flex justify-between text-xs font-medium mb-1.5">
                             <span>Tilt</span>
-                            <span className="text-gray-400">{localPitch.toFixed(0)}°</span>
+                            <span className="text-sand-400">{localPitch.toFixed(0)}°</span>
                         </div>
                         <input
                             type="range"
@@ -897,7 +897,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                             onMouseUp={handleSliderCommit}
                             onTouchStart={() => setIsDraggingSlider(true)}
                             onTouchEnd={handleSliderCommit}
-                            className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                            className="w-full h-1 bg-sand-600 rounded-lg appearance-none cursor-pointer accent-forest-700"
                         />
                     </div>
 
@@ -905,7 +905,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                     <div className="mb-6">
                         <div className="flex justify-between text-xs font-medium mb-1.5">
                             <span>Heading</span>
-                            <span className="text-gray-400">{localBearing.toFixed(0)}°</span>
+                            <span className="text-sand-400">{localBearing.toFixed(0)}°</span>
                         </div>
                         <input
                             type="range"
@@ -917,14 +917,14 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                             onMouseUp={handleSliderCommit}
                             onTouchStart={() => setIsDraggingSlider(true)}
                             onTouchEnd={handleSliderCommit}
-                            className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                            className="w-full h-1 bg-sand-600 rounded-lg appearance-none cursor-pointer accent-forest-700"
                         />
                     </div>
 
                     {/* Reset Button */}
                     <button
                         onClick={handleResetNorth}
-                        className="cursor-pointer w-full py-2 flex items-center justify-center text-xs font-bold text-blue-400 hover:text-blue-300 hover:bg-white/5 rounded-lg transition-colors text-right"
+                        className="cursor-pointer w-full py-2 flex items-center justify-center text-xs font-bold text-forest-400 hover:text-forest-300 hover:bg-white/5 rounded-lg transition-colors text-right"
                     >
                         Reset to north
                     </button>

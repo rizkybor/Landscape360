@@ -183,42 +183,42 @@ export const SearchPanel = () => {
   if (!showSearch) return null;
 
   return (
-    <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-start justify-center p-4 sm:pt-24 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[70] bg-ink/40 backdrop-blur-sm flex items-start justify-center p-4 sm:pt-24 animate-in fade-in duration-200">
       <div 
         ref={containerRef}
-        className="w-full max-w-2xl bg-[#0F172A] border border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] animate-in slide-in-from-top-4 duration-300 ring-1 ring-white/10"
+        className="w-full max-w-2xl bg-white border border-sand-200 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] animate-in slide-in-from-top-4 duration-300 ring-1 ring-sand-200"
       >
         {/* Header / Input Area */}
-        <div className="relative border-b border-slate-700/50 bg-slate-900/50 p-4 flex items-center gap-3">
-          <Search className="text-slate-400 shrink-0" size={20} />
+        <div className="relative border-b border-sand-200 bg-white p-4 flex items-center gap-3">
+          <Search className="text-sand-600 shrink-0" size={20} />
           <input
             ref={inputRef}
             type="text"
             placeholder="Search mountains, basecamp, or cities..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="flex-1 bg-transparent border-none outline-none text-white text-lg placeholder-slate-500 font-medium"
+            className="flex-1 bg-transparent border-none outline-none text-ink text-lg placeholder-sand-500 font-medium"
           />
           {loading ? (
-            <Loader2 className="animate-spin text-blue-400 shrink-0" size={20} />
+            <Loader2 className="animate-spin text-forest-700 shrink-0" size={20} />
           ) : query && (
             <button 
               onClick={() => { setQuery(""); setResults([]); inputRef.current?.focus(); }}
-              className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+              className="text-sand-600 hover:text-ink transition-colors cursor-pointer"
             >
               <X size={20} />
             </button>
           )}
-          <div className="hidden sm:flex items-center gap-1 text-[10px] font-mono text-slate-500 border border-slate-700 rounded px-1.5 py-0.5">
+          <div className="hidden sm:flex items-center gap-1 text-[10px] font-mono text-sand-500 border border-sand-200 rounded px-1.5 py-0.5">
             <span>ESC</span>
           </div>
         </div>
 
         {/* Results Area */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#0F172A]">
+        <div className="flex-1 overflow-y-auto custom-scrollbar bg-white">
           {results.length > 0 ? (
             <div className="py-2">
-              <div className="px-4 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+              <div className="px-4 py-2 text-[10px] font-bold text-sand-500 uppercase tracking-widest">
                 Search Results
               </div>
               <ul>
@@ -226,14 +226,14 @@ export const SearchPanel = () => {
                   <li key={res.id}>
                     <button
                       onClick={() => handleSelect(res)}
-                      className="cursor-pointer w-full text-left px-4 py-3 hover:bg-slate-800/50 transition-colors flex items-center gap-4 group border-l-2 border-transparent hover:border-blue-500"
+                      className="cursor-pointer w-full text-left px-4 py-3 hover:bg-forest-50 transition-colors flex items-center gap-4 group border-l-2 border-transparent hover:border-forest-600"
                     >
                       <div className={`
                         w-10 h-10 rounded-full flex items-center justify-center shrink-0
-                        ${res.place_type.includes("mountain") ? "bg-orange-500/10 text-orange-400" : 
-                          res.place_type.includes("poi") ? "bg-green-500/10 text-green-400" :
-                          res.place_type.includes("basecamp") ? "bg-blue-500/10 text-blue-400" :
-                          "bg-slate-700/30 text-slate-400"}
+                        ${res.place_type.includes("mountain") ? "bg-ember-50 text-ember-700" : 
+                          res.place_type.includes("poi") ? "bg-forest-50 text-forest-700" :
+                          res.place_type.includes("basecamp") ? "bg-forest-50 text-forest-700" :
+                          "bg-sand-100 text-sand-600"}
                       `}>
                         {res.place_type.includes("mountain") ? <Mountain size={18} /> :
                          res.place_type.includes("basecamp") ? <Tent size={18} /> :
@@ -243,21 +243,21 @@ export const SearchPanel = () => {
                       
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">
-                          <span className="font-semibold text-slate-200 text-sm group-hover:text-blue-300 transition-colors truncate">
+                          <span className="font-semibold text-sand-800 text-sm group-hover:text-forest-700 transition-colors truncate">
                             {res.place_name.split(",")[0]}
                           </span>
                           {res.place_type.includes("custom") && (
-                            <span className="text-[9px] bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded font-bold border border-purple-500/30">
+                            <span className="text-[9px] bg-gold-50 text-gold-700 px-1.5 py-0.5 rounded font-bold border border-gold-200">
                               VERIFIED - OFFICIAL360
                             </span>
                           )}
                         </div>
-                        <div className="text-xs text-slate-500 truncate group-hover:text-slate-400">
+                        <div className="text-xs text-sand-500 truncate group-hover:text-sand-600">
                           {res.place_name.split(",").slice(1).join(",").trim() || res.text}
                         </div>
                       </div>
 
-                      <ArrowRight size={16} className="text-slate-600 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all duration-200" />
+                      <ArrowRight size={16} className="text-sand-400 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all duration-200" />
                     </button>
                   </li>
                 ))}
@@ -265,15 +265,15 @@ export const SearchPanel = () => {
             </div>
           ) : query.length > 2 && !loading ? (
             <div className="p-12 text-center">
-              <div className="w-16 h-16 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-500">
+              <div className="w-16 h-16 bg-sand-100 rounded-full flex items-center justify-center mx-auto mb-4 text-sand-500">
                 <Search size={32} />
               </div>
-              <h3 className="text-slate-300 font-medium mb-1">No locations found</h3>
-              <p className="text-slate-500 text-sm">Try searching for a different keyword or coordinate.</p>
+              <h3 className="text-sand-700 font-medium mb-1">No locations found</h3>
+              <p className="text-sand-500 text-sm">Try searching for a different keyword or coordinate.</p>
             </div>
           ) : (
             <div className="p-8">
-              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">
+              <div className="text-[10px] font-bold text-sand-500 uppercase tracking-widest mb-3">
                 Quick Suggestions
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -286,19 +286,19 @@ export const SearchPanel = () => {
                   <button
                     key={idx}
                     onClick={() => { setQuery(item.name); performSearch(item.name); }}
-                    className="cursor-pointer flex items-center gap-3 p-3 rounded-xl bg-slate-800/30 hover:bg-slate-800 border border-slate-700/30 hover:border-slate-600 transition-all text-left group"
+                    className="cursor-pointer flex items-center gap-3 p-3 rounded-xl bg-sand-100 hover:bg-sand-100 border border-sand-200 hover:border-sand-300 transition-all text-left group"
                   >
                     <div className={`
                       w-8 h-8 rounded-lg flex items-center justify-center shrink-0
-                      ${item.type === "mountain" ? "bg-orange-500/10 text-orange-400" : 
-                        item.type === "basecamp" ? "bg-blue-500/10 text-blue-400" :
-                        "bg-green-500/10 text-green-400"}
+                      ${item.type === "mountain" ? "bg-ember-50 text-ember-700" : 
+                        item.type === "basecamp" ? "bg-forest-50 text-forest-700" :
+                        "bg-forest-50 text-forest-700"}
                     `}>
                       {item.type === "mountain" ? <Mountain size={14} /> :
                        item.type === "basecamp" ? <Tent size={14} /> :
                        <MapPin size={14} />}
                     </div>
-                    <span className="text-sm text-slate-300 font-medium group-hover:text-white">{item.name}</span>
+                    <span className="text-sm text-sand-700 font-medium group-hover:text-ink">{item.name}</span>
                   </button>
                 ))}
               </div>
@@ -307,10 +307,10 @@ export const SearchPanel = () => {
         </div>
         
         {/* Footer */}
-        <div className="p-3 bg-slate-900/80 border-t border-slate-700/50 flex justify-between items-center text-[10px] text-slate-500">
+        <div className="p-3 bg-sand-50 border-t border-sand-200 flex justify-between items-center text-[10px] text-sand-500">
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-forest-700"></span>
               Landscape 360
             </span>
             {/* <span className="hidden sm:inline">Coordinates supported (Lat, Lon)</span> */}

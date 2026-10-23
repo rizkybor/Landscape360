@@ -16,7 +16,7 @@ import {
 import streetsView from "../assets/Street-View.png";
 import outdoorsView from "../assets/Outdoors-View.png";
 import satelliteView from "../assets/Satellite-View.png";
-import geoportalLogo from "../assets/geoportal360.png";
+import geoportalLogo from "../assets/geoportal360.svg";
 import { SEO } from "./SEO";
 
 interface Props {

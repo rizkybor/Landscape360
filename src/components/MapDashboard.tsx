@@ -17,14 +17,14 @@ export const MapDashboard = ({
   const rightMapRef = useRef<MapRef | null>(null);
 
   return (
-    <div className="w-full h-screen bg-gray-900 relative overflow-hidden">
+    <div className="w-full h-screen bg-white relative overflow-hidden">
       <SEO />
       {isSplitScreen ? (
         <div className="flex flex-col md:flex-row w-full h-full">
           {/* Left/Top Panel (2D) */}
-          <div className="w-full h-[40%] md:w-1/2 md:h-full border-b-2 md:border-b-0 md:border-r-2 border-gray-800 relative group transition-all duration-300 ease-in-out">
-            <div className="absolute top-4 right-16 md:right-20 z-20 bg-black/60 text-white px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-md border border-white/10 flex items-center gap-2 shadow-lg pointer-events-none select-none">
-              <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+          <div className="w-full h-[40%] md:w-1/2 md:h-full border-b-2 md:border-b-0 md:border-r-2 border-sand-200 relative group transition-all duration-300 ease-in-out">
+            <div className="absolute top-4 right-16 md:right-20 z-20 bg-white/95 text-ink px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-md border border-sand-200 flex items-center gap-2 shadow-lg pointer-events-none select-none">
+              <span className="w-2 h-2 rounded-full bg-forest-700 animate-pulse"></span>
               2D Topo
             </div>
             <MapBoxContainer
@@ -35,8 +35,8 @@ export const MapDashboard = ({
             />
             {/* Sync Indicator */}
             <div className="absolute bottom-4 right-4 z-20 transition-opacity pointer-events-none opacity-0 group-hover:opacity-100 md:opacity-100">
-              <span className="text-[10px] font-mono text-blue-300 bg-blue-900/50 border border-blue-500/30 px-2 py-1 rounded flex items-center gap-1 backdrop-blur-md shadow-lg">
-                <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+              <span className="text-[10px] font-mono text-forest-700 bg-forest-100 border border-forest-200 px-2 py-1 rounded flex items-center gap-1 backdrop-blur-md shadow-lg">
+                <div className="w-1.5 h-1.5 rounded-full bg-forest-500"></div>
                 SYNC ACTIVE
               </span>
             </div>
@@ -44,8 +44,8 @@ export const MapDashboard = ({
 
           {/* Right/Bottom Panel (3D) */}
           <div className="w-full h-[60%] md:w-1/2 md:h-full relative group transition-all duration-300 ease-in-out">
-            <div className="absolute top-4 right-16 md:right-20 z-20 bg-black/60 text-white px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-md border border-white/10 flex items-center gap-2 shadow-lg pointer-events-none select-none">
-              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+            <div className="absolute top-4 right-16 md:right-20 z-20 bg-white/95 text-ink px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-md border border-sand-200 flex items-center gap-2 shadow-lg pointer-events-none select-none">
+              <span className="w-2 h-2 rounded-full bg-forest-700 animate-pulse"></span>
               3D Terrain
             </div>
             <MapBoxContainer
@@ -69,16 +69,16 @@ export const MapDashboard = ({
           onClick={() => setIsSplitScreen(!isSplitScreen)}
           className={`
             cursor-pointer absolute z-30 
-            bg-white/10 backdrop-blur-md 
-            border border-white/20 
+            bg-sand-100 backdrop-blur-md 
+            border border-sand-300 
             p-3 rounded-full shadow-lg 
-            text-white 
+            text-ink 
             transition-all duration-300
-            hover:bg-white/20 hover:scale-105 hover:border-white/40
+            hover:bg-sand-200 hover:scale-105 hover:border-sand-300
             active:scale-95
             ${
               isSplitScreen
-                ? "bottom-8 left-8 translate-x-0 bg-blue-600/80 border-blue-400/50 hover:bg-blue-600"
+                ? "bottom-8 left-8 translate-x-0 bg-forest-800 border-forest-300 hover:bg-forest-800"
                 : "bottom-4 left-8 translate-x-0"
             }
           `}

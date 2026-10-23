@@ -175,8 +175,8 @@ export const GeoreferenceTool = () => {
         onDrag={onDragCenter}
         pitchAlignment="map"
       >
-        <div className="p-3 md:p-2 bg-blue-600 rounded-full shadow-lg cursor-move hover:scale-110 transition-transform active:scale-125 touch-none">
-          <Move size={20} className="text-white md:w-4 md:h-4" />
+        <div className="p-3 md:p-2 bg-forest-800 rounded-full shadow-lg cursor-move hover:scale-110 transition-transform active:scale-125 touch-none">
+          <Move size={20} className="text-ink md:w-4 md:h-4" />
         </div>
       </Marker>
 
@@ -188,8 +188,8 @@ export const GeoreferenceTool = () => {
         onDrag={onDragResize}
         pitchAlignment="map"
       >
-        <div className="p-2.5 md:p-1.5 bg-white border-2 border-blue-600 rounded-full shadow-lg cursor-nwse-resize hover:scale-110 transition-transform active:scale-125 touch-none">
-          <Maximize size={18} className="text-blue-600 md:w-3.5 md:h-3.5" />
+        <div className="p-2.5 md:p-1.5 bg-white border-2 border-forest-600 rounded-full shadow-lg cursor-nwse-resize hover:scale-110 transition-transform active:scale-125 touch-none">
+          <Maximize size={18} className="text-forest-700 md:w-3.5 md:h-3.5" />
         </div>
       </Marker>
 
@@ -197,30 +197,30 @@ export const GeoreferenceTool = () => {
       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-xl p-2 flex items-center gap-2 z-50 w-[90%] md:w-auto justify-center">
           <button 
             onClick={() => startGeoreferencing(georeferenceTarget === 'A4_LANDSCAPE' ? 'A4_PORTRAIT' : 'A4_LANDSCAPE')}
-            className="flex-1 md:flex-none px-3 py-2 md:py-1 border-r border-gray-200 flex items-center justify-center gap-2 hover:bg-gray-50 rounded transition-colors"
+            className="flex-1 md:flex-none px-3 py-2 md:py-1 border-r border-sand-300 flex items-center justify-center gap-2 hover:bg-sand-900 rounded transition-colors"
             title="Rotate Orientation"
           >
-              <RotateCw size={16} className="text-blue-500" />
-              <span className="text-xs font-bold text-gray-600 uppercase">
+              <RotateCw size={16} className="text-forest-700" />
+              <span className="text-xs font-bold text-sand-400 uppercase">
                   {georeferenceTarget.replace('A4_', '')}
               </span>
           </button>
           <button 
             onClick={handleConfirm}
-            className="flex-1 md:flex-none flex items-center justify-center gap-1 px-4 py-2 md:py-1.5 bg-green-500 hover:bg-green-600 text-white rounded text-sm font-bold transition-colors shadow-sm active:bg-green-700"
+            className="flex-1 md:flex-none flex items-center justify-center gap-1 px-4 py-2 md:py-1.5 bg-forest-700 hover:bg-forest-800 text-white rounded text-sm font-bold transition-colors shadow-sm active:bg-forest-800"
           >
               <Check size={18} /> Apply
           </button>
           <button 
             onClick={stopGeoreferencing}
-            className="flex-none px-3 py-2 md:py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded text-sm font-medium transition-colors active:bg-gray-300"
+            className="flex-none px-3 py-2 md:py-1.5 bg-sand-800 hover:bg-sand-700 text-sand-400 rounded text-sm font-medium transition-colors active:bg-sand-500"
           >
               <X size={18} />
           </button>
       </div>
       
       {/* Instructions */}
-      <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-full text-xs backdrop-blur-sm pointer-events-none">
+      <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 bg-white/95 text-ink px-4 py-2 rounded-full text-xs backdrop-blur-sm pointer-events-none">
           Drag center to move • Drag corner to resize
       </div>
     </>

@@ -628,10 +628,10 @@ export const TrackerHistoryViewer = () => {
       <div className="absolute top-[270px] right-4.5 flex flex-col items-center gap-2 z-[20]">
         <button
           onClick={toggleTrackingLists}
-          className={`cursor-pointer w-[40px] h-[40px] rounded-xl shadow-[0_0_0_2px_rgba(0,0,0,0.1)] flex items-center justify-center transition-colors border ${
+          className={`cursor-pointer w-[40px] h-[40px] rounded-xl flex items-center justify-center transition-colors border ${
             isTrackingListsOpen
-              ? "bg-slate-900 text-white border-slate-900"
-              : "bg-white text-slate-700 border-slate-300/50 hover:bg-slate-50 active:bg-slate-100"
+              ? "bg-white text-ink border-sand-100"
+              : "bg-white text-sand-400 border-sand-300 hover:bg-sand-900 active:bg-sand-800"
           }`}
           title="Tracking Lists"
         >
@@ -641,27 +641,27 @@ export const TrackerHistoryViewer = () => {
 
       {/* Slide-Up Panel (Bottom Sheet) */}
       <div
-        className={`fixed inset-x-0 bottom-0 z-[60] bg-white shadow-[0_-5px_20px_-5px_rgba(0,0,0,0.1)] rounded-t-2xl transition-transform duration-300 ease-out transform h-auto max-h-[75vh] md:max-h-[60vh] ${isTrackingListsOpen ? "translate-y-0" : "translate-y-full"}`}
+        className={`fixed inset-x-0 bottom-0 z-[60] bg-white rounded-t-2xl transition-transform duration-300 ease-out transform h-auto max-h-[75vh] md:max-h-[60vh] ${isTrackingListsOpen ? "translate-y-0" : "translate-y-full"}`}
       >
         {/* Drag Handle (Visual Only) */}
         <div
           className="flex justify-center pt-3 pb-1"
           onClick={toggleTrackingLists}
         >
-          <div className="w-12 h-1.5 bg-slate-200 rounded-full cursor-pointer hover:bg-slate-300 transition-colors"></div>
+          <div className="w-12 h-1.5 bg-sand-700 rounded-full cursor-pointer hover:bg-sand-500 transition-colors"></div>
         </div>
 
         {/* Header */}
-        <div className="px-4 pb-3 border-b border-slate-100 flex items-center justify-between">
+        <div className="px-4 pb-3 border-b border-sand-300 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="bg-blue-50 p-2 rounded-full text-blue-600">
+            <div className="bg-forest-100 p-2 rounded-full text-forest-700">
               <History size={18} />
             </div>
             <div>
-              <h2 className="font-bold text-slate-800 text-sm md:text-base">
+              <h2 className="font-bold text-sand-300 text-sm md:text-base">
                 Tracking Lists
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-sand-500">
                 {userRole === "monitor360"
                   ? "Monitoring All Units"
                   : "Your Movement History"}
@@ -673,16 +673,16 @@ export const TrackerHistoryViewer = () => {
           <div className="flex items-center gap-2">
             
             {/* View Mode Toggle */}
-            <div className="flex bg-slate-100 p-0.5 rounded-lg mr-2">
+            <div className="flex bg-sand-800 p-0.5 rounded-lg mr-2">
                 <button
                     onClick={() => setViewMode('activities')}
-                    className={`cursor-pointer px-2 py-1 text-[10px] font-bold rounded-md transition-all ${viewMode === 'activities' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                    className={`cursor-pointer px-2 py-1 text-[10px] font-bold rounded-md transition-all ${viewMode === 'activities' ? 'bg-white text-forest-700 shadow-sm' : 'text-sand-500 hover:text-sand-400'}`}
                 >
                     Activities
                 </button>
                 <button
                     onClick={() => setViewMode('logs')}
-                    className={`cursor-pointer px-2 py-1 text-[10px] font-bold rounded-md transition-all ${viewMode === 'logs' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                    className={`cursor-pointer px-2 py-1 text-[10px] font-bold rounded-md transition-all ${viewMode === 'logs' ? 'bg-white text-forest-700 shadow-sm' : 'text-sand-500 hover:text-sand-400'}`}
                 >
                     Logs
                 </button>
@@ -699,7 +699,7 @@ export const TrackerHistoryViewer = () => {
                       fetchLogs(false);
                   }
               }}
-              className="cursor-pointer p-1.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-blue-600 transition-colors"
+              className="cursor-pointer p-1.5 hover:bg-sand-800 rounded-full text-sand-600 hover:text-forest-700 transition-colors"
               title="Refresh Data"
             >
               <RefreshCw
@@ -714,7 +714,7 @@ export const TrackerHistoryViewer = () => {
                   <button
                       onClick={exportPDF}
                       disabled={isExporting}
-                      className="cursor-pointer p-1.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-red-600 transition-colors disabled:opacity-50"
+                      className="cursor-pointer p-1.5 hover:bg-sand-800 rounded-full text-sand-600 hover:text-brick-600 transition-colors disabled:opacity-50"
                       title="Export to PDF"
                   >
                       <FileDown size={16} className={isExporting ? "animate-bounce" : ""} />
@@ -722,7 +722,7 @@ export const TrackerHistoryViewer = () => {
                   <button
                       onClick={exportAllLogsGPX}
                       disabled={exportingGPXId === 'all'}
-                      className="cursor-pointer p-1.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-green-600 transition-colors disabled:opacity-50"
+                      className="cursor-pointer p-1.5 hover:bg-sand-800 rounded-full text-sand-600 hover:text-forest-700 transition-colors disabled:opacity-50"
                       title="Export to GPX"
                   >
                       <FileDown size={16} className={exportingGPXId === 'all' ? "animate-bounce" : ""} />
@@ -739,7 +739,7 @@ export const TrackerHistoryViewer = () => {
                     setSelectedUserFilter(e.target.value);
                     setPage(0);
                   }}
-                  className="cursor-pointer text-xs border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none bg-slate-50 text-slate-600 max-w-[120px]"
+                  className="cursor-pointer text-xs border border-sand-300 rounded-lg px-2 py-1.5 focus:outline-none bg-sand-900 text-sand-400 max-w-[120px]"
                 >
                   <option value="all">All Users</option>
                   {availableUsers.map((u) => (
@@ -755,7 +755,7 @@ export const TrackerHistoryViewer = () => {
 
             <button
               onClick={() => setTrackingListsOpen(false)}
-              className="cursor-pointer p-1.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
+              className="cursor-pointer p-1.5 hover:bg-sand-800 rounded-full text-sand-600 hover:text-sand-400 transition-colors"
               title="Close"
             >
               <X size={20} />
@@ -774,8 +774,8 @@ export const TrackerHistoryViewer = () => {
               <div className="p-2 space-y-2">
                   {/* Clear View Button if Session Active */}
                   {viewingSession && (
-                      <div className="mb-2 p-3 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-blue-700">
+                      <div className="mb-2 p-3 bg-forest-100 border border-forest-600 rounded-xl flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-forest-700">
                               <MapIcon size={16} />
                               <span className="text-xs font-bold">Currently Viewing Session on Map</span>
                           </div>
@@ -783,7 +783,7 @@ export const TrackerHistoryViewer = () => {
                             {/* Show/Hide Toggle */}
                             <button
                                 onClick={() => setSessionVisible(!isSessionVisible)}
-                                className="p-1.5 bg-white text-blue-600 rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors"
+                                className="p-1.5 bg-white text-forest-700 rounded-lg border border-forest-600 hover:bg-forest-100 transition-colors"
                                 title={isSessionVisible ? "Hide Path" : "Show Path"}
                             >
                                 {isSessionVisible ? <Eye size={14} /> : <EyeOff size={14} />}
@@ -791,7 +791,7 @@ export const TrackerHistoryViewer = () => {
                             {/* Clear Button */}
                             <button 
                                 onClick={() => setViewingSession(null)}
-                                className="px-3 py-1.5 bg-white text-blue-600 text-xs font-bold rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors"
+                                className="px-3 py-1.5 bg-white text-forest-700 text-xs font-bold rounded-lg border border-forest-600 hover:bg-forest-100 transition-colors"
                             >
                                 Clear Map
                             </button>
@@ -800,29 +800,29 @@ export const TrackerHistoryViewer = () => {
                   )}
 
                   {isLoading && activities.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center h-40 text-slate-400 gap-2">
+                      <div className="flex flex-col items-center justify-center h-40 text-sand-600 gap-2">
                           <RefreshCw size={24} className="animate-spin" />
                           <span className="text-xs">Loading activities...</span>
                       </div>
                   ) : activities.length === 0 ? (
-                      <div className="text-center py-8 text-slate-400">
+                      <div className="text-center py-8 text-sand-600">
                           <Calendar size={32} className="mx-auto mb-2 opacity-20" />
                           <p className="text-xs">No recorded activities found.</p>
                       </div>
                   ) : (
                       activities.map((activity, idx) => (
-                          <div key={idx} className="bg-white border border-slate-100 rounded-xl p-3 hover:border-blue-200 transition-all shadow-sm hover:shadow-md group">
+                          <div key={idx} className="bg-white border border-sand-300 rounded-xl p-3 hover:border-forest-600 transition-all shadow-sm hover:shadow-md group">
                               <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-3">
-                                      <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex flex-col items-center justify-center border border-indigo-100">
+                                      <div className="w-10 h-10 rounded-lg bg-forest-100 text-forest-700 flex flex-col items-center justify-center border border-forest-600">
                                           <span className="text-[10px] font-bold uppercase">{new Date(activity.started_at).toLocaleString('en-US', { month: 'short' })}</span>
                                           <span className="text-sm font-bold leading-none">{new Date(activity.started_at).getDate()}</span>
                                       </div>
                                       <div>
-                                          <h4 className="text-sm font-bold text-slate-800">
+                                          <h4 className="text-sm font-bold text-sand-300">
                                               {activity.email ? activity.email.split('@')[0] : 'Activity'}
                                           </h4>
-                                          <div className="flex items-center gap-2 text-[10px] text-slate-500">
+                                          <div className="flex items-center gap-2 text-[10px] text-sand-500">
                                               <span>
                                                 {new Date(activity.started_at).toLocaleTimeString([], { hour: '2-digit', minute:'2-digit' })}
                                                 {activity.ended_at ? ` - ${new Date(activity.ended_at).toLocaleTimeString([], { hour: '2-digit', minute:'2-digit' })}` : ''}
@@ -842,14 +842,14 @@ export const TrackerHistoryViewer = () => {
                                     <button 
                                       onClick={() => exportSessionGPX(activity)}
                                       disabled={exportingGPXId === activity.session_id}
-                                      className="cursor-pointer p-2 rounded-full bg-slate-50 text-slate-400 hover:bg-green-500 hover:text-white transition-colors disabled:opacity-50"
+                                      className="cursor-pointer p-2 rounded-full bg-sand-900 text-sand-600 hover:bg-forest-700 hover:text-white transition-colors disabled:opacity-50"
                                       title="Download GPX"
                                     >
                                         <FileDown size={18} className={exportingGPXId === activity.session_id ? "animate-bounce" : ""} />
                                     </button>
                                     <button 
                                       onClick={() => handleLoadActivity(activity)}
-                                      className="cursor-pointer p-2 rounded-full bg-slate-50 text-slate-400 hover:bg-blue-500 hover:text-white transition-colors"
+                                      className="cursor-pointer p-2 rounded-full bg-sand-900 text-sand-600 hover:bg-forest-700 hover:text-white transition-colors"
                                       title="View on Map"
                                     >
                                         <Eye size={18} />
@@ -861,13 +861,13 @@ export const TrackerHistoryViewer = () => {
                   )}
                   {/* Loading Indicator for Infinite Scroll */}
               {isLoading && activities.length > 0 && (
-                  <div className="p-4 flex justify-center items-center text-slate-400 gap-2 text-xs">
+                  <div className="p-4 flex justify-center items-center text-sand-600 gap-2 text-xs">
                       <RefreshCw size={14} className="animate-spin" /> Loading more...
                   </div>
               )}
               
               {!hasMoreActivities && activities.length > 0 && (
-                  <div className="p-4 text-center text-[10px] text-slate-300 uppercase tracking-widest font-medium">
+                  <div className="p-4 text-center text-[10px] text-sand-700 uppercase tracking-widest font-medium">
                       No more activities
                   </div>
               )}
@@ -877,40 +877,40 @@ export const TrackerHistoryViewer = () => {
           {/* --- LOGS VIEW (Original) --- */}
           {viewMode === 'logs' && (
             isLoading && logs.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-2">
+            <div className="flex flex-col items-center justify-center h-full text-sand-600 gap-2">
               <RefreshCw size={24} className="animate-spin" />
               <span className="text-xs">Loading data...</span>
             </div>
           ) : logs.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-2 p-8 text-center">
+            <div className="flex flex-col items-center justify-center h-full text-sand-600 gap-2 p-8 text-center">
               <History size={32} className="opacity-20" />
               <span className="text-xs">No movement logs found.</span>
-              <p className="text-[10px] max-w-[200px] text-slate-300">
+              <p className="text-[10px] max-w-[200px] text-sand-700">
                 Activate "Broadcast My GPS" and move around to start generating
                 history logs.
               </p>
               <button
                 onClick={() => fetchLogs()}
-                className="mt-2 text-xs text-blue-500 hover:underline flex items-center gap-1"
+                className="mt-2 text-xs text-forest-700 hover:underline flex items-center gap-1"
               >
                 <RefreshCw size={10} /> Try Refreshing
               </button>
             </div>
           ) : (
-            <div className="divide-y divide-slate-50">
+            <div className="divide-y divide-sand-300">
               {logs.map((log, index) => (
                 <div
                   key={log.id}
-                  className="px-4 py-3 hover:bg-slate-50 transition-colors flex items-center justify-between group"
+                  className="px-4 py-3 hover:bg-sand-900 transition-colors flex items-center justify-between group"
                 >
                   {/* Left: User Info & Time */}
                   <div className="flex items-center gap-3 min-w-[120px] sm:min-w-[140px]">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-[10px] sm:text-xs shrink-0">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-forest-100 flex items-center justify-center text-forest-700 font-bold text-[10px] sm:text-xs shrink-0">
                       {index + 1}
                     </div>
 
                     <div className="flex flex-col overflow-hidden">
-                      <span className="text-xs sm:text-sm font-bold text-slate-800 truncate max-w-[80px] sm:max-w-none">
+                      <span className="text-xs sm:text-sm font-bold text-sand-300 truncate max-w-[80px] sm:max-w-none">
                         {/* Show Name/Email if available (Monitor), else Time */}
                         {(() => {
                           const email = log.profiles?.email;
@@ -918,14 +918,14 @@ export const TrackerHistoryViewer = () => {
                         })()}
                       </span>
                       <div className="flex flex-col">
-                        <span className="text-[9px] sm:text-[10px] text-slate-400 font-mono leading-tight">
+                        <span className="text-[9px] sm:text-[10px] text-sand-600 font-mono leading-tight">
                             {new Date(log.timestamp).toLocaleTimeString("id-ID", {
                                 hour: "2-digit",
                                 minute: "2-digit",
                                 second: "2-digit",
                             }).replace(/\./g, ":")}
                         </span>
-                        <span className="text-[8px] sm:text-[9px] text-slate-300 font-medium leading-tight">
+                        <span className="text-[8px] sm:text-[9px] text-sand-700 font-medium leading-tight">
                             {new Date(log.timestamp).toLocaleDateString("id-ID", {
                                 weekday: "short",
                                 day: "numeric",
@@ -939,10 +939,10 @@ export const TrackerHistoryViewer = () => {
                   {/* Middle: Coordinates (DMS) - Visible on Mobile now */}
                   <div className="flex-1 px-2 sm:px-4">
                     <div className="flex flex-col gap-0.5 sm:gap-1">
-                      <div className="hidden sm:flex text-[10px] font-bold text-slate-400 uppercase tracking-wider items-center gap-1">
+                      <div className="hidden sm:flex text-[10px] font-bold text-sand-600 uppercase tracking-wider items-center gap-1">
                         COORDINATES
                       </div>
-                      <div className="text-[9px] sm:text-xs font-mono text-slate-600 bg-slate-50 px-1.5 py-1 sm:px-2 sm:py-1.5 rounded border border-slate-100 whitespace-nowrap overflow-x-auto no-scrollbar">
+                      <div className="text-[9px] sm:text-xs font-mono text-sand-400 bg-sand-900 px-1.5 py-1 sm:px-2 sm:py-1.5 rounded border border-sand-300 whitespace-nowrap overflow-x-auto no-scrollbar">
                         <div>{toDMS(log.lat, true)}</div>
                         <div>{toDMS(log.lng, false)}</div>
                       </div>
@@ -952,18 +952,18 @@ export const TrackerHistoryViewer = () => {
                   {/* Right: Stats & Actions */}
                   <div className="flex items-center gap-2 sm:gap-4 text-right">
                     <div className="flex flex-col items-end w-[40px] sm:w-[60px]">
-                      <span className="text-xs sm:text-sm font-bold text-slate-700">
+                      <span className="text-xs sm:text-sm font-bold text-sand-400">
                         {log.elevation?.toFixed(0) || 0}
                       </span>
-                      <span className="text-[8px] sm:text-[9px] text-slate-400 uppercase">
+                      <span className="text-[8px] sm:text-[9px] text-sand-600 uppercase">
                         mdpl
                       </span>
                     </div>
                     <div className="flex flex-col items-end w-[35px] sm:w-[50px]">
-                      <span className="text-xs sm:text-sm font-bold text-slate-700">
+                      <span className="text-xs sm:text-sm font-bold text-sand-400">
                         {log.speed?.toFixed(1) || 0}
                       </span>
-                      <span className="text-[8px] sm:text-[9px] text-slate-400 uppercase">
+                      <span className="text-[8px] sm:text-[9px] text-sand-600 uppercase">
                         km/h
                       </span>
                     </div>
@@ -972,7 +972,7 @@ export const TrackerHistoryViewer = () => {
                     {userRole === "monitor360" && (
                       <button
                         onClick={() => setDeleteConfirmation(log.id)}
-                        className="cursor-pointer p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors ml-1"
+                        className="cursor-pointer p-1.5 text-brick-600 hover:text-brick-600 hover:bg-brick-50 rounded-full transition-colors ml-1"
                         title="Delete Log"
                       >
                         <Trash2 size={14} />
@@ -984,13 +984,13 @@ export const TrackerHistoryViewer = () => {
               
               {/* Loading Indicator for Infinite Scroll */}
               {isLoading && logs.length > 0 && (
-                  <div className="p-4 flex justify-center items-center text-slate-400 gap-2 text-xs">
+                  <div className="p-4 flex justify-center items-center text-sand-600 gap-2 text-xs">
                       <RefreshCw size={14} className="animate-spin" /> Loading more...
                   </div>
               )}
               
               {!hasMore && logs.length > 0 && (
-                  <div className="p-4 text-center text-[10px] text-slate-300 uppercase tracking-widest font-medium">
+                  <div className="p-4 text-center text-[10px] text-sand-700 uppercase tracking-widest font-medium">
                       No more logs
                   </div>
               )}
@@ -1000,35 +1000,35 @@ export const TrackerHistoryViewer = () => {
       </div>
       {/* Custom Delete Confirmation Modal */}
       {deleteConfirmation && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-slate-800 rounded-xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-700">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="bg-sand-100 rounded-xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200 border border-sand-200">
                 {/* Header */}
-                <div className="px-5 py-4 border-b border-slate-700/50 flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center shrink-0">
-                         <Trash2 size={16} className="text-red-500" />
+                <div className="px-5 py-4 border-b border-sand-200 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-brick-50 flex items-center justify-center shrink-0">
+                         <Trash2 size={16} className="text-brick-600" />
                     </div>
                     <div>
-                        <h3 className="text-white font-semibold text-sm">Delete Log Entry</h3>
-                        <p className="text-slate-400 text-xs mt-0.5">This action cannot be undone.</p>
+                        <h3 className="text-ink font-semibold text-sm">Delete Log Entry</h3>
+                        <p className="text-sand-600 text-xs mt-0.5">This action cannot be undone.</p>
                     </div>
                 </div>
                 
                 {/* Content */}
-                <div className="px-5 py-4 text-slate-300 text-sm leading-relaxed">
+                <div className="px-5 py-4 text-sand-700 text-sm leading-relaxed">
                     Are you sure you want to delete this tracking history record permanently?
                 </div>
 
                 {/* Footer Actions */}
-                <div className="px-5 py-4 bg-slate-900/50 flex items-center justify-end gap-3">
+                <div className="px-5 py-4 bg-sand-50 border-t border-sand-200 flex items-center justify-end gap-3">
                     <button 
                         onClick={() => setDeleteConfirmation(null)}
-                        className="cursor-pointer px-4 py-2 rounded-lg text-slate-400 text-xs font-medium hover:text-white hover:bg-slate-700 transition-colors"
+                        className="cursor-pointer px-4 py-2 rounded-lg text-sand-600 text-xs font-medium hover:text-ink hover:bg-sand-200 transition-colors"
                     >
                         Cancel
                     </button>
                     <button 
                         onClick={() => deleteLog(deleteConfirmation)}
-                        className="cursor-pointer px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-bold shadow-lg shadow-red-500/20 transition-all transform active:scale-95"
+                        className="cursor-pointer px-4 py-2 rounded-lg bg-brick-500 hover:bg-brick-600 text-white text-xs font-bold shadow-lg transition-all transform active:scale-95"
                     >
                         Yes, Delete it
                     </button>

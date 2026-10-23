@@ -54,6 +54,10 @@ async function request<T>(method: string, body?: unknown, query = ''): Promise<T
   if (!res.ok) {
     throw new Error(payload?.error || `Request failed (${res.status})`);
   }
+  // A non-JSON 200 means the dev server answered with index.html: the Vercel Function is not running
+  if (payload === null) {
+    throw new Error('Admin API is not available here. Use the deployed site or run `vercel dev`.');
+  }
   return payload as T;
 }
 

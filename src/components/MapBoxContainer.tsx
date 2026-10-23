@@ -983,7 +983,7 @@ const MapBoxContainerComponent = ({
                 <button
                   type="button"
                   onClick={closeSelectedLocation}
-                  className="text-[11px] font-semibold text-gray-600 hover:text-gray-900"
+                  className="text-[11px] font-semibold text-sand-400 hover:text-sand-300"
                 >
                   Close
                 </button>
@@ -992,10 +992,10 @@ const MapBoxContainerComponent = ({
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
                     selectedLocation.place_type.includes("mountain")
-                      ? "bg-green-100 text-green-600"
+                      ? "bg-forest-100 text-forest-700"
                       : selectedLocation.place_type.includes("water")
-                        ? "bg-blue-100 text-blue-600"
-                        : "bg-purple-100 text-purple-600"
+                        ? "bg-forest-100 text-forest-700"
+                        : "bg-gold-100 text-gold-700"
                   }`}
                 >
                   <img
@@ -1017,21 +1017,21 @@ const MapBoxContainerComponent = ({
                   />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm text-gray-900 leading-tight">
+                  <h3 className="font-bold text-sm text-sand-300 leading-tight">
                     {selectedLocation.place_name}
                   </h3>
-                  <p className="text-[10px] text-gray-500 font-medium mt-0.5 uppercase tracking-wide">
+                  <p className="text-[10px] text-sand-500 font-medium mt-0.5 uppercase tracking-wide">
                     {selectedLocation.text}
                   </p>
                 </div>
               </div>
 
               {selectedLocation.properties?.wikidata && (
-                <div className="mt-2 pt-2 border-t border-gray-100 text-center">
-                  <p className="text-[10px] text-gray-400 tracking-wide line-clamp-8">
+                <div className="mt-2 pt-2 border-t border-sand-300 text-center">
+                  <p className="text-[10px] text-sand-600 tracking-wide line-clamp-8">
                     Data source: Wikipedia
                   </p>
-                  <p className="text-[11px] text-gray-500 leading-tight">
+                  <p className="text-[11px] text-sand-500 leading-tight">
                     {selectedLocation.properties.wikidata}
                   </p>
                 </div>
@@ -1088,8 +1088,8 @@ const MapBoxContainerComponent = ({
 
       {/* Map Error Indicator */}
       {mapError && (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-red-900/90 text-white px-6 py-4 rounded-xl border border-red-500/50 shadow-2xl backdrop-blur-md max-w-sm text-center">
-          <div className="text-red-200 mb-2">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-brick-800 text-ink px-6 py-4 rounded-xl border border-brick-300 shadow-2xl backdrop-blur-md max-w-sm text-center">
+          <div className="text-brick-600 mb-2">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-8 w-8 mx-auto"
@@ -1112,7 +1112,7 @@ const MapBoxContainerComponent = ({
 
       {/* Offline Indicator */}
       {isOffline && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-red-500/90 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-2 backdrop-blur-md animate-in fade-in slide-in-from-top-4">
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-brick-500 text-ink px-4 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-2 backdrop-blur-md animate-in fade-in slide-in-from-top-4">
           <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
           OFFLINE MODE
         </div>

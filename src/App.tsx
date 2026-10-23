@@ -46,8 +46,8 @@ function App() {
       
       {!isLoading && (
         <Suspense fallback={
-            <div className="fixed inset-0 flex items-center justify-center bg-black text-white">
-                <Loader2 size={32} className="animate-spin text-blue-500" />
+            <div className="fixed inset-0 flex items-center justify-center bg-ink/40 text-ink">
+                <Loader2 size={32} className="animate-spin text-forest-700" />
             </div>
         }>
             <Routes>

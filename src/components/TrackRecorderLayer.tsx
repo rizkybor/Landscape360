@@ -75,12 +75,12 @@ export const TrackRecorderLayer = () => {
 
       {viewStart && (
         <Marker longitude={viewStart.lng} latitude={viewStart.lat} anchor="center">
-          <div className="w-4 h-4 rounded-full bg-green-500 border-2 border-white shadow-lg" title="Start" />
+          <div className="w-4 h-4 rounded-full bg-forest-700 border-2 border-white shadow-lg" title="Start" />
         </Marker>
       )}
       {viewEnd && (
         <Marker longitude={viewEnd.lng} latitude={viewEnd.lat} anchor="center">
-          <div className="w-4 h-4 rounded-sm bg-red-500 border-2 border-white shadow-lg" title="Finish" />
+          <div className="w-4 h-4 rounded-sm bg-brick-500 border-2 border-white shadow-lg" title="Finish" />
         </Marker>
       )}
 
@@ -124,8 +124,8 @@ export const TrackRecorderLayer = () => {
           </Source>
           <Marker longitude={currentFix.lng} latitude={currentFix.lat} anchor="center">
             <div className="relative w-4 h-4">
-              <div className="absolute inset-0 rounded-full bg-orange-500 animate-ping opacity-60" />
-              <div className="relative w-4 h-4 rounded-full bg-orange-500 border-2 border-white shadow-lg" />
+              <div className="absolute inset-0 rounded-full bg-ember-500 animate-ping opacity-60" />
+              <div className="relative w-4 h-4 rounded-full bg-ember-500 border-2 border-white shadow-lg" />
             </div>
           </Marker>
         </>

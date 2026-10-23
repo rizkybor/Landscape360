@@ -158,13 +158,13 @@ const InterpolatedMarker = memo(({ packet, onClick }: { packet: TrackerPacket; o
         {/* Idle Ring (Static Dashed Amber) */}
         {isIdle && (
              <div 
-               className="absolute -inset-1 rounded-full border-2 border-dashed border-amber-500 opacity-80"
+               className="absolute -inset-1 rounded-full border-2 border-dashed border-gold-500 opacity-80"
              />
         )}
 
         {/* Main Marker Body */}
         <div 
-          className={`w-10 h-10 rounded-full shadow-xl border-[3px] flex items-center justify-center text-white font-bold backdrop-blur-sm transition-colors duration-300 ${isOffline ? 'border-gray-300' : 'border-white'}`}
+          className={`w-10 h-10 rounded-full shadow-xl border-[3px] flex items-center justify-center text-white font-bold backdrop-blur-sm transition-colors duration-300 ${isOffline ? 'border-sand-300' : 'border-white'}`}
           style={{ backgroundColor: markerBg }}
         >
           {isOffline ? (
@@ -184,13 +184,13 @@ const InterpolatedMarker = memo(({ packet, onClick }: { packet: TrackerPacket; o
 
         {/* Hover Label */}
         {isHovered && (
-            <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-xl whitespace-nowrap z-50 border border-slate-700 animate-in fade-in zoom-in-95 duration-200">
+            <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-sand-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-xl whitespace-nowrap z-50 border border-sand-700 animate-in fade-in zoom-in-95 duration-200">
               {packet.user_id}
-              <div className="text-[9px] font-normal text-slate-400 mt-0.5 uppercase tracking-wide">
+              <div className="text-[9px] font-normal text-sand-400 mt-0.5 uppercase tracking-wide">
                   {isOffline ? 'OFFLINE' : (isIdle ? 'IDLE (STATIONARY)' : 'ONLINE (MOVING)')}
               </div>
               {/* Tooltip Arrow */}
-              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-900 rotate-45 border-b border-r border-slate-700"></div>
+              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-sand-900 rotate-45 border-b border-r border-sand-700"></div>
             </div>
         )}
       </div>
@@ -427,7 +427,7 @@ export const LiveTrackerLayer = ({ mapRef }: { mapRef?: React.RefObject<MapRef |
                 {/* Close Button (Absolute Top-Right) */}
                 <button 
                     onClick={() => selectTracker(null)}
-                    className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-black/5 transition-colors z-10"
+                    className="absolute top-3 right-3 text-sand-400 hover:text-sand-600 p-1 rounded-full hover:bg-white/90 transition-colors z-10"
                     title="Close"
                 >
                     <X size={16} />
@@ -445,12 +445,12 @@ export const LiveTrackerLayer = ({ mapRef }: { mapRef?: React.RefObject<MapRef |
                     
                     {/* Title & Status */}
                     <div className="flex flex-col min-w-0 pt-0.5">
-                        <h3 className="font-bold text-slate-800 text-lg leading-tight truncate pr-6 uppercase tracking-wide">
+                        <h3 className="font-bold text-sand-800 text-lg leading-tight truncate pr-6 uppercase tracking-wide">
                             {selectedTracker.latestPacket.user_id}
                         </h3>
                         <div className="flex items-center gap-1.5 mt-1">
-                            <span className={`w-2 h-2 rounded-full shrink-0 ${selectedTracker.isOffline ? 'bg-slate-400' : 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]'}`}></span>
-                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                            <span className={`w-2 h-2 rounded-full shrink-0 ${selectedTracker.isOffline ? 'bg-sand-400' : 'bg-forest-700 '}`}></span>
+                            <span className="text-[10px] font-bold text-sand-500 uppercase tracking-widest">
                                 {selectedTracker.isOffline ? 'OFFLINE' : 'LIVE TRACKING'}
                             </span>
                         </div>
@@ -458,11 +458,11 @@ export const LiveTrackerLayer = ({ mapRef }: { mapRef?: React.RefObject<MapRef |
                 </div>
                 
                 {/* Coordinates Card (Translucent Inner Panel) */}
-                <div className="bg-slate-100/50 p-3 rounded-xl border border-slate-200/50 mb-4 backdrop-blur-sm">
-                    <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                <div className="bg-sand-100/50 p-3 rounded-xl border border-sand-200/50 mb-4 backdrop-blur-sm">
+                    <div className="flex items-center gap-2 text-[10px] font-bold text-sand-400 uppercase tracking-wider mb-1.5">
                         <MapPin size={12} /> COORDINATES
                     </div>
-                    <div className="font-mono text-sm font-semibold text-slate-700 leading-relaxed tracking-tight">
+                    <div className="font-mono text-sm font-semibold text-sand-700 leading-relaxed tracking-tight">
                         <div>{toDMS(selectedTracker.latestPacket.lat, true)}</div>
                         <div>{toDMS(selectedTracker.latestPacket.lng, false)}</div>
                     </div>
@@ -472,39 +472,39 @@ export const LiveTrackerLayer = ({ mapRef }: { mapRef?: React.RefObject<MapRef |
                 <div className="grid grid-cols-2 gap-4 mb-4 px-1">
                     {/* Elevation */}
                     <div className="flex flex-col">
-                        <span className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                            <Mountain size={14} className="text-slate-400"/> ELEVATION
+                        <span className="flex items-center gap-1.5 text-[10px] font-bold text-sand-400 uppercase tracking-wider mb-1">
+                            <Mountain size={14} className="text-sand-400"/> ELEVATION
                         </span>
                         <div className="flex items-baseline gap-1">
-                            <span className="font-bold text-slate-800 text-xl">
+                            <span className="font-bold text-sand-800 text-xl">
                                 {terrainElevation !== null ? terrainElevation.toFixed(0) : (selectedTracker.latestPacket.alt?.toFixed(0) || '-')}
                             </span>
-                            <span className="text-xs font-medium text-slate-500 lowercase">mdpl</span>
+                            <span className="text-xs font-medium text-sand-500 lowercase">mdpl</span>
                         </div>
                     </div>
                     
                     {/* Speed */}
                     <div className="flex flex-col">
-                        <span className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                            <Signal size={14} className="text-slate-400"/> SPEED
+                        <span className="flex items-center gap-1.5 text-[10px] font-bold text-sand-400 uppercase tracking-wider mb-1">
+                            <Signal size={14} className="text-sand-400"/> SPEED
                         </span>
                         <div className="flex items-baseline gap-1">
-                            <span className="font-bold text-slate-800 text-xl">
+                            <span className="font-bold text-sand-800 text-xl">
                                 {selectedTracker.latestPacket.speed?.toFixed(1) || 0}
                             </span>
-                            <span className="text-xs font-medium text-slate-500 lowercase">km/h</span>
+                            <span className="text-xs font-medium text-sand-500 lowercase">km/h</span>
                         </div>
                     </div>
                 </div>
 
                 {/* Footer */}
-                <div className="border-t border-slate-200/60 pt-3 flex justify-between items-end">
-                    <span className="text-[10px] text-slate-400 font-medium">Last update</span>
+                <div className="border-t border-sand-200/60 pt-3 flex justify-between items-end">
+                    <span className="text-[10px] text-sand-400 font-medium">Last update</span>
                     <div className="text-right flex flex-col items-end">
-                      <span className="text-slate-700 font-bold text-xs font-mono">
+                      <span className="text-sand-700 font-bold text-xs font-mono">
                         {new Date(selectedTracker.latestPacket.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':')} WIB
                       </span>
-                      <span className="text-[10px] text-slate-400 font-medium mt-0.5">
+                      <span className="text-[10px] text-sand-400 font-medium mt-0.5">
                         {new Date(selectedTracker.latestPacket.timestamp).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
                       </span>
                     </div>
