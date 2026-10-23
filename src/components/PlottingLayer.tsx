@@ -96,11 +96,6 @@ export const PlottingLayer = () => {
   // Prepare GeoJSON
   // pointsGeoJSON removed as we use Markers for interactivity
   
-  const linesGeoJSON: FeatureCollection = {
-    type: 'FeatureCollection',
-    features: []
-  };
-
   // Calculate labels for Points (Lat, Lng, Elev)
   const pointLabels = useMemo(() => {
     return groups.flatMap(g => g.points.map((p, idx) => {
@@ -119,8 +114,12 @@ export const PlottingLayer = () => {
     }));
   }, [groups, activeGroupId]);
 
-  // Calculate measurement labels for Markers
-  const measurementLabels = useMemo(() => {
+  // Calculate lines and measurement labels for Markers
+  const { baseLines, baseLabels } = useMemo(() => {
+      const lines: FeatureCollection = {
+          type: 'FeatureCollection',
+          features: []
+      };
       const labels: Array<{
           id: string;
           lng: number;
@@ -153,7 +152,7 @@ export const PlottingLayer = () => {
                   console.warn("Failed to generate curve, falling back to straight line", e);
               }
 
-              linesGeoJSON.features.push({
+              lines.features.push({
                   type: 'Feature',
                   geometry: geometry,
                   properties: { 
@@ -190,8 +189,12 @@ export const PlottingLayer = () => {
               }
           }
       });
-      return labels;
-  }, [groups, activeGroupId, linesGeoJSON]);
+      return { baseLines: lines, baseLabels: labels };
+  }, [groups, activeGroupId]);
+
+  // Copy so the preview below never mutates the memoized results
+  const linesGeoJSON: FeatureCollection = { ...baseLines, features: [...baseLines.features] };
+  const measurementLabels = [...baseLabels];
 
   // Preview line from last point of active group to cursor
   if (isPlotMode && activeGroup && activeGroup.points.length > 0 && cursorLocation) {

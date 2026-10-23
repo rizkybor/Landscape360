@@ -102,7 +102,7 @@ describe('RegionDrawingOverlay', () => {
     
     // Check Prices
     expect(screen.getByText('Rp 10.000')).toBeInTheDocument();
-    expect(screen.getByText('Rp 110.000')).toBeInTheDocument();
+    expect(screen.getByText('Available Upon Request')).toBeInTheDocument();
 
     // Check default selection
     expect(screen.getByText('Request Pro Upgrade')).toBeInTheDocument();

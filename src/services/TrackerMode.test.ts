@@ -32,6 +32,15 @@ describe('Online/Offline Tracker Mode', () => {
       isSimulationEnabled: false,
       isLocalBroadcastEnabled: true,
       setConnectionStatus: mockSetConnectionStatus,
+      isActivityRecording: false,
+      activitySessionId: null,
+      activityStartedAt: null,
+      activityEndedAt: null,
+      activityDistanceM: 0,
+      activityPointCount: 0,
+      setActivityStats: vi.fn(),
+      hydrateActivity: vi.fn(),
+      clearActivity: vi.fn(),
     }));
 
     (useSurveyStore as any).mockReturnValue({
