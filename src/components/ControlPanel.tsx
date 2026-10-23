@@ -6,6 +6,7 @@ import { useTrackerStore } from "../store/useTrackerStore"; // Import Tracker St
 import { useRouteStore } from "../store/useRouteStore";
 import { useCustomBasemapStore } from "../store/useCustomBasemapStore";
 import { AuthControl } from "./AuthControl";
+import { CONTACT_ADMIN_LABEL } from "../config";
 import mapboxgl from "mapbox-gl";
 import type { MapRef } from "react-map-gl/mapbox";
 import {
@@ -679,7 +680,7 @@ export const ControlPanel = () => {
                           </div>
                           {!isMobile && (
                             <div className="text-[10px] text-gray-600">
-                              Upgrade to Pro
+                              {CONTACT_ADMIN_LABEL}
                             </div>
                           )}
                         </div>
