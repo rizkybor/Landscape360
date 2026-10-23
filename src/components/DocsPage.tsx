@@ -16,7 +16,7 @@ import {
 import streetsView from "../assets/Street-View.png";
 import outdoorsView from "../assets/Outdoors-View.png";
 import satelliteView from "../assets/Satellite-View.png";
-import geoportalLogo from "../assets/geoportal360.svg";
+import landscapeLogo from "../assets/LandscapeLogo.svg";
 import { SEO } from "./SEO";
 
 interface Props {
@@ -80,7 +80,7 @@ export const DocsPage = ({ onBack }: Props) => {
               <div className="relative group">
                 <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full group-hover:bg-blue-500/30 transition-all duration-500"></div>
                 <img
-                  src={geoportalLogo}
+                  src={landscapeLogo}
                   alt="360"
                   className="relative w-24 h-24 object-contain drop-shadow-2xl transform transition-transform duration-500 group-hover:scale-110"
                 />

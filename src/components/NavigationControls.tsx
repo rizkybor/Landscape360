@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Minus, Compass, Crosshair, Camera, Loader2, X } from "lucide-react";
 import type { MapRef } from "react-map-gl/mapbox";
-import geoportalLogo from "../assets/geoportal360.svg";
+import landscapeLogo from "../assets/LandscapeLogo.png";
 import { useSurveyStore } from "../store/useSurveyStore";
 import { useMapStore } from "../store/useMapStore";
 import { distance, point } from "@turf/turf";
@@ -211,7 +211,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         const renderHeader = (isFirstPage: boolean) => `
             <div style="height: ${headerHeight}px; padding: ${MARGIN}px ${MARGIN}px 0 ${MARGIN}px; display: flex; justify-content: space-between; align-items: start; margin-bottom: ${20 * scale}px;">
                 <div style="display: flex; align-items: center; gap: ${16 * scale}px;">
-                    <img src="${geoportalLogo}" style="width: ${40 * scale}px; height: ${40 * scale}px; object-fit: contain;" />
+                    <img src="${landscapeLogo}" style="width: ${40 * scale}px; height: ${40 * scale}px; object-fit: contain;" />
                     <div>
                         <h1 style="color: white; font-family: 'Inter', sans-serif; font-weight: 800; font-size: ${20 * scale}px; line-height: 1; margin: 0; letter-spacing: -0.02em;">Landscape 360</h1>
                         <p style="color: #f2cc6c; font-family: 'Inter', monospace; font-size: ${10 * scale}px; margin: ${4 * scale}px 0 0 0; letter-spacing: 0.1em; text-transform: uppercase;">${isFirstPage ? 'Professional Survey Report' : 'Survey Report Continuation'}</p>

@@ -33,7 +33,7 @@ import {
   Square,
   Footprints,
 } from "lucide-react";
-import geoportalLogo from "../assets/geoportal360.svg";
+import landscapeLogo from "../assets/LandscapeLogo.svg";
 import streetsView from "../assets/Street-View.png";
 import outdoorsView from "../assets/Outdoors-View.png";
 import satelliteView from "../assets/Satellite-View.png";
@@ -329,7 +329,7 @@ export const ControlPanel = () => {
         >
           <span className="absolute inset-0 rounded-full bg-gradient-to-br from-white/30 via-transparent to-transparent opacity-60 pointer-events-none" />
           <img
-            src={geoportalLogo}
+            src={landscapeLogo}
             alt="Landscape 360"
             className="w-8 h-8 object-contain relative z-10"
           />
@@ -379,7 +379,7 @@ export const ControlPanel = () => {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <img
-                  src={geoportalLogo}
+                  src={landscapeLogo}
                   alt="360"
                   className="w-12 h-12 object-contain"
                 />
@@ -1644,7 +1644,7 @@ const GetStartedModal = ({
         <div className="p-6 border-b border-sand-100 bg-sand-50">
           <div className="flex items-center gap-3">
             <img
-              src={geoportalLogo}
+              src={landscapeLogo}
               alt="Logo"
               className="w-10 h-10 object-contain"
             />

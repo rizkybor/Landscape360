@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  /* Brand palette, sampled from the Geoportal360 logo (src/assets/geoportal360.png) */
+  /* Brand palette, sampled from the Landscape 360 logo (src/assets/LandscapeLogo.svg) */
   --color-ink: #1a2214;
 
   /* Forest green: logo ground, primary actions */
