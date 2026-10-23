@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useMapStore } from "../store/useMapStore";
-import { Search, X, MapPin, Loader2, ArrowRight, Mountain, Tent, Navigation } from "lucide-react";
+import { Search, X, MapPin, Loader2, CornerDownLeft, Mountain, Tent, Navigation, BadgeCheck, Crosshair } from "lucide-react";
 import customLocations from "../data/myDataLocation.json";
 
 // Using the same token as in MapBoxContainer
@@ -20,8 +20,10 @@ export const SearchPanel = () => {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   // Fetch user location on mount
   useEffect(() => {
@@ -166,6 +168,7 @@ export const SearchPanel = () => {
       });
 
       setResults(finalResults);
+      setActiveIndex(0);
     } catch (error) {
       console.error("Search error:", error);
     } finally {
@@ -180,141 +183,195 @@ export const SearchPanel = () => {
     setQuery("");
   };
 
+  // Keep the keyboard-selected result in view
+  useEffect(() => {
+    listRef.current
+      ?.querySelector('[data-active="true"]')
+      ?.scrollIntoView({ block: "nearest" });
+  }, [activeIndex]);
+
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (results.length === 0) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIndex((i) => (i + 1) % results.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIndex((i) => (i - 1 + results.length) % results.length);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      const selected = results[activeIndex];
+      if (selected) handleSelect(selected);
+    }
+  };
+
   if (!showSearch) return null;
+
+  const isCoordinateQuery = /^(-?\d+(\.\d+)?),\s*(-?\d+(\.\d+)?)$/.test(query.trim());
+  const verifiedResults = results.filter((r) => r.place_type.includes("custom"));
+  const placeResults = results.filter((r) => !r.place_type.includes("custom"));
+
+  const iconFor = (types: string[]) => {
+    if (types.includes("mountain")) return { icon: <Mountain size={16} />, tone: "bg-ember-50 text-ember-700 border-ember-100" };
+    if (types.includes("basecamp")) return { icon: <Tent size={16} />, tone: "bg-forest-50 text-forest-700 border-forest-100" };
+    if (types.includes("poi")) return { icon: <MapPin size={16} />, tone: "bg-gold-50 text-gold-700 border-gold-100" };
+    return { icon: <Navigation size={16} />, tone: "bg-sand-100 text-sand-600 border-sand-200" };
+  };
+
+  const renderResult = (res: SearchResult) => {
+    const index = results.indexOf(res);
+    const isActive = index === activeIndex;
+    const { icon, tone } = iconFor(res.place_type);
+    const [title, ...rest] = res.place_name.split(",");
+    return (
+      <li key={res.id}>
+        <button
+          onClick={() => handleSelect(res)}
+          onMouseEnter={() => setActiveIndex(index)}
+          data-active={isActive}
+          className={`cursor-pointer w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-3 transition-colors ${
+            isActive ? "bg-forest-50 ring-1 ring-forest-200" : "hover:bg-sand-50"
+          }`}
+        >
+          <div className={`w-9 h-9 rounded-lg border flex items-center justify-center shrink-0 ${tone}`}>
+            {icon}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span className={`font-semibold text-sm truncate ${isActive ? "text-forest-800" : "text-ink"}`}>
+                {title}
+              </span>
+              {res.place_type.includes("custom") && (
+                <BadgeCheck size={14} className="text-gold-600 shrink-0" aria-label="Verified location" />
+              )}
+            </div>
+            <div className="text-xs text-sand-500 truncate">
+              {rest.join(",").trim() || res.text}
+            </div>
+          </div>
+          <CornerDownLeft
+            size={14}
+            className={`shrink-0 transition-opacity ${isActive ? "opacity-100 text-forest-700" : "opacity-0"}`}
+          />
+        </button>
+      </li>
+    );
+  };
 
   return (
     <div className="fixed inset-0 z-[70] bg-ink/40 backdrop-blur-sm flex items-start justify-center p-4 sm:pt-24 animate-in fade-in duration-200">
-      <div 
+      <div
         ref={containerRef}
-        className="w-full max-w-2xl bg-white border border-sand-200 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] animate-in slide-in-from-top-4 duration-300 ring-1 ring-sand-200"
+        className="w-full max-w-2xl bg-white border border-sand-200 rounded-2xl shadow-2xl shadow-sand-900/10 overflow-hidden flex flex-col max-h-[80vh] animate-in slide-in-from-top-4 duration-300"
       >
-        {/* Header / Input Area */}
-        <div className="relative border-b border-sand-200 bg-white p-4 flex items-center gap-3">
-          <Search className="text-sand-600 shrink-0" size={20} />
-          <input
-            ref={inputRef}
-            type="text"
-            placeholder="Search mountains, basecamp, or cities..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="flex-1 bg-transparent border-none outline-none text-ink text-lg placeholder-sand-500 font-medium"
-          />
-          {loading ? (
-            <Loader2 className="animate-spin text-forest-700 shrink-0" size={20} />
-          ) : query && (
-            <button 
-              onClick={() => { setQuery(""); setResults([]); inputRef.current?.focus(); }}
-              className="text-sand-600 hover:text-ink transition-colors cursor-pointer"
-            >
-              <X size={20} />
-            </button>
-          )}
-          <div className="hidden sm:flex items-center gap-1 text-[10px] font-mono text-sand-500 border border-sand-200 rounded px-1.5 py-0.5">
-            <span>ESC</span>
+        {/* Input */}
+        <div className="p-3 border-b border-sand-200">
+          <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-sand-50 border border-sand-200 focus-within:border-forest-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-forest-100 transition-all">
+            <Search className="text-forest-700 shrink-0" size={20} />
+            <input
+              ref={inputRef}
+              type="text"
+              placeholder="Search mountains, basecamp, or cities..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={handleInputKeyDown}
+              className="flex-1 min-w-0 bg-transparent border-none outline-none text-ink text-base sm:text-lg placeholder-sand-400 font-medium"
+            />
+            {loading ? (
+              <Loader2 className="animate-spin text-forest-700 shrink-0" size={18} />
+            ) : (
+              query && (
+                <button
+                  onClick={() => { setQuery(""); setResults([]); inputRef.current?.focus(); }}
+                  className="cursor-pointer p-1 rounded-md text-sand-500 hover:text-ink hover:bg-sand-100 transition-colors"
+                  title="Clear"
+                >
+                  <X size={16} />
+                </button>
+              )
+            )}
+            <kbd className="hidden sm:inline-flex items-center text-[10px] font-mono text-sand-500 bg-white border border-sand-200 rounded-md px-1.5 py-0.5">
+              ESC
+            </kbd>
           </div>
+          {isCoordinateQuery && (
+            <div className="mt-2 flex items-center gap-1.5 px-1 text-[11px] text-forest-700">
+              <Crosshair size={12} /> Coordinate search (Lat, Lon)
+            </div>
+          )}
         </div>
 
-        {/* Results Area */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar bg-white">
+        {/* Results */}
+        <div ref={listRef} className="flex-1 overflow-y-auto custom-scrollbar p-2">
           {results.length > 0 ? (
-            <div className="py-2">
-              <div className="px-4 py-2 text-[10px] font-bold text-sand-500 uppercase tracking-widest">
-                Search Results
-              </div>
-              <ul>
-                {results.map((res) => (
-                  <li key={res.id}>
-                    <button
-                      onClick={() => handleSelect(res)}
-                      className="cursor-pointer w-full text-left px-4 py-3 hover:bg-forest-50 transition-colors flex items-center gap-4 group border-l-2 border-transparent hover:border-forest-600"
-                    >
-                      <div className={`
-                        w-10 h-10 rounded-full flex items-center justify-center shrink-0
-                        ${res.place_type.includes("mountain") ? "bg-ember-50 text-ember-700" : 
-                          res.place_type.includes("poi") ? "bg-forest-50 text-forest-700" :
-                          res.place_type.includes("basecamp") ? "bg-forest-50 text-forest-700" :
-                          "bg-sand-100 text-sand-600"}
-                      `}>
-                        {res.place_type.includes("mountain") ? <Mountain size={18} /> :
-                         res.place_type.includes("basecamp") ? <Tent size={18} /> :
-                         res.place_type.includes("poi") ? <MapPin size={18} /> :
-                         <Navigation size={18} />}
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className="font-semibold text-sand-800 text-sm group-hover:text-forest-700 transition-colors truncate">
-                            {res.place_name.split(",")[0]}
-                          </span>
-                          {res.place_type.includes("custom") && (
-                            <span className="text-[9px] bg-gold-50 text-gold-700 px-1.5 py-0.5 rounded font-bold border border-gold-200">
-                              VERIFIED - OFFICIAL360
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-xs text-sand-500 truncate group-hover:text-sand-600">
-                          {res.place_name.split(",").slice(1).join(",").trim() || res.text}
-                        </div>
-                      </div>
-
-                      <ArrowRight size={16} className="text-sand-400 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all duration-200" />
-                    </button>
-                  </li>
-                ))}
-              </ul>
+            <div className="space-y-3">
+              {verifiedResults.length > 0 && (
+                <section>
+                  <div className="px-3 pt-1 pb-1.5 text-[10px] font-bold text-gold-700 uppercase tracking-widest flex items-center gap-1.5">
+                    <BadgeCheck size={12} /> Verified Locations
+                  </div>
+                  <ul className="space-y-0.5">{verifiedResults.map(renderResult)}</ul>
+                </section>
+              )}
+              {placeResults.length > 0 && (
+                <section>
+                  <div className="px-3 pt-1 pb-1.5 text-[10px] font-bold text-sand-500 uppercase tracking-widest">
+                    Places
+                  </div>
+                  <ul className="space-y-0.5">{placeResults.map(renderResult)}</ul>
+                </section>
+              )}
             </div>
           ) : query.length > 2 && !loading ? (
-            <div className="p-12 text-center">
-              <div className="w-16 h-16 bg-sand-100 rounded-full flex items-center justify-center mx-auto mb-4 text-sand-500">
-                <Search size={32} />
+            <div className="py-12 px-6 text-center">
+              <div className="w-14 h-14 bg-sand-50 border border-sand-200 rounded-2xl flex items-center justify-center mx-auto mb-4 text-sand-400">
+                <Search size={24} />
               </div>
-              <h3 className="text-sand-700 font-medium mb-1">No locations found</h3>
-              <p className="text-sand-500 text-sm">Try searching for a different keyword or coordinate.</p>
+              <h3 className="text-ink font-semibold mb-1">No locations found</h3>
+              <p className="text-sand-500 text-sm">Try a different keyword, or paste coordinates like <span className="font-mono text-sand-700">-6.77, 106.98</span>.</p>
             </div>
           ) : (
-            <div className="p-8">
+            <div className="p-4">
               <div className="text-[10px] font-bold text-sand-500 uppercase tracking-widest mb-3">
                 Quick Suggestions
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="flex flex-wrap gap-2">
                 {[
                   { name: "Gunung Gede", type: "mountain" },
                   // { name: "Gunung Semeru", type: "mountain" },
                   { name: "Sekretariat Makopala", type: "basecamp" },
                   // { name: "Ranu Kumbolo", type: "poi" },
-                ].map((item, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => { setQuery(item.name); performSearch(item.name); }}
-                    className="cursor-pointer flex items-center gap-3 p-3 rounded-xl bg-sand-100 hover:bg-sand-100 border border-sand-200 hover:border-sand-300 transition-all text-left group"
-                  >
-                    <div className={`
-                      w-8 h-8 rounded-lg flex items-center justify-center shrink-0
-                      ${item.type === "mountain" ? "bg-ember-50 text-ember-700" : 
-                        item.type === "basecamp" ? "bg-forest-50 text-forest-700" :
-                        "bg-forest-50 text-forest-700"}
-                    `}>
-                      {item.type === "mountain" ? <Mountain size={14} /> :
-                       item.type === "basecamp" ? <Tent size={14} /> :
-                       <MapPin size={14} />}
-                    </div>
-                    <span className="text-sm text-sand-700 font-medium group-hover:text-ink">{item.name}</span>
-                  </button>
-                ))}
+                ].map((item, idx) => {
+                  const { icon, tone } = iconFor([item.type]);
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => { setQuery(item.name); performSearch(item.name); }}
+                      className="cursor-pointer inline-flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full bg-white border border-sand-200 hover:border-forest-300 hover:bg-forest-50 transition-colors text-sm text-sand-700 hover:text-forest-800"
+                    >
+                      <span className={`w-6 h-6 rounded-full border flex items-center justify-center ${tone}`}>{icon}</span>
+                      {item.name}
+                    </button>
+                  );
+                })}
               </div>
+              <p className="mt-4 text-xs text-sand-500">
+                Tip: search by name, or paste coordinates (Lat, Lon).
+              </p>
             </div>
           )}
         </div>
-        
+
         {/* Footer */}
-        <div className="p-3 bg-sand-50 border-t border-sand-200 flex justify-between items-center text-[10px] text-sand-500">
-          <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-forest-700"></span>
-              Landscape 360
-            </span>
-            {/* <span className="hidden sm:inline">Coordinates supported (Lat, Lon)</span> */}
+        <div className="px-4 py-2.5 bg-sand-50 border-t border-sand-200 flex justify-between items-center text-[10px] text-sand-500">
+          <div className="hidden sm:flex items-center gap-3">
+            <span className="flex items-center gap-1"><kbd className="font-mono bg-white border border-sand-200 rounded px-1">↑</kbd><kbd className="font-mono bg-white border border-sand-200 rounded px-1">↓</kbd> navigate</span>
+            <span className="flex items-center gap-1"><kbd className="font-mono bg-white border border-sand-200 rounded px-1">↵</kbd> go to location</span>
           </div>
+          <span className="sm:hidden flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-forest-700"></span>
+            Landscape 360
+          </span>
           <div className="font-mono">
             {results.length} results
           </div>

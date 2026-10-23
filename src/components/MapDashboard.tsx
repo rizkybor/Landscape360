@@ -3,6 +3,7 @@ import { MapBoxContainer } from "./MapBoxContainer";
 import { Split, Maximize } from "lucide-react";
 // import { ScreenshotControl } from "./ScreenshotControl";
 import { SEO } from "./SEO";
+import { useTrackRecorderService } from "../services/TrackRecorderService";
 import type { MapRef } from "react-map-gl/mapbox";
 
 export const MapDashboard = ({
@@ -11,6 +12,8 @@ export const MapDashboard = ({
   initialLocation?: [number, number] | null;
 }) => {
   const [isSplitScreen, setIsSplitScreen] = useState(false);
+  // Runs once for the whole dashboard, also when two maps are shown side by side
+  useTrackRecorderService();
 
   const mainMapRef = useRef<MapRef | null>(null);
   const leftMapRef = useRef<MapRef | null>(null);
@@ -68,18 +71,14 @@ export const MapDashboard = ({
         <button
           onClick={() => setIsSplitScreen(!isSplitScreen)}
           className={`
-            cursor-pointer absolute z-30 
-            bg-sand-100 backdrop-blur-md 
-            border border-sand-300 
-            p-3 rounded-full shadow-lg 
-            text-ink 
+            cursor-pointer absolute z-30 bottom-10 left-4
+            p-3 rounded-full shadow-lg backdrop-blur-md border
             transition-all duration-300
-            hover:bg-sand-200 hover:scale-105 hover:border-sand-300
-            active:scale-95
+            hover:scale-105 active:scale-95
             ${
               isSplitScreen
-                ? "bottom-8 left-8 translate-x-0 bg-forest-800 border-forest-300 hover:bg-forest-800"
-                : "bottom-4 left-8 translate-x-0"
+                ? "bg-forest-800 border-forest-900 text-gold-300 hover:bg-forest-700"
+                : "bg-white/95 border-sand-200 text-ink hover:bg-white hover:text-forest-800"
             }
           `}
           title={isSplitScreen ? "Exit Split Screen" : "Enter Split Screen"}

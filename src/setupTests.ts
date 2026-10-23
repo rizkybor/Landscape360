@@ -23,6 +23,9 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
+// jsdom does not implement scrollIntoView
+Element.prototype.scrollIntoView = vi.fn();
+
 // Mock URL.createObjectURL
 Object.defineProperty(URL, 'createObjectURL', {
   writable: true,
