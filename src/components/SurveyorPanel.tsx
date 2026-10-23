@@ -46,6 +46,9 @@ export const SurveyorPanel = () => {
 
   const [editingPointId, setEditingPointId] = useState<string | null>(null);
   const [tempPointName, setTempPointName] = useState("");
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const prevGroupCount = useRef(groups.length);
 
   // Close Handler (Exits Plot Mode)
   const handleClose = () => {
@@ -83,6 +86,29 @@ export const SurveyorPanel = () => {
       window.removeEventListener("mouseup", handleMouseUp);
     };
   }, [isDragging]);
+
+  // Keep the newest sheet tab visible after creating one
+  useEffect(() => {
+    if (groups.length > prevGroupCount.current && tabsRef.current) {
+      tabsRef.current.scrollTo({ left: tabsRef.current.scrollWidth, behavior: "smooth" });
+    }
+    prevGroupCount.current = groups.length;
+  }, [groups.length]);
+
+  // Shortcut: press N in Navigator Mode to create a new sheet
+  useEffect(() => {
+    if (!isPlotMode) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() !== "n" || e.repeat) return;
+      if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
+      const el = e.target as HTMLElement | null;
+      if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable)) return;
+      e.preventDefault();
+      createGroup();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isPlotMode, createGroup]);
 
   const onMouseDown = (e: React.MouseEvent) => {
     // Disable drag on mobile
@@ -219,11 +245,15 @@ export const SurveyorPanel = () => {
       {!isMinimized && (
         <div className="flex-1 flex flex-col min-h-0">
           {/* Group Tabs/Selector */}
-          <div className="bg-white/5 border-b border-white/10 p-2 overflow-x-auto flex gap-2 scrollbar-hide shrink-0">
+          <div className="bg-white/5 border-b border-white/10 p-2 flex items-center gap-2 shrink-0">
+           <div ref={tabsRef} className="flex-1 min-w-0 overflow-x-auto flex gap-2 scrollbar-hide">
             {groups.map((g) => (
               <button
                 key={g.id}
-                onClick={() => setActiveGroup(g.id)}
+                onClick={() => {
+                  setActiveGroup(g.id);
+                  setConfirmDeleteId(null);
+                }}
                 className={`cursor-pointer px-3 py-1 rounded-full text-[10px] whitespace-nowrap transition-colors flex items-center gap-1 border ${
                   g.id === activeGroupId
                     ? "bg-yellow-500 text-black border-yellow-400 font-bold"
@@ -237,9 +267,11 @@ export const SurveyorPanel = () => {
                 {g.name}
               </button>
             ))}
+           </div>
             <button
               onClick={createGroup}
-              className="cursor-pointer px-3 py-1 rounded-full text-[10px] bg-blue-600/20 text-blue-400 border border-blue-500/30 hover:bg-blue-600/40 transition-colors flex items-center gap-1"
+              title="New sheet (N)"
+              className="cursor-pointer shrink-0 px-3 py-1 rounded-full text-[10px] bg-blue-600/20 text-blue-400 border border-blue-500/30 hover:bg-blue-600/40 transition-colors flex items-center gap-1"
             >
               <Plus size={10} /> New
             </button>
@@ -281,13 +313,36 @@ export const SurveyorPanel = () => {
                     </>
                   )}
                 </div>
-                <button
-                  onClick={() => deleteGroup(activeGroup.id)}
-                  className="cursor-pointer p-1.5 hover:bg-red-500/20 text-red-400 rounded transition-colors"
-                  title="Delete Survey"
-                >
-                  <Trash2 size={14} />
-                </button>
+                {confirmDeleteId === activeGroup.id ? (
+                  <div className="flex items-center gap-1">
+                    <span className="text-[10px] text-red-300 mr-1">Delete?</span>
+                    <button
+                      onClick={() => {
+                        deleteGroup(activeGroup.id);
+                        setConfirmDeleteId(null);
+                      }}
+                      className="cursor-pointer p-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded transition-colors"
+                      title="Confirm delete"
+                    >
+                      <Check size={14} />
+                    </button>
+                    <button
+                      onClick={() => setConfirmDeleteId(null)}
+                      className="cursor-pointer p-1 hover:bg-white/10 text-gray-400 rounded transition-colors"
+                      title="Cancel"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setConfirmDeleteId(activeGroup.id)}
+                    className="cursor-pointer p-1.5 hover:bg-red-500/20 text-red-400 rounded transition-colors"
+                    title="Delete Survey"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
               </div>
 
               {/* Section Header */}
