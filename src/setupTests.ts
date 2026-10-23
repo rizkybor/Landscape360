@@ -1,5 +1,12 @@
 import '@testing-library/jest-dom';
+import 'fake-indexeddb/auto';
 import { vi } from 'vitest';
+
+// Mock pdfjs-dist (needs DOMMatrix, which jsdom lacks)
+vi.mock('pdfjs-dist', () => ({
+  GlobalWorkerOptions: { workerSrc: '' },
+  getDocument: vi.fn(),
+}));
 
 // Mock matchMedia
 Object.defineProperty(window, 'matchMedia', {
@@ -73,6 +80,16 @@ const ResizeObserverMock = vi.fn(() => ({
     disconnect: vi.fn(),
 }));
 vi.stubGlobal('ResizeObserver', ResizeObserverMock);
+
+// Mock Web Worker (not available in jsdom)
+class WorkerMock {
+  onmessage: ((e: MessageEvent) => void) | null = null;
+  postMessage = vi.fn();
+  terminate = vi.fn();
+  addEventListener = vi.fn();
+  removeEventListener = vi.fn();
+}
+vi.stubGlobal('Worker', WorkerMock);
 
 // Mock localStorage
 const localStorageMock = (function() {

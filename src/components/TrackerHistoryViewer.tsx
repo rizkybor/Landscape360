@@ -85,8 +85,8 @@ export const TrackerHistoryViewer = () => {
       return false;
   }, [userRole, subscriptionStatus]);
 
-  if (!canAccess || !user) return null;
-  if (!isLiveTrackingEnabled) return null;
+  // Hooks below must always run; the early return happens just before render
+  const isEnabled = canAccess && !!user && isLiveTrackingEnabled;
 
   // --- Activity Logic ---
   
@@ -100,7 +100,7 @@ export const TrackerHistoryViewer = () => {
           const { data, error } = await supabase.rpc('get_tracker_activity_sessions', {
              p_user_id: userRole === 'monitor360' && selectedUserFilter !== 'all' ? selectedUserFilter : null,
              p_limit: ACTIVITY_LIMIT,
-             p_offset: isLoadMore ? (activityPage + 1) * ACTIVITY_LIMIT : 0
+             p_offset: isLoadMore ? activityPage * ACTIVITY_LIMIT : 0
           });
 
           if (error) throw error;
@@ -483,7 +483,7 @@ export const TrackerHistoryViewer = () => {
 
   // Fetch unique users for filter (Monitor only) - Decoupled Approach
   useEffect(() => {
-    if (isTrackingListsOpen && userRole === "monitor360") {
+    if (isEnabled && isTrackingListsOpen && userRole === "monitor360") {
       const fetchUsers = async () => {
         // 1. Get recent unique user_ids from logs
         const { data: logData } = await supabase
@@ -518,7 +518,7 @@ export const TrackerHistoryViewer = () => {
       };
       fetchUsers();
     }
-  }, [isTrackingListsOpen, userRole]);
+  }, [isEnabled, isTrackingListsOpen, userRole]);
 
   // Fetch Logs - Decoupled Approach & Memoized
   const fetchLogs = useCallback(async (isLoadMore = false) => {
@@ -582,6 +582,7 @@ export const TrackerHistoryViewer = () => {
 
   // Initial Load & Filter Change
   useEffect(() => {
+    if (!isEnabled) return;
     setPage(0);
     setHasMore(true);
     setActivityPage(0);
@@ -591,21 +592,21 @@ export const TrackerHistoryViewer = () => {
     } else {
         fetchLogs(false);
     }
-  }, [selectedUserFilter, viewMode]);
+  }, [isEnabled, selectedUserFilter, viewMode]);
 
   // Load More when page changes (scrolling)
   useEffect(() => {
-      if (page > 0 && viewMode === 'logs') {
+      if (isEnabled && page > 0 && viewMode === 'logs') {
           fetchLogs(true);
       }
-  }, [page, viewMode]);
+  }, [isEnabled, page, viewMode]);
 
   // Load More Sessions
   useEffect(() => {
-      if (activityPage > 0 && viewMode === 'activities') {
+      if (isEnabled && activityPage > 0 && viewMode === 'activities') {
           fetchActivities(true);
       }
-  }, [activityPage, viewMode]);
+  }, [isEnabled, activityPage, viewMode]);
 
   // Infinite Scroll Handler
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -619,7 +620,7 @@ export const TrackerHistoryViewer = () => {
       }
   };
 
-  if (!user) return null;
+  if (!isEnabled || !user) return null;
 
   return (
     <>

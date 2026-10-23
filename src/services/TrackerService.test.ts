@@ -37,6 +37,15 @@ describe('useTrackerService', () => {
             isSimulationEnabled: false,
             isLocalBroadcastEnabled: false,
             setConnectionStatus: mockSetConnectionStatus,
+            isActivityRecording: false,
+            activitySessionId: null,
+            activityStartedAt: null,
+            activityEndedAt: null,
+            activityDistanceM: 0,
+            activityPointCount: 0,
+            setActivityStats: vi.fn(),
+            hydrateActivity: vi.fn(),
+            clearActivity: vi.fn(),
         };
         return selector(state);
     });
