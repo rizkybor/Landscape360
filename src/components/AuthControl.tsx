@@ -21,6 +21,9 @@ import {
   Check,
 } from "lucide-react";
 
+// Set to true to show the Upgrade button (opens the Upgrade Plan modal) again
+const SHOW_UPGRADE_BUTTON = false;
+
 export const AuthControl = () => {
   const {
     user,
@@ -603,12 +606,14 @@ export const AuthControl = () => {
                             Status:{" "}
                             {userRole === "monitor360" ? "Monitor" : "Active"}
                           </div>
-                          <button
-                            onClick={() => setShowUpgradeModal(true)}
-                            className="cursor-pointer text-[10px] text-blue-400 hover:text-blue-300 hover:underline"
-                          >
-                            Upgrade
-                          </button>
+                          {SHOW_UPGRADE_BUTTON && (
+                            <button
+                              onClick={() => setShowUpgradeModal(true)}
+                              className="cursor-pointer text-[10px] text-blue-400 hover:text-blue-300 hover:underline"
+                            >
+                              Upgrade
+                            </button>
+                          )}
                         </div>
 
                         <div className="grid grid-cols-2 gap-2">
