@@ -147,7 +147,8 @@ export const SurveyorPanel = () => {
     setEditingPointId(null);
   };
 
-  if (groups.length === 0 && !isPlotMode) return null;
+  // Panel follows the Navigator toggle; plotted lines stay on the map via PlottingLayer
+  if (!isPlotMode) return null;
 
   const copyCoords = (p: SurveyPoint) => {
     const text = `Lat: ${p.lat.toFixed(6)} (${toDMS(p.lat, true)})\nLng: ${p.lng.toFixed(6)} (${toDMS(p.lng, false)})\nElev: ${p.elevation.toFixed(1)} mdpl`;
