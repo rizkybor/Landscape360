@@ -198,7 +198,19 @@ const InterpolatedMarker = memo(({ packet, onClick }: { packet: TrackerPacket; o
   );
 });
 
-export const LiveTrackerLayer = ({ mapRef }: { mapRef?: React.RefObject<MapRef | null> }) => {
+// Runs the realtime tracker connection; mounted once even when several maps are shown
+const TrackerServiceHost = () => {
+  useTrackerService();
+  return null;
+};
+
+export const LiveTrackerLayer = ({
+  mapRef,
+  runService = true,
+}: {
+  mapRef?: React.RefObject<MapRef | null>;
+  runService?: boolean;
+}) => {
   const { trackers, selectedTrackerId, selectTracker, isLiveTrackingEnabled, viewingSession, isSessionVisible } = useTrackerStore();
   const [terrainElevation, setTerrainElevation] = useState<number | null>(null);
   
@@ -207,7 +219,6 @@ export const LiveTrackerLayer = ({ mapRef }: { mapRef?: React.RefObject<MapRef |
   }, [trackers]);
 
   // Initialize Service (Start Simulation/Connection)
-  useTrackerService();
 
   // Update elevation when selected tracker moves
   useEffect(() => {
@@ -347,8 +358,10 @@ export const LiveTrackerLayer = ({ mapRef }: { mapRef?: React.RefObject<MapRef |
 
   return (
     <>
-      {/* History Viewer Button & Panel */}
-      <TrackerHistoryViewer />
+      {runService && <TrackerServiceHost />}
+
+      {/* History Viewer Button & Panel (once, on the primary map) */}
+      {runService && <TrackerHistoryViewer />}
 
       {/* 0. Viewing Session Layer (Recalled) */}
       {sessionGeoJSON && (

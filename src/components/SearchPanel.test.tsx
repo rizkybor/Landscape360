@@ -123,4 +123,27 @@ describe('SearchPanel', () => {
     expect(mockSetZoom).toHaveBeenCalledWith(16);
     expect(mockSetShowSearch).toHaveBeenCalledWith(false);
   });
+
+  it('selects a result with the keyboard', async () => {
+    render(<SearchPanel />);
+    const input = screen.getByPlaceholderText(/Search mountains, basecamp, or cities/i);
+
+    (globalThis.fetch as any).mockResolvedValue({
+      json: async () => ({
+        features: [
+          { id: '1', place_name: 'Bogor, Jawa Barat', center: [106.79, -6.59], place_type: ['place'] },
+          { id: '2', place_name: 'Bandung, Jawa Barat', center: [107.61, -6.91], place_type: ['place'] },
+        ],
+      }),
+    });
+
+    fireEvent.change(input, { target: { value: 'Jawa' } });
+    await screen.findByText('Bandung');
+
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    expect(mockSetCenter).toHaveBeenCalledWith([107.61, -6.91]);
+    expect(mockSetShowSearch).toHaveBeenCalledWith(false);
+  });
 });

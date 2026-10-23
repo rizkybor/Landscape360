@@ -11,8 +11,9 @@ import { BasemapManager } from "./BasemapManager";
 import { GeoreferenceTool } from "./GeoreferenceTool"; // New component
 import { useCustomBasemapStore } from "../store/useCustomBasemapStore";
 import { useSurveyStore } from "../store/useSurveyStore";
-import MapGL, { Source, Layer, Popup } from "react-map-gl/mapbox";
+import MapGL, { Source, Layer, Popup, useMap } from "react-map-gl/mapbox";
 import type { MapRef, MapMouseEvent } from "react-map-gl/mapbox";
+import type { MapSourceDataEvent } from "mapbox-gl";
 import { useMapStore } from "../store/useMapStore";
 import { ControlPanel, TelemetryOverlay } from "./ControlPanel";
 import { useRouteStore } from "../store/useRouteStore";
@@ -20,7 +21,6 @@ import { RegionSelectionLayer } from "./RegionSelectionLayer";
 import { SurveyorPanel } from "./SurveyorPanel";
 import { TrackRecorderPanel } from "./TrackRecorderPanel";
 import { TrackRecorderLayer } from "./TrackRecorderLayer";
-import { useTrackRecorderService } from "../services/TrackRecorderService";
 import { SearchPanel } from "./SearchPanel";
 import { NavigationControls } from "./NavigationControls";
 import { UserLocationMarker } from "./UserLocationMarker";
@@ -76,6 +76,54 @@ interface MapBoxContainerProps {
   initialLocation?: [number, number] | null;
 }
 
+// DEM source and terrain live together: terrain is set only once the source exists and is
+// detached before the source is removed. react-map-gl reuses map instances (reuseMaps), so a
+// declarative `terrain` prop raced the <Source> when entering/leaving split screen.
+const DemTerrain = ({ exaggeration }: { exaggeration: number }) => {
+  const { current: mapRef } = useMap();
+
+  useEffect(() => {
+    const map = mapRef?.getMap();
+    if (!map) return;
+    const apply = () => {
+      if (!map.getSource("mapbox-dem")) return;
+      const current = map.getTerrain();
+      if (current?.source === "mapbox-dem" && current.exaggeration === exaggeration) return;
+      map.setTerrain({ source: "mapbox-dem", exaggeration });
+    };
+    const onSourceData = (e: MapSourceDataEvent) => {
+      if (e.sourceId === "mapbox-dem") apply();
+    };
+    apply();
+    map.on("sourcedata", onSourceData);
+    return () => {
+      map.off("sourcedata", onSourceData);
+    };
+  }, [mapRef, exaggeration]);
+
+  // Runs before the child <Source> cleanup removes the DEM source
+  useEffect(() => {
+    const map = mapRef?.getMap();
+    return () => {
+      try {
+        map?.setTerrain(null);
+      } catch {
+        // Map already torn down
+      }
+    };
+  }, [mapRef]);
+
+  return (
+    <Source
+      id="mapbox-dem"
+      type="raster-dem"
+      url="mapbox://mapbox.mapbox-terrain-dem-v1"
+      tileSize={512}
+      maxzoom={14}
+    />
+  );
+};
+
 const MapBoxContainerComponent = ({
   overrideViewMode,
   className,
@@ -114,7 +162,6 @@ const MapBoxContainerComponent = ({
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   const { basemaps, loadBasemaps, layerOpacities, isManagerOpen, toggleManager } = useCustomBasemapStore();
   const { user, isPlotMode } = useSurveyStore();
-  useTrackRecorderService();
   const isRoutePlannerEnabled = useRouteStore((s) => s.isRoutePlannerEnabled);
 
   useEffect(() => {
@@ -318,13 +365,16 @@ const MapBoxContainerComponent = ({
       const z = map.getZoom();
       const p = map.getPitch();
       const b = map.getBearing();
+      // A 2D map stays flat; comparing it with the shared (3D) pitch would make it
+      // re-animate on every store update and fall behind in split screen
+      const targetPitch = mode === "3D" ? pitch : 0;
 
       // Epsilon for float comparison
       const EPS = 0.001;
       const centerDiff =
         Math.abs(c.lng - center[0]) + Math.abs(c.lat - center[1]);
       const zoomDiff = Math.abs(z - zoom);
-      const pitchDiff = Math.abs(p - pitch);
+      const pitchDiff = Math.abs(p - targetPitch);
       const bearingDiff = Math.abs(b - bearing);
 
       if (
@@ -350,7 +400,7 @@ const MapBoxContainerComponent = ({
         map.easeTo({
           center: center,
           zoom: zoom,
-          pitch: mode === "3D" ? pitch : 0,
+          pitch: targetPitch,
           bearing: bearing,
           duration: duration,
           easing: (t) =>
@@ -369,19 +419,6 @@ const MapBoxContainerComponent = ({
       cancelAnimationFrame(rafId);
     };
   }, [center, zoom, pitch, bearing, mode, mapRef]);
-
-  // Sync Terrain Exaggeration (Restored)
-  useEffect(() => {
-    const map = mapRef.current?.getMap();
-    if (!map) return;
-
-    if (map.getSource("mapbox-dem")) {
-      map.setTerrain({
-        source: "mapbox-dem",
-        exaggeration: mode === "3D" ? elevationExaggeration : 0.0001,
-      });
-    }
-  }, [elevationExaggeration, mode, mapRef]);
 
   const handleMapClick = useCallback(
     (evt: MapMouseEvent) => {
@@ -684,15 +721,18 @@ const MapBoxContainerComponent = ({
     };
 
     const onMouseUp = () => {
+      // mouseup is a window listener; in split screen every map receives it
+      const wasDragging = isRotateDragging || isPanDragging;
       isRotateDragging = false;
       isPanDragging = false;
       canvas.style.cursor = "";
+      if (!wasDragging) return;
 
       // Sync final state to store ONCE when drag ends
       const c = map.getCenter();
       setCenter([c.lng, c.lat]);
       setBearing(map.getBearing());
-      setPitch(map.getPitch());
+      if (mode === "3D") setPitch(map.getPitch());
     };
 
     // Prevent context menu on right click to allow panning
@@ -711,7 +751,7 @@ const MapBoxContainerComponent = ({
       window.removeEventListener("mouseup", onMouseUp);
       canvas.removeEventListener("contextmenu", onContextMenu);
     };
-  }, [mouseControlMode, setBearing, setPitch, setCenter]);
+  }, [mouseControlMode, setBearing, setPitch, setCenter, mode]);
 
   // Handle Shift + Scroll for Pitch (Tilt)
   useEffect(() => {
@@ -785,14 +825,6 @@ const MapBoxContainerComponent = ({
         antialias={!isMobile} // Disable antialiasing on mobile for performance
         style={{ width: "100%", height: "100%" }}
         mapStyle={mapStyle}
-        terrain={
-          // PERFORMANCE: Only load terrain source if strictly needed (3D mode) or on Desktop
-          // Mobile 2D mode should avoid loading terrain tiles to save bandwidth/memory
-          (mode === "3D" || !isMobile) ? {
-            source: "mapbox-dem",
-            exaggeration: mode === "3D" ? elevationExaggeration : 0.0001, 
-          } : undefined
-        }
         maxPitch={85}
         fog={
           mode === "3D" && !isMobile // Disable fog on mobile for performance
@@ -810,14 +842,10 @@ const MapBoxContainerComponent = ({
       >
         {/* Mapbox 3D Terrain & Sky */}
 
+        {/* PERFORMANCE: Only load terrain if needed (3D mode) or on desktop;
+            mobile 2D skips terrain tiles to save bandwidth/memory */}
         {(mode === "3D" || !isMobile) && (
-          <Source
-            id="mapbox-dem"
-            type="raster-dem"
-            url="mapbox://mapbox.mapbox-terrain-dem-v1"
-            tileSize={512}
-            maxzoom={14}
-          />
+          <DemTerrain exaggeration={mode === "3D" ? elevationExaggeration : 0.0001} />
         )}
 
         {/* Sky for 3D */}
@@ -871,7 +899,7 @@ const MapBoxContainerComponent = ({
         {import.meta.env.VITE_ENABLE_GPS_TRACKER === "true" && (
           <ErrorBoundary fallback={null}>
             <Suspense fallback={null}>
-              <LiveTrackerLayer mapRef={mapRef} />
+              <LiveTrackerLayer mapRef={mapRef} runService={showControls} />
             </Suspense>
           </ErrorBoundary>
         )}

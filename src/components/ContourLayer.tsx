@@ -67,7 +67,7 @@ export const ContourLayer = () => {
     map.on('sourcedata', handleSourceData);
 
     // Initial check
-    if (map.isSourceLoaded('mapbox-dem')) {
+    if (map.getSource('mapbox-dem') && map.isSourceLoaded('mapbox-dem')) {
         updateContours();
     }
 
