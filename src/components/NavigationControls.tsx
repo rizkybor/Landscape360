@@ -870,12 +870,12 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
 
             {/* Compass Popover Menu */}
             {showCompassMenu && (
-                <div className="absolute top-0 right-12 bg-white border border-sand-700 rounded-xl shadow-2xl p-4 w-[240px] animate-in fade-in slide-in-from-right-4 z-50 text-white">
+                <div className="absolute top-0 right-12 bg-white border border-sand-200 rounded-xl shadow-2xl shadow-sand-900/10 p-4 w-[240px] animate-in fade-in slide-in-from-right-4 z-50 text-ink">
                     <div className="flex justify-between items-center mb-4">
-                        <span className="text-xs font-bold text-sand-400 uppercase tracking-wider">View Settings</span>
+                        <span className="text-xs font-bold text-sand-500 uppercase tracking-wider">View Settings</span>
                         <button 
                             onClick={() => setShowCompassMenu(false)}
-                            className="cursor-pointer text-sand-400 hover:text-white transition-colors"
+                            className="cursor-pointer p-1 -m-1 rounded-md text-sand-500 hover:text-ink hover:bg-sand-100 transition-colors"
                         >
                             <X size={16} />
                         </button>
@@ -884,8 +884,8 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                     {/* Tilt Slider */}
                     <div className="mb-4">
                         <div className="flex justify-between text-xs font-medium mb-1.5">
-                            <span>Tilt</span>
-                            <span className="text-sand-400">{localPitch.toFixed(0)}°</span>
+                            <span className="text-ink">Tilt</span>
+                            <span className="font-mono text-forest-800">{localPitch.toFixed(0)}°</span>
                         </div>
                         <input
                             type="range"
@@ -897,15 +897,15 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                             onMouseUp={handleSliderCommit}
                             onTouchStart={() => setIsDraggingSlider(true)}
                             onTouchEnd={handleSliderCommit}
-                            className="w-full h-1 bg-sand-600 rounded-lg appearance-none cursor-pointer accent-forest-700"
+                            className="w-full h-1 bg-sand-200 rounded-lg appearance-none cursor-pointer accent-forest-700"
                         />
                     </div>
 
                     {/* Heading Slider */}
                     <div className="mb-6">
                         <div className="flex justify-between text-xs font-medium mb-1.5">
-                            <span>Heading</span>
-                            <span className="text-sand-400">{localBearing.toFixed(0)}°</span>
+                            <span className="text-ink">Heading</span>
+                            <span className="font-mono text-forest-800">{localBearing.toFixed(0)}°</span>
                         </div>
                         <input
                             type="range"
@@ -917,14 +917,14 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                             onMouseUp={handleSliderCommit}
                             onTouchStart={() => setIsDraggingSlider(true)}
                             onTouchEnd={handleSliderCommit}
-                            className="w-full h-1 bg-sand-600 rounded-lg appearance-none cursor-pointer accent-forest-700"
+                            className="w-full h-1 bg-sand-200 rounded-lg appearance-none cursor-pointer accent-forest-700"
                         />
                     </div>
 
                     {/* Reset Button */}
                     <button
                         onClick={handleResetNorth}
-                        className="cursor-pointer w-full py-2 flex items-center justify-center text-xs font-bold text-forest-400 hover:text-forest-300 hover:bg-white/5 rounded-lg transition-colors text-right"
+                        className="cursor-pointer w-full py-2 flex items-center justify-center text-xs font-bold text-forest-800 bg-forest-50 border border-forest-200 hover:bg-forest-100 rounded-lg transition-colors"
                     >
                         Reset to north
                     </button>
