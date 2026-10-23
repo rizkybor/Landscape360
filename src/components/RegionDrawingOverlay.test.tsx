@@ -78,11 +78,13 @@ describe('RegionDrawingOverlay', () => {
       expect(screen.getByText(/Download Limit Exceeded/i)).toBeInTheDocument();
     });
 
-    // Check if Check Upgrade Options button appears
-    expect(screen.getByText(/CHECK UPGRADE OPTIONS/i)).toBeInTheDocument();
+    // Upgrade options are hidden (SHOW_UPGRADE_OPTIONS = false): button asks to reduce the area
+    expect(screen.queryByText(/CHECK UPGRADE OPTIONS/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/Reduce Area to Download/i).closest('button')).toBeDisabled();
   });
 
-  it('should open upgrade modal and default to Pro for Free user', async () => {
+  // Re-enable these two tests when SHOW_UPGRADE_OPTIONS is set back to true
+  it.skip('should open upgrade modal and default to Pro for Free user', async () => {
     // Override mock: Large area
     (tileUtils.getTilesInBounds as any).mockReturnValue(new Array(500).fill({}));
 
@@ -108,7 +110,7 @@ describe('RegionDrawingOverlay', () => {
     expect(screen.getByText('Request Pro Upgrade')).toBeInTheDocument();
   });
 
-  it('should default to Enterprise for Pro user upgrade', async () => {
+  it.skip('should default to Enterprise for Pro user upgrade', async () => {
     // Override mock: Large area
     (tileUtils.getTilesInBounds as any).mockReturnValue(new Array(500).fill({}));
 
