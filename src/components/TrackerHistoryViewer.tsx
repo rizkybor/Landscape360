@@ -344,10 +344,12 @@ export const TrackerHistoryViewer = () => {
       // --- Header & Layout ---
       doc.setFont("helvetica", "bold");
       doc.setFontSize(18);
+      doc.setTextColor(26, 34, 20); // ink
       doc.text(title, 14, 20); // Main Title
 
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
+      doc.setTextColor(127, 121, 101); // sand-500
       doc.text(`Generated: ${new Date().toLocaleString("id-ID")}`, 14, 28);
       doc.text(`Total Records: ${logData.length}`, 14, 33);
 
@@ -393,15 +395,16 @@ export const TrackerHistoryViewer = () => {
             fontSize: 9, 
             font: "helvetica",
             cellPadding: 3,
-            textColor: [50, 50, 50] 
+            textColor: [26, 34, 20], // ink
+            lineColor: [231, 226, 212], // sand-200
         },
         headStyles: { 
-            fillColor: [31, 111, 178], // #1F6FB2 (Requested Blue)
+            fillColor: [40, 74, 27], // forest-700 (brand)
             textColor: [255, 255, 255],
             fontStyle: 'bold'
         },
         alternateRowStyles: {
-            fillColor: [245, 245, 245] // Zebra striping
+            fillColor: [250, 248, 243] // Zebra striping (sand-50)
         },
         columnStyles: {
             0: { cellWidth: 20 }, // Time
@@ -423,7 +426,7 @@ export const TrackerHistoryViewer = () => {
 
             // Watermark (Top Right, Small, Thin)
             doc.saveGraphicsState();
-            doc.setTextColor(180, 180, 180); // Subtle Gray
+            doc.setTextColor(169, 162, 139); // sand-400
             doc.setFontSize(9);
             doc.setFont("helvetica", "normal"); 
             doc.text("Landscape 360", pageWidth - 14, 12, {
@@ -435,7 +438,7 @@ export const TrackerHistoryViewer = () => {
             const pageCount = (doc.internal as any).getNumberOfPages();
             const str = "Page " + pageCount;
             doc.setFontSize(8);
-            doc.setTextColor(100, 100, 100);
+            doc.setTextColor(127, 121, 101); // sand-500
             doc.text(str, pageWidth - 20, pageHeight - 10, { align: 'right' });
             doc.text("Landscape 360 Tracking System", 14, pageHeight - 10);
         }

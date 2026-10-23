@@ -176,7 +176,7 @@ export const GeoreferenceTool = () => {
         pitchAlignment="map"
       >
         <div className="p-3 md:p-2 bg-forest-800 rounded-full shadow-lg cursor-move hover:scale-110 transition-transform active:scale-125 touch-none">
-          <Move size={20} className="text-ink md:w-4 md:h-4" />
+          <Move size={20} className="text-white md:w-4 md:h-4" />
         </div>
       </Marker>
 

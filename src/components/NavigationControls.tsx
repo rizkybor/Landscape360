@@ -171,7 +171,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                 useCORS: true,
                 allowTaint: true,
                 scale: captureScale, // High res capture
-                backgroundColor: '#111827',
+                backgroundColor: '#ffffff',
                 logging: false,
                 width: PAGE_WIDTH,
                 height: PAGE_HEIGHT,
@@ -193,8 +193,8 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         pageContainer.style.top = '0';
         pageContainer.style.width = `${PAGE_WIDTH}px`;
         pageContainer.style.height = `${PAGE_HEIGHT}px`;
-        pageContainer.style.backgroundColor = '#111827';
-        pageContainer.style.color = 'white';
+        pageContainer.style.backgroundColor = '#ffffff';
+        pageContainer.style.color = '#1a2214';
         pageContainer.style.fontFamily = "'Inter', sans-serif";
         pageContainer.style.overflow = 'hidden'; // Clip content
         pageContainer.style.display = 'flex';
@@ -213,15 +213,15 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                 <div style="display: flex; align-items: center; gap: ${16 * scale}px;">
                     <img src="${landscapeLogo}" style="width: ${40 * scale}px; height: ${40 * scale}px; object-fit: contain;" />
                     <div>
-                        <h1 style="color: white; font-family: 'Inter', sans-serif; font-weight: 800; font-size: ${20 * scale}px; line-height: 1; margin: 0; letter-spacing: -0.02em;">Landscape 360</h1>
-                        <p style="color: #f2cc6c; font-family: 'Inter', monospace; font-size: ${10 * scale}px; margin: ${4 * scale}px 0 0 0; letter-spacing: 0.1em; text-transform: uppercase;">${isFirstPage ? 'Professional Survey Report' : 'Survey Report Continuation'}</p>
+                        <h1 style="color: #1a2214; font-family: 'Inter', sans-serif; font-weight: 800; font-size: ${20 * scale}px; line-height: 1; margin: 0; letter-spacing: -0.02em;">Landscape 360</h1>
+                        <p style="color: #365b25; font-family: 'Inter', monospace; font-size: ${10 * scale}px; margin: ${4 * scale}px 0 0 0; letter-spacing: 0.1em; text-transform: uppercase;">${isFirstPage ? 'Professional Survey Report' : 'Survey Report Continuation'}</p>
                     </div>
                 </div>
                 <div style="text-align: right;">
-                    <div style="color: white; font-family: 'Inter', monospace; font-size: ${12 * scale}px; font-weight: bold;">${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                    <div style="color: #1a2214; font-family: 'Inter', monospace; font-size: ${12 * scale}px; font-weight: bold;">${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
                 </div>
             </div>
-            <div style="height: 1px; background: #374151; margin: 0 ${MARGIN}px;"></div>
+            <div style="height: 1px; background: #e7e2d4; margin: 0 ${MARGIN}px;"></div>
         `;
 
         // Table Constants
@@ -231,13 +231,13 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         
         // Footer Render Function
         const renderPageFooter = (pageNum: number) => `
-            <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: ${footerHeight}px; padding: 0 ${MARGIN}px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #374151; background-color: #111827; z-index: 50;">
+            <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: ${footerHeight}px; padding: 0 ${MARGIN}px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e7e2d4; background-color: #ffffff; z-index: 50;">
                 <div style="display: flex; gap: ${16 * scale}px; align-items: center;">
-                    <span style="color: #6b7280; font-size: ${10 * scale}px;">© ${new Date().getFullYear()} Landscape 360</span>
-                    <span style="color: #4b5563; font-size: ${10 * scale}px;">|</span>
-                    <span style="color: #6b7280; font-size: ${10 * scale}px;">Professional Survey Report</span>
+                    <span style="color: #7f7965; font-size: ${10 * scale}px;">© ${new Date().getFullYear()} Landscape 360</span>
+                    <span style="color: #a9a28b; font-size: ${10 * scale}px;">|</span>
+                    <span style="color: #7f7965; font-size: ${10 * scale}px;">Professional Survey Report</span>
                 </div>
-                <div style="color: #f3f4f6; font-size: ${10 * scale}px; font-weight: 500; text-align: right;">
+                <div style="color: #1a2214; font-size: ${10 * scale}px; font-weight: 500; text-align: right;">
                     Page ${pageNum}
                 </div>
             </div>
@@ -309,8 +309,8 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                     markerEl.style.position = 'absolute';
                     markerEl.style.width = `${markerSize}px`;
                     markerEl.style.height = `${markerSize}px`;
-                    markerEl.style.backgroundColor = '#6366f1'; 
-                    markerEl.style.border = `${2 * scale}px solid black`;
+                    markerEl.style.backgroundColor = '#e46c24';
+                    markerEl.style.border = `${2 * scale}px solid white`;
                     markerEl.style.left = `-${markerSize/2}px`;
                     markerEl.style.top = `-${markerSize/2}px`;
                     markerEl.style.transform = 'rotate(45deg)';
@@ -324,11 +324,11 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                     labelEl.style.transform = 'translateX(-50%)';
                     
                     // Glassmorphism Styles
-                    labelEl.style.backgroundColor = 'rgba(23, 25, 59, 0.65)'; // Semi-transparent dark blue
+                    labelEl.style.backgroundColor = 'rgba(255, 255, 255, 0.92)';
                     labelEl.style.backdropFilter = 'blur(4px)'; // Blur effect
                     // @ts-ignore
                     labelEl.style.webkitBackdropFilter = 'blur(4px)';
-                    labelEl.style.border = `${1.5 * scale}px solid rgba(99, 102, 241, 0.6)`; // Semi-transparent Indigo border
+                    labelEl.style.border = `${1.5 * scale}px solid #365b25`;
                     
                     labelEl.style.borderRadius = `${24 * scale}px`;
                     // labelEl.style.padding = `${6 * scale}px ${16 * scale}px`;
@@ -343,7 +343,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
 
                     const nameSpan = document.createElement('span');
                     nameSpan.textContent = p.name;
-                    nameSpan.style.color = 'white'; // White text for better contrast
+                    nameSpan.style.color = '#1a2214';
                     nameSpan.style.fontWeight = '700';
                     nameSpan.style.fontSize = `${14 * scale}px`;
                     nameSpan.style.letterSpacing = '0.02em';
@@ -353,7 +353,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
 
                     const elevSpan = document.createElement('span');
                     elevSpan.textContent = `${p.elevation.toFixed(1)} mdpl`;
-                    elevSpan.style.color = '#bfdbfe'; // Light blue text
+                    elevSpan.style.color = '#365b25';
                     elevSpan.style.fontWeight = '500';
                     elevSpan.style.fontSize = `${14 * scale}px`;
                     elevSpan.style.letterSpacing = '0.02em';
@@ -384,19 +384,19 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
 
             <!-- Bottom Footer -->
             <div style="display: flex; justify-content: space-between; align-items: end;">
-                <div style="background: rgba(0,0,0,0.6); padding: ${16 * scale}px; border-radius: ${16 * scale}px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.15); display: grid; grid-template-columns: auto auto; gap: ${8 * scale}px ${24 * scale}px; color: white; font-family: 'Inter', monospace; font-size: ${12 * scale}px;">
-                    <div style="color: #9ca3af;">Center Point</div>
+                <div style="background: rgba(255,255,255,0.92); padding: ${16 * scale}px; border-radius: ${16 * scale}px; backdrop-filter: blur(10px); border: 1px solid #e7e2d4; display: grid; grid-template-columns: auto auto; gap: ${8 * scale}px ${24 * scale}px; color: #1a2214; font-family: 'Inter', monospace; font-size: ${12 * scale}px;">
+                    <div style="color: #7f7965;">Center Point</div>
                     <div style="font-weight: bold;">${toDMS(map.getCenter().lat, true)}, ${toDMS(map.getCenter().lng, false)}</div>
                     
-                    <div style="color: #9ca3af;">Avg Elevation</div>
-                    <div style="font-weight: bold; color: #fde047;">${(() => {
+                    <div style="color: #7f7965;">Avg Elevation</div>
+                    <div style="font-weight: bold; color: #8a5e14;">${(() => {
                         const raw = map.queryTerrainElevation ? map.queryTerrainElevation(map.getCenter()) : 0;
                         const terrain = map.getTerrain();
                         const exaggeration = (terrain && typeof terrain.exaggeration === 'number') ? terrain.exaggeration : 1;
                         return ((raw || 0) / exaggeration).toFixed(1);
                     })()} mdpl</div>
                     
-                    <div style="color: #9ca3af;">Heading/Pitch</div>
+                    <div style="color: #7f7965;">Heading/Pitch</div>
                     <div style="font-weight: bold;">${map.getBearing().toFixed(1)}° / ${map.getPitch().toFixed(1)}°</div>
                 </div>
 
@@ -416,7 +416,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         mapContainer.style.height = `${mapDisplayHeight}px`; 
         mapContainer.style.overflow = 'hidden';
         mapContainer.style.borderRadius = `${16 * scale}px`;
-        mapContainer.style.border = `1px solid #374151`;
+        mapContainer.style.border = `1px solid #e7e2d4`;
         
         mapImage.style.width = '100%';
         mapImage.style.height = '100%';
@@ -449,11 +449,11 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
             w.innerHTML = `
                 <div style="display: flex; align-items: center; gap: ${12 * scale}px; margin-bottom: ${16 * scale}px;">
                     <div style="width: ${4 * scale}px; height: ${24 * scale}px; background-color: #e9b640; border-radius: 4px;"></div>
-                    <h2 style="font-size: ${18 * scale}px; font-weight: bold; margin: 0; color: white;">Survey Data Points</h2>
+                    <h2 style="font-size: ${18 * scale}px; font-weight: bold; margin: 0; color: #1a2214;">Survey Data Points</h2>
                 </div>
                 <table style="width: 100%; border-collapse: collapse; font-size: ${12 * scale}px; text-align: left;">
                     <thead>
-                        <tr style="background-color: #1f2937; color: #9ca3af; text-transform: uppercase; font-size: ${10 * scale}px; letter-spacing: 0.05em; border-bottom: 2px solid #374151;">
+                        <tr style="background-color: #f3f0e7; color: #5e5a4a; text-transform: uppercase; font-size: ${10 * scale}px; letter-spacing: 0.05em; border-bottom: 2px solid #d3ccb8;">
                             <th style="padding: ${10 * scale}px;">#</th>
                             <th style="padding: ${10 * scale}px;">Point Name</th>
                             <th style="padding: ${10 * scale}px;">Coordinates</th>
@@ -477,18 +477,18 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         // Render Rows
         if (processedPoints.length === 0) {
             const tr = document.createElement('tr');
-            tr.style.borderBottom = '1px solid #374151';
+            tr.style.borderBottom = '1px solid #e7e2d4';
             tr.innerHTML = `
-                <td colspan="6" style="padding: ${60 * scale}px; text-align: center; color: #9ca3af;">
+                <td colspan="6" style="padding: ${60 * scale}px; text-align: center; color: #7f7965;">
                     <div style="display: flex; flex-direction: column; align-items: center; gap: ${16 * scale}px; opacity: 0.8;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="${48 * scale}" height="${48 * scale}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: #6b7280;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="${48 * scale}" height="${48 * scale}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: #a9a28b;">
                             <circle cx="12" cy="12" r="10"/>
                             <line x1="12" y1="8" x2="12" y2="12"/>
                             <line x1="12" y1="16" x2="12.01" y2="16"/>
                         </svg>
                         <div style="display: flex; flex-direction: column; gap: ${4 * scale}px;">
-                            <span style="font-size: ${16 * scale}px; font-weight: 600; letter-spacing: 0.01em; color: white;">No Survey Data Available</span>
-                            <span style="font-size: ${13 * scale}px; color: #6b7280;">Start adding points to generate a professional report</span>
+                            <span style="font-size: ${16 * scale}px; font-weight: 600; letter-spacing: 0.01em; color: #1a2214;">No Survey Data Available</span>
+                            <span style="font-size: ${13 * scale}px; color: #7f7965;">Start adding points to generate a professional report</span>
                         </div>
                     </div>
                 </td>
@@ -519,19 +519,19 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                 
                 // Add Row
                 const tr = document.createElement('tr');
-                tr.style.borderBottom = '1px solid #374151';
+                tr.style.borderBottom = '1px solid #e7e2d4';
                 // Show "Point X" in table even if it's default name, unlike map overlay
                 const displayName = p.name || `Point ${i + 1}`;
                 
                 tr.innerHTML = `
-                    <td style="padding: ${10 * scale}px; color: #e9b640; font-weight: bold;">${i + 1}</td>
-                    <td style="padding: ${10 * scale}px; font-weight: 500; color: white;">${displayName}</td>
-                    <td style="padding: ${10 * scale}px; font-family: monospace; color: #d1d5db; white-space: nowrap;">
+                    <td style="padding: ${10 * scale}px; color: #b07b17; font-weight: bold;">${i + 1}</td>
+                    <td style="padding: ${10 * scale}px; font-weight: 500; color: #1a2214;">${displayName}</td>
+                    <td style="padding: ${10 * scale}px; font-family: monospace; color: #45423a; white-space: nowrap;">
                         ${toDMS(p.lat, true)}, ${toDMS(p.lng, false)}
                     </td>
-                    <td style="padding: ${10 * scale}px; font-family: monospace; color: #fde047;">${p.elevation.toFixed(1)} m</td>
-                    <td style="padding: ${10 * scale}px; font-family: monospace; color: #d1d5db;">${i === 0 ? '-' : p.dist.toFixed(1)} m</td>
-                    <td style="padding: ${10 * scale}px; font-family: monospace; color: #9ca3af;">${p.totalDist.toFixed(1)} m</td>
+                    <td style="padding: ${10 * scale}px; font-family: monospace; color: #8a5e14;">${p.elevation.toFixed(1)} m</td>
+                    <td style="padding: ${10 * scale}px; font-family: monospace; color: #45423a;">${i === 0 ? '-' : p.dist.toFixed(1)} m</td>
+                    <td style="padding: ${10 * scale}px; font-family: monospace; color: #7f7965;">${p.totalDist.toFixed(1)} m</td>
                 `;
                 tbody.appendChild(tr);
                 currentY += rowHeight;
@@ -594,45 +594,45 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
              // Professional Stats Header
              const statsHtml = `
                 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: ${16 * scale}px; margin-bottom: ${32 * scale}px;">
-                    <div style="background: rgba(31, 41, 55, 0.4); border: 1px solid #374151; padding: ${20 * scale}px; border-radius: ${12 * scale}px;">
-                        <div style="color: #9ca3af; font-size: ${12 * scale}px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: ${8 * scale}px; font-weight: 600;">Min Elevation</div>
-                        <div style="color: white; font-size: ${24 * scale}px; font-weight: 800; font-family: monospace;">${minElev.toFixed(1)} <span style="font-size: ${14 * scale}px; color: #6b7280; font-weight: 600;">m</span></div>
+                    <div style="background: #faf8f3; border: 1px solid #e7e2d4; padding: ${20 * scale}px; border-radius: ${12 * scale}px;">
+                        <div style="color: #7f7965; font-size: ${12 * scale}px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: ${8 * scale}px; font-weight: 600;">Min Elevation</div>
+                        <div style="color: #1a2214; font-size: ${24 * scale}px; font-weight: 800; font-family: monospace;">${minElev.toFixed(1)} <span style="font-size: ${14 * scale}px; color: #a9a28b; font-weight: 600;">m</span></div>
                     </div>
-                    <div style="background: rgba(31, 41, 55, 0.4); border: 1px solid #374151; padding: ${20 * scale}px; border-radius: ${12 * scale}px;">
-                        <div style="color: #9ca3af; font-size: ${12 * scale}px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: ${8 * scale}px; font-weight: 600;">Max Elevation</div>
-                        <div style="color: white; font-size: ${24 * scale}px; font-weight: 800; font-family: monospace;">${maxElev.toFixed(1)} <span style="font-size: ${14 * scale}px; color: #6b7280; font-weight: 600;">m</span></div>
+                    <div style="background: #faf8f3; border: 1px solid #e7e2d4; padding: ${20 * scale}px; border-radius: ${12 * scale}px;">
+                        <div style="color: #7f7965; font-size: ${12 * scale}px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: ${8 * scale}px; font-weight: 600;">Max Elevation</div>
+                        <div style="color: #1a2214; font-size: ${24 * scale}px; font-weight: 800; font-family: monospace;">${maxElev.toFixed(1)} <span style="font-size: ${14 * scale}px; color: #a9a28b; font-weight: 600;">m</span></div>
                     </div>
-                    <div style="background: rgba(31, 41, 55, 0.4); border: 1px solid #374151; padding: ${20 * scale}px; border-radius: ${12 * scale}px;">
-                        <div style="color: #9ca3af; font-size: ${12 * scale}px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: ${8 * scale}px; font-weight: 600;">Total Distance</div>
-                        <div style="color: white; font-size: ${24 * scale}px; font-weight: 800; font-family: monospace;">${totalDist.toFixed(1)} <span style="font-size: ${14 * scale}px; color: #6b7280; font-weight: 600;">m</span></div>
+                    <div style="background: #faf8f3; border: 1px solid #e7e2d4; padding: ${20 * scale}px; border-radius: ${12 * scale}px;">
+                        <div style="color: #7f7965; font-size: ${12 * scale}px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: ${8 * scale}px; font-weight: 600;">Total Distance</div>
+                        <div style="color: #1a2214; font-size: ${24 * scale}px; font-weight: 800; font-family: monospace;">${totalDist.toFixed(1)} <span style="font-size: ${14 * scale}px; color: #a9a28b; font-weight: 600;">m</span></div>
                     </div>
-                     <div style="background: rgba(31, 41, 55, 0.4); border: 1px solid #374151; padding: ${20 * scale}px; border-radius: ${12 * scale}px;">
-                        <div style="color: #9ca3af; font-size: ${12 * scale}px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: ${8 * scale}px; font-weight: 600;">Elev. Gain</div>
-                        <div style="color: #34d399; font-size: ${24 * scale}px; font-weight: 800; font-family: monospace;">+${gain.toFixed(1)} <span style="font-size: ${14 * scale}px; color: #6b7280; font-weight: 600;">m</span></div>
+                     <div style="background: #faf8f3; border: 1px solid #e7e2d4; padding: ${20 * scale}px; border-radius: ${12 * scale}px;">
+                        <div style="color: #7f7965; font-size: ${12 * scale}px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: ${8 * scale}px; font-weight: 600;">Elev. Gain</div>
+                        <div style="color: #365b25; font-size: ${24 * scale}px; font-weight: 800; font-family: monospace;">+${gain.toFixed(1)} <span style="font-size: ${14 * scale}px; color: #a9a28b; font-weight: 600;">m</span></div>
                     </div>
                 </div>
              `;
 
              chartContainer.innerHTML = `
-                <div style="padding: ${40 * scale}px; background: #111827; border-radius: ${24 * scale}px; border: 1px solid #374151; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
+                <div style="padding: ${40 * scale}px; background: #ffffff; border-radius: ${24 * scale}px; border: 1px solid #e7e2d4; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: ${32 * scale}px;">
                          <div style="display: flex; align-items: center; gap: ${16 * scale}px;">
-                            <div style="width: ${6 * scale}px; height: ${32 * scale}px; background-color: #fde047; border-radius: 4px;"></div>
+                            <div style="width: ${6 * scale}px; height: ${32 * scale}px; background-color: #365b25; border-radius: 4px;"></div>
                             <div>
-                                <h3 style="font-size: ${24 * scale}px; font-weight: 800; color: white; margin: 0; letter-spacing: -0.02em; line-height: 1.2;">Elevation Profile Analysis</h3>
-                                <p style="font-size: ${12 * scale}px; color: #9ca3af; margin: 0; font-weight: 500;">Terrain cross-section and gradient analysis</p>
+                                <h3 style="font-size: ${24 * scale}px; font-weight: 800; color: #1a2214; margin: 0; letter-spacing: -0.02em; line-height: 1.2;">Elevation Profile Analysis</h3>
+                                <p style="font-size: ${12 * scale}px; color: #7f7965; margin: 0; font-weight: 500;">Terrain cross-section and gradient analysis</p>
                             </div>
                          </div>
                     </div>
                     
                     ${statsHtml}
 
-                    <div style="position: relative; width: 100%; height: ${chartHeight}px; border: 1px solid #1f2937; border-radius: ${16 * scale}px; padding: ${20 * scale}px; background: rgba(17, 24, 39, 0.5);">
+                    <div style="position: relative; width: 100%; height: ${chartHeight}px; border: 1px solid #e7e2d4; border-radius: ${16 * scale}px; padding: ${20 * scale}px; background: #faf8f3;">
                         <svg width="100%" height="100%" viewBox="0 0 ${chartWidth} ${chartHeight}" preserveAspectRatio="none" style="overflow: visible;">
                              <defs>
                                 <linearGradient id="${gradientId}" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stop-color="#fde047" stop-opacity="0.2"/>
-                                    <stop offset="100%" stop-color="#fde047" stop-opacity="0.0"/>
+                                    <stop offset="0%" stop-color="#365b25" stop-opacity="0.22"/>
+                                    <stop offset="100%" stop-color="#365b25" stop-opacity="0.0"/>
                                 </linearGradient>
                              </defs>
                              
@@ -641,39 +641,39 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                                 const y = chartPadding.top + (graphHeight * t);
                                 const labelValue = yMax - (yRange * t);
                                 return `
-                                    <line x1="${chartPadding.left}" y1="${y}" x2="${chartWidth - chartPadding.right}" y2="${y}" stroke="#374151" stroke-dasharray="4" stroke-width="1" opacity="0.3" />
-                                    <text x="${chartPadding.left - (16 * scale)}" y="${y + (4 * scale)}" text-anchor="end" fill="#9ca3af" font-size="${11 * scale}px" font-family="monospace" font-weight="500">${labelValue.toFixed(0)}</text>
+                                    <line x1="${chartPadding.left}" y1="${y}" x2="${chartWidth - chartPadding.right}" y2="${y}" stroke="#d3ccb8" stroke-dasharray="4" stroke-width="1" opacity="0.8" />
+                                    <text x="${chartPadding.left - (16 * scale)}" y="${y + (4 * scale)}" text-anchor="end" fill="#7f7965" font-size="${11 * scale}px" font-family="monospace" font-weight="500">${labelValue.toFixed(0)}</text>
                                 `;
                              }).join('')}
 
                              <!-- Y-Axis Label -->
-                             <text x="${30 * scale}" y="${chartHeight / 2}" transform="rotate(-90, ${30 * scale}, ${chartHeight / 2})" text-anchor="middle" fill="#6b7280" font-size="${12 * scale}px" font-weight="bold" font-family="'Inter', sans-serif" letter-spacing="0.1em">ELEVATION (m)</text>
+                             <text x="${30 * scale}" y="${chartHeight / 2}" transform="rotate(-90, ${30 * scale}, ${chartHeight / 2})" text-anchor="middle" fill="#7f7965" font-size="${12 * scale}px" font-weight="bold" font-family="'Inter', sans-serif" letter-spacing="0.1em">ELEVATION (m)</text>
 
                              <!-- Chart Area -->
                             <path d="${areaPath}" fill="url(#${gradientId})" />
-                            <path d="${linePath}" fill="none" stroke="#fde047" stroke-width="${3 * scale}" stroke-linejoin="round" stroke-linecap="round" />
+                            <path d="${linePath}" fill="none" stroke="#284a1b" stroke-width="${3 * scale}" stroke-linejoin="round" stroke-linecap="round" />
                             
                             <!-- Data Points -->
                             ${pointsCoords.map((p) => `
                                 <g>
-                                    <line x1="${p.x}" y1="${p.y}" x2="${p.x}" y2="${chartPadding.top + graphHeight}" stroke="#374151" stroke-width="1" stroke-dasharray="2" opacity="0.2" />
-                                    <circle cx="${p.x}" cy="${p.y}" r="${4 * scale}" fill="#111827" stroke="#fde047" stroke-width="${2 * scale}" />
+                                    <line x1="${p.x}" y1="${p.y}" x2="${p.x}" y2="${chartPadding.top + graphHeight}" stroke="#d3ccb8" stroke-width="1" stroke-dasharray="2" opacity="0.7" />
+                                    <circle cx="${p.x}" cy="${p.y}" r="${4 * scale}" fill="#ffffff" stroke="#284a1b" stroke-width="${2 * scale}" />
                                     
                                     <!-- Point Label Group (Staggered or simplified based on density) -->
                                     <g transform="translate(${p.x}, ${p.y - (12 * scale)})">
                                         <!-- Only show every Nth label if too dense, or use smarter logic. For now, we keep all but ensure clean rendering -->
-                                        <rect x="${-(18 * scale)}" y="${-(22 * scale)}" width="${36 * scale}" height="${18 * scale}" rx="${4 * scale}" fill="#fde047" stroke="#111827" stroke-width="1" />
-                                        <text x="0" y="${-(10 * scale)}" text-anchor="middle" fill="#000" font-size="${10 * scale}px" font-weight="bold" font-family="monospace">${p.val.toFixed(0)}</text>
+                                        <rect x="${-(18 * scale)}" y="${-(22 * scale)}" width="${36 * scale}" height="${18 * scale}" rx="${4 * scale}" fill="#f2cc6c" stroke="#ffffff" stroke-width="1" />
+                                        <text x="0" y="${-(10 * scale)}" text-anchor="middle" fill="#1a2214" font-size="${10 * scale}px" font-weight="bold" font-family="monospace">${p.val.toFixed(0)}</text>
                                     </g>
                                     
                                     <!-- Point Name Label (Only Numbers) -->
-                                    <text x="${p.x}" y="${chartPadding.top + graphHeight + (20 * scale)}" text-anchor="middle" fill="#9ca3af" font-size="${11 * scale}px" font-weight="600" font-family="monospace">${p.label}</text>
+                                    <text x="${p.x}" y="${chartPadding.top + graphHeight + (20 * scale)}" text-anchor="middle" fill="#7f7965" font-size="${11 * scale}px" font-weight="600" font-family="monospace">${p.label}</text>
                                 </g>
                             `).join('')}
 
                             <!-- Axes Lines -->
-                            <line x1="${chartPadding.left}" y1="${chartPadding.top + graphHeight}" x2="${chartWidth - chartPadding.right}" y2="${chartPadding.top + graphHeight}" stroke="#4b5563" stroke-width="2" />
-                            <line x1="${chartPadding.left}" y1="${chartPadding.top}" x2="${chartPadding.left}" y2="${chartPadding.top + graphHeight}" stroke="#4b5563" stroke-width="2" />
+                            <line x1="${chartPadding.left}" y1="${chartPadding.top + graphHeight}" x2="${chartWidth - chartPadding.right}" y2="${chartPadding.top + graphHeight}" stroke="#a9a28b" stroke-width="2" />
+                            <line x1="${chartPadding.left}" y1="${chartPadding.top}" x2="${chartPadding.left}" y2="${chartPadding.top + graphHeight}" stroke="#a9a28b" stroke-width="2" />
                         </svg>
                     </div>
                 </div>

@@ -61,7 +61,7 @@ export const useMapStore = create<MapState>()(
       bearing: 0,
       bounds: null,
       contourInterval: 50,
-      activeView: '3D', // Default to 3D mode
+      activeView: '2D', // Always open in 2D Topo (not persisted)
       elevationExaggeration: 1.5, // Slightly exaggerate terrain for better effect
       opacity: 0.8,
       mouseControlMode: 'map', // Default to Map Mode (Left=Pan)
@@ -121,7 +121,6 @@ export const useMapStore = create<MapState>()(
         pitch: state.pitch,
         bearing: state.bearing,
         mapStyle: state.mapStyle,
-        activeView: state.activeView,
         showContours: state.showContours,
         showGridDMS: state.showGridDMS,
         gridOpacity: state.gridOpacity,
@@ -133,6 +132,12 @@ export const useMapStore = create<MapState>()(
         opacity: state.opacity,
         // Don't persist transient state like flyToDestination or temporary measurement points (unless desired)
       }),
+      // Ignore a view mode saved by older versions so the app always opens in 2D Topo
+      merge: (persisted, current) => {
+        const restored = { ...(persisted as Partial<MapState>) };
+        delete restored.activeView;
+        return { ...current, ...restored };
+      },
     }
   )
 );
