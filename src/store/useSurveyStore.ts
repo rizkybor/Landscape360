@@ -37,6 +37,7 @@ interface SurveyState {
   isSyncing: boolean;
   subscriptionStatus: 'Free' | 'Pro' | 'Enterprise';
   userRole: 'pengguna360' | 'monitor360'; // New User Role
+  isAdmin: boolean; // profiles.is_admin: full access regardless of plan/role
 
   errorMessage: string | null;
   clearError: () =>  Promise<void>;
@@ -81,6 +82,7 @@ export const useSurveyStore = create<SurveyState>()(
   isSyncing: false,
   subscriptionStatus: 'Free',
   userRole: 'pengguna360', // Default
+  isAdmin: false,
 
   errorMessage: null,
   clearError: async () => {
@@ -98,6 +100,7 @@ export const useSurveyStore = create<SurveyState>()(
         currentSurveyId: null, 
         subscriptionStatus: 'Free',
         userRole: 'pengguna360',
+        isAdmin: false,
         // Clear survey data on logout
         groups: [],
         activeGroupId: null,
@@ -109,6 +112,20 @@ export const useSurveyStore = create<SurveyState>()(
   loadUserProfile: async () => {
     const { user } = get();
     if (!user) {
+      return;
+    }
+
+    // Admins get full access (highest plan + monitor role) regardless of stored plan/role.
+    // Queried separately so a missing is_admin column never breaks normal profile loading.
+    const adminCheck = await supabase
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', user.id)
+      .maybeSingle();
+    const isAdmin = !adminCheck.error && adminCheck.data?.is_admin === true;
+    set({ isAdmin });
+    if (isAdmin) {
+      set({ subscriptionStatus: 'Enterprise', userRole: 'monitor360' });
       return;
     }
 
@@ -510,6 +527,7 @@ export const useSurveyStore = create<SurveyState>()(
         savedSurveys: state.savedSurveys, // Persist list of surveys for offline access
         subscriptionStatus: state.subscriptionStatus,
         userRole: state.userRole, // Persist role
+        isAdmin: state.isAdmin,
         user: state.user // Persist user for instant auth state on reload
       }),
     }

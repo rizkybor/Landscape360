@@ -6,6 +6,7 @@ import { useMapStore } from "../store/useMapStore";
 import { useOfflineStore } from "../store/useOfflineStore";
 import { OfflineManager } from "./OfflineManager";
 import { RegionDrawingOverlay } from "./RegionDrawingOverlay";
+import { UserManagementPanel } from "./UserManagementPanel";
 import {
   LogIn,
   LogOut,
@@ -19,6 +20,7 @@ import {
   Pencil,
   X,
   Check,
+  Users,
 } from "lucide-react";
 
 // Set to true to show the Upgrade button (opens the Upgrade Plan modal) again
@@ -39,6 +41,7 @@ export const AuthControl = () => {
     isSyncing,
     subscriptionStatus,
     userRole,
+    isAdmin,
   } = useSurveyStore();
 
   const { interactionMode } = useMapStore();
@@ -48,6 +51,7 @@ export const AuthControl = () => {
   const [showOfflineManager, setShowOfflineManager] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showUserManagement, setShowUserManagement] = useState(false);
 
   useEffect(() => {
     // Check active session
@@ -593,20 +597,24 @@ export const AuthControl = () => {
                         <div className="flex items-center gap-2">
                           <div
                             className={`text-[10px] px-2 py-0.5 rounded-full border ${
-                              subscriptionStatus === "Enterprise"
+                              isAdmin
+                                ? "bg-red-500/20 text-red-300 border-red-500/20"
+                                : subscriptionStatus === "Enterprise"
                                 ? "bg-purple-500/20 text-purple-300 border-purple-500/20"
                                 : subscriptionStatus === "Pro"
                                   ? "bg-blue-500/20 text-blue-300 border-blue-500/20"
                                   : "bg-gray-500/20 text-gray-300 border-gray-500/20"
                             }`}
                           >
-                            {subscriptionStatus} Plan
+                            {isAdmin ? "Admin · All Access" : `${subscriptionStatus} Plan`}
                           </div>
-                          <div className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 border border-green-500/20">
-                            Status:{" "}
-                            {userRole === "monitor360" ? "Monitor" : "Active"}
-                          </div>
-                          {SHOW_UPGRADE_BUTTON && (
+                          {!isAdmin && (
+                            <div className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 border border-green-500/20">
+                              Status:{" "}
+                              {userRole === "monitor360" ? "Monitor" : "Active"}
+                            </div>
+                          )}
+                          {SHOW_UPGRADE_BUTTON && !isAdmin && (
                             <button
                               onClick={() => setShowUpgradeModal(true)}
                               className="cursor-pointer text-[10px] text-blue-400 hover:text-blue-300 hover:underline"
@@ -764,6 +772,19 @@ export const AuthControl = () => {
                   </div>
                 </div>
 
+                {/* Admin: User Management */}
+                {isAdmin && (
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      setShowUserManagement(true);
+                    }}
+                    className="cursor-pointer w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 border border-blue-500/20 transition-all font-medium text-sm"
+                  >
+                    <Users size={16} /> Manage Users & Plans
+                  </button>
+                )}
+
                 {/* Logout Button */}
                 <button
                   onClick={() => setShowLogoutConfirm(true)}
@@ -785,6 +806,17 @@ export const AuthControl = () => {
               setShowOfflineManager(false);
               setShowMenu(true);
             }}
+          />,
+          document.body,
+        )}
+
+      {showUserManagement &&
+        user &&
+        isAdmin &&
+        createPortal(
+          <UserManagementPanel
+            currentUserId={user.id}
+            onClose={() => setShowUserManagement(false)}
           />,
           document.body,
         )}
