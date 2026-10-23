@@ -779,7 +779,7 @@ export const AuthControl = () => {
                       setShowMenu(false);
                       setShowUserManagement(true);
                     }}
-                    className="cursor-pointer w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 border border-blue-500/20 transition-all font-medium text-sm"
+                    className="cursor-pointer w-full mb-3 flex items-center justify-center gap-2 p-3 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 border border-blue-500/20 transition-all font-medium text-sm"
                   >
                     <Users size={16} /> Manage Users & Plans
                   </button>
