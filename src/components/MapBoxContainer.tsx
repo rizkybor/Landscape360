@@ -18,6 +18,9 @@ import { ControlPanel, TelemetryOverlay } from "./ControlPanel";
 import { useRouteStore } from "../store/useRouteStore";
 import { RegionSelectionLayer } from "./RegionSelectionLayer";
 import { SurveyorPanel } from "./SurveyorPanel";
+import { TrackRecorderPanel } from "./TrackRecorderPanel";
+import { TrackRecorderLayer } from "./TrackRecorderLayer";
+import { useTrackRecorderService } from "../services/TrackRecorderService";
 import { SearchPanel } from "./SearchPanel";
 import { NavigationControls } from "./NavigationControls";
 import { UserLocationMarker } from "./UserLocationMarker";
@@ -111,6 +114,7 @@ const MapBoxContainerComponent = ({
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   const { basemaps, loadBasemaps, layerOpacities, isManagerOpen, toggleManager } = useCustomBasemapStore();
   const { user, isPlotMode } = useSurveyStore();
+  useTrackRecorderService();
   const isRoutePlannerEnabled = useRouteStore((s) => s.isRoutePlannerEnabled);
 
   useEffect(() => {
@@ -853,6 +857,8 @@ const MapBoxContainerComponent = ({
 
         <RegionSelectionLayer />
 
+        <TrackRecorderLayer />
+
         {mode === "3D" && (
           <Suspense fallback={null}>
             <ThreeScene />
@@ -1113,6 +1119,7 @@ const MapBoxContainerComponent = ({
       )}
 
       {showControls && <SurveyorPanel />}
+      {showControls && <TrackRecorderPanel />}
       {showControls && <SearchPanel />}
       {showControls && <WeatherWidget />}
       {/* Custom Basemap Manager */}
