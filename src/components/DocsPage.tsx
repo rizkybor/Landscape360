@@ -23,6 +23,9 @@ interface Props {
   onBack?: () => void;
 }
 
+// Set to true to show the Pricing & Plans section again
+const SHOW_PRICING = false;
+
 export const DocsPage = ({ onBack }: Props) => {
   return (
     <div className="h-screen bg-[#050505] text-white font-sans overflow-hidden flex flex-col">
@@ -1311,7 +1314,8 @@ export const DocsPage = ({ onBack }: Props) => {
             </div>
           </section>
 
-          {/* Pricing & Plans */}
+          {/* Pricing & Plans (temporarily hidden, see SHOW_PRICING) */}
+          {SHOW_PRICING && (
           <section className="space-y-8 pt-8 border-t border-white/5">
             <div className="text-center max-w-2xl mx-auto space-y-3">
               <h3 className="text-2xl font-bold text-white">Pricing & Plans</h3>
@@ -1464,6 +1468,7 @@ export const DocsPage = ({ onBack }: Props) => {
               </div>
             </div>
           </section>
+          )}
 
           {/* Footer */}
           <footer className="pt-16 pb-8 border-t border-white/5 text-center">
