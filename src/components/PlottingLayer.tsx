@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { Source, Layer, useMap, Marker } from 'react-map-gl/mapbox';
 import { useSurveyStore } from '../store/useSurveyStore';
 import { getAzimuthData, formatDegrees, formatDistance, toDMS } from '../utils/surveyUtils';
@@ -16,10 +16,27 @@ export const PlottingLayer = () => {
 
   const activeGroup = groups.find(g => g.id === activeGroupId) || groups[0];
 
+  // Pan helpers: dragging the map or holding Space pans instead of plotting
+  const isSpaceHeldRef = useRef(false);
+  const pointerDownRef = useRef<{ x: number; y: number } | null>(null);
+  const didDragRef = useRef(false);
+  const DRAG_THRESHOLD_PX = 4;
+
   // Handle Map Click (Only if not dragging)
   useEffect(() => {
     if (!mapRef || !isPlotMode) return;
     const map = mapRef.getMap();
+    const canvas = map.getCanvas();
+
+    const updateCursor = () => {
+      if (pointerDownRef.current && (didDragRef.current || isSpaceHeldRef.current)) {
+          canvas.style.cursor = 'grabbing';
+      } else if (isSpaceHeldRef.current) {
+          canvas.style.cursor = 'grab';
+      } else {
+          canvas.style.cursor = 'crosshair';
+      }
+    };
 
     const handleClick = async (e: MapMouseEvent) => {
       // Prevent adding point if we just finished dragging
@@ -27,6 +44,8 @@ export const PlottingLayer = () => {
           setDraggedPointId(null);
           return;
       }
+      // Ignore clicks that ended a map pan or happened in Space-pan mode
+      if (didDragRef.current || isSpaceHeldRef.current) return;
       
       const { lng, lat } = e.lngLat;
       
@@ -37,19 +56,88 @@ export const PlottingLayer = () => {
     };
 
     const handleMouseMove = (e: MapMouseEvent) => {
-        if (!draggedPointId) {
-            setCursorLocation([e.lngLat.lng, e.lngLat.lat]);
-            map.getCanvas().style.cursor = 'crosshair';
+        if (draggedPointId) return;
+
+        const down = pointerDownRef.current;
+        if (down && !didDragRef.current) {
+            const { clientX, clientY } = e.originalEvent;
+            if (Math.hypot(clientX - down.x, clientY - down.y) > DRAG_THRESHOLD_PX) {
+                didDragRef.current = true;
+            }
         }
+
+        if (didDragRef.current || isSpaceHeldRef.current) {
+            // Panning: hide the preview line and keep the hand cursor
+            setCursorLocation(null);
+        } else {
+            setCursorLocation([e.lngLat.lng, e.lngLat.lat]);
+        }
+        updateCursor();
     };
 
+    const handleMouseDown = (e: MouseEvent) => {
+        pointerDownRef.current = { x: e.clientX, y: e.clientY };
+        didDragRef.current = false;
+        updateCursor();
+    };
+
+    const handleMouseUp = () => {
+        if (!pointerDownRef.current) return;
+        pointerDownRef.current = null;
+        // Run after other mouseup handlers that reset the cursor
+        requestAnimationFrame(updateCursor);
+    };
+
+    const handleMouseOut = () => {
+        if (!pointerDownRef.current) setCursorLocation(null);
+    };
+
+    const isTypingTarget = (target: EventTarget | null) => {
+        const el = target as HTMLElement | null;
+        return !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.code !== 'Space' || isTypingTarget(e.target)) return;
+        e.preventDefault(); // Avoid page scroll
+        if (isSpaceHeldRef.current) return;
+        isSpaceHeldRef.current = true;
+        setCursorLocation(null);
+        updateCursor();
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+        if (e.code !== 'Space') return;
+        isSpaceHeldRef.current = false;
+        updateCursor();
+    };
+
+    const handleBlur = () => {
+        isSpaceHeldRef.current = false;
+        pointerDownRef.current = null;
+        updateCursor();
+    };
+
+    updateCursor();
     map.on('click', handleClick);
     map.on('mousemove', handleMouseMove);
+    canvas.addEventListener('mousedown', handleMouseDown);
+    canvas.addEventListener('mouseout', handleMouseOut);
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('blur', handleBlur);
 
     return () => {
       map.off('click', handleClick);
       map.off('mousemove', handleMouseMove);
-      map.getCanvas().style.cursor = '';
+      canvas.removeEventListener('mousedown', handleMouseDown);
+      canvas.removeEventListener('mouseout', handleMouseOut);
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('blur', handleBlur);
+      canvas.style.cursor = '';
     };
   }, [mapRef, isPlotMode, addPoint, draggedPointId]);
 
@@ -318,6 +406,9 @@ export const PlottingLayer = () => {
                                 <span className="text-white/80 font-bold uppercase text-[8px]">Azim</span>
                                 <span className="font-bold font-mono text-white">{formatDegrees(data.forwardAzimuth)}</span>
                             </div>
+                            {!isMobile && (
+                                <div className="text-white/60 text-[8px] pt-0.5">Hold Space or drag to pan</div>
+                            )}
                         </>
                     );
                 })()}
