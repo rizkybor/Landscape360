@@ -78,9 +78,16 @@ describe('RegionDrawingOverlay', () => {
       expect(screen.getByText(/Download Limit Exceeded/i)).toBeInTheDocument();
     });
 
-    // Upgrade options are hidden (SHOW_UPGRADE_OPTIONS = false): button asks to reduce the area
+    // Upgrade options are hidden (SHOW_UPGRADE_OPTIONS = false): users contact the admin instead
     expect(screen.queryByText(/CHECK UPGRADE OPTIONS/i)).not.toBeInTheDocument();
-    expect(screen.getByText(/Reduce Area to Download/i).closest('button')).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: /Contact Admin/i }));
+
+    // Modal keeps the limit info and offers only the admin contact, no plan cards
+    expect(screen.getAllByText('Download Limit Exceeded').length).toBeGreaterThan(1);
+    expect(screen.queryByText(/PRO PLAN/i)).not.toBeInTheDocument();
+    const contactLink = screen.getByRole('link', { name: /Contact Admin/i });
+    expect(contactLink.getAttribute('href')).toMatch(/^mailto:contact@jcdigital\.co\.id/);
+    expect(contactLink.getAttribute('href')).toContain('test@example.com');
   });
 
   // Re-enable these two tests when SHOW_UPGRADE_OPTIONS is set back to true
