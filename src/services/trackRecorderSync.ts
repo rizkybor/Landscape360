@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
-import type { RecordedTrack, TrackPoint } from '../types/trackRecorder';
+import type { RecordedTrack, SharedTrack, TrackPoint, TrackShare } from '../types/trackRecorder';
 
 // Cloud copy of recorded tracks (table: recorded_tracks). One row per track; points are
 // stored compactly as [lng, lat, alt, timestamp, accuracy, segment] so an upsert of the
@@ -112,4 +112,55 @@ export const renameRemoteTrack = async (trackId: string, name: string) => {
 export const deleteRemoteTrack = async (trackId: string) => {
   const { error } = await supabase.from('recorded_tracks').delete().eq('id', trackId);
   if (error) throw new Error(error.message);
+};
+
+// --- Sharing (table recorded_track_shares + RPCs in 20261024000001_track_recorder_sharing.sql)
+
+interface ShareRow {
+  shared_with: string;
+  email: string;
+  created_at: string;
+}
+
+const fromShareRow = (row: ShareRow): TrackShare => ({
+  userId: row.shared_with,
+  email: row.email,
+  sharedAt: Date.parse(row.created_at),
+});
+
+export const shareTrack = async (trackId: string, email: string): Promise<TrackShare> => {
+  const { data, error } = await supabase.rpc('share_recorded_track', { p_track_id: trackId, p_email: email });
+  if (error) throw new Error(error.message);
+  const row = (data as ShareRow[] | null)?.[0];
+  if (!row) throw new Error('Share failed');
+  return fromShareRow(row);
+};
+
+export const listShares = async (trackId: string): Promise<TrackShare[]> => {
+  const { data, error } = await supabase.rpc('list_recorded_track_shares', { p_track_id: trackId });
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as ShareRow[]).map(fromShareRow);
+};
+
+// Owner revokes one recipient
+export const revokeShare = async (trackId: string, recipientId: string) => {
+  const { error } = await supabase
+    .from('recorded_track_shares')
+    .delete()
+    .eq('track_id', trackId)
+    .eq('shared_with', recipientId);
+  if (error) throw new Error(error.message);
+};
+
+// Recipient removes a shared track from their own list
+export const leaveSharedTrack = async (trackId: string, myUserId: string) => revokeShare(trackId, myUserId);
+
+export const fetchSharedWithMe = async (): Promise<SharedTrack[]> => {
+  const { data, error } = await supabase.rpc('list_tracks_shared_with_me');
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as (RecordedTrackRow & { owner_email: string | null; shared_at: string })[]).map((row) => ({
+    ...fromRow(row),
+    ownerEmail: row.owner_email,
+    sharedAt: Date.parse(row.shared_at),
+  }));
 };

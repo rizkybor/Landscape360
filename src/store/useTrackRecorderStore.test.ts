@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { canUseTrackRecorder, useTrackRecorderStore } from './useTrackRecorderStore';
+import { canRecordTracks, useTrackRecorderStore } from './useTrackRecorderStore';
 import * as localDb from '../utils/trackRecorderDb';
 import * as cloud from '../services/trackRecorderSync';
 
@@ -9,6 +9,11 @@ vi.mock('../services/trackRecorderSync', () => ({
   fetchRemotePoints: vi.fn(),
   renameRemoteTrack: vi.fn(),
   deleteRemoteTrack: vi.fn(),
+  fetchSharedWithMe: vi.fn(),
+  shareTrack: vi.fn(),
+  listShares: vi.fn(),
+  revokeShare: vi.fn(),
+  leaveSharedTrack: vi.fn(),
 }));
 
 const store = () => useTrackRecorderStore.getState();
@@ -41,6 +46,7 @@ describe('useTrackRecorderStore', () => {
     vi.mocked(cloud.fetchRemoteTracks).mockResolvedValue([]);
     vi.mocked(cloud.uploadTrack).mockResolvedValue(undefined);
     vi.mocked(cloud.deleteRemoteTrack).mockResolvedValue(undefined);
+    vi.mocked(cloud.fetchSharedWithMe).mockResolvedValue([]);
     setOnline(true);
     store().reset();
     userId = `user-${++userCounter}`;
@@ -49,12 +55,12 @@ describe('useTrackRecorderStore', () => {
 
   afterEach(() => setOnline(true));
 
-  it('allows only Pro, Enterprise and admin accounts', () => {
-    expect(canUseTrackRecorder({ hasUser: true, subscriptionStatus: 'Free', isAdmin: false })).toBe(false);
-    expect(canUseTrackRecorder({ hasUser: true, subscriptionStatus: 'Pro', isAdmin: false })).toBe(true);
-    expect(canUseTrackRecorder({ hasUser: true, subscriptionStatus: 'Enterprise', isAdmin: false })).toBe(true);
-    expect(canUseTrackRecorder({ hasUser: true, subscriptionStatus: 'Free', isAdmin: true })).toBe(true);
-    expect(canUseTrackRecorder({ hasUser: false, subscriptionStatus: 'Pro', isAdmin: false })).toBe(false);
+  it('allows only Enterprise and admin accounts to record', () => {
+    expect(canRecordTracks({ hasUser: true, subscriptionStatus: 'Free', isAdmin: false })).toBe(false);
+    expect(canRecordTracks({ hasUser: true, subscriptionStatus: 'Pro', isAdmin: false })).toBe(false);
+    expect(canRecordTracks({ hasUser: true, subscriptionStatus: 'Enterprise', isAdmin: false })).toBe(true);
+    expect(canRecordTracks({ hasUser: true, subscriptionStatus: 'Free', isAdmin: true })).toBe(true);
+    expect(canRecordTracks({ hasUser: false, subscriptionStatus: 'Enterprise', isAdmin: false })).toBe(false);
   });
 
   it('records an offline track on the device without uploading it', async () => {
@@ -206,5 +212,89 @@ describe('useTrackRecorderStore', () => {
     const { filename, content } = await store().exportGpx(id);
     expect(filename).toBe('Export_me.gpx');
     expect(content.match(/<trkpt /g)).toHaveLength(2);
+  });
+
+  describe('sharing', () => {
+    const sharedTrack = (overrides = {}) => ({
+      id: 'shared-1', userId: 'someone-else', name: 'Friend hike', mode: 'online' as const, status: 'completed' as const,
+      startedAt: 1, endedAt: 2, elapsedMs: 1, lastResumedAt: null, distanceM: 10, movingTimeMs: 1,
+      elevationGainM: 0, elevationLossM: 0, maxAltM: null, minAltM: null, pointCount: 2,
+      syncStatus: 'remote' as const, syncError: null, syncedAt: 2, updatedAt: 2,
+      ownerEmail: 'friend@example.com', sharedAt: 3,
+      ...overrides,
+    });
+
+    it('uploads an offline track before sharing it', async () => {
+      vi.mocked(cloud.shareTrack).mockResolvedValue({ userId: 'r1', email: 'r1@example.com', sharedAt: 1 });
+      await store().startTrack('To share', 'offline');
+      walk(2);
+      await store().stopTrack();
+      const id = (await localDb.listTracks(userId))[0].id;
+
+      const share = await store().shareTrack(id, 'r1@example.com');
+
+      expect(cloud.uploadTrack).toHaveBeenCalledTimes(1);
+      expect(cloud.shareTrack).toHaveBeenCalledWith(id, 'r1@example.com');
+      expect(share.email).toBe('r1@example.com');
+      expect((await localDb.getTrack(id))?.syncStatus).toBe('synced');
+    });
+
+    it('does not share when the upload fails', async () => {
+      vi.mocked(cloud.uploadTrack).mockRejectedValueOnce(new Error('network down'));
+      await store().startTrack('Will fail', 'offline');
+      walk(2);
+      await store().stopTrack();
+      const id = (await localDb.listTracks(userId))[0].id;
+
+      await expect(store().shareTrack(id, 'r1@example.com')).rejects.toThrow(/network down/);
+      expect(cloud.shareTrack).not.toHaveBeenCalled();
+    });
+
+    it('refuses to share without a connection', async () => {
+      await store().startTrack('Offline share', 'offline');
+      await store().stopTrack();
+      const id = (await localDb.listTracks(userId))[0].id;
+      setOnline(false);
+
+      await expect(store().shareTrack(id, 'r1@example.com')).rejects.toThrow(/internet/);
+    });
+
+    it('revokes a recipient', async () => {
+      vi.mocked(cloud.revokeShare).mockResolvedValue(undefined);
+      await store().revokeShare('track-1', 'r1');
+      expect(cloud.revokeShare).toHaveBeenCalledWith('track-1', 'r1');
+    });
+
+    it('loads tracks shared with me, opens them from the cloud, and keeps them read-only', async () => {
+      vi.mocked(cloud.fetchSharedWithMe).mockResolvedValue([sharedTrack()]);
+      vi.mocked(cloud.fetchRemotePoints).mockResolvedValue([
+        { lat: -7.6, lng: 110.45, alt: 1000, accuracy: 5, speed: null, timestamp: 1, segment: 0 },
+      ]);
+      await store().loadSharedTracks();
+      expect(store().sharedTracks.map((t) => t.ownerEmail)).toEqual(['friend@example.com']);
+
+      await store().viewTrack('shared-1');
+      expect(cloud.fetchRemotePoints).toHaveBeenCalledWith('shared-1');
+      expect(store().viewing?.track.id).toBe('shared-1');
+
+      // Not the owner: rename, delete and sync are ignored
+      await store().renameTrack('shared-1', 'Mine now');
+      await store().deleteTrack('shared-1');
+      await store().syncTrack('shared-1');
+      expect(cloud.renameRemoteTrack).not.toHaveBeenCalled();
+      expect(cloud.deleteRemoteTrack).not.toHaveBeenCalled();
+      expect(cloud.uploadTrack).not.toHaveBeenCalled();
+      await expect(store().shareTrack('shared-1', 'x@example.com')).rejects.toThrow(/your own/);
+    });
+
+    it('removes a shared track from my list', async () => {
+      vi.mocked(cloud.fetchSharedWithMe).mockResolvedValue([sharedTrack()]);
+      vi.mocked(cloud.leaveSharedTrack).mockResolvedValue(undefined);
+      await store().loadSharedTracks();
+
+      await store().leaveSharedTrack('shared-1');
+      expect(cloud.leaveSharedTrack).toHaveBeenCalledWith('shared-1', userId);
+      expect(store().sharedTracks).toHaveLength(0);
+    });
   });
 });

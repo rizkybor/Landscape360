@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useSurveyStore } from '../store/useSurveyStore';
-import { canUseTrackRecorder, useTrackRecorderStore } from '../store/useTrackRecorderStore';
+import { canRecordTracks, useTrackRecorderStore } from '../store/useTrackRecorderStore';
 import { TRACK_RECORDER_CONFIG } from '../types/trackRecorder';
 
 type WakeLockSentinel = {
@@ -14,7 +14,7 @@ type WakeLockSentinel = {
 export const useTrackRecorderService = () => {
   const { user, subscriptionStatus, isAdmin } = useSurveyStore();
   const userId = user?.id ?? null;
-  const hasAccess = canUseTrackRecorder({ hasUser: !!user, subscriptionStatus, isAdmin });
+  const canRecord = canRecordTracks({ hasUser: !!user, subscriptionStatus, isAdmin });
 
   const activeId = useTrackRecorderStore((s) => s.activeTrack?.id ?? null);
   const activeStatus = useTrackRecorderStore((s) => s.activeTrack?.status ?? null);
@@ -23,20 +23,20 @@ export const useTrackRecorderService = () => {
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const isRecording = activeStatus === 'recording';
 
-  // Account changes: load this user's tracks, clear everything on logout
+  // Account changes: load this user's own and shared tracks, clear everything on logout
   useEffect(() => {
     const store = useTrackRecorderStore.getState();
     if (!userId) {
       store.reset();
       return;
     }
-    if (hasAccess) store.init(userId);
-  }, [userId, hasAccess]);
+    store.init(userId);
+  }, [userId]);
 
-  // Losing access (plan downgrade) pauses the recording instead of dropping data
+  // Losing recording access (plan change) pauses the recording instead of dropping data
   useEffect(() => {
-    if (!hasAccess && isRecording) useTrackRecorderStore.getState().pauseTrack();
-  }, [hasAccess, isRecording]);
+    if (!canRecord && isRecording) useTrackRecorderStore.getState().pauseTrack();
+  }, [canRecord, isRecording]);
 
   // GPS watch while recording
   useEffect(() => {
@@ -118,15 +118,17 @@ export const useTrackRecorderService = () => {
     return () => clearInterval(interval);
   }, [isRecording, activeMode, activeId]);
 
-  // Back online: retry pending uploads of online-mode tracks
+  // Back online: retry pending uploads of online-mode tracks and refresh shared tracks
   useEffect(() => {
-    if (!userId || !hasAccess) return;
+    if (!userId) return;
     const handleOnline = () => {
-      const { activeTrack, syncTrack, syncPending } = useTrackRecorderStore.getState();
+      const { activeTrack, syncTrack, syncPending, loadSharedTracks } = useTrackRecorderStore.getState();
+      loadSharedTracks();
+      if (!canRecord) return;
       syncPending();
       if (activeTrack?.mode === 'online') syncTrack(activeTrack.id);
     };
     window.addEventListener('online', handleOnline);
     return () => window.removeEventListener('online', handleOnline);
-  }, [userId, hasAccess]);
+  }, [userId, canRecord]);
 };
