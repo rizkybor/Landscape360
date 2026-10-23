@@ -52,6 +52,19 @@ export interface RecordedTrack extends TrackStats {
   updatedAt: number;
 }
 
+// A track another account shared with me (read-only)
+export interface SharedTrack extends RecordedTrack {
+  ownerEmail: string | null;
+  sharedAt: number;
+}
+
+// A recipient of one of my tracks
+export interface TrackShare {
+  userId: string;
+  email: string;
+  sharedAt: number;
+}
+
 export const TRACK_RECORDER_CONFIG = {
   // Ignore fixes worse than this (meters)
   MAX_ACCURACY_M: 50,

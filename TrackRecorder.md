@@ -4,18 +4,20 @@ Track Recorder merekam **jejak GPS pribadi** (seperti Strava / Gaia GPS): rute, 
 
 ## Hak Akses
 
-| Akun | Akses |
-|---|---|
-| Free | ❌ Tombol terkunci, label "Hubungi Admin" |
-| Pro | ✅ |
-| Enterprise (User maupun Monitor) | ✅ |
-| Admin (`profiles.is_admin`) | ✅ |
+| Akun | Merekam & membagikan | Melihat track sendiri & yang dibagikan |
+|---|---|---|
+| Free | ❌ Tab Record terkunci ("Hubungi Admin") | ✅ |
+| Pro | ❌ Tab Record terkunci ("Hubungi Admin") | ✅ |
+| Enterprise (User maupun Monitor) | ✅ | ✅ |
+| Admin (`profiles.is_admin`) | ✅ | ✅ |
+
+Panel Track Recorder bisa dibuka semua akun yang login (untuk melihat track lama dan track yang dibagikan); **merekam dan membagikan** hanya Enterprise & admin.
 
 Dicek di dua lapis:
-1. **UI**: `canUseTrackRecorder()` di `src/store/useTrackRecorderStore.ts`.
-2. **Database**: fungsi `can_use_track_recorder()` + RLS di tabel `recorded_tracks`. Jadi walaupun UI diakali, server tetap menolak.
+1. **UI**: `canRecordTracks()` di `src/store/useTrackRecorderStore.ts`.
+2. **Database**: fungsi `can_use_track_recorder()` + RLS di `recorded_tracks` dan `recorded_track_shares`. Jadi walaupun UI diakali, server tetap menolak.
 
-Jika plan turun (mis. Pro → Free) saat sedang merekam, rekaman **di-pause, bukan dihapus**. Track lama tetap bisa dilihat & dihapus.
+Jika plan turun (mis. Enterprise → Pro) saat sedang merekam, rekaman **di-pause, bukan dihapus**. Track lama tetap bisa dilihat & dihapus.
 
 ## Konsep: Local-first
 
@@ -59,6 +61,24 @@ sequenceDiagram
     end
 ```
 
+## Berbagi Track (Sharing)
+
+Pemilik track (Enterprise/admin) bisa membagikan track ke **akun mana pun** (termasuk Free/Pro) lewat **email akun**:
+
+1. Tab **My Tracks** → ikon **Share** pada track → isi email penerima → **Share**.
+2. Track yang belum ada di cloud (mis. mode Offline) otomatis di-upload dulu. Butuh koneksi internet.
+3. Daftar penerima tampil di bawahnya; ikon **Remove access** (dengan konfirmasi) untuk **membatalkan** akses akun tersebut.
+
+Penerima melihatnya di tab **Shared** (hanya-lihat): nama track, email pemilik, statistik, tampil di peta, dan ekspor GPX. Penerima **tidak bisa** mengubah/menghapus track pemilik, tapi bisa **Remove from my list** (melepas akses dirinya sendiri).
+
+Track mode Online yang **masih direkam** ikut terlihat oleh penerima (label *In progress*), diperbarui setiap kali tersinkron (±60 detik).
+
+Jika pemilik menghapus track, semua akses berbagi ikut terhapus.
+
+Keamanan:
+- Akun dicari berdasarkan email oleh fungsi database (`share_recorded_track`), sehingga daftar user tidak pernah terbuka ke browser.
+- Tidak bisa berbagi ke diri sendiri; email yang tidak terdaftar ditolak dengan pesan jelas.
+
 ## Penyaringan & Perhitungan
 
 Konfigurasi di `TRACK_RECORDER_CONFIG` (`src/types/trackRecorder.ts`):
@@ -86,8 +106,10 @@ Saat merekam, layar dijaga tetap menyala (Wake Lock API) bila browser mendukung.
 | `src/store/useTrackRecorderStore.ts` | State & aksi: start/pause/resume/finish/discard, pemulihan, sync, list, hapus, GPX, `canUseTrackRecorder` |
 | `src/services/TrackRecorderService.ts` | Hook latar belakang: GPS `watchPosition`, Wake Lock, auto-sync, login/logout & hak akses |
 | `src/components/TrackRecorderLayer.tsx` | Gambar di peta: jejak aktif (oranye), posisi + lingkaran akurasi, track tersimpan (cyan) |
-| `src/components/TrackRecorderPanel.tsx` | UI panel (Record / My Tracks) + indikator REC |
+| `src/components/TrackRecorderPanel.tsx` | UI panel (Record / My Tracks / Shared) + indikator REC |
+| `src/components/TrackShareManager.tsx` | Bagikan track via email & cabut akses |
 | `supabase/migrations/20261024000000_create_recorded_tracks.sql` | Tabel, index, fungsi akses, RLS |
+| `supabase/migrations/20261024000001_track_recorder_sharing.sql` | Akses rekam Enterprise/admin, tabel `recorded_track_shares`, RLS & fungsi berbagi |
 
 Dipasang di `MapBoxContainer.tsx` (service, layer, panel) dan `ControlPanel.tsx` (tombol).
 
@@ -95,11 +117,16 @@ Dipasang di `MapBoxContainer.tsx` (service, layer, panel) dan `ControlPanel.tsx`
 
 Tabel `recorded_tracks`: satu baris per track. Titik disimpan ringkas di kolom `points` (JSONB) sebagai `[lng, lat, alt, timestamp_ms, accuracy_m, segment]`. Upload selalu meng-*upsert* seluruh track, jadi aman diulang saat koneksi putus-nyambung.
 
-RLS: user hanya bisa melihat/menghapus track miliknya; membuat/mengubah hanya jika Pro, Enterprise, atau admin.
+RLS: user bisa melihat track miliknya dan yang dibagikan kepadanya; menghapus hanya miliknya; membuat/mengubah hanya jika Enterprise atau admin.
+
+Tabel `recorded_track_shares`: satu baris per (track, penerima). Menyimpan `owner_id` agar policy kedua tabel tidak saling memanggil (rekursi RLS).
 
 ## Setup
 
-1. Jalankan migration `supabase/migrations/20261024000000_create_recorded_tracks.sql` di Supabase SQL Editor (butuh migration `20261023000000_restrict_profile_self_update.sql` yang menambah `is_admin`).
+1. Jalankan migration berikut di Supabase SQL Editor, **berurutan**:
+   1. `20261023000000_restrict_profile_self_update.sql` (menambah `is_admin`, jika belum)
+   2. `20261024000000_create_recorded_tracks.sql`
+   3. `20261024000001_track_recorder_sharing.sql`
 2. Tidak ada env tambahan.
 
 ## Testing

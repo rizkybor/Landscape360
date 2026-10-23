@@ -7,7 +7,7 @@ import { useRouteStore } from "../store/useRouteStore";
 import { useCustomBasemapStore } from "../store/useCustomBasemapStore";
 import { AuthControl } from "./AuthControl";
 import { CONTACT_ADMIN_LABEL } from "../config";
-import { canUseTrackRecorder, useTrackRecorderStore } from "../store/useTrackRecorderStore";
+import { canRecordTracks, useTrackRecorderStore } from "../store/useTrackRecorderStore";
 import mapboxgl from "mapbox-gl";
 import type { MapRef } from "react-map-gl/mapbox";
 import {
@@ -79,7 +79,9 @@ export const ControlPanel = () => {
   const isTrackRecorderOpen = useTrackRecorderStore((s) => s.isPanelOpen);
   const isTrackRecording = useTrackRecorderStore((s) => s.activeTrack?.status === "recording");
   const toggleTrackRecorder = useTrackRecorderStore((s) => s.togglePanel);
-  const canRecordTracks = canUseTrackRecorder({ hasUser: !!user, subscriptionStatus, isAdmin });
+  const canRecordTrack = canRecordTracks({ hasUser: !!user, subscriptionStatus, isAdmin });
+  // Any signed-in account can open it to view own and shared tracks; recording needs canRecordTrack
+  const canOpenTrackRecorder = !!user;
   const { isRoutePlannerEnabled, setRoutePlannerEnabled } = useRouteStore();
   const {
     isLiveTrackingEnabled,
@@ -623,12 +625,12 @@ export const ControlPanel = () => {
                   </div>
                 </button>
 
-                {/* Track Recorder (Pro, Enterprise & Admin) */}
+                {/* Track Recorder (record: Enterprise & Admin; view/shared: all signed-in) */}
                 <button
-                  onClick={canRecordTracks ? toggleTrackRecorder : undefined}
-                  disabled={!canRecordTracks}
+                  onClick={canOpenTrackRecorder ? toggleTrackRecorder : undefined}
+                  disabled={!canOpenTrackRecorder}
                   className={`${isMobile ? "flex-none w-28 snap-center h-full" : "col-span-1 w-full"} flex items-center rounded-xl border transition-all duration-200 group ${
-                    !canRecordTracks
+                    !canOpenTrackRecorder
                       ? "border-white/5 bg-white/5 opacity-60 cursor-not-allowed"
                       : isTrackRecorderOpen || isTrackRecording
                         ? "cursor-pointer bg-orange-900/20 border-orange-500/30 shadow-[0_0_15px_rgba(249,115,22,0.1)]"
@@ -637,14 +639,14 @@ export const ControlPanel = () => {
                 >
                   <div
                     className={`p-2 rounded-lg transition-colors ${
-                      !canRecordTracks
+                      !canOpenTrackRecorder
                         ? "bg-gray-500/10 text-gray-500"
                         : isTrackRecorderOpen || isTrackRecording
                           ? "bg-orange-500 text-white shadow-lg shadow-orange-500/40"
                           : "bg-white/10 text-gray-400 group-hover:text-white"
                     } ${isMobile ? "mb-1" : ""}`}
                   >
-                    {canRecordTracks ? (
+                    {canOpenTrackRecorder ? (
                       <Footprints size={isMobile ? 18 : 16} />
                     ) : (
                       <Lock size={isMobile ? 18 : 16} />
@@ -653,7 +655,7 @@ export const ControlPanel = () => {
                   <div className="flex-1">
                     <div
                       className={`font-bold transition-colors ${
-                        !canRecordTracks
+                        !canOpenTrackRecorder
                           ? "text-gray-400"
                           : isTrackRecorderOpen || isTrackRecording
                             ? "text-white"
@@ -665,20 +667,20 @@ export const ControlPanel = () => {
                     {!isMobile && (
                       <div
                         className={`text-[10px] ${
-                          !canRecordTracks
+                          !canOpenTrackRecorder
                             ? "text-gray-600"
                             : isTrackRecording
                               ? "text-orange-200"
                               : "text-gray-500"
                         }`}
                       >
-                        {!canRecordTracks
-                          ? user
-                            ? CONTACT_ADMIN_LABEL
-                            : "Login required"
+                        {!canOpenTrackRecorder
+                          ? "Login required"
                           : isTrackRecording
                             ? "Recording"
-                            : "Online / Offline"}
+                            : canRecordTrack
+                              ? "Online / Offline"
+                              : "View & Shared"}
                       </div>
                     )}
                   </div>

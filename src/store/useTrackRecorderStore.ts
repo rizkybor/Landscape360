@@ -2,8 +2,10 @@ import { create } from 'zustand';
 import type {
   GpsStatus,
   RecordedTrack,
+  SharedTrack,
   TrackMode,
   TrackPoint,
+  TrackShare,
 } from '../types/trackRecorder';
 import {
   accumulatePoint,
@@ -17,14 +19,13 @@ import {
 import * as localDb from '../utils/trackRecorderDb';
 import * as cloud from '../services/trackRecorderSync';
 
-// Pro, Enterprise and admin accounts may record tracks (also enforced by RLS).
-export const canUseTrackRecorder = (params: {
+// Only Enterprise and admin accounts may record and share tracks (also enforced by RLS).
+// Every signed-in account can open the recorder to view its own and shared tracks.
+export const canRecordTracks = (params: {
   hasUser: boolean;
   subscriptionStatus: string;
   isAdmin: boolean;
-}) =>
-  params.hasUser &&
-  (params.isAdmin || params.subscriptionStatus === 'Pro' || params.subscriptionStatus === 'Enterprise');
+}) => params.hasUser && (params.isAdmin || params.subscriptionStatus === 'Enterprise');
 
 export type GpsFix = Omit<TrackPoint, 'segment'>;
 
@@ -64,6 +65,14 @@ interface TrackRecorderStore {
   renameTrack: (trackId: string, name: string) => Promise<void>;
   deleteTrack: (trackId: string) => Promise<void>;
   exportGpx: (trackId: string) => Promise<{ filename: string; content: string }>;
+
+  sharedTracks: SharedTrack[];
+  isLoadingShared: boolean;
+  loadSharedTracks: () => Promise<void>;
+  leaveSharedTrack: (trackId: string) => Promise<void>;
+  shareTrack: (trackId: string, email: string) => Promise<TrackShare>;
+  listShares: (trackId: string) => Promise<TrackShare[]>;
+  revokeShare: (trackId: string, recipientId: string) => Promise<void>;
 }
 
 // Serialize IndexedDB writes so points are stored in order even when fixes arrive quickly
@@ -101,11 +110,18 @@ export const useTrackRecorderStore = create<TrackRecorderStore>((set, get) => {
     }));
   };
 
-  const findTrack = async (trackId: string) => {
-    const { activeTrack, tracks } = get();
+  const findTrack = async (trackId: string): Promise<RecordedTrack | null> => {
+    const { activeTrack, tracks, sharedTracks } = get();
     if (activeTrack?.id === trackId) return activeTrack;
-    return (await localDb.getTrack(trackId)) ?? tracks.find((t) => t.id === trackId) ?? null;
+    return (
+      (await localDb.getTrack(trackId)) ??
+      tracks.find((t) => t.id === trackId) ??
+      sharedTracks.find((t) => t.id === trackId) ??
+      null
+    );
   };
+
+  const isOwnTrack = (track: RecordedTrack) => track.userId === get().userId;
 
   const loadPoints = async (track: RecordedTrack) =>
     track.syncStatus === 'remote' ? cloud.fetchRemotePoints(track.id) : localDb.getPoints(track.id);
@@ -121,12 +137,14 @@ export const useTrackRecorderStore = create<TrackRecorderStore>((set, get) => {
 
     tracks: [],
     isLoadingTracks: false,
+    sharedTracks: [],
+    isLoadingShared: false,
     error: null,
     clearError: () => set({ error: null }),
 
     init: async (userId) => {
       if (get().userId === userId) return;
-      set({ userId, ...idleState, tracks: [], error: null });
+      set({ userId, ...idleState, tracks: [], sharedTracks: [], error: null });
 
       // Recover a recording that was interrupted (reload, crash, app closed)
       const unfinished = await localDb.findUnfinishedTrack(userId);
@@ -156,10 +174,10 @@ export const useTrackRecorderStore = create<TrackRecorderStore>((set, get) => {
         await enqueue(() => localDb.saveTrack(recovered));
       }
 
-      await get().loadTracks();
+      await Promise.all([get().loadTracks(), get().loadSharedTracks()]);
     },
 
-    reset: () => set({ userId: null, ...idleState, tracks: [], isPanelOpen: false, error: null }),
+    reset: () => set({ userId: null, ...idleState, tracks: [], sharedTracks: [], isPanelOpen: false, error: null }),
 
     startTrack: async (name, mode) => {
       const { userId, activeTrack } = get();
@@ -280,7 +298,7 @@ export const useTrackRecorderStore = create<TrackRecorderStore>((set, get) => {
 
     syncTrack: async (trackId) => {
       const track = await findTrack(trackId);
-      if (!track || track.syncStatus === 'remote') return;
+      if (!track || !isOwnTrack(track) || track.syncStatus === 'remote') return;
       if (!isOnline()) {
         await persistTrack({ ...track, syncStatus: track.syncStatus === 'local' ? 'local' : 'pending' });
         return;
@@ -358,7 +376,7 @@ export const useTrackRecorderStore = create<TrackRecorderStore>((set, get) => {
     renameTrack: async (trackId, name) => {
       const trimmed = name.trim().slice(0, 120);
       const track = await findTrack(trackId);
-      if (!track || !trimmed || trimmed === track.name) return;
+      if (!track || !isOwnTrack(track) || !trimmed || trimmed === track.name) return;
       try {
         if (track.syncStatus === 'remote' || track.syncedAt) await cloud.renameRemoteTrack(trackId, trimmed);
       } catch (err) {
@@ -376,7 +394,7 @@ export const useTrackRecorderStore = create<TrackRecorderStore>((set, get) => {
 
     deleteTrack: async (trackId) => {
       const track = await findTrack(trackId);
-      if (!track || get().activeTrack?.id === trackId) return;
+      if (!track || !isOwnTrack(track) || get().activeTrack?.id === trackId) return;
       // Remove the cloud copy first so a failed request never leaves an orphan behind
       if (track.syncStatus === 'remote' || track.syncedAt) {
         try {
@@ -400,5 +418,53 @@ export const useTrackRecorderStore = create<TrackRecorderStore>((set, get) => {
       const safeName = track.name.replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '_') || 'track';
       return { filename: `${safeName}.gpx`, content: buildGpx(track, points) };
     },
+
+    loadSharedTracks: async () => {
+      const { userId } = get();
+      if (!userId || !isOnline()) return;
+      set({ isLoadingShared: true });
+      try {
+        const shared = await cloud.fetchSharedWithMe();
+        if (get().userId === userId) set({ sharedTracks: shared });
+      } catch (err) {
+        set({ error: `Could not load shared tracks: ${errorMessage(err)}` });
+      } finally {
+        set({ isLoadingShared: false });
+      }
+    },
+
+    leaveSharedTrack: async (trackId) => {
+      const { userId } = get();
+      if (!userId) return;
+      try {
+        await cloud.leaveSharedTrack(trackId, userId);
+        set((state) => ({
+          sharedTracks: state.sharedTracks.filter((t) => t.id !== trackId),
+          viewing: state.viewing?.track.id === trackId ? null : state.viewing,
+        }));
+      } catch (err) {
+        set({ error: `Could not remove shared track: ${errorMessage(err)}` });
+      }
+    },
+
+    shareTrack: async (trackId, email) => {
+      const track = await findTrack(trackId);
+      if (!track || !isOwnTrack(track)) throw new Error('You can only share your own tracks');
+      if (!isOnline()) throw new Error('Connect to the internet to share a track');
+
+      // Recipients read the cloud copy, so make sure it exists and is current
+      if (track.syncStatus !== 'synced' && track.syncStatus !== 'remote') {
+        await get().syncTrack(trackId);
+        const synced = await findTrack(trackId);
+        if (!synced?.syncedAt) {
+          throw new Error(synced?.syncError ? `Upload failed: ${synced.syncError}` : 'Upload the track before sharing');
+        }
+      }
+      return cloud.shareTrack(trackId, email);
+    },
+
+    listShares: (trackId) => cloud.listShares(trackId),
+
+    revokeShare: (trackId, recipientId) => cloud.revokeShare(trackId, recipientId),
   };
 });

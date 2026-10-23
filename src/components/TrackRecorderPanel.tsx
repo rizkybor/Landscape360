@@ -19,9 +19,14 @@ import {
   X,
   Check,
   Footprints,
+  Lock,
+  Share2,
+  LogOut,
 } from "lucide-react";
 import { useSurveyStore } from "../store/useSurveyStore";
-import { canUseTrackRecorder, useTrackRecorderStore } from "../store/useTrackRecorderStore";
+import { canRecordTracks, useTrackRecorderStore } from "../store/useTrackRecorderStore";
+import { TrackShareManager } from "./TrackShareManager";
+import { CONTACT_ADMIN_LABEL } from "../config";
 import {
   formatDistance,
   formatDuration,
@@ -92,7 +97,7 @@ const Stat = ({ label, value }: { label: string; value: string }) => (
 
 export const TrackRecorderPanel = () => {
   const { user, subscriptionStatus, isAdmin } = useSurveyStore();
-  const hasAccess = canUseTrackRecorder({ hasUser: !!user, subscriptionStatus, isAdmin });
+  const canRecord = canRecordTracks({ hasUser: !!user, subscriptionStatus, isAdmin });
 
   const {
     isPanelOpen,
@@ -117,13 +122,19 @@ export const TrackRecorderPanel = () => {
     renameTrack,
     deleteTrack,
     exportGpx,
+    sharedTracks,
+    isLoadingShared,
+    loadSharedTracks,
+    leaveSharedTrack,
   } = useTrackRecorderStore();
 
   const isOnline = useOnlineStatus();
   const isRecording = activeTrack?.status === "recording";
   const now = useNow(!!activeTrack);
 
-  const [tab, setTab] = useState<"record" | "tracks">("record");
+  const [tab, setTab] = useState<"record" | "tracks" | "shared">("record");
+  const [sharingId, setSharingId] = useState<string | null>(null);
+  const [confirmLeaveId, setConfirmLeaveId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [mode, setMode] = useState<TrackMode>("online");
   const [confirm, setConfirm] = useState<"stop" | "discard" | null>(null);
@@ -138,7 +149,8 @@ export const TrackRecorderPanel = () => {
     [tracks, activeTrack],
   );
 
-  if (!hasAccess) return null;
+  // Everyone signed in can view own and shared tracks; recording is Enterprise/admin only
+  if (!user) return null;
 
   const runBusy = async (id: string, action: () => Promise<unknown>) => {
     setBusyId(id);
@@ -217,18 +229,23 @@ export const TrackRecorderPanel = () => {
 
       {/* Tabs */}
       <div className="flex gap-1 p-2 border-b border-white/5 shrink-0">
-        {(["record", "tracks"] as const).map((t) => (
+        {(["record", "tracks", "shared"] as const).map((t) => (
           <button
             key={t}
             onClick={() => {
               setTab(t);
               if (t === "tracks") loadTracks();
+              if (t === "shared") loadSharedTracks();
             }}
-            className={`cursor-pointer flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+            className={`cursor-pointer flex-1 py-1.5 rounded-lg text-[11px] font-bold transition-colors ${
               tab === t ? "bg-orange-500/20 text-orange-300" : "text-gray-400 hover:bg-white/5"
             }`}
           >
-            {t === "record" ? "Record" : `My Tracks (${tracks.length})`}
+            {t === "record"
+              ? "Record"
+              : t === "tracks"
+                ? `My Tracks (${tracks.length})`
+                : `Shared (${sharedTracks.length})`}
           </button>
         ))}
       </div>
@@ -243,7 +260,20 @@ export const TrackRecorderPanel = () => {
       )}
 
       <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-3">
-        {tab === "record" && !activeTrack && (
+        {tab === "record" && !activeTrack && !canRecord && (
+          <div className="py-6 px-2 text-center space-y-2">
+            <div className="mx-auto w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400">
+              <Lock size={18} />
+            </div>
+            <p className="text-xs text-gray-300">Recording tracks is available for Enterprise accounts.</p>
+            <p className="text-[11px] text-gray-500">
+              <strong className="text-orange-300">{CONTACT_ADMIN_LABEL}</strong> to enable recording. You can still view your
+              tracks and tracks shared with you.
+            </p>
+          </div>
+        )}
+
+        {tab === "record" && !activeTrack && canRecord && (
           <div className="space-y-3">
             <input
               value={name}
@@ -376,7 +406,9 @@ export const TrackRecorderPanel = () => {
               <div className="grid grid-cols-3 gap-2">
                 <button
                   onClick={isRecording ? pauseTrack : resumeTrack}
-                  className="cursor-pointer flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold transition-colors"
+                  disabled={!isRecording && !canRecord}
+                  title={!isRecording && !canRecord ? `Recording requires Enterprise. ${CONTACT_ADMIN_LABEL}` : undefined}
+                  className="cursor-pointer flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isRecording ? <Pause size={14} /> : <Play size={14} />}
                   {isRecording ? "Pause" : "Resume"}
@@ -424,7 +456,10 @@ export const TrackRecorderPanel = () => {
                 const isViewing = viewing?.track.id === t.id;
                 const isBusy = busyId === t.id;
                 const canUpload =
-                  !isActive && isOnline && (t.syncStatus === "local" || t.syncStatus === "pending" || t.syncStatus === "error");
+                  canRecord &&
+                  !isActive &&
+                  isOnline &&
+                  (t.syncStatus === "local" || t.syncStatus === "pending" || t.syncStatus === "error");
                 const badge = SYNC_BADGES[t.syncStatus];
                 return (
                   <div
@@ -538,6 +573,18 @@ export const TrackRecorderPanel = () => {
                             >
                               <Download size={14} />
                             </button>
+                            {canRecord && (
+                              <button
+                                onClick={() => setSharingId(sharingId === t.id ? null : t.id)}
+                                disabled={isBusy || !isOnline}
+                                className={`cursor-pointer p-1.5 rounded-lg hover:bg-white/10 transition-colors disabled:opacity-50 ${
+                                  sharingId === t.id ? "text-orange-300 bg-white/10" : "text-gray-300"
+                                }`}
+                                title={isOnline ? "Share" : "Connect to the internet to share"}
+                              >
+                                <Share2 size={14} />
+                              </button>
+                            )}
                             {canUpload && (
                               <button
                                 onClick={() => runBusy(t.id, () => syncTrack(t.id))}
@@ -571,6 +618,124 @@ export const TrackRecorderPanel = () => {
                         )}
                       </div>
                     )}
+
+                    {sharingId === t.id && !isActive && (
+                      <TrackShareManager trackId={t.id} onClose={() => setSharingId(null)} />
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
+
+        {tab === "shared" && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-gray-500">Tracks other accounts shared with you (view only)</span>
+              <button
+                onClick={loadSharedTracks}
+                disabled={isLoadingShared || !isOnline}
+                className="cursor-pointer p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+                title="Refresh"
+              >
+                <RefreshCw size={14} className={isLoadingShared ? "animate-spin" : ""} />
+              </button>
+            </div>
+
+            {!isOnline && (
+              <p className="text-[10px] text-yellow-300/80">Shared tracks need an internet connection.</p>
+            )}
+
+            {sharedTracks.length === 0 ? (
+              <div className="py-8 text-center text-xs text-gray-500">
+                {isLoadingShared ? "Loading shared tracks..." : "No tracks have been shared with you yet."}
+              </div>
+            ) : (
+              sharedTracks.map((t, index) => {
+                const isViewing = viewing?.track.id === t.id;
+                const isBusy = busyId === t.id;
+                const inProgress = t.status !== "completed";
+                return (
+                  <div
+                    key={t.id}
+                    className={`p-2.5 rounded-xl border transition-colors ${
+                      isViewing ? "bg-cyan-500/10 border-cyan-500/30" : "bg-white/5 border-white/5"
+                    }`}
+                  >
+                    <div className="flex items-start gap-2">
+                      <span className="shrink-0 w-6 h-6 rounded-md bg-white/5 border border-white/10 flex items-center justify-center text-[10px] font-mono text-gray-400">
+                        {index + 1}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-bold truncate">{t.name}</div>
+                        <div className="text-[10px] text-orange-200/80 truncate">by {t.ownerEmail ?? "unknown"}</div>
+                        <div className="text-[10px] text-gray-400">
+                          {new Date(t.startedAt).toLocaleString()} · {formatDistance(t.distanceM)} ·{" "}
+                          {formatDuration(t.elapsedMs)} · ↑ {Math.round(t.elevationGainM)} m
+                        </div>
+                        {inProgress && (
+                          <span className="inline-block mt-1 text-[9px] px-1.5 py-0.5 rounded-full border bg-red-500/20 text-red-300 border-red-500/20">
+                            In progress · updated {new Date(t.updatedAt).toLocaleTimeString()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-end gap-1 mt-2">
+                      {isBusy && <Loader2 size={14} className="animate-spin text-gray-400 mr-1" />}
+                      {confirmLeaveId === t.id ? (
+                        <>
+                          <span className="text-[10px] text-red-300 mr-1">Remove from your list?</span>
+                          <button
+                            onClick={() =>
+                              runBusy(t.id, async () => {
+                                await leaveSharedTrack(t.id);
+                                setConfirmLeaveId(null);
+                              })
+                            }
+                            className="cursor-pointer p-1.5 rounded-lg bg-red-600/20 hover:bg-red-600/40 text-red-400 transition-colors"
+                            title="Confirm"
+                          >
+                            <Check size={14} />
+                          </button>
+                          <button
+                            onClick={() => setConfirmLeaveId(null)}
+                            className="cursor-pointer p-1.5 rounded-lg hover:bg-white/10 text-gray-400 transition-colors"
+                            title="Cancel"
+                          >
+                            <X size={14} />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => (isViewing ? closeView() : runBusy(t.id, () => viewTrack(t.id)))}
+                            disabled={isBusy || !isOnline}
+                            className="cursor-pointer p-1.5 rounded-lg hover:bg-white/10 text-gray-300 transition-colors disabled:opacity-50"
+                            title={isViewing ? "Hide from map" : "Show on map"}
+                          >
+                            {isViewing ? <EyeOff size={14} /> : <Eye size={14} />}
+                          </button>
+                          <button
+                            onClick={() => handleExport(t.id)}
+                            disabled={isBusy || !isOnline}
+                            className="cursor-pointer p-1.5 rounded-lg hover:bg-white/10 text-gray-300 transition-colors disabled:opacity-50"
+                            title="Export GPX"
+                          >
+                            <Download size={14} />
+                          </button>
+                          <button
+                            onClick={() => setConfirmLeaveId(t.id)}
+                            disabled={isBusy}
+                            className="cursor-pointer p-1.5 rounded-lg hover:bg-red-500/20 text-red-400 transition-colors disabled:opacity-50"
+                            title="Remove from my list"
+                          >
+                            <LogOut size={14} />
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 );
               })
