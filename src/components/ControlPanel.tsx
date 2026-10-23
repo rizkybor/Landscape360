@@ -33,7 +33,7 @@ import {
   Square,
   Footprints,
 } from "lucide-react";
-import geoportalLogo from "../assets/geoportal360.png";
+import landscapeLogo from "../assets/LandscapeLogo.svg";
 import streetsView from "../assets/Street-View.png";
 import outdoorsView from "../assets/Outdoors-View.png";
 import satelliteView from "../assets/Satellite-View.png";
@@ -234,21 +234,21 @@ export const ControlPanel = () => {
       name: "Streets",
       style: "mapbox://styles/mapbox/streets-v12",
       image: streetsView,
-      gradient: "from-blue-100/50 to-gray-100/50",
-      textColor: "text-gray-800",
+      gradient: "from-white/40 to-sand-100/40",
+      textColor: "text-ink",
     },
     {
       name: "Outdoors",
       style: "mapbox://styles/mapbox/outdoors-v12",
       image: outdoorsView,
-      gradient: "from-green-100/50 to-emerald-200/50",
-      textColor: "text-green-900",
+      gradient: "from-forest-100/40 to-forest-200/40",
+      textColor: "text-forest-900",
     },
     {
       name: "Satellite",
       style: "mapbox://styles/mapbox/satellite-streets-v12",
       image: satelliteView,
-      gradient: "from-gray-800/50 to-black/50",
+      gradient: "from-ink/10 to-ink/60",
       textColor: "text-white",
     },
   ];
@@ -316,12 +316,12 @@ export const ControlPanel = () => {
     w-14 h-14
     flex items-center justify-center
     rounded-full
-    bg-white/10
+    bg-sand-100
     backdrop-blur-md md:backdrop-blur-xl backdrop-saturate-150
-    border border-white/20
-    shadow-lg shadow-black/30
-    hover:bg-white/20
-    hover:shadow-blue-500/30
+    border border-sand-300
+    shadow-lg shadow-sand-900/10
+    hover:bg-sand-200
+    
     cursor-pointer
     active:scale-95
     transition-all duration-300
@@ -329,7 +329,7 @@ export const ControlPanel = () => {
         >
           <span className="absolute inset-0 rounded-full bg-gradient-to-br from-white/30 via-transparent to-transparent opacity-60 pointer-events-none" />
           <img
-            src={geoportalLogo}
+            src={landscapeLogo}
             alt="Landscape 360"
             className="w-8 h-8 object-contain relative z-10"
           />
@@ -352,7 +352,7 @@ export const ControlPanel = () => {
         fixed z-50 
         bottom-0 left-0 right-0 max-h-[90vh] rounded-t-2xl
         md:top-4 md:left-4 md:bottom-auto md:right-auto md:w-64 md:rounded-xl
-        bg-black/80 md:bg-black/60 backdrop-blur-md md:backdrop-blur-xl border-t md:border border-white/20 text-white shadow-2xl flex flex-col
+        bg-white/95 md:bg-white/95 backdrop-blur-md md:backdrop-blur-xl border-t md:border border-sand-300 text-ink shadow-2xl flex flex-col
         ${!isOpen ? "md:opacity-0 md:pointer-events-none" : ""}
       `}
       >
@@ -362,7 +362,7 @@ export const ControlPanel = () => {
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          <div className="w-12 h-1.5 bg-white/20 rounded-full shadow-sm"></div>
+          <div className="w-12 h-1.5 bg-sand-200 rounded-full shadow-sm"></div>
         </div>
 
         <div
@@ -371,15 +371,15 @@ export const ControlPanel = () => {
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          <div className="absolute inset-0 rounded-t-2xl md:rounded-t-xl overflow-hidden pointer-events-none border-b border-white/20 bg-white/5 backdrop-blur-sm md:backdrop-blur-md">
-            <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/10 blur-2xl rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          <div className="absolute inset-0 rounded-t-2xl md:rounded-t-xl overflow-hidden pointer-events-none border-b border-sand-300 bg-sand-50 backdrop-blur-sm md:backdrop-blur-md">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-forest-50 blur-2xl rounded-full -translate-y-1/2 translate-x-1/2"></div>
           </div>
 
           <div className="relative p-4">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <img
-                  src={geoportalLogo}
+                  src={landscapeLogo}
                   alt="360"
                   className="w-12 h-12 object-contain"
                 />
@@ -388,7 +388,7 @@ export const ControlPanel = () => {
                   <h2 className="font-bold text-sm tracking-tight leading-none">
                     Landscape 360
                   </h2>
-                  <span className="text-[10px] text-blue-300 font-mono tracking-wider">
+                  <span className="text-[10px] text-forest-700 font-mono tracking-wider">
                     v3.3.0
                   </span>
                 </div>
@@ -399,7 +399,7 @@ export const ControlPanel = () => {
                   e.stopPropagation();
                   setIsOpen(false);
                 }}
-                className="cursor-pointer hidden md:block p-1 hover:bg-white/10 rounded text-gray-400"
+                className="cursor-pointer hidden md:block p-1 hover:bg-sand-100 rounded text-sand-600"
               >
                 <ChevronUp size={16} />
               </button>
@@ -408,13 +408,13 @@ export const ControlPanel = () => {
             <div className="flex gap-2 mb-2">
               <button
                 onClick={() => setShowGetStarted(true)}
-                className="cursor-pointer flex-1 py-1.5 bg-gradient-to-r from-yellow-500/10 to-yellow-600/10 border border-yellow-500/30 rounded text-[10px] font-medium text-yellow-200 hover:bg-yellow-500/20 transition-colors flex items-center justify-center gap-1"
+                className="cursor-pointer flex-1 py-1.5 bg-gold-50 border border-gold-200 rounded text-[10px] font-medium text-gold-700 hover:bg-gold-50 transition-colors flex items-center justify-center gap-1"
               >
                 Quick Guide
               </button>
               <button
                 onClick={() => navigate("/docs")}
-                className="cursor-pointer flex-1 py-1.5 bg-white/5 border border-white/10 rounded text-[10px] font-medium text-gray-300 hover:bg-white/10 transition-colors flex items-center justify-center gap-1"
+                className="cursor-pointer flex-1 py-1.5 bg-sand-50 border border-sand-200 rounded text-[10px] font-medium text-sand-700 hover:bg-sand-100 transition-colors flex items-center justify-center gap-1"
               >
                 <BookOpen size={10} /> Docs
               </button>
@@ -423,8 +423,8 @@ export const ControlPanel = () => {
               <AuthControl />
             </div>
 
-            <div className="mt-3 border-white/10 p-1">
-              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-2 block">
+            <div className="mt-3 border-sand-200 p-1">
+              <label className="text-[10px] uppercase tracking-widest text-sand-500 font-bold mb-2 block">
                 Tools & Exploration
               </label>
 
@@ -442,15 +442,15 @@ export const ControlPanel = () => {
                   onClick={() => setShowSearch(!showSearch)}
                   className={`${isMobile ? "flex-none w-28 snap-center h-full" : "col-span-1 w-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
                     showSearch
-                      ? "bg-blue-900/20 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.15)]"
-                      : "bg-white/5 border-white/10 hover:bg-white/10"
+                      ? "bg-forest-50 border-forest-200 "
+                      : "bg-sand-50 border-sand-200 hover:bg-sand-100"
                   } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
                 >
                   <div
                     className={`p-2 rounded-lg transition-colors ${
                       showSearch
-                        ? "bg-blue-500 text-white shadow-lg shadow-blue-500/40"
-                        : "bg-white/10 text-gray-400 group-hover:text-white"
+                        ? "bg-forest-700 text-white shadow-lg "
+                        : "bg-sand-100 text-sand-600 group-hover:text-ink"
                     } ${isMobile ? "mb-1" : ""}`}
                   >
                     <Search size={isMobile ? 18 : 16} />
@@ -459,7 +459,7 @@ export const ControlPanel = () => {
                   <div className="flex-1">
                     <div
                       className={`font-bold transition-colors ${
-                        showSearch ? "text-white" : "text-gray-300"
+                        showSearch ? "text-ink" : "text-sand-700"
                       } ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
                     >
                       Search
@@ -468,7 +468,7 @@ export const ControlPanel = () => {
                     {!isMobile && (
                       <div
                         className={`text-[10px] ${
-                          showSearch ? "text-blue-200" : "text-gray-500"
+                          showSearch ? "text-forest-700" : "text-sand-500"
                         }`}
                       >
                         {showSearch ? "Active" : "Location"}
@@ -482,28 +482,28 @@ export const ControlPanel = () => {
                   onClick={togglePlotMode}
                   className={`${isMobile ? "flex-none w-28 snap-center h-full" : "col-span-1 w-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
                     isPlotMode
-                      ? "bg-yellow-900/20 border-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.1)]"
-                      : "bg-white/5 border-white/10 hover:bg-white/10"
+                      ? "bg-gold-50 border-gold-200 "
+                      : "bg-sand-50 border-sand-200 hover:bg-sand-100"
                   } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
                 >
                   <div
                     className={`p-2 rounded-lg transition-colors ${
                       isPlotMode
-                        ? "bg-yellow-500 text-black shadow-lg shadow-yellow-500/40"
-                        : "bg-white/10 text-gray-400 group-hover:text-white"
+                        ? "bg-gold-400 text-ink shadow-lg "
+                        : "bg-sand-100 text-sand-600 group-hover:text-ink"
                     } ${isMobile ? "mb-1" : ""}`}
                   >
                     <Ruler size={isMobile ? 18 : 16} />
                   </div>
                   <div className="flex-1">
                     <div
-                      className={`font-bold transition-colors ${isPlotMode ? "text-white" : "text-gray-300"} ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
+                      className={`font-bold transition-colors ${isPlotMode ? "text-ink" : "text-sand-700"} ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
                     >
                       Navigator
                     </div>
                     {!isMobile && (
                       <div
-                        className={`text-[10px] ${isPlotMode ? "text-yellow-200" : "text-gray-500"}`}
+                        className={`text-[10px] ${isPlotMode ? "text-gold-700" : "text-sand-500"}`}
                       >
                         {isPlotMode ? "Active" : "Tools"}
                       </div>
@@ -524,15 +524,15 @@ export const ControlPanel = () => {
                   }}
                   className={`${isMobile ? "flex-none w-28 snap-center h-full" : "col-span-1 w-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
                     isRoutePlannerEnabled
-                      ? "bg-blue-900/20 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.15)]"
-                      : "bg-white/5 border-white/10 hover:bg-white/10"
+                      ? "bg-forest-50 border-forest-200 "
+                      : "bg-sand-50 border-sand-200 hover:bg-sand-100"
                   } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
                 >
                   <div
                     className={`p-2 rounded-lg transition-colors ${
                       isRoutePlannerEnabled
-                        ? "bg-blue-500 text-white shadow-lg shadow-blue-500/40"
-                        : "bg-white/10 text-gray-400 group-hover:text-white"
+                        ? "bg-forest-700 text-white shadow-lg "
+                        : "bg-sand-100 text-sand-600 group-hover:text-ink"
                     } ${isMobile ? "mb-1" : ""}`}
                   >
                     <Route size={isMobile ? 18 : 16} />
@@ -540,7 +540,7 @@ export const ControlPanel = () => {
                   <div className="flex-1">
                     <div
                       className={`font-bold transition-colors ${
-                        isRoutePlannerEnabled ? "text-white" : "text-gray-300"
+                        isRoutePlannerEnabled ? "text-ink" : "text-sand-700"
                       } ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
                     >
                       Route
@@ -548,7 +548,7 @@ export const ControlPanel = () => {
                     {!isMobile && (
                       <div
                         className={`text-[10px] ${
-                          isRoutePlannerEnabled ? "text-blue-200" : "text-gray-500"
+                          isRoutePlannerEnabled ? "text-forest-700" : "text-sand-500"
                         }`}
                       >
                         {isRoutePlannerEnabled ? "Select 2 Points" : "Directions"}
@@ -562,28 +562,28 @@ export const ControlPanel = () => {
                   onClick={() => setShowWeather(!showWeather)}
                   className={`${isMobile ? "flex-none w-28 snap-center h-full" : "col-span-1 w-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
                     showWeather
-                      ? "bg-cyan-900/20 border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.1)]"
-                      : "bg-white/5 border-white/10 hover:bg-white/10"
+                      ? "bg-forest-50 border-forest-200 "
+                      : "bg-sand-50 border-sand-200 hover:bg-sand-100"
                   } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
                 >
                   <div
                     className={`p-2 rounded-lg transition-colors ${
                       showWeather
-                        ? "bg-cyan-600 text-white shadow-lg shadow-cyan-500/40"
-                        : "bg-white/10 text-gray-400 group-hover:text-white"
+                        ? "bg-forest-800 text-white shadow-lg "
+                        : "bg-sand-100 text-sand-600 group-hover:text-ink"
                     } ${isMobile ? "mb-1" : ""}`}
                   >
                     <CloudSun size={isMobile ? 18 : 16} />
                   </div>
                   <div className="flex-1">
                     <div
-                      className={`font-bold transition-colors ${showWeather ? "text-white" : "text-gray-300"} ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
+                      className={`font-bold transition-colors ${showWeather ? "text-ink" : "text-sand-700"} ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
                     >
                       Weather
                     </div>
                     {!isMobile && (
                       <div
-                        className={`text-[10px] ${showWeather ? "text-cyan-200" : "text-gray-500"}`}
+                        className={`text-[10px] ${showWeather ? "text-forest-700" : "text-sand-500"}`}
                       >
                         {showWeather ? "Visible" : "Hidden"}
                       </div>
@@ -596,28 +596,28 @@ export const ControlPanel = () => {
                   onClick={() => setShowCustomLocations(!showCustomLocations)}
                   className={`${isMobile ? "flex-none w-28 snap-center h-full" : "col-span-1 w-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
                     showCustomLocations
-                      ? "bg-purple-900/20 border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.1)]"
-                      : "bg-white/5 border-white/10 hover:bg-white/10"
+                      ? "bg-gold-50 border-gold-200 "
+                      : "bg-sand-50 border-sand-200 hover:bg-sand-100"
                   } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
                 >
                   <div
                     className={`p-2 rounded-lg transition-colors ${
                       showCustomLocations
-                        ? "bg-purple-600 text-white shadow-lg shadow-purple-500/40"
-                        : "bg-white/10 text-gray-400 group-hover:text-white"
+                        ? "bg-gold-500 text-white shadow-lg "
+                        : "bg-sand-100 text-sand-600 group-hover:text-ink"
                     } ${isMobile ? "mb-1" : ""}`}
                   >
                     <MapPin size={isMobile ? 18 : 16} />
                   </div>
                   <div className="flex-1">
                     <div
-                      className={`font-bold transition-colors ${showCustomLocations ? "text-white" : "text-gray-300"} ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
+                      className={`font-bold transition-colors ${showCustomLocations ? "text-ink" : "text-sand-700"} ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
                     >
                       {isMobile ? "POIs" : "Point of Interest"}
                     </div>
                     {!isMobile && (
                       <div
-                        className={`text-[10px] ${showCustomLocations ? "text-purple-200" : "text-gray-500"}`}
+                        className={`text-[10px] ${showCustomLocations ? "text-gold-700" : "text-sand-500"}`}
                       >
                         {showCustomLocations ? "Visible" : "Hidden"}
                       </div>
@@ -631,19 +631,19 @@ export const ControlPanel = () => {
                   disabled={!canOpenTrackRecorder}
                   className={`${isMobile ? "flex-none w-28 snap-center h-full" : "col-span-1 w-full"} flex items-center rounded-xl border transition-all duration-200 group ${
                     !canOpenTrackRecorder
-                      ? "border-white/5 bg-white/5 opacity-60 cursor-not-allowed"
+                      ? "border-sand-100 bg-sand-50 opacity-60 cursor-not-allowed"
                       : isTrackRecorderOpen || isTrackRecording
-                        ? "cursor-pointer bg-orange-900/20 border-orange-500/30 shadow-[0_0_15px_rgba(249,115,22,0.1)]"
-                        : "cursor-pointer bg-white/5 border-white/10 hover:bg-white/10"
+                        ? "cursor-pointer bg-ember-50 border-ember-200 "
+                        : "cursor-pointer bg-sand-50 border-sand-200 hover:bg-sand-100"
                   } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
                 >
                   <div
                     className={`p-2 rounded-lg transition-colors ${
                       !canOpenTrackRecorder
-                        ? "bg-gray-500/10 text-gray-500"
+                        ? "bg-sand-100 text-sand-500"
                         : isTrackRecorderOpen || isTrackRecording
-                          ? "bg-orange-500 text-white shadow-lg shadow-orange-500/40"
-                          : "bg-white/10 text-gray-400 group-hover:text-white"
+                          ? "bg-ember-500 text-white shadow-lg "
+                          : "bg-sand-100 text-sand-600 group-hover:text-ink"
                     } ${isMobile ? "mb-1" : ""}`}
                   >
                     {canOpenTrackRecorder ? (
@@ -656,10 +656,10 @@ export const ControlPanel = () => {
                     <div
                       className={`font-bold transition-colors ${
                         !canOpenTrackRecorder
-                          ? "text-gray-400"
+                          ? "text-sand-600"
                           : isTrackRecorderOpen || isTrackRecording
-                            ? "text-white"
-                            : "text-gray-300"
+                            ? "text-ink"
+                            : "text-sand-700"
                       } ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
                     >
                       {isMobile ? "Track" : "Track Recorder"}
@@ -668,10 +668,10 @@ export const ControlPanel = () => {
                       <div
                         className={`text-[10px] ${
                           !canOpenTrackRecorder
-                            ? "text-gray-600"
+                            ? "text-sand-400"
                             : isTrackRecording
-                              ? "text-orange-200"
-                              : "text-gray-500"
+                              ? "text-ember-700"
+                              : "text-sand-500"
                         }`}
                       >
                         {!canOpenTrackRecorder
@@ -692,15 +692,15 @@ export const ControlPanel = () => {
                     onClick={toggleManager}
                     className={`${isMobile ? "flex-none w-28 snap-center h-full" : "col-span-1 w-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
                       isManagerOpen
-                        ? "bg-indigo-900/20 border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.1)]"
-                        : "bg-white/5 border-white/10 hover:bg-white/10"
+                        ? "bg-forest-50 border-forest-200 "
+                        : "bg-sand-50 border-sand-200 hover:bg-sand-100"
                     } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
                   >
                     <div
                       className={`p-2 rounded-lg transition-colors ${
                         isManagerOpen
-                          ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/40"
-                          : "bg-white/10 text-gray-400 group-hover:text-white"
+                          ? "bg-forest-800 text-white shadow-lg "
+                          : "bg-sand-100 text-sand-600 group-hover:text-ink"
                       } ${isMobile ? "mb-1" : ""}`}
                     >
                       <Layers size={isMobile ? 18 : 16} />
@@ -708,7 +708,7 @@ export const ControlPanel = () => {
                     <div className="flex-1">
                       <div
                         className={`font-bold transition-colors ${
-                          isManagerOpen ? "text-white" : "text-gray-300"
+                          isManagerOpen ? "text-ink" : "text-sand-700"
                         } ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
                       >
                         Basemaps
@@ -716,7 +716,7 @@ export const ControlPanel = () => {
                       {!isMobile && (
                         <div
                           className={`text-[10px] ${
-                            isManagerOpen ? "text-indigo-200" : "text-gray-500"
+                            isManagerOpen ? "text-forest-700" : "text-sand-500"
                           }`}
                         >
                           {isManagerOpen ? "Managing" : "Custom Layers"}
@@ -734,21 +734,21 @@ export const ControlPanel = () => {
                     {subscriptionStatus === "Free" ? (
                       <button
                         disabled
-                        className={`w-full flex items-center ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"} rounded-xl border border-white/5 bg-white/5 opacity-60 cursor-not-allowed group`}
+                        className={`w-full flex items-center ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"} rounded-xl border border-sand-100 bg-sand-50 opacity-60 cursor-not-allowed group`}
                       >
                         <div
-                          className={`p-2 rounded-lg bg-gray-500/10 text-gray-500 ${isMobile ? "mb-1" : ""}`}
+                          className={`p-2 rounded-lg bg-sand-100 text-sand-500 ${isMobile ? "mb-1" : ""}`}
                         >
                           <Lock size={isMobile ? 18 : 16} />
                         </div>
                         <div className="flex-1">
                           <div
-                            className={`font-bold text-gray-400 ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
+                            className={`font-bold text-sand-600 ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
                           >
                             {isMobile ? "GPS" : "GPS Tracking"}
                           </div>
                           {!isMobile && (
-                            <div className="text-[10px] text-gray-600">
+                            <div className="text-[10px] text-sand-400">
                               {CONTACT_ADMIN_LABEL}
                             </div>
                           )}
@@ -760,9 +760,9 @@ export const ControlPanel = () => {
                           isLiveTrackingEnabled
                             ? userRole === "monitor360" &&
                               subscriptionStatus === "Enterprise"
-                              ? "bg-blue-900/20 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.15)]"
-                              : "bg-green-900/20 border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.15)]"
-                            : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20"
+                              ? "bg-forest-50 border-forest-200 "
+                              : "bg-forest-50 border-forest-200 "
+                            : "bg-sand-50 border-sand-200 hover:bg-sand-100 hover:border-sand-300"
                         }`}
                       >
                         <button
@@ -774,9 +774,9 @@ export const ControlPanel = () => {
                             className={`p-2 rounded-lg transition-colors ${
                               isLiveTrackingEnabled
                                 ? userRole === "monitor360"
-                                  ? "bg-blue-500 text-white shadow-lg shadow-blue-500/40"
-                                  : "bg-green-500 text-white shadow-lg shadow-green-500/40"
-                                : "bg-white/10 text-gray-400 group-hover:text-white"
+                                  ? "bg-forest-700 text-white shadow-lg "
+                                  : "bg-forest-700 text-white shadow-lg "
+                                : "bg-sand-100 text-sand-600 group-hover:text-ink"
                             } ${isMobile ? "mb-1" : ""}`}
                           >
                             {userRole === "monitor360" &&
@@ -799,7 +799,7 @@ export const ControlPanel = () => {
 
                           <div className="flex-1">
                             <div
-                              className={`font-bold transition-colors ${isLiveTrackingEnabled ? "text-white" : "text-gray-300"} ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
+                              className={`font-bold transition-colors ${isLiveTrackingEnabled ? "text-ink" : "text-sand-700"} ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
                             >
                               {userRole === "monitor360" &&
                               subscriptionStatus === "Enterprise"
@@ -812,10 +812,10 @@ export const ControlPanel = () => {
                             </div>
                             {!isMobile && (
                               <div
-                                className={`text-[10px] flex items-center gap-1.5 ${isLiveTrackingEnabled ? "text-blue-200" : "text-gray-500"}`}
+                                className={`text-[10px] flex items-center gap-1.5 ${isLiveTrackingEnabled ? "text-forest-700" : "text-sand-500"}`}
                               >
                                 <span
-                                  className={`w-1.5 h-1.5 rounded-full ${isLiveTrackingEnabled ? "bg-green-400 animate-pulse" : "bg-gray-600"}`}
+                                  className={`w-1.5 h-1.5 rounded-full ${isLiveTrackingEnabled ? "bg-forest-500 animate-pulse" : "bg-sand-300"}`}
                                 />
                                 {isLiveTrackingEnabled ? "Active" : "Inactive"}
                               </div>
@@ -830,20 +830,20 @@ export const ControlPanel = () => {
 
               {/* Advanced Controls (Simulation/Broadcast) - Moved outside grid for better mobile layout */}
               {isLiveTrackingEnabled && !isMobile && (
-                <div className="px-3 pb-3 pt-1 space-y-2 border-t border-white/5 mt-1">
+                <div className="px-3 pb-3 pt-1 space-y-2 border-t border-sand-100 mt-1">
                   {/* Monitor Status */}
                   {userRole === "monitor360" &&
                     subscriptionStatus === "Enterprise" && (
                       <div
                         className={`text-[10px] py-1.5 px-2 rounded-lg flex items-center justify-between ${
                           connectionStatus === "connected"
-                            ? "bg-green-500/10 text-green-300"
-                            : "bg-red-500/10 text-red-300"
+                            ? "bg-forest-50 text-forest-700"
+                            : "bg-brick-50 text-brick-600"
                         }`}
                       >
                         <span className="flex items-center gap-1.5">
                           <span
-                            className={`w-1.5 h-1.5 rounded-full ${connectionStatus === "connected" ? "bg-green-400" : "bg-red-400"}`}
+                            className={`w-1.5 h-1.5 rounded-full ${connectionStatus === "connected" ? "bg-forest-500" : "bg-brick-500"}`}
                           />
                           {connectionStatus === "connected"
                             ? "Online"
@@ -859,11 +859,11 @@ export const ControlPanel = () => {
                       className="flex items-center justify-between group cursor-pointer"
                       onClick={toggleSimulation}
                     >
-                      <label className="text-[10px] text-gray-400 cursor-pointer group-hover:text-gray-300">
+                      <label className="text-[10px] text-sand-600 cursor-pointer group-hover:text-sand-700">
                         Simulate Data
                       </label>
                       <div
-                        className={`w-7 h-3.5 rounded-full p-0.5 transition-colors ${isSimulationEnabled ? "bg-blue-500" : "bg-gray-700"}`}
+                        className={`w-7 h-3.5 rounded-full p-0.5 transition-colors ${isSimulationEnabled ? "bg-forest-700" : "bg-sand-200"}`}
                       >
                         <div
                           className={`w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-transform ${isSimulationEnabled ? "translate-x-3.5" : ""}`}
@@ -878,17 +878,17 @@ export const ControlPanel = () => {
                       className="flex items-center justify-between group cursor-pointer"
                       onClick={toggleLocalBroadcast}
                     >
-                      <label className="text-[10px] text-gray-400 cursor-pointer group-hover:text-gray-300 flex items-center gap-1.5">
+                      <label className="text-[10px] text-sand-600 cursor-pointer group-hover:text-sand-700 flex items-center gap-1.5">
                         Broadcast Location
                         {isLocalBroadcastEnabled && (
                           <Wifi
                             size={10}
-                            className="text-green-400 animate-pulse"
+                            className="text-forest-700 animate-pulse"
                           />
                         )}
                       </label>
                       <div
-                        className={`w-7 h-3.5 rounded-full p-0.5 transition-colors ${isLocalBroadcastEnabled ? "bg-green-500" : "bg-gray-700"}`}
+                        className={`w-7 h-3.5 rounded-full p-0.5 transition-colors ${isLocalBroadcastEnabled ? "bg-forest-700" : "bg-sand-200"}`}
                       >
                         <div
                           className={`w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-transform ${isLocalBroadcastEnabled ? "translate-x-3.5" : ""}`}
@@ -898,19 +898,19 @@ export const ControlPanel = () => {
                   )}
 
                   {canRecordActivity && (
-                    <div className="rounded-lg border border-white/10 bg-white/5 p-2">
+                    <div className="rounded-lg border border-sand-200 bg-sand-50 p-2">
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex flex-col">
-                          <span className="text-[10px] text-gray-300 font-bold">
+                          <span className="text-[10px] text-sand-700 font-bold">
                             Record Activity
                           </span>
                           <span
                             className={`text-[10px] ${
                               isActivityRecording
-                                ? "text-green-300"
+                                ? "text-forest-700"
                                 : isActivityPendingSave
-                                  ? "text-amber-300"
-                                  : "text-gray-500"
+                                  ? "text-gold-700"
+                                  : "text-sand-500"
                             }`}
                           >
                             {isActivityRecording
@@ -921,15 +921,15 @@ export const ControlPanel = () => {
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="px-2 py-1 rounded-md bg-black/20 text-[10px] text-gray-200 font-mono tabular-nums">
+                          <span className="px-2 py-1 rounded-md bg-white/90 text-[10px] text-sand-800 font-mono tabular-nums">
                             {activityStartedAt
                               ? formatDuration((activityNow - activityStartedAt) / 1000)
                               : "0:00"}
                           </span>
-                          <span className="px-2 py-1 rounded-md bg-black/10 text-[10px] text-gray-300 tabular-nums">
+                          <span className="px-2 py-1 rounded-md bg-white/90 text-[10px] text-sand-700 tabular-nums">
                             {(activityDistanceM / 1000).toFixed(2)} km
                           </span>
-                          <span className="px-2 py-1 rounded-md bg-black/10 text-[10px] text-gray-400 tabular-nums">
+                          <span className="px-2 py-1 rounded-md bg-white/90 text-[10px] text-sand-600 tabular-nums">
                             {activityPointCount} pts
                           </span>
                         </div>
@@ -942,7 +942,7 @@ export const ControlPanel = () => {
                               if (!isLiveTrackingEnabled) setLiveTracking(true);
                               startActivity();
                             }}
-                            className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-green-500/15 text-green-200 border border-green-500/25 hover:bg-green-500/25 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                            className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-forest-50 text-forest-700 border border-forest-200 hover:bg-forest-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                             title="Start Activity"
                           >
                             <Play size={12} />
@@ -951,7 +951,7 @@ export const ControlPanel = () => {
                         ) : (
                           <button
                             onClick={() => stopActivity()}
-                            className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-red-500/15 text-red-200 border border-red-500/25 hover:bg-red-500/25 transition-colors"
+                            className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brick-50 text-brick-600 border border-brick-200 hover:bg-brick-100 transition-colors"
                             title="Stop Activity"
                           >
                             <Square size={12} />
@@ -966,20 +966,20 @@ export const ControlPanel = () => {
 
               {/* Mobile-optimized Advanced Controls Container */}
               {isLiveTrackingEnabled && isMobile && (
-                <div className="mt-2 px-3 py-2 rounded-lg border border-white/5 bg-white/5 space-y-2">
+                <div className="mt-2 px-3 py-2 rounded-lg border border-sand-100 bg-sand-50 space-y-2">
                   {/* Monitor Status */}
                   {userRole === "monitor360" &&
                     subscriptionStatus === "Enterprise" && (
                       <div
                         className={`text-[10px] py-1.5 px-2 rounded-lg flex items-center justify-between ${
                           connectionStatus === "connected"
-                            ? "bg-green-500/10 text-green-300"
-                            : "bg-red-500/10 text-red-300"
+                            ? "bg-forest-50 text-forest-700"
+                            : "bg-brick-50 text-brick-600"
                         }`}
                       >
                         <span className="flex items-center gap-1.5">
                           <span
-                            className={`w-1.5 h-1.5 rounded-full ${connectionStatus === "connected" ? "bg-green-400" : "bg-red-400"}`}
+                            className={`w-1.5 h-1.5 rounded-full ${connectionStatus === "connected" ? "bg-forest-500" : "bg-brick-500"}`}
                           />
                           {connectionStatus === "connected"
                             ? "Online"
@@ -995,11 +995,11 @@ export const ControlPanel = () => {
                       className="flex items-center justify-between group cursor-pointer"
                       onClick={toggleSimulation}
                     >
-                      <label className="text-[10px] text-gray-400 cursor-pointer group-hover:text-gray-300">
+                      <label className="text-[10px] text-sand-600 cursor-pointer group-hover:text-sand-700">
                         Simulate Data
                       </label>
                       <div
-                        className={`w-7 h-3.5 rounded-full p-0.5 transition-colors ${isSimulationEnabled ? "bg-blue-500" : "bg-gray-700"}`}
+                        className={`w-7 h-3.5 rounded-full p-0.5 transition-colors ${isSimulationEnabled ? "bg-forest-700" : "bg-sand-200"}`}
                       >
                         <div
                           className={`w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-transform ${isSimulationEnabled ? "translate-x-3.5" : ""}`}
@@ -1014,17 +1014,17 @@ export const ControlPanel = () => {
                       className="flex items-center justify-between group cursor-pointer"
                       onClick={toggleLocalBroadcast}
                     >
-                      <label className="text-[10px] text-gray-400 cursor-pointer group-hover:text-gray-300 flex items-center gap-1.5">
+                      <label className="text-[10px] text-sand-600 cursor-pointer group-hover:text-sand-700 flex items-center gap-1.5">
                         Broadcast Location
                         {isLocalBroadcastEnabled && (
                           <Wifi
                             size={10}
-                            className="text-green-400 animate-pulse"
+                            className="text-forest-700 animate-pulse"
                           />
                         )}
                       </label>
                       <div
-                        className={`w-7 h-3.5 rounded-full p-0.5 transition-colors ${isLocalBroadcastEnabled ? "bg-green-500" : "bg-gray-700"}`}
+                        className={`w-7 h-3.5 rounded-full p-0.5 transition-colors ${isLocalBroadcastEnabled ? "bg-forest-700" : "bg-sand-200"}`}
                       >
                         <div
                           className={`w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-transform ${isLocalBroadcastEnabled ? "translate-x-3.5" : ""}`}
@@ -1034,19 +1034,19 @@ export const ControlPanel = () => {
                   )}
 
                   {canRecordActivity && (
-                    <div className="rounded-lg border border-white/10 bg-white/5 p-2">
+                    <div className="rounded-lg border border-sand-200 bg-sand-50 p-2">
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex flex-col">
-                          <span className="text-[10px] text-gray-300 font-bold">
+                          <span className="text-[10px] text-sand-700 font-bold">
                             Record Activity
                           </span>
                           <span
                             className={`text-[10px] ${
                               isActivityRecording
-                                ? "text-green-300"
+                                ? "text-forest-700"
                                 : isActivityPendingSave
-                                  ? "text-amber-300"
-                                  : "text-gray-500"
+                                  ? "text-gold-700"
+                                  : "text-sand-500"
                             }`}
                           >
                             {isActivityRecording
@@ -1056,7 +1056,7 @@ export const ControlPanel = () => {
                                 : "Ready"}
                           </span>
                         </div>
-                        <span className="px-2 py-1 rounded-md bg-black/20 text-[10px] text-gray-200 font-mono tabular-nums">
+                        <span className="px-2 py-1 rounded-md bg-white/90 text-[10px] text-sand-800 font-mono tabular-nums">
                           {activityStartedAt
                             ? formatDuration((activityNow - activityStartedAt) / 1000)
                             : "0:00"}
@@ -1064,10 +1064,10 @@ export const ControlPanel = () => {
                       </div>
                       <div className="mt-2 flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
-                          <span className="px-2 py-1 rounded-md bg-black/10 text-[10px] text-gray-300 tabular-nums">
+                          <span className="px-2 py-1 rounded-md bg-white/90 text-[10px] text-sand-700 tabular-nums">
                             {(activityDistanceM / 1000).toFixed(2)} km
                           </span>
-                          <span className="px-2 py-1 rounded-md bg-black/10 text-[10px] text-gray-400 tabular-nums">
+                          <span className="px-2 py-1 rounded-md bg-white/90 text-[10px] text-sand-600 tabular-nums">
                             {activityPointCount} pts
                           </span>
                         </div>
@@ -1078,7 +1078,7 @@ export const ControlPanel = () => {
                               if (!isLiveTrackingEnabled) setLiveTracking(true);
                               startActivity();
                             }}
-                            className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-green-500/15 text-green-200 border border-green-500/25 hover:bg-green-500/25 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                            className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-forest-50 text-forest-700 border border-forest-200 hover:bg-forest-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                             title="Start Activity"
                           >
                             <Play size={12} />
@@ -1087,7 +1087,7 @@ export const ControlPanel = () => {
                         ) : (
                           <button
                             onClick={() => stopActivity()}
-                            className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-red-500/15 text-red-200 border border-red-500/25 hover:bg-red-500/25 transition-colors"
+                            className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brick-50 text-brick-600 border border-brick-200 hover:bg-brick-100 transition-colors"
                             title="Stop Activity"
                           >
                             <Square size={12} />
@@ -1104,18 +1104,16 @@ export const ControlPanel = () => {
         </div>
 
         <div
-          className={`p-3 flex justify-between items-center border-b border-white/30 transition-all duration-300 touch-none cursor-pointer ${
-            isTerrainScrolled
-              ? "bg-yellow-500 shadow-lg shadow-black/50"
-              : "bg-yellow-500/70"
+          className={`p-3 flex justify-between items-center border-b border-forest-950 transition-all duration-300 touch-none cursor-pointer bg-forest-900 hover:bg-forest-800 ${
+            isTerrainScrolled ? "shadow-lg shadow-sand-900/10" : ""
           }`}
           onClick={() => {
             // Toggle terrain controls visibility (Mobile & Desktop)
             setIsTerrainControlsOpen(!isTerrainControlsOpen);
           }}
         >
-          <h6 className="font-bold flex items-center gap-1 text-xs text-black-400 tracking-wider">
-            <Activity size={12} className="text-black-400" />
+          <h6 className="font-bold flex items-center gap-1 text-xs text-gold-300 tracking-wider">
+            <Activity size={12} className="text-gold-300" />
             TERRAIN CONTROLS{" "}
             {isTerrainControlsOpen && (
               <small className="opacity-70 font-normal normal-case">
@@ -1125,7 +1123,7 @@ export const ControlPanel = () => {
           </h6>
 
           {/* Chevron Indicator for Minimize/Expand */}
-          <div className="text-black-400 bg-black/10 rounded p-0.5">
+          <div className="text-gold-200 bg-white/10 rounded p-0.5">
             {isTerrainControlsOpen ? (
               isMobile ? <ChevronDown size={16} /> : <ChevronUp size={16} />
             ) : (
@@ -1148,7 +1146,7 @@ export const ControlPanel = () => {
         >
           {/* Map Style Selector */}
           <div>
-            <label className="text-xs text-gray-300 mb-2 block font-semibold border-b border-white/10 pb-1">
+            <label className="text-xs text-sand-700 mb-2 block font-semibold border-b border-sand-200 pb-1">
               Map Style
             </label>
             <div className="grid grid-cols-3 gap-2">
@@ -1158,7 +1156,7 @@ export const ControlPanel = () => {
                   onClick={() => setMapStyle(style.style)}
                   className={`
                     cursor-pointer relative rounded-lg overflow-hidden h-16 flex flex-col justify-end p-1 transition-all duration-200 group
-                    ${mapStyle === style.style ? "ring-2 ring-blue-500 scale-105 shadow-lg" : "opacity-80 hover:opacity-100 hover:scale-105"}
+                    ${mapStyle === style.style ? "ring-2 ring-forest-600 scale-105 shadow-lg" : "opacity-80 hover:opacity-100 hover:scale-105"}
                   `}
                 >
                   <div
@@ -1182,20 +1180,20 @@ export const ControlPanel = () => {
           </div>
 
           {/* Mouse Mode Toggle - Desktop Only */}
-          <div className="bg-blue-600/20 p-2 rounded text-[10px] text-blue-100 mb-2 space-y-2 hidden md:block">
-            <p className="font-semibold border-b border-blue-500/30 pb-1 mb-1">
+          <div className="bg-forest-50 p-2 rounded text-[10px] text-forest-700 mb-2 space-y-2 hidden md:block">
+            <p className="font-semibold border-b border-forest-200 pb-1 mb-1">
               Mouse Interaction Mode
             </p>
-            <div className="flex bg-black/20 rounded p-1">
+            <div className="flex bg-white/90 rounded p-1">
               <button
                 onClick={() => setMouseControlMode("map")}
-                className={`cursor-pointer flex-1 py-1 rounded transition-colors ${mouseControlMode === "map" ? "bg-blue-500 text-white" : "hover:bg-white/10"}`}
+                className={`cursor-pointer flex-1 py-1 rounded transition-colors ${mouseControlMode === "map" ? "bg-forest-700 text-white" : "hover:bg-sand-100"}`}
               >
                 Map Mode (Move)
               </button>
               <button
                 onClick={() => setMouseControlMode("camera")}
-                className={`cursor-pointer flex-1 py-1 rounded transition-colors ${mouseControlMode === "camera" ? "bg-blue-500 text-white" : "hover:bg-white/10"}`}
+                className={`cursor-pointer flex-1 py-1 rounded transition-colors ${mouseControlMode === "camera" ? "bg-forest-700 text-white" : "hover:bg-sand-100"}`}
               >
                 Camera Mode (Rotate)
               </button>
@@ -1206,17 +1204,17 @@ export const ControlPanel = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4">
             {/* View Mode */}
             <div>
-              <label className="text-xs text-gray-300 mb-1 block">
+              <label className="text-xs text-sand-700 mb-1 block">
                 View Mode
               </label>
-              <div className="flex bg-black/30 rounded p-1">
+              <div className="flex bg-white/90 rounded p-1">
                 <button
                   onClick={() => {
                     setActiveView("2D");
                     setPitch(0);
                     setBearing(0);
                   }}
-                  className={`flex-1 py-1 text-xs rounded transition-colors cursor-pointer ${activeView === "2D" ? "bg-blue-600 text-white shadow-sm" : "text-gray-400 hover:text-white"}`}
+                  className={`flex-1 py-1 text-xs rounded transition-colors cursor-pointer ${activeView === "2D" ? "bg-forest-800 text-white shadow-sm" : "text-sand-600 hover:text-ink"}`}
                 >
                   2D Topo
                 </button>
@@ -1225,25 +1223,25 @@ export const ControlPanel = () => {
                     setActiveView("3D");
                     setPitch(75);
                   }}
-                  className={`flex-1 py-1 text-xs rounded transition-colors cursor-pointer ${activeView === "3D" ? "bg-blue-600 text-white shadow-sm" : "text-gray-400 hover:text-white"}`}
+                  className={`flex-1 py-1 text-xs rounded transition-colors cursor-pointer ${activeView === "3D" ? "bg-forest-800 text-white shadow-sm" : "text-sand-600 hover:text-ink"}`}
                 >
                   3D Terrain
                 </button>
               </div>
             </div>
 
-            <label className="text-xs text-gray-300 block font-semibold border-b border-white/10 pb-1">
+            <label className="text-xs text-sand-700 block font-semibold border-b border-sand-200 pb-1">
               Contours Config
             </label>
             {/* Contour Toggle */}
             <div
               className={`flex items-center justify-between transition-opacity duration-300 ${activeView === "2D" ? "opacity-50 pointer-events-none grayscale" : ""}`}
             >
-              <label className="text-xs text-gray-300">Show Contours</label>
+              <label className="text-xs text-sand-700">Show Contours</label>
               <button
                 onClick={() => setShowContours(!showContours)}
                 disabled={activeView === "2D"}
-                className={`cursor-pointer w-10 h-5 rounded-full p-1 transition-colors ${showContours ? "bg-blue-600" : "bg-white/10"}`}
+                className={`cursor-pointer w-10 h-5 rounded-full p-1 transition-colors ${showContours ? "bg-forest-800" : "bg-sand-100"}`}
               >
                 <div
                   className={`w-3 h-3 bg-white rounded-full shadow transition-transform ${showContours ? "translate-x-5" : "translate-x-0"}`}
@@ -1255,7 +1253,7 @@ export const ControlPanel = () => {
             <div
               className={`transition-opacity duration-300 ${activeView === "2D" || !showContours ? "opacity-50 pointer-events-none grayscale" : ""}`}
             >
-              <label className="text-xs text-gray-300 mb-1 flex justify-between">
+              <label className="text-xs text-sand-700 mb-1 flex justify-between">
                 <span>Opacity Contours</span>
                 <span>{(opacity * 100).toFixed(0)}%</span>
               </label>
@@ -1267,7 +1265,7 @@ export const ControlPanel = () => {
                 value={Math.round(opacity * 100)}
                 onChange={(e) => setOpacity(Number(e.target.value) / 100)}
                 disabled={activeView === "2D" || !showContours}
-                className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                className="w-full h-1 bg-sand-300 rounded-lg appearance-none cursor-pointer accent-forest-600"
               />
             </div>
 
@@ -1278,7 +1276,7 @@ export const ControlPanel = () => {
                 ${!showContours || activeView === "2D" ? "opacity-50 pointer-events-none grayscale" : "opacity-100"}
               `}
             >
-              <label className="text-xs text-gray-300 mb-1 flex justify-between">
+              <label className="text-xs text-sand-700 mb-1 flex justify-between">
                 <span>Contour Interval</span>
                 <span>{contourInterval}m</span>
               </label>
@@ -1290,7 +1288,7 @@ export const ControlPanel = () => {
                 value={contourInterval}
                 onChange={(e) => setContourInterval(Number(e.target.value))}
                 disabled={activeView === "2D"}
-                className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                className="w-full h-1 bg-sand-300 rounded-lg appearance-none cursor-pointer accent-forest-600"
               />
               <div className="flex justify-between mt-2 gap-1">
                 {[12.5, 25, 50, 125].map((val) => (
@@ -1300,8 +1298,8 @@ export const ControlPanel = () => {
                     disabled={activeView === "2D"}
                     className={`cursor-pointer flex-1 text-[10px] py-1 rounded border transition-colors ${
                       contourInterval === val
-                        ? "bg-blue-600 border-blue-500 text-white font-bold"
-                        : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10"
+                        ? "bg-forest-800 border-forest-600 text-white font-bold"
+                        : "bg-sand-50 border-sand-200 text-sand-600 hover:bg-sand-100"
                     }`}
                   >
                     {val}m
@@ -1314,7 +1312,7 @@ export const ControlPanel = () => {
             <div
               className={`transition-opacity duration-300 ${activeView === "2D" || !showContours ? "opacity-50 pointer-events-none grayscale" : ""}`}
             >
-              <label className="text-xs text-gray-300 mb-1 flex justify-between">
+              <label className="text-xs text-sand-700 mb-1 flex justify-between">
                 <span>Exaggeration (Height)</span>
                 <span>{elevationExaggeration.toFixed(1)}x</span>
               </label>
@@ -1328,20 +1326,20 @@ export const ControlPanel = () => {
                   setElevationExaggeration(Number(e.target.value))
                 }
                 disabled={activeView === "2D" || !showContours}
-                className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                className="w-full h-1 bg-sand-300 rounded-lg appearance-none cursor-pointer accent-forest-600"
               />
             </div>
 
-            <label className="text-xs text-gray-300 block font-semibold border-b border-white/10 pb-1">
+            <label className="text-xs text-sand-700 block font-semibold border-b border-sand-200 pb-1">
               Grid Config
             </label>
             {/* Grid DMS Toggle */}
             <div className="flex flex-col gap-2 transition-opacity duration-300">
               <div className="flex items-center justify-between">
-                <label className="text-xs text-gray-300">Show Grid DMS</label>
+                <label className="text-xs text-sand-700">Show Grid DMS</label>
                 <button
                   onClick={() => setShowGridDMS(!showGridDMS)}
-                  className={`cursor-pointer w-10 h-5 rounded-full p-1 transition-colors ${showGridDMS ? "bg-blue-600" : "bg-white/10"}`}
+                  className={`cursor-pointer w-10 h-5 rounded-full p-1 transition-colors ${showGridDMS ? "bg-forest-800" : "bg-sand-100"}`}
                 >
                   <div
                     className={`w-3 h-3 bg-white rounded-full shadow transition-transform ${showGridDMS ? "translate-x-5" : "translate-x-0"}`}
@@ -1354,7 +1352,7 @@ export const ControlPanel = () => {
                 <div className="animate-in fade-in slide-in-from-top-2 space-y-3">
                   {/* Opacity */}
                   <div>
-                    <label className="text-[10px] text-gray-400 mb-1 flex justify-between">
+                    <label className="text-[10px] text-sand-600 mb-1 flex justify-between">
                       <span>Grid Opacity</span>
                       <span>{(gridOpacity * 100).toFixed(0)}%</span>
                     </label>
@@ -1367,13 +1365,13 @@ export const ControlPanel = () => {
                       onChange={(e) =>
                         setGridOpacity(Number(e.target.value) / 100)
                       }
-                      className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                      className="w-full h-1 bg-sand-300 rounded-lg appearance-none cursor-pointer accent-forest-600"
                     />
                   </div>
 
                   {/* Grid Interval Selection */}
                   <div>
-                    <label className="text-[10px] text-gray-400 mb-1 block">
+                    <label className="text-[10px] text-sand-600 mb-1 block">
                       Grid Interval
                     </label>
                     <div className="grid grid-cols-2 gap-1">
@@ -1381,8 +1379,8 @@ export const ControlPanel = () => {
                         onClick={() => setGridStep("auto")}
                         className={`cursor-pointer px-2 py-1 text-[10px] rounded border transition-colors col-span-2 ${
                           gridStep === "auto"
-                            ? "bg-blue-600 border-blue-500 text-white font-bold"
-                            : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10"
+                            ? "bg-forest-800 border-forest-600 text-white font-bold"
+                            : "bg-sand-50 border-sand-200 text-sand-600 hover:bg-sand-100"
                         }`}
                       >
                         Auto (Dynamic)
@@ -1392,8 +1390,8 @@ export const ControlPanel = () => {
                         onClick={() => setGridStep(15 / 3600)}
                         className={`cursor-pointer px-2 py-1 text-[10px] rounded border transition-colors ${
                           gridStep === 15 / 3600
-                            ? "bg-blue-600 border-blue-500 text-white font-bold"
-                            : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10"
+                            ? "bg-forest-800 border-forest-600 text-white font-bold"
+                            : "bg-sand-50 border-sand-200 text-sand-600 hover:bg-sand-100"
                         }`}
                         title="~15 Detik (Skala 1:10.000)"
                       >
@@ -1404,8 +1402,8 @@ export const ControlPanel = () => {
                         onClick={() => setGridStep(30 / 3600)}
                         className={`cursor-pointer px-2 py-1 text-[10px] rounded border transition-colors ${
                           gridStep === 30 / 3600
-                            ? "bg-blue-600 border-blue-500 text-white font-bold"
-                            : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10"
+                            ? "bg-forest-800 border-forest-600 text-white font-bold"
+                            : "bg-sand-50 border-sand-200 text-sand-600 hover:bg-sand-100"
                         }`}
                         title="~30 Detik (Skala 1:25.000)"
                       >
@@ -1416,8 +1414,8 @@ export const ControlPanel = () => {
                         onClick={() => setGridStep(1 / 60)}
                         className={`cursor-pointer px-2 py-1 text-[10px] rounded border transition-colors ${
                           gridStep === 1 / 60
-                            ? "bg-blue-600 border-blue-500 text-white font-bold"
-                            : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10"
+                            ? "bg-forest-800 border-forest-600 text-white font-bold"
+                            : "bg-sand-50 border-sand-200 text-sand-600 hover:bg-sand-100"
                         }`}
                         title="~1 Menit (Skala 1:50.000)"
                       >
@@ -1428,8 +1426,8 @@ export const ControlPanel = () => {
                         onClick={() => setGridStep(5 / 60)}
                         className={`cursor-pointer px-2 py-1 text-[10px] rounded border transition-colors ${
                           Math.abs(Number(gridStep) - 5 / 60) < 0.0000001
-                            ? "bg-blue-600 border-blue-500 text-white font-bold"
-                            : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10"
+                            ? "bg-forest-800 border-forest-600 text-white font-bold"
+                            : "bg-sand-50 border-sand-200 text-sand-600 hover:bg-sand-100"
                         }`}
                         title="~5 Menit (Skala 1:250.000)"
                       >
@@ -1442,8 +1440,8 @@ export const ControlPanel = () => {
             </div>
           </div>
 
-          <div className="pt-6 mt-8 border-t border-white/10 text-[10px] text-center text-gray-500 font-mono">
-            <div className="uppercase tracking-[0.2em] mb-1 text-[9px] text-gray-600">
+          <div className="pt-6 mt-8 border-t border-sand-200 text-[10px] text-center text-sand-500 font-mono">
+            <div className="uppercase tracking-[0.2em] mb-1 text-[9px] text-sand-400">
               In Collaboration With
             </div>
 
@@ -1452,7 +1450,7 @@ export const ControlPanel = () => {
                 <a
                   href="https://instagram.com/jendelacakradigital"
                   target="_blank"
-                  className="font-bold text-gray-400 hover:text-blue-400 transition-colors uppercase tracking-wider"
+                  className="font-bold text-sand-600 hover:text-forest-700 transition-colors uppercase tracking-wider"
                 >
                   Jendela Cakra Digital
                 </a>
@@ -1462,7 +1460,7 @@ export const ControlPanel = () => {
                 <a
                   href="https://instagram.com/makopala_ubl"
                   target="_blank"
-                  className="font-bold text-gray-400 hover:text-emerald-400 transition-colors uppercase tracking-wider"
+                  className="font-bold text-sand-600 hover:text-forest-700 transition-colors uppercase tracking-wider"
                 >
                   Makopala Univ. Budi Luhur
                 </a>
@@ -1587,42 +1585,42 @@ export const TelemetryOverlay = ({
   if (!info) return null;
 
   return (
-    <div className="fixed bottom-6 right-4 md:absolute md:bottom-8 md:right-8 z-30 md:z-10 bg-black/80 md:bg-white/5 backdrop-blur-md md:backdrop-blur-xl border border-white/10 p-3 md:p-4 rounded-xl text-white text-xs font-mono pointer-events-none shadow-2xl overflow-hidden group max-w-[180px] md:max-w-none">
+    <div className="fixed bottom-6 right-4 md:absolute md:bottom-8 md:right-8 z-30 md:z-10 bg-white/95 md:bg-sand-50 backdrop-blur-md md:backdrop-blur-xl border border-sand-200 p-3 md:p-4 rounded-xl text-ink text-xs font-mono pointer-events-none shadow-2xl overflow-hidden group max-w-[180px] md:max-w-none">
       <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none"></div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1 md:gap-y-2 relative z-10">
         <div className="flex justify-between items-center">
-          <span className="text-blue-300/70">Lng</span>
+          <span className="text-forest-700">Lng</span>
           <span className="font-bold">{info.lng.toFixed(5)}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-blue-300/70">Lat</span>
+          <span className="text-forest-700">Lat</span>
           <span className="font-bold">{info.lat.toFixed(5)}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-blue-300/70">Elev</span>
-          <span className="font-bold text-yellow-300">
+          <span className="text-forest-700">Elev</span>
+          <span className="font-bold text-gold-700">
             {info.elev.toFixed(1)} mdpl
           </span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-blue-300/70">Slope</span>
+          <span className="text-forest-700">Slope</span>
           <span className="font-bold">{info.slope.toFixed(1)}°</span>
         </div>
 
-        <div className="md:col-span-2 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent my-1"></div>
+        <div className="md:col-span-2 h-px bg-gradient-to-r from-transparent via-sand-200 to-transparent my-1"></div>
 
         <div className="flex justify-between items-center">
-          <span className="text-blue-300/70">Pitch</span>
+          <span className="text-forest-700">Pitch</span>
           <span>{info.pitch.toFixed(1)}°</span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-blue-300/70">Bearing</span>
+          <span className="text-forest-700">Bearing</span>
           <span>{info.bearing.toFixed(1)}°</span>
         </div>
       </div>
 
-      <div className="hidden md:block mt-3 pt-2 border-t border-white/5 text-[8px] text-center text-gray-500 uppercase tracking-widest opacity-50 group-hover:opacity-100 transition-opacity">
+      <div className="hidden md:block mt-3 pt-2 border-t border-sand-100 text-[8px] text-center text-sand-500 uppercase tracking-widest opacity-50 group-hover:opacity-100 transition-opacity">
         Powered by Landscape 360
       </div>
     </div>
@@ -1639,22 +1637,22 @@ const GetStartedModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm md:backdrop-blur-md">
-      <div className="relative w-full max-w-lg bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)]">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-ink/40 backdrop-blur-sm md:backdrop-blur-md">
+      <div className="relative w-full max-w-lg bg-white border border-sand-200 rounded-2xl overflow-hidden ">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-1 bg-gradient-to-r from-transparent via-forest-700 to-transparent"></div>
 
-        <div className="p-6 border-b border-white/5 bg-white/[0.02]">
+        <div className="p-6 border-b border-sand-100 bg-sand-50">
           <div className="flex items-center gap-3">
             <img
-              src={geoportalLogo}
+              src={landscapeLogo}
               alt="Logo"
               className="w-10 h-10 object-contain"
             />
             <div>
-              <h2 className="text-xl font-bold text-white tracking-tight">
+              <h2 className="text-xl font-bold text-ink tracking-tight">
                 Quick Start Guide
               </h2>
-              <p className="text-xs text-blue-400 font-mono tracking-widest">
+              <p className="text-xs text-forest-700 font-mono tracking-widest">
                 Initialization
               </p>
             </div>
@@ -1723,14 +1721,14 @@ const GetStartedModal = ({
               },
             ].map((item, i) => (
               <div key={i} className="flex gap-4 group">
-                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-all">
+                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-forest-50 border border-forest-200 flex items-center justify-center text-forest-700 group-hover:bg-forest-700 group-hover:text-white transition-all">
                   {item.icon}
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-200">
+                  <h4 className="text-sm font-semibold text-sand-800">
                     {item.title}
                   </h4>
-                  <div className="text-xs text-gray-400 leading-relaxed">
+                  <div className="text-xs text-sand-600 leading-relaxed">
                     {item.desc}
                   </div>
                 </div>
@@ -1741,7 +1739,7 @@ const GetStartedModal = ({
           <div className="pt-4">
             <button
               onClick={onClose}
-              className="cursor-pointer w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-400 hover:text-white transition-all active:scale-[0.98] shadow-lg"
+              className="cursor-pointer w-full py-3 bg-forest-800 text-white font-bold rounded-xl hover:bg-forest-500 hover:text-white transition-all active:scale-[0.98] shadow-lg"
             >
               Let's Go
             </button>
@@ -1750,13 +1748,13 @@ const GetStartedModal = ({
 
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 cursor-pointer p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white z-[60]"
+          className="absolute top-4 right-4 cursor-pointer p-2 hover:bg-sand-100 rounded-full transition-colors text-sand-600 hover:text-ink z-[60]"
           title="Close"
         >
           <X size={20} />
         </button>
 
-        <div className="p-4 bg-black/40 border-t border-white/5 text-center text-[10px] text-gray-600 font-mono">
+        <div className="p-4 bg-white/90 border-t border-sand-100 text-center text-[10px] text-sand-400 font-mono">
           Landscape 360 v3.3.0
         </div>
       </div>

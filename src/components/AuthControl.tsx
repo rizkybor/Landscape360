@@ -199,7 +199,7 @@ export const AuthControl = () => {
         <div className="relative w-full">
           <button
             onClick={() => setShowMenu(true)}
-            className="cursor-pointer w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600/80 to-blue-500/80 hover:from-blue-600 hover:to-blue-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg shadow-blue-500/20 border border-blue-400/30 backdrop-blur-sm"
+            className="cursor-pointer w-full flex items-center justify-center gap-2 bg-forest-800 hover:bg-forest-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg border border-forest-200 backdrop-blur-sm"
           >
             <LogIn size={14} />
             <span>Sign In / Register</span>
@@ -209,29 +209,29 @@ export const AuthControl = () => {
         {/* Full Screen Modal for Auth - Rendered via Portal */}
         {showMenu &&
           createPortal(
-            <div className="fixed inset-0 z-[100] flex items-center justify-center md:p-4 bg-black/80 backdrop-blur-sm md:backdrop-blur-md animate-in fade-in duration-200">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center md:p-4 bg-ink/40 backdrop-blur-sm md:backdrop-blur-md animate-in fade-in duration-200">
               <div
-                className="relative w-full h-full md:h-auto md:max-w-md bg-[#0a0a0a] border-0 md:border md:border-white/10 rounded-none md:rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col justify-center"
+                className="relative w-full h-full md:h-auto md:max-w-md bg-white border-0 md:border md:border-sand-200 rounded-none md:rounded-2xl overflow-hidden flex flex-col justify-center"
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Glow Decor */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-1 bg-gradient-to-r from-transparent via-forest-700 to-transparent"></div>
 
                 {/* Background Effects */}
-                <div className="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-blue-600/10 blur-[100px] rounded-full pointer-events-none"></div>
-                <div className="absolute bottom-0 left-0 -mb-16 -ml-16 w-64 h-64 bg-purple-600/10 blur-[100px] rounded-full pointer-events-none"></div>
+                <div className="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-forest-50 blur-[100px] rounded-full pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 -mb-16 -ml-16 w-64 h-64 bg-gold-50 blur-[100px] rounded-full pointer-events-none"></div>
 
                 <div className="p-8 relative z-10 overflow-y-auto custom-scrollbar flex-1 flex flex-col justify-center">
                   {/* Header */}
                   <div className="text-center mb-8">
-                    <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">
+                    <h2 className="text-2xl font-bold text-ink mb-2 tracking-tight">
                       {isForgotPassword
                         ? "Reset Password"
                         : isLoginView
                           ? "Welcome Back"
                           : "Request Account"}
                     </h2>
-                    <p className="text-sm text-gray-400 font-mono tracking-wide">
+                    <p className="text-sm text-sand-600 font-mono tracking-wide">
                       {isForgotPassword
                         ? "REQUEST RESET VIA EMAIL"
                         : isLoginView
@@ -243,7 +243,7 @@ export const AuthControl = () => {
                   {/* Status Message */}
                   {message && (
                     <div
-                      className={`p-3 rounded-lg text-xs font-medium mb-6 flex items-start gap-2 ${message.type === "success" ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}
+                      className={`p-3 rounded-lg text-xs font-medium mb-6 flex items-start gap-2 ${message.type === "success" ? "bg-forest-50 text-forest-700 border border-forest-200" : "bg-brick-50 text-brick-600 border border-brick-200"}`}
                     >
                       <span>{message.type === "success" ? "✓" : "⚠️"}</span>
                       {message.text}
@@ -253,11 +253,11 @@ export const AuthControl = () => {
                   {/* Form */}
                   <form onSubmit={handleEmailAuth} className="space-y-5">
                     <div className="space-y-1">
-                      <label className="text-[10px] uppercase font-bold text-gray-500 tracking-wider ml-1">
+                      <label className="text-[10px] uppercase font-bold text-sand-500 tracking-wider ml-1">
                         Email Address
                       </label>
                       <div className="relative group">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500 group-focus-within:text-blue-400 transition-colors">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-sand-500 group-focus-within:text-forest-700 transition-colors">
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             width="16"
@@ -277,7 +277,7 @@ export const AuthControl = () => {
                           type="email"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          className="w-full bg-white/[0.03] border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-gray-600 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 focus:bg-black/40 transition-all outline-none"
+                          className="w-full bg-sand-50 border border-sand-200 rounded-xl py-3 pl-10 pr-4 text-sm text-ink placeholder-sand-400 focus:border-forest-300 focus:ring-1 focus:ring-forest-300 focus:bg-white/90 transition-all outline-none"
                           required
                           pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
                           title="Please enter a valid email address"
@@ -288,11 +288,11 @@ export const AuthControl = () => {
 
                     {!isForgotPassword && isLoginView && (
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-gray-500 tracking-wider ml-1">
+                        <label className="text-[10px] uppercase font-bold text-sand-500 tracking-wider ml-1">
                           Password
                         </label>
                         <div className="relative group">
-                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500 group-focus-within:text-blue-400 transition-colors">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-sand-500 group-focus-within:text-forest-700 transition-colors">
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
                               width="16"
@@ -319,14 +319,14 @@ export const AuthControl = () => {
                             type={showPassword ? "text" : "password"}
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full bg-white/[0.03] border border-white/10 rounded-xl py-3 pl-10 pr-12 text-sm text-white placeholder-gray-600 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 focus:bg-black/40 transition-all outline-none"
+                            className="w-full bg-sand-50 border border-sand-200 rounded-xl py-3 pl-10 pr-12 text-sm text-ink placeholder-sand-400 focus:border-forest-300 focus:ring-1 focus:ring-forest-300 focus:bg-white/90 transition-all outline-none"
                             required
                             minLength={8}
                           />
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-blue-400 transition-colors cursor-pointer"
+                            className="absolute inset-y-0 right-0 pr-4 flex items-center text-sand-500 hover:text-forest-700 transition-colors cursor-pointer"
                           >
                             {showPassword ? (
                               <EyeOff size={16} />
@@ -341,7 +341,7 @@ export const AuthControl = () => {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="cursor-pointer w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl text-sm font-bold shadow-lg shadow-blue-600/20 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
+                      className="cursor-pointer w-full bg-forest-800 hover:bg-forest-700 text-white py-3 rounded-xl text-sm font-bold shadow-lg transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
                     >
                       {loading ? (
                         <Loader2 size={18} className="animate-spin" />
@@ -374,9 +374,9 @@ export const AuthControl = () => {
                   </form>
 
                   {/* Footer Links */}
-                  <div className="mt-8 pt-6 border-t border-white/5 flex flex-col items-center gap-4 text-sm">
+                  <div className="mt-8 pt-6 border-t border-sand-100 flex flex-col items-center gap-4 text-sm">
                     {!isForgotPassword && (
-                      <div className="text-gray-400">
+                      <div className="text-sand-600">
                         {isLoginView
                           ? "Don't have an account?"
                           : "Already have an account? "}{" "}
@@ -385,7 +385,7 @@ export const AuthControl = () => {
                             setIsLoginView(!isLoginView);
                             setMessage(null);
                           }}
-                          className="cursor-pointer text-blue-400 hover:text-blue-300 font-semibold transition-colors"
+                          className="cursor-pointer text-forest-700 hover:text-forest-700 font-semibold transition-colors"
                         >
                           {isLoginView ? "Request Account" : "Sign In"}
                         </button>
@@ -397,7 +397,7 @@ export const AuthControl = () => {
                         setIsForgotPassword(!isForgotPassword);
                         setMessage(null);
                       }}
-                      className="cursor-pointer text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                      className="cursor-pointer text-xs text-sand-500 hover:text-sand-700 transition-colors"
                     >
                       {isForgotPassword
                         ? "Back to Login"
@@ -412,7 +412,7 @@ export const AuthControl = () => {
                     e.stopPropagation();
                     setShowMenu(false);
                   }}
-                  className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors z-[60] p-2 hover:bg-white/10 rounded-full cursor-pointer"
+                  className="absolute top-4 right-4 text-sand-600 hover:text-ink transition-colors z-[60] p-2 hover:bg-sand-100 rounded-full cursor-pointer"
                   title="Close Modal"
                 >
                   <svg
@@ -459,7 +459,7 @@ export const AuthControl = () => {
     <div className="relative w-full">
       <button
         onClick={() => setShowMenu(!showMenu)}
-        className="cursor-pointer w-full flex items-center justify-center gap-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-200 px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors border border-blue-500/30"
+        className="cursor-pointer w-full flex items-center justify-center gap-2 bg-forest-50 hover:bg-forest-100 text-forest-700 px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors border border-forest-200"
       >
         {currentUser.user_metadata?.avatar_url ? (
           <img
@@ -468,7 +468,7 @@ export const AuthControl = () => {
             alt="Avatar"
           />
         ) : (
-          <div className="w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center text-[8px]">
+          <div className="w-4 h-4 rounded-full bg-forest-700 flex items-center justify-center text-[8px]">
             {currentUser.email?.charAt(0).toUpperCase()}
           </div>
         )}
@@ -478,22 +478,22 @@ export const AuthControl = () => {
             currentUser.email}
         </span>
         {isSyncing && (
-          <Loader2 size={12} className="animate-spin text-blue-400" />
+          <Loader2 size={12} className="animate-spin text-forest-700" />
         )}
       </button>
 
       {/* Full Screen Modal for User Menu - Rendered via Portal */}
       {showMenu &&
         createPortal(
-          <div className="fixed inset-0 z-[100] flex items-center justify-center md:p-4 bg-black/80 backdrop-blur-sm md:backdrop-blur-md animate-in fade-in duration-200">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center md:p-4 bg-ink/40 backdrop-blur-sm md:backdrop-blur-md animate-in fade-in duration-200">
             <div
-              className="relative w-full h-full md:h-auto md:max-w-sm bg-[#0a0a0a] border-0 md:border md:border-white/10 rounded-none md:rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col"
+              className="relative w-full h-full md:h-auto md:max-w-sm bg-white border-0 md:border md:border-sand-200 rounded-none md:rounded-2xl overflow-hidden flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-white/5 bg-white/[0.02]">
-                <h2 className="text-sm font-bold text-white tracking-wide uppercase flex items-center gap-2">
-                  <div className="w-1 h-4 bg-blue-500 rounded-full"></div>
+              <div className="flex items-center justify-between p-4 border-b border-sand-100 bg-sand-50">
+                <h2 className="text-sm font-bold text-ink tracking-wide uppercase flex items-center gap-2">
+                  <div className="w-1 h-4 bg-forest-700 rounded-full"></div>
                   User Account
                 </h2>
                 <button
@@ -501,7 +501,7 @@ export const AuthControl = () => {
                     e.stopPropagation();
                     setShowMenu(false);
                   }}
-                  className="cursor-pointer text-gray-400 hover:text-white transition-colors p-1 hover:bg-white/10 rounded-lg cursor-pointer"
+                  className="cursor-pointer text-sand-600 hover:text-ink transition-colors p-1 hover:bg-sand-100 rounded-lg cursor-pointer"
                   title="Close Menu"
                 >
                   <X size={18} />
@@ -512,16 +512,16 @@ export const AuthControl = () => {
                 {isEditingProfile ? (
                   <form
                     onSubmit={handleSaveProfile}
-                    className="mb-6 space-y-3 bg-white/5 p-4 rounded-xl border border-white/10"
+                    className="mb-6 space-y-3 bg-sand-50 p-4 rounded-xl border border-sand-200"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-sm font-bold text-white">
+                      <h3 className="text-sm font-bold text-ink">
                         Edit Name
                       </h3>
                       <button
                         type="button"
                         onClick={() => setIsEditingProfile(false)}
-                        className="cursor-pointer text-gray-400 hover:text-white"
+                        className="cursor-pointer text-sand-600 hover:text-ink"
                       >
                         <X size={14} />
                       </button>
@@ -534,7 +534,7 @@ export const AuthControl = () => {
                           value={editName}
                           onChange={(e) => setEditName(e.target.value)}
                           placeholder="Display Name"
-                          className="w-full bg-black/40 border border-white/10 rounded px-2 py-1.5 text-xs text-white focus:border-blue-500 outline-none"
+                          className="w-full bg-white/90 border border-sand-200 rounded px-2 py-1.5 text-xs text-ink focus:border-forest-600 outline-none"
                         />
                       </div>
                     </div>
@@ -542,7 +542,7 @@ export const AuthControl = () => {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="cursor-pointer w-full bg-blue-600 hover:bg-blue-500 text-white py-1.5 rounded text-xs font-bold transition-colors flex items-center justify-center gap-2"
+                      className="cursor-pointer w-full bg-forest-800 hover:bg-forest-700 text-white py-1.5 rounded text-xs font-bold transition-colors flex items-center justify-center gap-2"
                     >
                       {loading ? (
                         <Loader2 size={12} className="animate-spin" />
@@ -558,17 +558,17 @@ export const AuthControl = () => {
                     {currentUser.user_metadata?.avatar_url ? (
                       <img
                         src={currentUser.user_metadata.avatar_url}
-                        className="w-16 h-16 rounded-full border-2 border-blue-500 object-cover"
+                        className="w-16 h-16 rounded-full border-2 border-forest-600 object-cover"
                         alt="Avatar"
                       />
                     ) : (
-                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-blue-500/30">
+                      <div className="w-16 h-16 rounded-full bg-forest-800 ring-2 ring-gold-300 flex items-center justify-center text-2xl font-bold text-white shadow-lg ">
                         {currentUser.email?.charAt(0).toUpperCase()}
                       </div>
                     )}
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <h3 className="font-bold text-lg text-white">
+                        <h3 className="font-bold text-lg text-ink">
                           {currentUser.user_metadata?.full_name ||
                             currentUser.user_metadata?.name ||
                             "User L360"}
@@ -582,13 +582,13 @@ export const AuthControl = () => {
                             );
                             setIsEditingProfile(true);
                           }}
-                          className="cursor-pointer p-1.5 text-gray-500 hover:text-white bg-transparent hover:bg-white/10 rounded-lg transition-colors"
+                          className="cursor-pointer p-1.5 text-sand-500 hover:text-ink bg-transparent hover:bg-sand-100 rounded-lg transition-colors"
                           title="Edit Name"
                         >
                           <Pencil size={14} />
                         </button>
                       </div>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-sand-600">
                         {currentUser.email}
                       </p>
 
@@ -598,18 +598,18 @@ export const AuthControl = () => {
                           <div
                             className={`text-[10px] px-2 py-0.5 rounded-full border ${
                               isAdmin
-                                ? "bg-red-500/20 text-red-300 border-red-500/20"
+                                ? "bg-forest-900 text-gold-300 border-forest-900"
                                 : subscriptionStatus === "Enterprise"
-                                ? "bg-purple-500/20 text-purple-300 border-purple-500/20"
+                                ? "bg-gold-50 text-gold-700 border-gold-200"
                                 : subscriptionStatus === "Pro"
-                                  ? "bg-blue-500/20 text-blue-300 border-blue-500/20"
-                                  : "bg-gray-500/20 text-gray-300 border-gray-500/20"
+                                  ? "bg-forest-50 text-forest-700 border-forest-200"
+                                  : "bg-sand-100 text-sand-700 border-sand-300"
                             }`}
                           >
                             {isAdmin ? "Admin · All Access" : `${subscriptionStatus} Plan`}
                           </div>
                           {!isAdmin && (
-                            <div className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 border border-green-500/20">
+                            <div className="text-[10px] px-2 py-0.5 rounded-full bg-forest-50 text-forest-700 border border-forest-200">
                               Status:{" "}
                               {userRole === "monitor360" ? "Monitor" : "Active"}
                             </div>
@@ -617,7 +617,7 @@ export const AuthControl = () => {
                           {SHOW_UPGRADE_BUTTON && !isAdmin && (
                             <button
                               onClick={() => setShowUpgradeModal(true)}
-                              className="cursor-pointer text-[10px] text-blue-400 hover:text-blue-300 hover:underline"
+                              className="cursor-pointer text-[10px] text-forest-700 hover:text-forest-700 hover:underline"
                             >
                               Upgrade
                             </button>
@@ -625,22 +625,22 @@ export const AuthControl = () => {
                         </div>
 
                         <div className="grid grid-cols-2 gap-2">
-                          <div className="bg-white/5 rounded-lg p-2 border border-white/5">
-                            <div className="text-[9px] text-gray-500 uppercase font-bold mb-1">
+                          <div className="bg-sand-50 rounded-lg p-2 border border-sand-100">
+                            <div className="text-[9px] text-sand-500 uppercase font-bold mb-1">
                               Offline Maps
                             </div>
                             <div className="flex items-end justify-between">
                               <span
-                                className={`text-xs font-bold ${mapUsage >= currentLimits.maps ? "text-red-400" : "text-white"}`}
+                                className={`text-xs font-bold ${mapUsage >= currentLimits.maps ? "text-brick-600" : "text-ink"}`}
                               >
                                 {mapUsage}{" "}
-                                <span className="text-gray-500 font-normal">
+                                <span className="text-sand-500 font-normal">
                                   / {currentLimits.maps}
                                 </span>
                               </span>
-                              <div className="w-12 h-1 bg-gray-700 rounded-full overflow-hidden">
+                              <div className="w-12 h-1 bg-sand-200 rounded-full overflow-hidden">
                                 <div
-                                  className={`h-full rounded-full ${mapUsage >= currentLimits.maps ? "bg-red-500" : "bg-blue-500"}`}
+                                  className={`h-full rounded-full ${mapUsage >= currentLimits.maps ? "bg-brick-500" : "bg-forest-700"}`}
                                   style={{
                                     width: `${Math.min(100, (mapUsage / currentLimits.maps) * 100)}%`,
                                   }}
@@ -648,22 +648,22 @@ export const AuthControl = () => {
                               </div>
                             </div>
                           </div>
-                          <div className="bg-white/5 rounded-lg p-2 border border-white/5">
-                            <div className="text-[9px] text-gray-500 uppercase font-bold mb-1">
+                          <div className="bg-sand-50 rounded-lg p-2 border border-sand-100">
+                            <div className="text-[9px] text-sand-500 uppercase font-bold mb-1">
                               Surveys / Markers
                             </div>
                             <div className="flex items-end justify-between">
                               <span
-                                className={`text-xs font-bold ${surveyUsage >= currentLimits.surveys ? "text-red-400" : "text-white"}`}
+                                className={`text-xs font-bold ${surveyUsage >= currentLimits.surveys ? "text-brick-600" : "text-ink"}`}
                               >
                                 {surveyUsage}{" "}
-                                <span className="text-gray-500 font-normal">
+                                <span className="text-sand-500 font-normal">
                                   / {currentLimits.surveys}
                                 </span>
                               </span>
-                              <div className="w-12 h-1 bg-gray-700 rounded-full overflow-hidden">
+                              <div className="w-12 h-1 bg-sand-200 rounded-full overflow-hidden">
                                 <div
-                                  className={`h-full rounded-full ${surveyUsage >= currentLimits.surveys ? "bg-red-500" : "bg-purple-500"}`}
+                                  className={`h-full rounded-full ${surveyUsage >= currentLimits.surveys ? "bg-brick-500" : "bg-gold-400"}`}
                                   style={{
                                     width: `${Math.min(100, (surveyUsage / currentLimits.surveys) * 100)}%`,
                                   }}
@@ -685,12 +685,12 @@ export const AuthControl = () => {
                       createGroup(); // Start Navigator Mode (new survey group)
                       setShowMenu(false);
                     }}
-                    className="cursor-pointer flex flex-col items-center gap-2 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 transition-all group"
+                    className="cursor-pointer flex flex-col items-center gap-2 p-4 rounded-xl bg-sand-50 hover:bg-sand-100 border border-sand-100 hover:border-sand-300 transition-all group"
                   >
-                    <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                    <div className="p-2 bg-forest-50 rounded-lg text-forest-700 group-hover:bg-forest-700 group-hover:text-white transition-colors">
                       <Plus size={20} />
                     </div>
-                    <span className="text-xs font-medium text-gray-300">
+                    <span className="text-xs font-medium text-sand-700">
                       New Survey
                     </span>
                   </button>
@@ -699,12 +699,12 @@ export const AuthControl = () => {
                       setShowOfflineManager(true);
                       setShowMenu(false);
                     }}
-                    className="cursor-pointer flex flex-col items-center gap-2 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 transition-all group"
+                    className="cursor-pointer flex flex-col items-center gap-2 p-4 rounded-xl bg-sand-50 hover:bg-sand-100 border border-sand-100 hover:border-sand-300 transition-all group"
                   >
-                    <div className="p-2 bg-green-500/10 rounded-lg text-green-400 group-hover:bg-green-500 group-hover:text-white transition-colors">
+                    <div className="p-2 bg-forest-50 rounded-lg text-forest-700 group-hover:bg-forest-700 group-hover:text-white transition-colors">
                       <WifiOff size={20} />
                     </div>
-                    <span className="text-xs font-medium text-gray-300">
+                    <span className="text-xs font-medium text-sand-700">
                       Offline Map
                     </span>
                   </button>
@@ -713,7 +713,7 @@ export const AuthControl = () => {
                 {/* Survey / Marker Lists */}
                 <div className="space-y-1 mb-3">
                   <div className="p-3">
-                    <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <div className="text-xs font-bold text-sand-500 uppercase tracking-wider mb-3 flex items-center gap-2">
                       <FolderOpen size={12} />
                       Survey / Marker Lists
                     </div>
@@ -722,21 +722,21 @@ export const AuthControl = () => {
                         <div className="flex items-center gap-2 py-2">
                           <Loader2
                             size={12}
-                            className="animate-spin text-blue-400"
+                            className="animate-spin text-forest-700"
                           />
-                          <span className="text-[10px] text-gray-500">
+                          <span className="text-[10px] text-sand-500">
                             Loading surveys...
                           </span>
                         </div>
                       ) : savedSurveys.length === 0 ? (
-                        <div className="text-[10px] text-gray-600 italic">
+                        <div className="text-[10px] text-sand-400 italic">
                           No saved surveys found
                         </div>
                       ) : (
                         savedSurveys.map((survey) => (
                           <div
                             key={survey.id}
-                            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs group transition-colors ${currentSurveyId === survey.id ? "bg-blue-600/20 text-blue-300 border border-blue-500/20" : "hover:bg-white/5 text-gray-400 hover:text-gray-200"}`}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs group transition-colors ${currentSurveyId === survey.id ? "bg-forest-50 text-forest-700 border border-forest-200" : "hover:bg-sand-50 text-sand-600 hover:text-sand-800"}`}
                           >
                             <button
                               onClick={() => {
@@ -760,7 +760,7 @@ export const AuthControl = () => {
                                 e.stopPropagation();
                                 setDeleteConfirmId(survey.id);
                               }}
-                              className="cursor-pointer p-2 md:p-1.5 hover:bg-red-500/20 text-gray-500 hover:text-red-400 rounded transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100 flex-shrink-0"
+                              className="cursor-pointer p-2 md:p-1.5 hover:bg-brick-50 text-sand-500 hover:text-brick-600 rounded transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100 flex-shrink-0"
                               title="Delete Survey"
                             >
                               <Trash2 size={14} className="md:w-3 md:h-3" />
@@ -779,7 +779,7 @@ export const AuthControl = () => {
                       setShowMenu(false);
                       setShowUserManagement(true);
                     }}
-                    className="cursor-pointer w-full mb-3 flex items-center justify-center gap-2 p-3 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 border border-blue-500/20 transition-all font-medium text-sm"
+                    className="cursor-pointer w-full mb-3 flex items-center justify-center gap-2 p-3 rounded-xl bg-forest-50 hover:bg-forest-50 text-forest-700 hover:text-forest-700 border border-forest-200 transition-all font-medium text-sm"
                   >
                     <Users size={16} /> Manage Users & Plans
                   </button>
@@ -788,7 +788,7 @@ export const AuthControl = () => {
                 {/* Logout Button */}
                 <button
                   onClick={() => setShowLogoutConfirm(true)}
-                  className="cursor-pointer w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 transition-all font-medium text-sm"
+                  className="cursor-pointer w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-brick-50 hover:bg-brick-50 text-brick-600 hover:text-brick-600 border border-brick-200 transition-all font-medium text-sm"
                 >
                   <LogOut size={16} /> Sign Out
                 </button>
@@ -826,29 +826,29 @@ export const AuthControl = () => {
 
       {showUpgradeModal &&
         createPortal(
-          <div className="fixed inset-0 z-[110] flex items-center justify-center md:p-4 bg-black/80 backdrop-blur-sm md:backdrop-blur-md animate-in fade-in duration-300">
+          <div className="fixed inset-0 z-[110] flex items-center justify-center md:p-4 bg-ink/40 backdrop-blur-sm md:backdrop-blur-md animate-in fade-in duration-300">
             <div
-              className="relative w-full h-full md:h-auto md:max-w-2xl bg-[#0a0a0a] border-0 md:border md:border-white/10 rounded-none md:rounded-2xl shadow-[0_0_50px_rgba(59,130,246,0.15)] overflow-hidden flex flex-col md:max-h-[90vh]"
+              className="relative w-full h-full md:h-auto md:max-w-2xl bg-white border-0 md:border md:border-sand-200 rounded-none md:rounded-2xl overflow-hidden flex flex-col md:max-h-[90vh]"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-white/5 bg-white/[0.02]">
+              <div className="flex items-center justify-between p-6 border-b border-sand-100 bg-sand-50">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center text-blue-400">
+                  <div className="w-10 h-10 rounded-xl bg-forest-50 border border-sand-200 flex items-center justify-center text-forest-700">
                     <Check size={20} />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-white tracking-tight">
+                    <h2 className="text-xl font-bold text-ink tracking-tight">
                       Upgrade Plan
                     </h2>
-                    <div className="text-xs text-gray-400">
+                    <div className="text-xs text-sand-600">
                       Unlock more features and limits
                     </div>
                   </div>
                 </div>
                 <button
                   onClick={() => setShowUpgradeModal(false)}
-                  className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full cursor-pointer"
+                  className="text-sand-600 hover:text-ink transition-colors p-2 hover:bg-sand-100 rounded-full cursor-pointer"
                 >
                   <X size={20} />
                 </button>
@@ -858,24 +858,24 @@ export const AuthControl = () => {
                 <div className="grid md:grid-cols-3 gap-4">
                   {/* Free Plan */}
                   <div
-                    className={`p-4 rounded-xl border ${subscriptionStatus === "Free" ? "bg-white/5 border-blue-500/50" : "bg-transparent border-white/10"} relative flex flex-col`}
+                    className={`p-4 rounded-xl border ${subscriptionStatus === "Free" ? "bg-sand-50 border-forest-300" : "bg-transparent border-sand-200"} relative flex flex-col`}
                   >
                     {subscriptionStatus === "Free" && (
-                      <div className="absolute top-2 right-2 text-[10px] bg-blue-500 text-white px-2 py-0.5 rounded-full font-bold">
+                      <div className="absolute top-2 right-2 text-[10px] bg-forest-700 text-white px-2 py-0.5 rounded-full font-bold">
                         CURRENT
                       </div>
                     )}
                     <div className="mb-4">
-                      <span className="text-xs font-bold px-2 py-1 bg-gray-800 text-gray-300 rounded uppercase tracking-wider">
+                      <span className="text-xs font-bold px-2 py-1 bg-sand-100 text-sand-700 rounded uppercase tracking-wider">
                         Starter
                       </span>
                     </div>
-                    <h3 className="font-bold text-white mb-1">Free</h3>
-                    <p className="text-sm text-gray-400 mb-6">
+                    <h3 className="font-bold text-ink mb-1">Free</h3>
+                    <p className="text-sm text-sand-600 mb-6">
                       Basic exploration tools
                     </p>
 
-                    <ul className="space-y-2 text-xs text-gray-400 mb-6 flex-1">
+                    <ul className="space-y-2 text-xs text-sand-600 mb-6 flex-1">
                       <li className="flex gap-2">
                         <span>✓</span> 1 MB Max Download
                       </li>
@@ -885,7 +885,7 @@ export const AuthControl = () => {
                       <li className="flex gap-2">
                         <span>✓</span> 2 Saved Surveys
                       </li>
-                      <li className="flex gap-2 text-gray-600 line-through decoration-gray-700">
+                      <li className="flex gap-2 text-sand-400 line-through decoration-sand-400">
                         <span className="opacity-50">×</span> No GPS Tracking
                       </li>
                     </ul>
@@ -893,7 +893,7 @@ export const AuthControl = () => {
                     {subscriptionStatus !== "Free" && (
                       <a
                         href="mailto:contact@jcdigital.co.id?subject=Account Request: Landscape360 Starter Plan&body=Dear Admin,%0D%0A%0D%0AI hope this message finds you well.%0D%0A%0D%0AI would like to request the creation of a Starter (Free) account for the Landscape360 platform.%0D%0A%0D%0APlease let me know if any further information is required from my side.%0D%0A%0D%0AThank you,%0D%0A[Your Name]"
-                        className="block w-full py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-center rounded-lg text-xs font-bold transition-colors"
+                        className="block w-full py-2 bg-sand-50 hover:bg-sand-100 border border-sand-200 text-ink text-center rounded-lg text-xs font-bold transition-colors"
                       >
                         Request Account
                       </a>
@@ -902,34 +902,34 @@ export const AuthControl = () => {
 
                   {/* Pro Plan */}
                   <div
-                    className={`p-4 rounded-xl border ${subscriptionStatus === "Pro" ? "bg-blue-500/10 border-blue-500" : "bg-transparent border-white/10 hover:border-blue-500/50"} relative transition-colors flex flex-col`}
+                    className={`p-4 rounded-xl border ${subscriptionStatus === "Pro" ? "bg-forest-50 border-forest-600" : "bg-transparent border-sand-200 hover:border-forest-300"} relative transition-colors flex flex-col`}
                   >
                     {subscriptionStatus === "Pro" && (
-                      <div className="absolute top-2 right-2 text-[10px] bg-blue-500 text-white px-2 py-0.5 rounded-full font-bold">
+                      <div className="absolute top-2 right-2 text-[10px] bg-forest-700 text-white px-2 py-0.5 rounded-full font-bold">
                         CURRENT
                       </div>
                     )}
                     <div className="mb-4">
-                      <span className="text-xs font-bold px-2 py-1 bg-blue-500/20 text-blue-400 rounded uppercase tracking-wider border border-blue-500/20">
+                      <span className="text-xs font-bold px-2 py-1 bg-forest-50 text-forest-700 rounded uppercase tracking-wider border border-forest-200">
                         Recommended
                       </span>
                     </div>
                     <div className="flex items-end gap-2 mb-1">
-                      <span className="text-xs text-gray-500 line-through decoration-red-500/50 decoration-1">
+                      <span className="text-xs text-sand-500 line-through decoration-brick-600 decoration-1">
                         Rp 85.000
                       </span>
                     </div>
-                    <h3 className="text-xl font-bold text-white mb-1">
+                    <h3 className="text-xl font-bold text-ink mb-1">
                       Rp 10.000
-                      <span className="text-xs font-normal text-gray-500">
+                      <span className="text-xs font-normal text-sand-500">
                         /bln
                       </span>
                     </h3>
-                    <p className="text-xs text-gray-400 mb-6">
+                    <p className="text-xs text-sand-600 mb-6">
                       For field professionals
                     </p>
 
-                    <ul className="space-y-2 text-xs text-gray-300 mb-6 flex-1">
+                    <ul className="space-y-2 text-xs text-sand-700 mb-6 flex-1">
                       <li className="flex gap-2">
                         <span>✓</span> 10 MB Max Download
                       </li>
@@ -942,15 +942,15 @@ export const AuthControl = () => {
                       <li className="flex gap-2">
                         <span>✓</span> High-Res Export
                       </li>
-                      <li className="flex gap-2 font-bold text-white">
-                        <span className="text-green-400">✓</span> GPS Broadcast
+                      <li className="flex gap-2 font-bold text-ink">
+                        <span className="text-forest-700">✓</span> GPS Broadcast
                       </li>
                     </ul>
 
                     {subscriptionStatus !== "Pro" && (
                       <a
                         href="mailto:contact@jcdigital.co.id?subject=Subscription Upgrade: Landscape360 Pro Plan&body=Dear Admin,%0D%0A%0D%0AI hope this message finds you well.%0D%0A%0D%0AI am writing to request an upgrade of my account to the Landscape360 Pro Plan. I am interested in utilizing the advanced field tools and GPS broadcasting features.%0D%0A%0D%0APlease guide me through the payment and activation process.%0D%0A%0D%0AThank you,%0D%0A[Your Name]"
-                        className="block w-full py-2 bg-blue-600 hover:bg-blue-500 text-white text-center rounded-lg text-xs font-bold transition-colors"
+                        className="block w-full py-2 bg-forest-800 hover:bg-forest-700 text-white text-center rounded-lg text-xs font-bold transition-colors"
                       >
                         Upgrade to Pro
                       </a>
@@ -959,23 +959,23 @@ export const AuthControl = () => {
 
                   {/* Enterprise Plan */}
                   <div
-                    className={`p-4 rounded-xl border ${subscriptionStatus === "Enterprise" ? "bg-purple-500/10 border-purple-500" : "bg-transparent border-white/10 hover:border-purple-500/50"} relative transition-colors flex flex-col`}
+                    className={`p-4 rounded-xl border ${subscriptionStatus === "Enterprise" ? "bg-gold-50 border-gold-400" : "bg-transparent border-sand-200 hover:border-gold-300"} relative transition-colors flex flex-col`}
                   >
                     {subscriptionStatus === "Enterprise" && (
-                      <div className="absolute top-2 right-2 text-[10px] bg-purple-500 text-white px-2 py-0.5 rounded-full font-bold">
+                      <div className="absolute top-2 right-2 text-[10px] bg-gold-400 text-white px-2 py-0.5 rounded-full font-bold">
                         CURRENT
                       </div>
                     )}
                     <div className="mb-4">
-                      <span className="text-xs font-bold px-2 py-1 bg-cyan-900/30 text-cyan-400 rounded uppercase tracking-wider border border-cyan-500/20">
+                      <span className="text-xs font-bold px-2 py-1 bg-forest-100 text-forest-700 rounded uppercase tracking-wider border border-forest-200">
                         Enterprise
                       </span>
                     </div>
-                    <h3 className="text-xl font-bold text-white mb-6">
+                    <h3 className="text-xl font-bold text-ink mb-6">
                       Available Upon Request
                     </h3>
 
-                    <ul className="space-y-2 text-xs text-gray-300 mb-6 flex-1">
+                    <ul className="space-y-2 text-xs text-sand-700 mb-6 flex-1">
                       <li className="flex gap-2">
                         <span>✓</span> 25 MB Max Download
                       </li>
@@ -985,8 +985,8 @@ export const AuthControl = () => {
                       <li className="flex gap-2">
                         <span>✓</span> 10 Saved Surveys
                       </li>
-                      <li className="flex gap-2 font-bold text-white">
-                        <span className="text-green-400">✓</span> Realtime
+                      <li className="flex gap-2 font-bold text-ink">
+                        <span className="text-forest-700">✓</span> Realtime
                         Monitoring
                       </li>
                       <li className="flex gap-2">
@@ -997,7 +997,7 @@ export const AuthControl = () => {
                     {subscriptionStatus !== "Enterprise" && (
                       <a
                         href="mailto:contact@jcdigital.co.id?subject=Subscription Upgrade: Landscape360 Enterprise Plan&body=Dear Admin,%0D%0A%0D%0AI hope this message finds you well.%0D%0A%0D%0AWe are interested in upgrading our organization's access to the Landscape360 Enterprise Plan to leverage the Realtime Monitoring and dedicated support features.%0D%0A%0D%0APlease contact us to arrange the upgrade and discuss any specific requirements.%0D%0A%0D%0ABest regards,%0D%0A[Your Name/Organization]"
-                        className="block w-full py-2 bg-purple-600 hover:bg-purple-500 text-white text-center rounded-lg text-xs font-bold transition-colors"
+                        className="block w-full py-2 bg-gold-500 hover:bg-gold-400 text-white text-center rounded-lg text-xs font-bold transition-colors"
                       >
                         Upgrade to Enterprise
                       </a>
@@ -1013,27 +1013,27 @@ export const AuthControl = () => {
       {/* Delete Confirmation Modal */}
       {deleteConfirmId &&
         createPortal(
-          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm md:backdrop-blur-md animate-in fade-in duration-300">
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-ink/40 backdrop-blur-sm md:backdrop-blur-md animate-in fade-in duration-300">
             <div
-              className="relative w-full max-w-xs bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-[0_0_50px_rgba(239,68,68,0.15)] overflow-hidden p-6 animate-in zoom-in-95 duration-300"
+              className="relative w-full max-w-xs bg-white border border-sand-200 rounded-2xl overflow-hidden p-6 animate-in zoom-in-95 duration-300"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Red Glow Decor */}
-              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-red-500/50 to-transparent"></div>
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-brick-100 to-transparent"></div>
 
               <div className="flex flex-col items-center text-center gap-5">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-red-500/20 blur-xl rounded-full"></div>
-                  <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-red-500/20 to-red-600/10 border border-red-500/30 flex items-center justify-center text-red-500 shadow-inner">
+                  <div className="absolute inset-0 bg-brick-50 blur-xl rounded-full"></div>
+                  <div className="relative w-14 h-14 rounded-2xl bg-brick-50 border border-brick-200 flex items-center justify-center text-brick-600 shadow-inner">
                     <Trash2 size={28} strokeWidth={1.5} />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <h3 className="text-xl font-bold text-white tracking-tight">
+                  <h3 className="text-xl font-bold text-ink tracking-tight">
                     Delete Survey?
                   </h3>
-                  <p className="text-xs text-gray-400 leading-relaxed px-2">
+                  <p className="text-xs text-sand-600 leading-relaxed px-2">
                     This action cannot be undone. All survey data will be
                     permanently deleted from your device and cloud.
                   </p>
@@ -1047,13 +1047,13 @@ export const AuthControl = () => {
                         setDeleteConfirmId(null);
                       }
                     }}
-                    className="cursor-pointer w-full py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-red-600/30 transition-all active:scale-[0.98] border border-red-400/20"
+                    className="cursor-pointer w-full py-3 bg-brick-600 hover:bg-brick-500 text-white rounded-xl text-xs font-bold shadow-lg transition-all active:scale-[0.98] border border-brick-200"
                   >
                     Delete Permanently
                   </button>
                   <button
                     onClick={() => setDeleteConfirmId(null)}
-                    className="cursor-pointer w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition-all active:scale-[0.98]"
+                    className="cursor-pointer w-full py-3 bg-sand-50 hover:bg-sand-100 border border-sand-200 rounded-xl text-xs font-bold text-sand-600 hover:text-ink transition-all active:scale-[0.98]"
                   >
                     Cancel
                   </button>
@@ -1066,27 +1066,27 @@ export const AuthControl = () => {
       {/* Logout Confirmation Modal */}
       {showLogoutConfirm &&
         createPortal(
-          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm md:backdrop-blur-md animate-in fade-in duration-300">
+          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-ink/40 backdrop-blur-sm md:backdrop-blur-md animate-in fade-in duration-300">
             <div
-              className="relative w-full max-w-xs bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-[0_0_50px_rgba(239,68,68,0.15)] overflow-hidden p-6 animate-in zoom-in-95 duration-300"
+              className="relative w-full max-w-xs bg-white border border-sand-200 rounded-2xl overflow-hidden p-6 animate-in zoom-in-95 duration-300"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Red Glow Decor */}
-              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-red-500/50 to-transparent"></div>
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-brick-100 to-transparent"></div>
 
               <div className="flex flex-col items-center text-center gap-5">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-red-500/20 blur-xl rounded-full"></div>
-                  <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-red-500/20 to-red-600/10 border border-red-500/30 flex items-center justify-center text-red-500 shadow-inner">
+                  <div className="absolute inset-0 bg-brick-50 blur-xl rounded-full"></div>
+                  <div className="relative w-14 h-14 rounded-2xl bg-brick-50 border border-brick-200 flex items-center justify-center text-brick-600 shadow-inner">
                     <LogOut size={28} strokeWidth={1.5} />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <h3 className="text-xl font-bold text-white tracking-tight">
+                  <h3 className="text-xl font-bold text-ink tracking-tight">
                     Sign Out?
                   </h3>
-                  <p className="text-xs text-gray-400 leading-relaxed px-2">
+                  <p className="text-xs text-sand-600 leading-relaxed px-2">
                     Are you sure you want to sign out? You will need to log in
                     again to access your saved data.
                   </p>
@@ -1095,13 +1095,13 @@ export const AuthControl = () => {
                 <div className="flex flex-col gap-2 w-full mt-2">
                   <button
                     onClick={handleLogout}
-                    className="cursor-pointer w-full py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-red-600/30 transition-all active:scale-[0.98] border border-red-400/20"
+                    className="cursor-pointer w-full py-3 bg-brick-600 hover:bg-brick-500 text-white rounded-xl text-xs font-bold shadow-lg transition-all active:scale-[0.98] border border-brick-200"
                   >
                     Yes, Sign Out
                   </button>
                   <button
                     onClick={() => setShowLogoutConfirm(false)}
-                    className="cursor-pointer w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition-all active:scale-[0.98]"
+                    className="cursor-pointer w-full py-3 bg-sand-50 hover:bg-sand-100 border border-sand-200 rounded-xl text-xs font-bold text-sand-600 hover:text-ink transition-all active:scale-[0.98]"
                   >
                     Cancel
                   </button>

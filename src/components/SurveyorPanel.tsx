@@ -164,7 +164,7 @@ export const SurveyorPanel = () => {
             ? "bottom-4 right-4 w-[180px] max-w-[85vw] md:bottom-auto md:top-28 md:right-4 md:w-80"
             : "w-auto md:w-80"
         }
-        bg-black/90 md:bg-black/80 backdrop-blur-md border border-yellow-500/30 rounded-xl text-white shadow-2xl overflow-hidden font-mono
+        bg-white/95 md:bg-white/95 backdrop-blur-md border border-gold-200 rounded-xl text-ink shadow-2xl overflow-hidden font-mono
         max-h-[60vh] md:max-h-[75vh] flex flex-col
       `}
       style={{
@@ -181,15 +181,15 @@ export const SurveyorPanel = () => {
       <div
         onMouseDown={onMouseDown}
         className="
-          bg-yellow-600/20
+          bg-gold-50
           p-2 md:p-3
           flex justify-between items-center
-          border-b border-yellow-500/20
+          border-b border-gold-200
           select-none shrink-0
           cursor-default md:cursor-move md:active:cursor-grabbing
         "
       >
-        <h3 className="font-bold text-yellow-400 flex items-center gap-1 md:gap-2 text-xs md:text-sm">
+        <h3 className="font-bold text-gold-700 flex items-center gap-1 md:gap-2 text-xs md:text-sm">
           <GripHorizontal size={12} className="opacity-40 hidden md:block" />
           <span className="hidden md:inline">📐</span>
           <span className="md:hidden">Nav Tool</span>
@@ -201,7 +201,7 @@ export const SurveyorPanel = () => {
             <button
               onClick={() => saveCurrentSurvey()}
               disabled={isSyncing}
-              className="cursor-pointer text-green-400 hover:text-green-300 px-2 flex items-center gap-1 text-[10px] md:text-xs"
+              className="cursor-pointer text-forest-700 hover:text-forest-700 px-2 flex items-center gap-1 text-[10px] md:text-xs"
               title="Save Survey"
             >
               {isSyncing ? (
@@ -215,7 +215,7 @@ export const SurveyorPanel = () => {
 
           <button
             onClick={() => setIsMinimized(!isMinimized)}
-            className="cursor-pointer text-gray-400 hover:text-white text-[10px] md:text-sm px-1"
+            className="cursor-pointer text-sand-600 hover:text-ink text-[10px] md:text-sm px-1"
           >
             {isMinimized ? "Show" : "Hide"}
           </button>
@@ -224,7 +224,7 @@ export const SurveyorPanel = () => {
             onClick={() => {
               handleClose();
             }}
-            className="cursor-pointer text-gray-400 hover:text-white p-1"
+            className="cursor-pointer text-sand-600 hover:text-ink p-1"
           >
             <X size={14} />
           </button>
@@ -232,11 +232,11 @@ export const SurveyorPanel = () => {
       </div>
 
       {errorMessage && (
-        <div className="mx-3 my-2 bg-red-500/10 border border-red-500/30 text-red-300 text-[10px] p-2 rounded flex justify-between items-center">
+        <div className="mx-3 my-2 bg-brick-50 border border-brick-200 text-brick-600 text-[10px] p-2 rounded flex justify-between items-center">
           <span>{errorMessage}</span>
           <button
             onClick={clearError}
-            className="text-red-400 hover:text-white"
+            className="text-brick-600 hover:text-ink"
           >
             <X size={12} />
           </button>
@@ -246,7 +246,7 @@ export const SurveyorPanel = () => {
       {!isMinimized && (
         <div className="flex-1 flex flex-col min-h-0">
           {/* Group Tabs/Selector */}
-          <div className="bg-white/5 border-b border-white/10 p-2 flex items-center gap-2 shrink-0">
+          <div className="bg-sand-50 border-b border-sand-200 p-2 flex items-center gap-2 shrink-0">
            <div ref={tabsRef} className="flex-1 min-w-0 overflow-x-auto flex gap-2 scrollbar-hide">
             {groups.map((g) => (
               <button
@@ -257,8 +257,8 @@ export const SurveyorPanel = () => {
                 }}
                 className={`cursor-pointer px-3 py-1 rounded-full text-[10px] whitespace-nowrap transition-colors flex items-center gap-1 border ${
                   g.id === activeGroupId
-                    ? "bg-yellow-500 text-black border-yellow-400 font-bold"
-                    : "bg-white/5 text-gray-400 border-white/10 hover:bg-white/10"
+                    ? "bg-gold-400 text-ink border-gold-400 font-bold"
+                    : "bg-sand-50 text-sand-600 border-sand-200 hover:bg-sand-100"
                 }`}
               >
                 <span
@@ -272,7 +272,7 @@ export const SurveyorPanel = () => {
             <button
               onClick={createGroup}
               title="New sheet (N)"
-              className="cursor-pointer shrink-0 px-3 py-1 rounded-full text-[10px] bg-blue-600/20 text-blue-400 border border-blue-500/30 hover:bg-blue-600/40 transition-colors flex items-center gap-1"
+              className="cursor-pointer shrink-0 px-3 py-1 rounded-full text-[10px] bg-forest-50 text-forest-700 border border-forest-200 hover:bg-forest-100 transition-colors flex items-center gap-1"
             >
               <Plus size={10} /> New
             </button>
@@ -281,7 +281,7 @@ export const SurveyorPanel = () => {
           {activeGroup ? (
             <div className="p-4 overflow-y-auto custom-scrollbar flex-1 min-h-0">
               {/* Active Group Header */}
-              <div className="flex justify-between items-center mb-4 pb-2 border-b border-white/5">
+              <div className="flex justify-between items-center mb-4 pb-2 border-b border-sand-100">
                 <div className="flex items-center gap-2 flex-1 mr-2">
                   {editingGroupId === activeGroup.id ? (
                     <div className="flex gap-1 flex-1">
@@ -291,23 +291,23 @@ export const SurveyorPanel = () => {
                         onChange={(e) => setEditName(e.target.value)}
                         onBlur={saveName}
                         onKeyDown={(e) => e.key === "Enter" && saveName()}
-                        className="bg-white/10 border border-yellow-500/50 rounded px-2 py-0.5 text-xs w-full text-white outline-none"
+                        className="bg-sand-100 border border-gold-300 rounded px-2 py-0.5 text-xs w-full text-ink outline-none"
                       />
                       <button
                         onClick={saveName}
-                        className="text-green-400 p-1 hover:bg-white/10 rounded cursor-pointer"
+                        className="text-forest-700 p-1 hover:bg-sand-100 rounded cursor-pointer"
                       >
                         <Check size={14} />
                       </button>
                     </div>
                   ) : (
                     <>
-                      <span className="text-xs font-bold text-yellow-200 truncate">
+                      <span className="text-xs font-bold text-gold-700 truncate">
                         {activeGroup.name}
                       </span>
                       <button
                         onClick={() => startEditing(activeGroup)}
-                        className="cursor-pointer text-gray-500 hover:text-white p-1"
+                        className="cursor-pointer text-sand-500 hover:text-ink p-1"
                       >
                         <Edit2 size={10} />
                       </button>
@@ -316,20 +316,20 @@ export const SurveyorPanel = () => {
                 </div>
                 {confirmDeleteId === activeGroup.id ? (
                   <div className="flex items-center gap-1">
-                    <span className="text-[10px] text-red-300 mr-1">Delete?</span>
+                    <span className="text-[10px] text-brick-600 mr-1">Delete?</span>
                     <button
                       onClick={() => {
                         deleteGroup(activeGroup.id);
                         setConfirmDeleteId(null);
                       }}
-                      className="cursor-pointer p-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded transition-colors"
+                      className="cursor-pointer p-1 bg-brick-50 hover:bg-brick-100 text-brick-600 rounded transition-colors"
                       title="Confirm delete"
                     >
                       <Check size={14} />
                     </button>
                     <button
                       onClick={() => setConfirmDeleteId(null)}
-                      className="cursor-pointer p-1 hover:bg-white/10 text-gray-400 rounded transition-colors"
+                      className="cursor-pointer p-1 hover:bg-sand-100 text-sand-600 rounded transition-colors"
                       title="Cancel"
                     >
                       <X size={14} />
@@ -338,7 +338,7 @@ export const SurveyorPanel = () => {
                 ) : (
                   <button
                     onClick={() => setConfirmDeleteId(activeGroup.id)}
-                    className="cursor-pointer p-1.5 hover:bg-red-500/20 text-red-400 rounded transition-colors"
+                    className="cursor-pointer p-1.5 hover:bg-brick-50 text-brick-600 rounded transition-colors"
                     title="Delete Survey"
                   >
                     <Trash2 size={14} />
@@ -348,30 +348,30 @@ export const SurveyorPanel = () => {
 
               {/* Section Header */}
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-1 h-3 bg-blue-500 rounded"></div>
-                <h2 className="font-bold text-xs text-white uppercase tracking-wider">
+                <div className="w-1 h-3 bg-forest-700 rounded"></div>
+                <h2 className="font-bold text-xs text-ink uppercase tracking-wider">
                   Survey Data Points
                 </h2>
               </div>
 
               {/* Table Header */}
-              <div className="flex bg-gray-800/80 text-[8px] text-gray-400 p-2 rounded-t border-b border-gray-700 uppercase tracking-wider font-semibold">
+              <div className="flex bg-sand-100 text-[8px] text-sand-600 p-2 rounded-t border-b border-sand-200 uppercase tracking-wider font-semibold">
                 <div className="w-4">#</div>
                 <div className="flex-1 pl-2">Point Name</div>
                 <div className="w-16 text-right">Coords</div>
               </div>
 
               {/* Table Body */}
-              <div className="bg-black/20 rounded-b min-h-[100px] border border-white/5 border-t-0 p-1">
+              <div className="bg-white/90 rounded-b min-h-[100px] border border-sand-100 border-t-0 p-1">
                 {activeGroup.points.length > 0 ? (
                   <div className="space-y-3">
                     {activeGroup.points.map((p, idx) => (
                       <div
                         key={p.id}
-                        className="relative pl-3 border-l-2 border-yellow-500/50 pt-1"
+                        className="relative pl-3 border-l-2 border-gold-300 pt-1"
                       >
                         <div className="flex justify-between items-start">
-                          <div className="text-[10px] text-gray-500 font-mono w-4 shrink-0">
+                          <div className="text-[10px] text-sand-500 font-mono w-4 shrink-0">
                             {idx + 1}
                           </div>
                           {editingPointId === p.id ? (
@@ -389,13 +389,13 @@ export const SurveyorPanel = () => {
                                   e.key === "Enter" &&
                                   savePointName(activeGroup.id, p.id)
                                 }
-                                className="bg-white/10 border border-yellow-500/50 rounded px-1 py-0.5 text-[10px] w-full text-white outline-none"
+                                className="bg-sand-100 border border-gold-300 rounded px-1 py-0.5 text-[10px] w-full text-ink outline-none"
                               />
                               <button
                                 onClick={() =>
                                   savePointName(activeGroup.id, p.id)
                                 }
-                                className="text-green-400 p-1 hover:bg-white/10 rounded cursor-pointer shrink-0"
+                                className="text-forest-700 p-1 hover:bg-sand-100 rounded cursor-pointer shrink-0"
                               >
                                 <Check size={12} />
                               </button>
@@ -403,13 +403,13 @@ export const SurveyorPanel = () => {
                           ) : (
                             <div className="flex items-center gap-2 group/point-name flex-1 min-w-0">
                               <span
-                                className={`text-[10px] font-bold uppercase tracking-tighter truncate ${p.name ? "text-indigo-300" : "text-yellow-200/70"}`}
+                                className={`text-[10px] font-bold uppercase tracking-tighter truncate ${p.name ? "text-forest-700" : "text-gold-700"}`}
                               >
                                 {p.name || `Point ${idx + 1}`}
                               </span>
                               <button
                                 onClick={() => startEditingPoint(p, idx)}
-                                className="text-gray-500 hover:text-white transition-colors shrink-0"
+                                className="text-sand-500 hover:text-ink transition-colors shrink-0"
                               >
                                 <Edit2 size={10} />
                               </button>
@@ -419,70 +419,70 @@ export const SurveyorPanel = () => {
                           <div className="flex gap-1 shrink-0 ml-1">
                             <button
                               onClick={() => copyCoords(p)}
-                              className="cursor-pointer p-1 rounded text-gray-400 hover:bg-white/10 active:scale-70 transition-all"
+                              className="cursor-pointer p-1 rounded text-sand-600 hover:bg-sand-100 active:scale-70 transition-all"
                               title="Copy Coordinates"
                             >
                               <Copy size={10} />
                             </button>
                             <button
                               onClick={() => removePoint(activeGroup.id, p.id)}
-                              className="cursor-pointer p-1 hover:bg-red-500/20 text-red-400/70 rounded"
+                              className="cursor-pointer p-1 hover:bg-brick-50 text-brick-600 rounded"
                               title="Remove Point"
                             >
                               <X size={10} />
                             </button>
                           </div>
                         </div>
-                        <div className="text-[9px] text-gray-400 font-mono mt-1 pl-4">
+                        <div className="text-[9px] text-sand-600 font-mono mt-1 pl-4">
                           {/* <div>
                             {p.lat.toFixed(5)} ({toDMS(p.lat, true)}), {p.lng.toFixed(5)} ({toDMS(p.lng, false)})
                           </div>
-                          <div className="text-yellow-500/80">
+                          <div className="text-gold-700">
                             {p.elevation.toFixed(1)} m
                           </div> */}
                           {/* Koordinat Geografis */}
                           <div className="flex justify-between items-start">
-                            <span className="text-green-200 uppercase tracking-wide">
+                            <span className="text-forest-700 uppercase tracking-wide">
                               DMS
                             </span>
-                            <span className="text-green-200 text-right">
+                            <span className="text-forest-700 text-right">
                               {toDMS(p.lat, true)}, {toDMS(p.lng, false)}
                             </span>
                           </div>
 
                           {/* Koordinat UTM (Decimal) */}
                           <div className="flex justify-between items-start">
-                            <span className="text-blue-300 uppercase tracking-wide">
+                            <span className="text-forest-700 uppercase tracking-wide">
                               UTM
                             </span>
-                            <span className="text-blue-300 text-right">
+                            <span className="text-forest-700 text-right">
                               {toUTM(p.lat, p.lng)}
                             </span>
                           </div>
 
                           {/* Koordinat UTM (Decimal) */}
                           <div className="flex justify-between items-start">
-                            <span className="text-yellow-400 uppercase tracking-wide">
+                            <span className="text-gold-700 uppercase tracking-wide">
                               DD
                             </span>
-                            <span className="text-yellow-400 text-right">
+                            <span className="text-gold-700 text-right">
                               {p.lat.toFixed(5)}, {p.lng.toFixed(5)}
                             </span>
                           </div>
 
                           {/* Elevation */}
                           <div className="flex justify-between items-center">
-                            <span className="text-gray-400 uppercase tracking-wide">
+                            <span className="text-sand-600 uppercase tracking-wide">
                               Elev
                             </span>
-                            <span className="text-gray-400 font-semibold text-right">
+                            <span className="text-sand-600 font-semibold text-right">
                               {p.elevation.toFixed(1)} m
                             </span>
                           </div>
                         </div>
 
                         {idx < activeGroup.points.length - 1 && (
-                          <div className="mt-2 ml-4 bg-white/5 p-1.5 rounded border border-white/10 shadow-inner">
+                          <div className="mt-2 ml-4 bg-sand-50 p-1.5 rounded border border-sand-200 shadow-inner">
                             <DataCard p1={p} p2={activeGroup.points[idx + 1]} />
                           </div>
                         )}
@@ -491,7 +491,7 @@ export const SurveyorPanel = () => {
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center py-8 opacity-60">
-                    <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center mb-3 border border-gray-700">
+                    <div className="w-12 h-12 rounded-full bg-sand-100 flex items-center justify-center mb-3 border border-sand-200">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         width="24"
@@ -502,7 +502,7 @@ export const SurveyorPanel = () => {
                         strokeWidth="1.5"
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        className="text-gray-400"
+                        className="text-sand-600"
                       >
                         <circle cx="12" cy="12" r="10" />
                         <line x1="12" y1="8" x2="12" y2="12" />
@@ -510,10 +510,10 @@ export const SurveyorPanel = () => {
                       </svg>
                     </div>
                     <div className="text-center">
-                      <h4 className="text-white font-bold text-xs mb-1">
+                      <h4 className="text-ink font-bold text-xs mb-1">
                         No Survey Data Available
                       </h4>
-                      <p className="text-[10px] text-gray-500 max-w-[150px] mx-auto leading-tight">
+                      <p className="text-[10px] text-sand-500 max-w-[150px] mx-auto leading-tight">
                         {isPlotMode
                           ? "Click anywhere on the map to add your first point"
                           : "Start Plotting to begin your survey"}
@@ -526,7 +526,7 @@ export const SurveyorPanel = () => {
               {activeGroup.points.length > 0 && (
                 <button
                   onClick={() => clearPoints(activeGroup.id)}
-                  className="w-full py-2 bg-red-600/10 hover:bg-red-600/20 text-red-400/80 text-[10px] rounded border border-red-500/20 transition-colors mt-4"
+                  className="w-full py-2 bg-brick-50 hover:bg-brick-50 text-brick-600 text-[10px] rounded border border-brick-200 transition-colors mt-4"
                 >
                   Clear Points
                 </button>
@@ -534,12 +534,12 @@ export const SurveyorPanel = () => {
             </div>
           ) : (
             <div className="p-8 text-center">
-              <p className="text-xs text-gray-500 mb-4">
+              <p className="text-xs text-sand-500 mb-4">
                 No surveys/markers yet
               </p>
               <button
                 onClick={createGroup}
-                className="w-full py-2 bg-blue-600 text-white rounded-lg text-xs font-bold shadow-lg shadow-blue-600/30"
+                className="w-full py-2 bg-forest-800 text-white rounded-lg text-xs font-bold shadow-lg "
               >
                 Create First Survey/Markers
               </button>
@@ -556,38 +556,38 @@ const DataCard = ({ p1, p2 }: { p1: SurveyPoint; p2: SurveyPoint }) => {
   return (
     <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[10px]">
       <div>
-        <div className="text-[8px] uppercase text-gray-500 font-bold">
+        <div className="text-[8px] uppercase text-sand-500 font-bold">
           Azimuth
         </div>
-        <div className="text-yellow-400 font-bold">
+        <div className="text-gold-700 font-bold">
           {formatDegrees(data.forwardAzimuth)}
         </div>
       </div>
       <div>
-        <div className="text-[8px] uppercase text-gray-500 font-bold">
+        <div className="text-[8px] uppercase text-sand-500 font-bold">
           Back Azimuth
         </div>
-        <div className="text-yellow-400 font-bold">
+        <div className="text-gold-700 font-bold">
           {formatDegrees(data.backAzimuth)}
         </div>
       </div>
       <div>
-        <div className="text-[8px] uppercase text-gray-500 font-bold">
+        <div className="text-[8px] uppercase text-sand-500 font-bold">
           Horiz Dist
         </div>
-        <div className="text-blue-300 font-bold">
+        <div className="text-forest-700 font-bold">
           {formatDistance(data.horizontalDistance)}
         </div>
       </div>
       <div>
-        <div className="text-[8px] uppercase text-gray-500 font-bold">
+        <div className="text-[8px] uppercase text-sand-500 font-bold">
           Slope
         </div>
         <div
-          className={`${Math.abs(data.slope) > 15 ? "text-red-400" : "text-green-400"} font-bold`}
+          className={`${Math.abs(data.slope) > 15 ? "text-brick-600" : "text-forest-700"} font-bold`}
         >
           {data.slope.toFixed(1)}%{" "}
-          <span className="text-gray-500 font-normal">
+          <span className="text-sand-500 font-normal">
             ({data.slopeDegrees.toFixed(1)}°)
           </span>
         </div>

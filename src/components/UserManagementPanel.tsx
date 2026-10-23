@@ -29,15 +29,15 @@ const ROLE_LABELS: Record<Role, string> = {
 };
 
 const PLAN_STYLES: Record<Plan, string> = {
-  Free: "bg-gray-500/20 text-gray-300 border-gray-500/20",
-  Pro: "bg-blue-500/20 text-blue-300 border-blue-500/20",
-  Enterprise: "bg-purple-500/20 text-purple-300 border-purple-500/20",
+  Free: "bg-sand-100 text-sand-700 border-sand-300",
+  Pro: "bg-forest-50 text-forest-700 border-forest-200",
+  Enterprise: "bg-gold-50 text-gold-700 border-gold-200",
 };
 
 const selectClass =
-  "cursor-pointer bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-[11px] text-white outline-none focus:border-blue-500/50 disabled:opacity-50 disabled:cursor-not-allowed";
+  "cursor-pointer bg-sand-50 border border-sand-200 rounded-lg px-2 py-1 text-[11px] text-ink outline-none focus:border-forest-300 disabled:opacity-50 disabled:cursor-not-allowed";
 const inputClass =
-  "w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder:text-gray-500 outline-none focus:border-blue-500/50";
+  "w-full bg-sand-50 border border-sand-200 rounded-lg px-3 py-2 text-xs text-ink placeholder:text-sand-500 outline-none focus:border-forest-300";
 
 interface Props {
   currentUserId: string;
@@ -175,22 +175,22 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
 
   return (
     <div
-      className="fixed inset-0 z-[110] flex items-center justify-center md:p-4 bg-black/80 backdrop-blur-sm md:backdrop-blur-md animate-in fade-in duration-300"
+      className="fixed inset-0 z-[110] flex items-center justify-center md:p-4 bg-ink/40 backdrop-blur-sm md:backdrop-blur-md animate-in fade-in duration-300"
       onClick={onClose}
     >
       <div
-        className="relative w-full h-full md:h-auto md:max-w-3xl bg-[#0a0a0a] border-0 md:border md:border-white/10 rounded-none md:rounded-2xl shadow-[0_0_50px_rgba(59,130,246,0.15)] overflow-hidden flex flex-col md:max-h-[90vh]"
+        className="relative w-full h-full md:h-auto md:max-w-3xl bg-white border-0 md:border md:border-sand-200 rounded-none md:rounded-2xl overflow-hidden flex flex-col md:max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between gap-3 p-4 border-b border-white/10 shrink-0">
+        <div className="flex items-center justify-between gap-3 p-4 border-b border-sand-200 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-blue-500/20 text-blue-400">
+            <div className="p-2 rounded-lg bg-forest-50 text-forest-700">
               <Users size={18} />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-white">Manage Users</h2>
-              <p className="text-[10px] text-gray-500">
+              <h2 className="text-sm font-bold text-ink">Manage Users</h2>
+              <p className="text-[10px] text-sand-500">
                 {users.length} accounts · create, edit plan & role, reset password, delete
               </p>
             </div>
@@ -199,14 +199,14 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
             <button
               onClick={refresh}
               disabled={isLoading}
-              className="cursor-pointer p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+              className="cursor-pointer p-2 rounded-lg hover:bg-sand-100 text-sand-600 hover:text-ink transition-colors disabled:opacity-50"
               title="Refresh"
             >
               <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
             </button>
             <button
               onClick={onClose}
-              className="cursor-pointer p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+              className="cursor-pointer p-2 rounded-lg hover:bg-sand-100 text-sand-600 hover:text-ink transition-colors"
               title="Close"
             >
               <X size={16} />
@@ -215,9 +215,9 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
         </div>
 
         {/* Toolbar */}
-        <div className="flex items-center gap-2 p-3 border-b border-white/5 shrink-0">
+        <div className="flex items-center gap-2 p-3 border-b border-sand-100 shrink-0">
           <div className="relative flex-1">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-sand-500" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -227,7 +227,7 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
           </div>
           <button
             onClick={() => setShowCreate((v) => !v)}
-            className="cursor-pointer shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-colors"
+            className="cursor-pointer shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg bg-forest-800 hover:bg-forest-700 text-white text-xs font-bold transition-colors"
           >
             <Plus size={14} /> Add User
           </button>
@@ -237,13 +237,13 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
           <div
             className={`mx-3 mt-3 text-[11px] p-2 rounded-lg border flex justify-between items-center gap-2 ${
               error
-                ? "bg-red-500/10 border-red-500/30 text-red-300"
-                : "bg-green-500/10 border-green-500/30 text-green-300"
+                ? "bg-brick-50 border-brick-200 text-brick-600"
+                : "bg-forest-50 border-forest-200 text-forest-700"
             }`}
           >
             <span>{error || notice}</span>
             {error && (
-              <button onClick={() => setError(null)} className="cursor-pointer text-red-400 hover:text-white">
+              <button onClick={() => setError(null)} className="cursor-pointer text-brick-600 hover:text-ink">
                 <X size={12} />
               </button>
             )}
@@ -254,7 +254,7 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
         {showCreate && (
           <form
             onSubmit={handleCreate}
-            className="m-3 p-3 rounded-xl bg-white/5 border border-white/10 grid grid-cols-1 md:grid-cols-2 gap-2 shrink-0"
+            className="m-3 p-3 rounded-xl bg-sand-50 border border-sand-200 grid grid-cols-1 md:grid-cols-2 gap-2 shrink-0"
           >
             <input
               type="email"
@@ -288,7 +288,7 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
                 className={`${selectClass} flex-1 py-2`}
               >
                 {PLANS.map((p) => (
-                  <option key={p} value={p} className="bg-[#0a0a0a]">{p}</option>
+                  <option key={p} value={p} className="bg-white">{p}</option>
                 ))}
               </select>
               <select
@@ -297,7 +297,7 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
                 className={`${selectClass} flex-1 py-2`}
               >
                 {ROLES.map((r) => (
-                  <option key={r} value={r} className="bg-[#0a0a0a]">{ROLE_LABELS[r]}</option>
+                  <option key={r} value={r} className="bg-white">{ROLE_LABELS[r]}</option>
                 ))}
               </select>
             </div>
@@ -305,14 +305,14 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
               <button
                 type="button"
                 onClick={() => setShowCreate(false)}
-                className="cursor-pointer px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 text-xs transition-colors"
+                className="cursor-pointer px-3 py-2 rounded-lg bg-sand-50 hover:bg-sand-100 text-sand-700 text-xs transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isCreating}
-                className="cursor-pointer flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-colors disabled:opacity-50"
+                className="cursor-pointer flex items-center gap-1.5 px-3 py-2 rounded-lg bg-forest-800 hover:bg-forest-700 text-white text-xs font-bold transition-colors disabled:opacity-50"
               >
                 {isCreating ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
                 Create User
@@ -324,11 +324,11 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
         {/* User list */}
         <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-3 space-y-2">
           {isLoading && users.length === 0 ? (
-            <div className="flex items-center justify-center gap-2 py-12 text-xs text-gray-500">
+            <div className="flex items-center justify-center gap-2 py-12 text-xs text-sand-500">
               <Loader2 size={16} className="animate-spin" /> Loading users...
             </div>
           ) : filteredUsers.length === 0 ? (
-            <div className="py-12 text-center text-xs text-gray-500">No users found</div>
+            <div className="py-12 text-center text-xs text-sand-500">No users found</div>
           ) : (
             filteredUsers.map((u, index) => {
               const isSelf = u.id === currentUserId;
@@ -336,23 +336,23 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
               return (
                 <div
                   key={u.id}
-                  className="p-3 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors"
+                  className="p-3 rounded-xl bg-sand-50 border border-sand-100 hover:border-sand-200 transition-colors"
                 >
                   <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3">
                     <div className="flex-1 min-w-0 flex items-start gap-3">
-                      <span className="shrink-0 w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-[10px] font-mono font-bold text-gray-400">
+                      <span className="shrink-0 w-7 h-7 rounded-lg bg-sand-50 border border-sand-200 flex items-center justify-center text-[10px] font-mono font-bold text-sand-600">
                         {index + 1}
                       </span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-white truncate">{u.email}</span>
+                          <span className="text-xs font-bold text-ink truncate">{u.email}</span>
                           {isSelf && (
-                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-300 shrink-0">
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-gold-50 text-gold-700 shrink-0">
                               You
                             </span>
                           )}
                           {u.isAdmin && (
-                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-300 shrink-0">
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-forest-900 text-gold-300 shrink-0">
                               Admin
                             </span>
                           )}
@@ -362,7 +362,7 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
                             </span>
                           )}
                         </div>
-                        <div className="text-[10px] text-gray-500 truncate">
+                        <div className="text-[10px] text-sand-500 truncate">
                           {u.displayName || "—"} · Joined {new Date(u.createdAt).toLocaleDateString()}
                           {u.lastSignInAt && ` · Last login ${new Date(u.lastSignInAt).toLocaleDateString()}`}
                         </div>
@@ -370,9 +370,9 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
                     </div>
 
                     <div className="flex items-center gap-1.5 shrink-0">
-                      {isBusy && <Loader2 size={14} className="animate-spin text-gray-400" />}
+                      {isBusy && <Loader2 size={14} className="animate-spin text-sand-600" />}
                       {u.isAdmin ? (
-                        <span className="text-[10px] text-gray-400 px-2" title="Admins have access to every feature">
+                        <span className="text-[10px] text-sand-600 px-2" title="Admins have access to every feature">
                           All access
                         </span>
                       ) : (
@@ -385,7 +385,7 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
                         title={isSelf ? "You cannot change your own plan" : "Plan"}
                       >
                         {PLANS.map((p) => (
-                          <option key={p} value={p} className="bg-[#0a0a0a]">{p}</option>
+                          <option key={p} value={p} className="bg-white">{p}</option>
                         ))}
                       </select>
                       <select
@@ -396,7 +396,7 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
                         title={isSelf ? "You cannot change your own role" : "Role"}
                       >
                         {ROLES.map((r) => (
-                          <option key={r} value={r} className="bg-[#0a0a0a]">{ROLE_LABELS[r]}</option>
+                          <option key={r} value={r} className="bg-white">{ROLE_LABELS[r]}</option>
                         ))}
                       </select>
                       </>
@@ -408,7 +408,7 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
                           setConfirmDeleteId(null);
                         }}
                         disabled={isBusy}
-                        className="cursor-pointer p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+                        className="cursor-pointer p-1.5 rounded-lg hover:bg-sand-100 text-sand-600 hover:text-ink transition-colors disabled:opacity-50"
                         title="Reset password"
                       >
                         <KeyRound size={14} />
@@ -418,14 +418,14 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
                           <button
                             onClick={() => handleDelete(u)}
                             disabled={isBusy}
-                            className="cursor-pointer p-1.5 rounded-lg bg-red-600/20 hover:bg-red-600/40 text-red-400 transition-colors"
+                            className="cursor-pointer p-1.5 rounded-lg bg-brick-50 hover:bg-brick-100 text-brick-600 transition-colors"
                             title="Confirm delete"
                           >
                             <Check size={14} />
                           </button>
                           <button
                             onClick={() => setConfirmDeleteId(null)}
-                            className="cursor-pointer p-1.5 rounded-lg hover:bg-white/10 text-gray-400 transition-colors"
+                            className="cursor-pointer p-1.5 rounded-lg hover:bg-sand-100 text-sand-600 transition-colors"
                             title="Cancel"
                           >
                             <X size={14} />
@@ -438,7 +438,7 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
                             setPasswordEditId(null);
                           }}
                           disabled={isSelf || isBusy}
-                          className="cursor-pointer p-1.5 rounded-lg hover:bg-red-500/20 text-red-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                          className="cursor-pointer p-1.5 rounded-lg hover:bg-brick-50 text-brick-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                           title={isSelf ? "You cannot delete your own account" : "Delete user"}
                         >
                           <Trash2 size={14} />
@@ -448,7 +448,7 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
                   </div>
 
                   {confirmDeleteId === u.id && (
-                    <div className="mt-2 text-[10px] text-red-300">
+                    <div className="mt-2 text-[10px] text-brick-600">
                       Delete {u.email} permanently? This cannot be undone.
                     </div>
                   )}
@@ -468,7 +468,7 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
                       <button
                         onClick={() => handlePasswordReset(u)}
                         disabled={isBusy}
-                        className="cursor-pointer shrink-0 px-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-colors disabled:opacity-50"
+                        className="cursor-pointer shrink-0 px-3 rounded-lg bg-forest-800 hover:bg-forest-700 text-white text-xs font-bold transition-colors disabled:opacity-50"
                       >
                         Save
                       </button>

@@ -21,6 +21,19 @@ describe('useMapStore', () => {
     expect(state.activeView).toBe('3D');
   });
 
+  it('opens in 2D Topo by default and does not persist the view mode', () => {
+    expect(useMapStore.getInitialState().activeView).toBe('2D');
+    const persisted = useMapStore.persist.getOptions().partialize?.(useMapStore.getState()) as Record<string, unknown>;
+    expect(persisted).not.toHaveProperty('activeView');
+  });
+
+  it('ignores a 3D view mode saved by an older version', () => {
+    const merge = useMapStore.persist.getOptions().merge!;
+    const merged = merge({ activeView: '3D', zoom: 9 }, useMapStore.getInitialState());
+    expect(merged.activeView).toBe('2D');
+    expect(merged.zoom).toBe(9);
+  });
+
   it('should update center and zoom', () => {
     useMapStore.getState().setCenter([0, 0]);
     useMapStore.getState().setZoom(10);

@@ -78,22 +78,22 @@ export const ScreenshotControl: React.FC<ScreenshotControlProps> = ({
       {!isOpen ? (
         <button
           onClick={() => setIsOpen(true)}
-          className="cursor-pointer p-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-white hover:bg-white/20 transition-all shadow-lg hover:scale-105"
+          className="cursor-pointer p-3 bg-sand-100 backdrop-blur-md border border-sand-300 rounded-full text-ink hover:bg-sand-200 transition-all shadow-lg hover:scale-105"
           title="Take Screenshot"
           disabled={isCapturing}
         >
           <Camera size={20} className={isCapturing ? "animate-pulse" : ""} />
         </button>
       ) : (
-        <div className="bg-black/80 backdrop-blur-xl border border-white/20 rounded-xl p-4 text-white shadow-2xl animate-fade-in-up origin-top-right relative">
+        <div className="bg-white/95 backdrop-blur-xl border border-sand-300 rounded-xl p-4 text-ink shadow-2xl animate-fade-in-up origin-top-right relative">
           {/* Header */}
-          <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-2">
+          <div className="flex justify-between items-center mb-4 border-b border-sand-200 pb-2">
             <h3 className="font-bold text-sm flex items-center gap-2">
-              <Camera size={16} className="text-blue-400" /> Capture View
+              <Camera size={16} className="text-forest-700" /> Capture View
             </h3>
             <button
               onClick={() => setIsOpen(false)}
-              className="cursor-pointer text-gray-400 hover:text-white"
+              className="cursor-pointer text-sand-600 hover:text-ink"
             >
               <X size={16} />
             </button>
@@ -106,17 +106,17 @@ export const ScreenshotControl: React.FC<ScreenshotControlProps> = ({
                 key={format}
                 onClick={() => handleCapture(format as "png" | "jpg" | "pdf")}
                 disabled={isCapturing}
-                className={`cursor-pointer flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-xs transition-colors text-left group ${
+                className={`cursor-pointer flex items-center gap-3 px-4 py-2 bg-sand-50 border border-sand-200 rounded-lg text-xs transition-colors text-left group ${
                   format === "pdf"
-                    ? "hover:bg-red-600/20"
-                    : "hover:bg-blue-600/20"
+                    ? "hover:bg-brick-50"
+                    : "hover:bg-forest-50"
                 }`}
               >
                 <div
                   className={`p-1.5 rounded transition-colors ${
                     format === "pdf"
-                      ? "bg-red-500/20 text-red-300 group-hover:bg-red-500 group-hover:text-white"
-                      : "bg-blue-500/20 text-blue-300 group-hover:bg-blue-500 group-hover:text-white"
+                      ? "bg-brick-50 text-brick-600 group-hover:bg-brick-500 group-hover:text-white"
+                      : "bg-forest-50 text-forest-700 group-hover:bg-forest-700 group-hover:text-white"
                   }`}
                 >
                   {format === "pdf" ? (
@@ -133,7 +133,7 @@ export const ScreenshotControl: React.FC<ScreenshotControlProps> = ({
                         ? "Save as JPG"
                         : "Export to PDF"}
                   </span>
-                  <span className="text-[10px] text-gray-400">
+                  <span className="text-[10px] text-sand-600">
                     {format === "png"
                       ? "Best for digital use"
                       : format === "jpg"
@@ -147,9 +147,9 @@ export const ScreenshotControl: React.FC<ScreenshotControlProps> = ({
 
           {/* Loading overlay */}
           {isCapturing && (
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center rounded-xl z-10">
+            <div className="absolute inset-0 bg-white/90 backdrop-blur-sm flex items-center justify-center rounded-xl z-10">
               <div className="flex flex-col items-center gap-2">
-                <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-5 h-5 border-2 border-forest-600 border-t-transparent rounded-full animate-spin"></div>
                 <span className="text-[10px] font-mono">Capturing...</span>
               </div>
             </div>

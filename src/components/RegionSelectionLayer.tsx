@@ -55,7 +55,7 @@ export const RegionSelectionLayer = () => {
                 updateRegionPoint(index, [evt.lngLat.lng, evt.lngLat.lat]);
             }}
         >
-            <div className="w-4 h-4 bg-white border-2 border-blue-600 rounded-full shadow-md flex items-center justify-center text-[8px] font-bold text-blue-600 cursor-move hover:scale-125 transition-transform">
+            <div className="w-4 h-4 bg-white border-2 border-forest-600 rounded-full shadow-md flex items-center justify-center text-[8px] font-bold text-forest-700 cursor-move hover:scale-125 transition-transform">
                 {index + 1}
             </div>
         </Marker>

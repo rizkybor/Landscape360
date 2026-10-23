@@ -1,6 +1,70 @@
 @import "tailwindcss";
 
 @theme {
+  /* Brand palette, sampled from the Landscape 360 logo (src/assets/LandscapeLogo.svg) */
+  --color-ink: #1a2214;
+
+  /* Forest green: logo ground, primary actions */
+  --color-forest-50: #f2f6ee;
+  --color-forest-100: #e2ebd8;
+  --color-forest-200: #c5d7b2;
+  --color-forest-300: #9ebb84;
+  --color-forest-400: #6f9655;
+  --color-forest-500: #4d7537;
+  --color-forest-600: #365b25;
+  --color-forest-700: #284a1b;
+  --color-forest-800: #1e3c13;
+  --color-forest-900: #183c0c;
+  --color-forest-950: #0f2507;
+
+  /* Gold: contour lines, highlights and premium accents */
+  --color-gold-50: #fdf8ea;
+  --color-gold-100: #faefcc;
+  --color-gold-200: #f6e0a0;
+  --color-gold-300: #f2cc6c;
+  --color-gold-400: #e9b640;
+  --color-gold-500: #d49b22;
+  --color-gold-600: #b07b17;
+  --color-gold-700: #8a5e14;
+  --color-gold-800: #6b4813;
+  --color-gold-900: #573b12;
+
+  /* Ember: map pin, strong call-to-action and recording */
+  --color-ember-50: #fef3ec;
+  --color-ember-100: #fde2d0;
+  --color-ember-200: #fac3a0;
+  --color-ember-300: #f49b67;
+  --color-ember-400: #ec7f3d;
+  --color-ember-500: #e46c24;
+  --color-ember-600: #c8551a;
+  --color-ember-700: #a04216;
+  --color-ember-800: #803618;
+  --color-ember-900: #682e16;
+
+  /* Brick: pin shadow, destructive actions */
+  --color-brick-50: #fdf1f0;
+  --color-brick-100: #fbdedb;
+  --color-brick-200: #f6bdb7;
+  --color-brick-300: #ee918a;
+  --color-brick-400: #d95c53;
+  --color-brick-500: #b4302a;
+  --color-brick-600: #962620;
+  --color-brick-700: #7a201c;
+  --color-brick-800: #651e1b;
+  --color-brick-900: #551c1a;
+
+  /* Sand: warm neutrals for surfaces, borders and secondary text */
+  --color-sand-50: #faf8f3;
+  --color-sand-100: #f3f0e7;
+  --color-sand-200: #e7e2d4;
+  --color-sand-300: #d3ccb8;
+  --color-sand-400: #a9a28b;
+  --color-sand-500: #7f7965;
+  --color-sand-600: #5e5a4a;
+  --color-sand-700: #45423a;
+  --color-sand-800: #2d2b25;
+  --color-sand-900: #1c1b17;
+
   --animate-shine: shine 3s linear infinite;
   --animate-fade-out: fadeOut 0.5s ease-out 2s forwards;
   --animate-fade-in-up: fadeInUp 0.8s ease-out forwards;
