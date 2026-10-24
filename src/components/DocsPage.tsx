@@ -739,15 +739,122 @@ export const DocsPage = ({ onBack }: Props) => {
                   <div className="absolute top-0 right-0 w-32 h-32 bg-forest-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
 
                   <div className="grid grid-cols-2 gap-4 relative z-10 mb-4">
-                    <div className="aspect-video bg-white rounded-lg border border-sand-200 flex items-center justify-center relative overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-br from-sand-100 to-white opacity-50"></div>
-                      <span className="relative text-[10px] font-bold text-sand-500 uppercase tracking-widest">
+                    <div className="aspect-video bg-[#f3eee2] rounded-lg border border-sand-200 flex items-center justify-center relative overflow-hidden">
+                      {/* Topographic map illustration */}
+                      <svg
+                        className="absolute inset-0 w-full h-full"
+                        viewBox="0 0 160 90"
+                        preserveAspectRatio="xMidYMid slice"
+                        aria-hidden="true"
+                      >
+                        <rect width="160" height="90" fill="#f3eee2" />
+                        <g stroke="#d9cfb8" strokeWidth="0.3">
+                          <path d="M40 0V90M80 0V90M120 0V90M0 30H160M0 60H160" />
+                        </g>
+                        <path
+                          d="M0 70 C25 62 40 80 62 72 S95 50 118 58 S150 78 160 74 V90 H0 Z"
+                          fill="#e3ebd3"
+                        />
+                        <g fill="none" stroke="#b08a5a" strokeWidth="0.6">
+                          <path d="M58 44 C58 22 80 12 100 18 C122 24 130 40 120 54 C110 68 80 70 68 62 C60 57 58 50 58 44 Z" />
+                          <path d="M66 43 C66 28 82 20 98 25 C114 30 120 41 112 51 C104 61 82 62 73 56 C68 52 66 48 66 43 Z" />
+                          <path d="M74 42 C74 33 85 27 96 31 C107 35 110 42 105 48 C99 55 85 55 79 51 C76 48 74 45 74 42 Z" />
+                          <path d="M82 41 C82 36 88 33 94 35 C100 37 101 42 98 45 C94 49 87 48 84 46 C83 44 82 43 82 41 Z" />
+                        </g>
+                        <g fill="none" stroke="#b08a5a" strokeWidth="1">
+                          <path d="M48 46 C46 16 82 2 106 10 C134 18 144 44 130 62 C116 80 76 82 58 70 C50 64 48 55 48 46 Z" />
+                        </g>
+                        <g fill="none" stroke="#c9a77c" strokeWidth="0.5">
+                          <path d="M14 20 C20 8 38 6 44 16 C50 26 40 36 28 34 C18 32 10 28 14 20 Z" />
+                          <path d="M20 21 C24 14 34 13 37 18 C40 24 34 29 27 28 C21 27 17 25 20 21 Z" />
+                          <path d="M132 8 C140 2 156 4 158 14 C160 24 148 28 140 24 C132 20 126 14 132 8 Z" />
+                        </g>
+                        <path
+                          d="M0 82 C20 74 36 86 54 78 S84 70 100 76 S136 88 160 80"
+                          fill="none"
+                          stroke="#6fa3c7"
+                          strokeWidth="1.4"
+                          strokeLinecap="round"
+                        />
+                        <path
+                          d="M10 52 L30 48 L44 56 M120 70 L138 66 L150 52"
+                          fill="none"
+                          stroke="#c0504d"
+                          strokeWidth="0.6"
+                          strokeDasharray="2 1.5"
+                        />
+                        <path d="M89 37 l2 -3.5 l2 3.5 Z" fill="#7a5a36" />
+                      </svg>
+                      <span className="relative px-2 py-0.5 rounded bg-white/80 backdrop-blur-sm text-[10px] font-bold text-sand-700 uppercase tracking-widest shadow-sm">
                         2D Topo
                       </span>
                     </div>
-                    <div className="aspect-video bg-forest-50 rounded-lg border border-forest-200 flex items-center justify-center relative overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-br from-forest-100 to-white opacity-50"></div>
-                      <span className="relative text-[10px] font-bold text-forest-700 uppercase tracking-widest">
+                    <div className="aspect-video bg-[#2f3b26] rounded-lg border border-forest-200 flex items-center justify-center relative overflow-hidden">
+                      {/* Satellite terrain illustration */}
+                      <svg
+                        className="absolute inset-0 w-full h-full"
+                        viewBox="0 0 160 90"
+                        preserveAspectRatio="xMidYMid slice"
+                        aria-hidden="true"
+                      >
+                        <defs>
+                          <filter id="docs-sat-texture" x="0" y="0" width="100%" height="100%">
+                            <feTurbulence type="fractalNoise" baseFrequency="0.09" numOctaves="4" seed="7" />
+                            <feColorMatrix
+                              type="matrix"
+                              values="0 0 0 0 0.18  0 0 0 0 0.26  0 0 0 0 0.13  0 0 0 1.4 -0.35"
+                            />
+                          </filter>
+                          <linearGradient id="docs-sat-sky" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0" stopColor="#9fb8c9" />
+                            <stop offset="1" stopColor="#d8e0d6" />
+                          </linearGradient>
+                          <linearGradient id="docs-sat-far" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0" stopColor="#6b7a5a" />
+                            <stop offset="1" stopColor="#4a5a3a" />
+                          </linearGradient>
+                          <linearGradient id="docs-sat-near" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0" stopColor="#5c6e3e" />
+                            <stop offset="0.5" stopColor="#3d5229" />
+                            <stop offset="1" stopColor="#22301a" />
+                          </linearGradient>
+                          <clipPath id="docs-sat-ridge">
+                            <path d="M0 58 L22 46 L40 52 L62 38 L84 50 L106 40 L128 52 L146 44 L160 50 V90 H0 Z" />
+                          </clipPath>
+                        </defs>
+                        <rect width="160" height="90" fill="url(#docs-sat-sky)" />
+                        <path
+                          d="M0 40 L18 30 L32 36 L52 20 L70 32 L88 14 L104 28 L122 22 L140 34 L160 26 V90 H0 Z"
+                          fill="url(#docs-sat-far)"
+                        />
+                        <path d="M52 20 L46 26 L56 25 Z M88 14 L82 21 L94 20 Z" fill="#e9ece6" opacity="0.85" />
+                        <path
+                          d="M0 58 L22 46 L40 52 L62 38 L84 50 L106 40 L128 52 L146 44 L160 50 V90 H0 Z"
+                          fill="url(#docs-sat-near)"
+                        />
+                        <path
+                          d="M62 38 L70 60 L84 50 Z M106 40 L112 62 L128 52 Z M22 46 L28 64 L40 52 Z"
+                          fill="#1b2614"
+                          opacity="0.35"
+                        />
+                        <g clipPath="url(#docs-sat-ridge)">
+                          <rect y="38" width="160" height="52" filter="url(#docs-sat-texture)" opacity="0.9" />
+                        </g>
+                        <path
+                          d="M30 90 C44 80 58 78 70 72 S96 64 112 66"
+                          fill="none"
+                          stroke="#7fa6b8"
+                          strokeWidth="1.6"
+                          strokeLinecap="round"
+                          opacity="0.85"
+                        />
+                        <path
+                          d="M120 90 L124 80 L132 76 L140 78 L136 90 Z"
+                          fill="#8a7a55"
+                          opacity="0.6"
+                        />
+                      </svg>
+                      <span className="relative px-2 py-0.5 rounded bg-black/45 backdrop-blur-sm text-[10px] font-bold text-white uppercase tracking-widest shadow-sm">
                         3D Sat
                       </span>
                     </div>
@@ -850,8 +957,61 @@ export const DocsPage = ({ onBack }: Props) => {
                   <div className="absolute top-0 right-0 w-32 h-32 bg-forest-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
 
                   <div className="grid grid-cols-2 gap-4 relative z-10 mb-4">
-                    <div className="aspect-video bg-white rounded-lg border border-sand-200 flex items-center justify-center relative overflow-hidden p-4">
-                      <div className="flex items-center justify-center gap-2">
+                    <div className="aspect-video bg-[#eef1e6] rounded-lg border border-sand-200 flex items-center justify-center relative overflow-hidden p-4">
+                      {/* Live tracking map illustration */}
+                      <svg
+                        className="absolute inset-0 w-full h-full"
+                        viewBox="0 0 160 90"
+                        preserveAspectRatio="xMidYMid slice"
+                        aria-hidden="true"
+                      >
+                        <rect width="160" height="90" fill="#eef1e6" />
+                        <path
+                          d="M0 0 H70 C60 18 34 26 0 30 Z M112 90 C120 70 140 62 160 60 V90 Z"
+                          fill="#dfe8cf"
+                        />
+                        <g fill="none" stroke="#c9b48e" strokeWidth="0.5">
+                          <path d="M100 4 C120 0 150 8 152 22 C154 36 130 40 114 34 C100 28 90 10 100 4 Z" />
+                          <path d="M108 10 C120 7 140 12 141 21 C142 30 126 32 116 28 C106 24 102 13 108 10 Z" />
+                          <path d="M4 60 C14 52 32 56 34 66 C36 76 20 82 10 78 C2 74 -2 66 4 60 Z" />
+                        </g>
+                        <path
+                          d="M0 46 C30 40 50 54 80 50 S130 30 160 38"
+                          fill="none"
+                          stroke="#ffffff"
+                          strokeWidth="3"
+                        />
+                        <path
+                          d="M0 46 C30 40 50 54 80 50 S130 30 160 38"
+                          fill="none"
+                          stroke="#e2c98f"
+                          strokeWidth="1.2"
+                        />
+                        <path
+                          d="M44 0 C48 20 40 36 52 56 S64 80 60 90"
+                          fill="none"
+                          stroke="#8fb8d4"
+                          strokeWidth="1.6"
+                          strokeLinecap="round"
+                        />
+                        <path
+                          d="M14 84 C22 72 20 62 32 58 S50 62 56 50 S72 30 58 20"
+                          fill="none"
+                          stroke="#2f6b3f"
+                          strokeWidth="1.3"
+                          strokeDasharray="3 2"
+                          strokeLinecap="round"
+                        />
+                        <circle cx="14" cy="84" r="1.6" fill="#ffffff" stroke="#2f6b3f" strokeWidth="0.8" />
+                        <circle cx="58" cy="20" r="7" fill="#2f6b3f" opacity="0.12" />
+                        <circle cx="58" cy="20" r="2.2" fill="#2f6b3f" stroke="#ffffff" strokeWidth="0.8" />
+                        <g fill="#c58a2b" stroke="#ffffff" strokeWidth="0.6">
+                          <circle cx="118" cy="62" r="1.8" />
+                          <circle cx="132" cy="24" r="1.8" />
+                          <circle cx="96" cy="76" r="1.8" />
+                        </g>
+                      </svg>
+                      <div className="relative flex items-center justify-center gap-2 px-2.5 py-1 rounded-full bg-white/85 backdrop-blur-sm shadow-sm">
                         <div className="w-3 h-3 bg-forest-700 rounded-full animate-ping"></div>
                         <span className="text-sm font-bold text-ink">
                           Live Position
