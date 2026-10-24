@@ -444,7 +444,17 @@ async function handleDelete(request: Request, supabase: SupabaseClient, admin: U
   if (id === admin.id) throw new HttpError(400, 'You cannot delete your own admin account');
 
   const { error } = await supabase.auth.admin.deleteUser(id);
-  if (error) throw new HttpError(400, error.message);
+  if (error) {
+    // Before 20261024000010_cascade_user_delete.sql, an account with a survey or an offline
+    // map could not be deleted (those rows blocked it)
+    if (/database error deleting user/i.test(error.message)) {
+      throw new HttpError(
+        409,
+        'This account still has data that blocks deleting it (surveys or offline maps). Run the 20261024000010_cascade_user_delete migration, then try again.',
+      );
+    }
+    throw new HttpError(400, error.message);
+  }
 
   return json({ ok: true });
 }
