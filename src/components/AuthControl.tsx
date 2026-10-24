@@ -797,14 +797,6 @@ export const AuthControl = () => {
                   User Account
                 </h2>
                 <div className="flex items-center gap-1">
-                  {/* Phones: Sign Out also up here, always in view */}
-                  <button
-                    onClick={() => setShowLogoutConfirm(true)}
-                    className="md:hidden cursor-pointer flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-brick-600 hover:bg-brick-50 text-xs font-bold transition-colors"
-                    title="Sign Out"
-                  >
-                    <LogOut size={15} /> Sign Out
-                  </button>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -989,16 +981,6 @@ export const AuthControl = () => {
                         >
                           <KeyRound size={12} /> Change password
                         </button>
-                        {isAdmin && (
-                          // Admin: the S.O.S button lives here instead of on the map
-                          <button
-                            onClick={() => setShowSos(true)}
-                            className="cursor-pointer mt-2 md:ml-0 ml-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brick-600 hover:bg-brick-700 text-white text-[11px] font-black tracking-wider shadow-sm"
-                            title="Open S.O.S (starts after a 5 second countdown you can cancel)"
-                          >
-                            <Siren size={12} /> S.O.S
-                          </button>
-                        )}
                         {passwordNotice && (
                           <p className="mt-1 text-[11px] text-forest-700 flex items-center md:justify-center gap-1">
                             <Check size={12} /> {passwordNotice}
@@ -1213,12 +1195,24 @@ export const AuthControl = () => {
                 <span className="hidden sm:block text-[11px] text-sand-500 truncate">
                   Signed in as <strong className="text-sand-700">{currentUser.email}</strong>
                 </span>
-                <button
-                  onClick={() => setShowLogoutConfirm(true)}
-                  className="cursor-pointer w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brick-50 hover:bg-brick-100 text-brick-600 border border-brick-200 transition-all font-medium text-sm"
-                >
-                  <LogOut size={16} /> Sign Out
-                </button>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  {isAdmin && (
+                    // Admin: the S.O.S button lives here instead of on the map
+                    <button
+                      onClick={() => setShowSos(true)}
+                      className="cursor-pointer flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brick-600 hover:bg-brick-700 text-white border border-brick-600 transition-all font-black tracking-wider text-sm shadow-sm"
+                      title="Open S.O.S (starts after a 5 second countdown you can cancel)"
+                    >
+                      <Siren size={16} /> S.O.S
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowLogoutConfirm(true)}
+                    className="cursor-pointer flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brick-50 hover:bg-brick-100 text-brick-600 border border-brick-200 transition-all font-medium text-sm"
+                  >
+                    <LogOut size={16} /> Sign Out
+                  </button>
+                </div>
               </div>
             </div>
           </div>,
