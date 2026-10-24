@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Check, ExternalLink, Megaphone, X } from "lucide-react";
+import { Check, Copy, ExternalLink, Megaphone, X } from "lucide-react";
 import {
   BROADCAST_TEMPLATES,
   GMAIL_DAILY_RECIPIENT_LIMIT,
@@ -24,6 +24,18 @@ export const BroadcastComposer = ({ sender, recipients, onClose }: Props) => {
   const [message, setMessage] = useState("");
   const [showRecipients, setShowRecipients] = useState(false);
   const [opened, setOpened] = useState<Set<number>>(new Set());
+  const [copyNote, setCopyNote] = useState<string | null>(null);
+
+  // Comma separated, as Gmail's To / BCC fields accept it
+  const copyEmails = async (emails: string[], label: string) => {
+    try {
+      await navigator.clipboard.writeText(emails.join(", "));
+      setCopyNote(`${label} copied`);
+    } catch {
+      setCopyNote("Could not copy to clipboard");
+    }
+    setTimeout(() => setCopyNote(null), 2500);
+  };
 
   const plan = useMemo(
     () => planBroadcast({ sender, recipients, subject, message }),
@@ -72,6 +84,25 @@ export const BroadcastComposer = ({ sender, recipients, onClose }: Props) => {
         >
           {showRecipients ? "Hide list" : "Show list"}
         </button>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() =>
+            copyEmails(
+              plan.batches.flat(),
+              `${plan.recipientCount} email${plan.recipientCount === 1 ? "" : "s"}`,
+            )
+          }
+          disabled={plan.recipientCount === 0}
+          className="cursor-pointer flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-sand-50 border border-sand-200 hover:bg-sand-100 text-sand-700 text-[11px] font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          title="Copy every recipient's address, comma separated"
+        >
+          <Copy size={12} /> Copy all emails ({plan.recipientCount})
+        </button>
+        <span className="text-[10px] text-sand-500">
+          {copyNote ?? "To copy only some, tick those users in the list first."}
+        </span>
       </div>
       {showRecipients && (
         <div className="max-h-24 overflow-y-auto custom-scrollbar p-2 rounded-lg bg-sand-50 border border-sand-100 text-[10px] text-sand-700 font-mono break-all">
@@ -136,8 +167,8 @@ export const BroadcastComposer = ({ sender, recipients, onClose }: Props) => {
             {plan.batches.map((batch, i) => {
               const isOpened = opened.has(i);
               return (
+                <div key={i} className="flex items-stretch">
                 <a
-                  key={i}
                   href={canOpen ? gmailComposeUrl({ to: sender, bcc: batch, subject, message }) : undefined}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -150,7 +181,7 @@ export const BroadcastComposer = ({ sender, recipients, onClose }: Props) => {
                     setOpened((prev) => new Set(prev).add(i));
                   }}
                   title={canOpen ? batch.join(", ") : "Write a subject and a message first"}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-colors ${
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-l-lg text-xs font-bold transition-colors ${
                     !canOpen
                       ? "bg-sand-100 text-sand-400 cursor-not-allowed"
                       : isOpened
@@ -162,6 +193,16 @@ export const BroadcastComposer = ({ sender, recipients, onClose }: Props) => {
                   {plan.batches.length === 1 ? "Open in Gmail" : `Batch ${i + 1}`}
                   <span className="font-normal opacity-80">({batch.length})</span>
                 </a>
+                <button
+                  type="button"
+                  onClick={() => copyEmails(batch, plan.batches.length === 1 ? "Emails" : `Batch ${i + 1} emails`)}
+                  className="cursor-pointer px-2 rounded-r-lg border border-l-0 border-sand-200 bg-white hover:bg-sand-100 text-sand-600 hover:text-ink transition-colors"
+                  title={`Copy the ${batch.length} addresses in this ${plan.batches.length === 1 ? "draft" : "batch"}`}
+                  aria-label={plan.batches.length === 1 ? "Copy emails" : `Copy batch ${i + 1} emails`}
+                >
+                  <Copy size={12} />
+                </button>
+                </div>
               );
             })}
           </div>
