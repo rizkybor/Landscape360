@@ -279,6 +279,23 @@ describe('UserManagementPanel broadcast', () => {
     expect(gmailLink().searchParams.get('bcc')).toBe('big@x.com');
   });
 
+  it('copies all recipients, or only the ticked ones', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+    render(<UserManagementPanel currentUserId="admin" onClose={vi.fn()} />);
+    await screen.findByText('pro@x.com');
+
+    openBroadcast(2);
+    fireEvent.click(screen.getByRole('button', { name: 'Copy all emails (2)' }));
+    await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
+    expect(writeText.mock.calls[0][0].split(', ').sort()).toEqual(['big@x.com', 'pro@x.com']);
+    expect(await screen.findByText('2 emails copied')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText('Select pro@x.com'));
+    fireEvent.click(screen.getByRole('button', { name: 'Copy all emails (1)' }));
+    await waitFor(() => expect(writeText).toHaveBeenLastCalledWith('pro@x.com'));
+  });
+
   it('keeps the Gmail link disabled until there is a subject and a message', async () => {
     render(<UserManagementPanel currentUserId="admin" onClose={vi.fn()} />);
     await screen.findByText('pro@x.com');
