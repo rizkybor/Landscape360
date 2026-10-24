@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Battery, Check, Loader2, MessageCircle, Navigation, Phone, RefreshCw, Siren, X } from "lucide-react";
-import { listSosAlerts, resolveSosAlert, type SosAlert } from "../lib/sosAlerts";
+import { Battery, Check, Loader2, MessageCircle, Navigation, Phone, RefreshCw, Siren, Trash2, X } from "lucide-react";
+import { deleteSosAlert, listSosAlerts, resolveSosAlert, type SosAlert } from "../lib/sosAlerts";
 import { useSosAlertsStore } from "../store/useSosAlertsStore";
 import { useMapStore } from "../store/useMapStore";
 import { toDMS, toUTM } from "../utils/surveyUtils";
@@ -19,6 +19,7 @@ export const SosAlertsPanel = ({ onClose }: { onClose: () => void }) => {
   const [resolvingId, setResolvingId] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const reloadActive = useSosAlertsStore((s) => s.loadActive);
 
   const refresh = useCallback(async () => {
@@ -51,6 +52,19 @@ export const SosAlertsPanel = ({ onClose }: { onClose: () => void }) => {
       setResolvingId(null);
       setNote("");
       await Promise.all([refresh(), reloadActive()]);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const remove = async (a: SosAlert) => {
+    setBusyId(a.id);
+    try {
+      await deleteSosAlert(a.id);
+      setDeletingId(null);
+      setAlerts((list) => list?.filter((x) => x.id !== a.id) ?? null);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -227,6 +241,37 @@ export const SosAlertsPanel = ({ onClose }: { onClose: () => void }) => {
                       </button>
                     )}
                   </div>
+
+                  {tab === "all" && !isActive && (
+                    <div className="mt-2 flex justify-end">
+                      {deletingId === a.id ? (
+                        <div className="flex items-center gap-2 text-[11px] text-brick-600">
+                          Delete this alert and its trail?
+                          <button
+                            onClick={() => setDeletingId(null)}
+                            className="cursor-pointer px-2.5 py-1.5 rounded-lg bg-white border border-sand-200 hover:bg-sand-100 text-sand-700 font-bold"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={() => remove(a)}
+                            disabled={busyId === a.id}
+                            className="cursor-pointer px-2.5 py-1.5 rounded-lg bg-brick-600 hover:bg-brick-700 text-white font-bold disabled:opacity-50"
+                          >
+                            {busyId === a.id ? <Loader2 size={12} className="animate-spin" /> : "Delete"}
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setDeletingId(a.id)}
+                          className="cursor-pointer flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sand-500 hover:text-brick-600 hover:bg-brick-50 text-[11px] font-bold"
+                          title="Delete from history"
+                        >
+                          <Trash2 size={12} /> Delete
+                        </button>
+                      )}
+                    </div>
+                  )}
 
                   {resolvingId === a.id && (
                     <div className="mt-2 flex gap-2">
