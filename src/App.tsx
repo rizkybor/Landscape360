@@ -1,4 +1,4 @@
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { DocsPage } from './components/DocsPage';
 import { LoadingOverlay } from './components/LoadingOverlay';
 import { SEO } from './components/SEO';
@@ -9,9 +9,14 @@ import { Loader2 } from 'lucide-react';
 
 // Lazy load heavy map component
 const MapDashboard = lazy(() => import('./components/MapDashboard').then(module => ({ default: module.MapDashboard })));
+const ReviewsPage = lazy(() => import('./components/ReviewsPage').then(module => ({ default: module.ReviewsPage })));
+const FaqPage = lazy(() => import('./components/FaqPage').then(module => ({ default: module.FaqPage })));
+const TermsPage = lazy(() => import('./components/TermsPage').then(module => ({ default: module.TermsPage })));
+const PrivacyPage = lazy(() => import('./components/PrivacyPage').then(module => ({ default: module.PrivacyPage })));
 
 function App() {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   // Use session storage to prevent splash screen from showing again on refresh/navigation if desired
   // But for now, let's keep it simple. If "reloading twice" happens, it might be due to strict mode or mounting issues.
   const [isLoading, setIsLoading] = useState(true);
@@ -40,11 +45,11 @@ function App() {
       <SEO />
       <SpeedInsights />
       <Analytics />
-      
-      {/* Conditionally render LoadingOverlay so it unmounts completely when done */}
-      {isLoading && <LoadingOverlay onComplete={handleStart} />}
-      
-      {!isLoading && (
+
+      {/* The start screen is for the map only; content pages open directly */}
+      {isLoading && pathname === '/' && <LoadingOverlay onComplete={handleStart} />}
+
+      {(!isLoading || pathname !== '/') && (
         <Suspense fallback={
             <div className="fixed inset-0 flex items-center justify-center bg-ink/40 text-ink">
                 <Loader2 size={32} className="animate-spin text-forest-700" />
@@ -53,6 +58,10 @@ function App() {
             <Routes>
             <Route path="/" element={<MapDashboard initialLocation={initialLocation} />} />
             <Route path="/docs" element={<DocsPage onBack={() => navigate('/')} />} />
+            <Route path="/reviews" element={<ReviewsPage />} />
+            <Route path="/faq" element={<FaqPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
             </Routes>
         </Suspense>
       )}

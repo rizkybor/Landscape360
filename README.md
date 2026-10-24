@@ -39,6 +39,7 @@
 - **Activity Recall & Export**: Recall saved tracking sessions onto the map and download them as standard **GPX** files for cross-platform use.
 - **Track Recorder**: Record personal GPS tracks **online or offline** (IndexedDB first, synced to the cloud), with distance, moving time and elevation stats, sharing by email and GPX export. See [TrackRecorder.md](TrackRecorder.md).
 - **Marked Locations**: Save one or many places with full details (name, category, coordinates, elevation, area/address, contact, description, tags). Set the position by clicking the map (elevation from terrain), the map center or device GPS. Share one or several locations with other accounts by **email or display name**, and export them as **GPX** waypoints.
+- **Public pages**: `/reviews` (ratings and reviews; readable by everyone, written by account holders, replied to by the admin), `/faq`, `/terms` (Terms & Conditions) and `/privacy` (Privacy Policy, aligned with Indonesia's UU PDP No. 27/2022). Content pages open without the map's start screen.
 - **Visual Feedback**: Dynamic marker shapes (Diamond vs Circle) and colors (Indigo vs Yellow) to distinguish edited points.
 - **Optimized Controls**:
   - **Desktop**: Smooth scroll zoom (1/600 rate), inertia-based panning, and orbit controls.
@@ -149,6 +150,8 @@ src/
     - `20261024000003_create_marked_locations.sql` (Marked Locations)
     - `20261024000004_storage_quotas.sql` (Cloud storage quotas, Track Recorder rename for Pro)
     - `20261024000005_login_history.sql` (Login history)
+    - `20261024000006_security_hardening.sql` (Basemap uploads limited to own folder / Enterprise Monitor / PNG ≤ 10 MB, fixed search_path on older functions)
+    - `20261024000007_reviews.sql` (Public reviews: anyone can read, account holders write one review each, only the admin replies or hides)
 
 5.  **Run Development Server**:
     ```bash

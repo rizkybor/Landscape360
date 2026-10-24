@@ -13,6 +13,15 @@ interface NavigationControlsProps {
   pitch: number;
 }
 
+// Point names are typed by users; escape them before building the PDF table with innerHTML
+const escapeHtml = (value: string) =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
 const toDMS = (deg: number, isLat: boolean): string => {
     const absolute = Math.abs(deg);
     const degrees = Math.floor(absolute);
@@ -521,7 +530,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                 const tr = document.createElement('tr');
                 tr.style.borderBottom = '1px solid #e7e2d4';
                 // Show "Point X" in table even if it's default name, unlike map overlay
-                const displayName = p.name || `Point ${i + 1}`;
+                const displayName = escapeHtml(p.name || `Point ${i + 1}`);
                 
                 tr.innerHTML = `
                     <td style="padding: ${10 * scale}px; color: #b07b17; font-weight: bold;">${i + 1}</td>

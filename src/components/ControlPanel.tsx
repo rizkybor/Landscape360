@@ -6,6 +6,7 @@ import { useTrackerStore } from "../store/useTrackerStore"; // Import Tracker St
 import { useRouteStore } from "../store/useRouteStore";
 import { useCustomBasemapStore } from "../store/useCustomBasemapStore";
 import { AuthControl } from "./AuthControl";
+import { SiteLinks } from "./SitePageLayout";
 import { CONTACT_ADMIN_LABEL } from "../config";
 import { canRecordTracks, useTrackRecorderStore } from "../store/useTrackRecorderStore";
 import { useMarkedLocationStore } from "../store/useMarkedLocationStore";
@@ -431,6 +432,7 @@ export const ControlPanel = () => {
                 <BookOpen size={10} /> Docs
               </button>
             </div>
+            <SiteLinks compact className="mb-2" />
             <div className="flex justify-center relative z-50">
               <AuthControl />
             </div>
