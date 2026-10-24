@@ -770,8 +770,9 @@ export const ControlPanel = () => {
                   </div>
                 </button>
 
-                {/* Custom Basemaps Toggle (Enterprise + Monitor360 Only) */}
-                {(userRole === "monitor360" && subscriptionStatus === "Enterprise") && (
+                {/* Custom Basemaps Toggle: every Enterprise account (Monitor or User role); the
+                    admin counts as Enterprise. Same rule as can_upload_custom_basemaps() */}
+                {subscriptionStatus === "Enterprise" && (
                   <button
                     onClick={toggleManager}
                     className={`${isMobile ? "flex-none w-28 snap-center h-full" : "col-span-1 w-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${

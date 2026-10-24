@@ -428,7 +428,7 @@ export const DocsPage = ({ onBack }: Props) => {
                     "Track Recorder: record online or offline, share and export GPX",
                     "GPS Tracking: broadcast your location",
                     "Team Monitor: follow every active member live (Monitor accounts)",
-                    "Custom Basemaps: GeoTIFF / GeoPDF overlays (Monitor accounts)",
+                    "Custom Basemaps: GeoTIFF / GeoPDF overlays",
                     "1 GB cloud storage",
                   ],
                 },
