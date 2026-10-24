@@ -283,3 +283,25 @@ describe('UserManagementPanel broadcast', () => {
     expect(screen.getByText(/Open in Gmail/).closest('a')).not.toHaveAttribute('href');
   });
 });
+
+describe('UserManagementPanel long lists', () => {
+  const many = Array.from({ length: 45 }, (_, i) =>
+    user({ id: `m${i}`, email: `member${String(i).padStart(2, '0')}@x.com`, storage: null }),
+  );
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(listUsers).mockResolvedValue({ users: many, planStorageLimits: null });
+  });
+
+  it('renders rows a page at a time but still counts every user for broadcasts', async () => {
+    render(<UserManagementPanel currentUserId="admin" onClose={vi.fn()} />);
+    await screen.findByText('member00@x.com');
+    // Counts and broadcasts cover all 45 users, not just the rows rendered so far
+    expect(screen.getByText('45 of 45')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Broadcast (45)' })).toBeInTheDocument();
+    // Reaching the end of the list renders the next rows (jsdom has no layout, so it
+    // counts as reached right away)
+    expect(await screen.findByText('member44@x.com')).toBeInTheDocument();
+  });
+});

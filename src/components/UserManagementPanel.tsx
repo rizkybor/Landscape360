@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { UserEmailComposer } from "./UserEmailComposer";
 import { BroadcastComposer } from "./BroadcastComposer";
+import { ScrollShadowArea } from "./ScrollShadowArea";
 import { UserLoginHistory } from "./UserLoginHistory";
 import {
   PLANS,
@@ -51,6 +52,9 @@ const PLAN_STYLES: Record<Plan, string> = {
   Pro: "bg-forest-50 text-forest-700 border-forest-200",
   Enterprise: "bg-gold-50 text-gold-700 border-gold-200",
 };
+
+// Rows rendered per step in the user list
+const USER_ROWS_PAGE = 20;
 
 // Same threshold as the red usage bar
 const NEAR_LIMIT_PERCENT = 90;
@@ -154,6 +158,15 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
     if (sortBy === "email") return matching;
     return [...matching].sort((a, b) => (b.storage?.usedBytes ?? 0) - (a.storage?.usedBytes ?? 0));
   }, [memberUsers, query, sortBy, planFilter, roleFilter, nearLimitOnly]);
+
+  // Rows rendered so far; starts over at one page whenever the search, filters or sort change
+  const listKey = [query, planFilter, roleFilter, nearLimitOnly, sortBy].join("|");
+  const [rowWindow, setRowWindow] = useState({ key: listKey, count: USER_ROWS_PAGE });
+  const rowLimit = rowWindow.key === listKey ? rowWindow.count : USER_ROWS_PAGE;
+  const showMoreRows = () => {
+    if (rowLimit >= filteredUsers.length) return;
+    setRowWindow({ key: listKey, count: rowLimit + USER_ROWS_PAGE });
+  };
 
   // Admins follow the search box only; plan, role and storage filters do not apply to them
   const shownAdmins =
@@ -947,8 +960,13 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
           </form>
         )}
 
-        {/* User list */}
-        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-3 space-y-2">
+        {/* User list: rows render a page at a time as the list is scrolled down (all users
+            are loaded at once, since search, filters, sorting and totals need them all) */}
+        <ScrollShadowArea
+          wrapperClassName="flex-1"
+          className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2"
+          onReachEnd={showMoreRows}
+        >
           {isLoading && users.length === 0 ? (
             <div className="flex items-center justify-center gap-2 py-12 text-xs text-sand-500">
               <Loader2 size={16} className="animate-spin" /> Loading users...
@@ -972,11 +990,21 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
               {filteredUsers.length === 0 ? (
                 <div className="py-12 text-center text-xs text-sand-500">No users found</div>
               ) : (
-                filteredUsers.map((u, index) => renderUserRow(u, index))
+                <>
+                  {filteredUsers.slice(0, rowLimit).map((u, index) => renderUserRow(u, index))}
+                  {filteredUsers.length > rowLimit && (
+                    <div className="py-2 text-center text-[10px] text-sand-500">
+                      Showing {rowLimit} of {filteredUsers.length} ·{" "}
+                      <button onClick={showMoreRows} className="cursor-pointer font-bold text-forest-700 hover:underline">
+                        Show more
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </>
           )}
-        </div>
+        </ScrollShadowArea>
       </div>
     </div>
   );

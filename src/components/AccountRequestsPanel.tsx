@@ -27,10 +27,12 @@ import {
   deleteAccountRequest,
   generatePassword,
   latestCreatedAt,
+  ACCOUNT_REQUESTS_PAGE_SIZE,
   type AccountRequest,
   type RequestStatus,
 } from "../lib/accountRequests";
 import { UserEmailComposer } from "./UserEmailComposer";
+import { ScrollShadowArea } from "./ScrollShadowArea";
 
 const ROLE_LABELS: Record<Role, string> = {
   pengguna360: "User",
@@ -82,6 +84,11 @@ export const AccountRequestsPanel = ({ onClose, onBack, onPendingCountChange, on
   const [requests, setRequests] = useState<AccountRequest[]>([]);
   const [pendingCount, setPendingCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const loadingMoreRef = useRef(false);
+  // The tab a response belongs to; answers for a tab no longer open are dropped
+  const tabRef = useRef(tab);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -106,12 +113,16 @@ export const AccountRequestsPanel = ({ onClose, onBack, onPendingCountChange, on
     onSeenRef.current = onSeen;
   }, [onSeen]);
 
+  // First page of the open tab (after a change, the list starts over from the newest)
   const refresh = useCallback(async () => {
+    tabRef.current = tab;
     setIsLoading(true);
     setError(null);
     try {
       const result = await listAccountRequests(tab);
+      if (tabRef.current !== tab) return;
       setRequests(result.requests);
+      setHasMore(result.hasMore);
       setPendingCount(result.pendingCount);
       onPendingCountChange?.(result.pendingCount);
       if (tab === "pending") onSeenRef.current?.(latestCreatedAt(result.requests));
@@ -125,6 +136,27 @@ export const AccountRequestsPanel = ({ onClose, onBack, onPendingCountChange, on
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  const loadMore = useCallback(async () => {
+    if (!hasMore || loadingMoreRef.current || requests.length === 0) return;
+    const requested = tab;
+    loadingMoreRef.current = true;
+    setIsLoadingMore(true);
+    try {
+      const result = await listAccountRequests(requested, requests[requests.length - 1].createdAt);
+      if (tabRef.current !== requested) return;
+      setRequests((prev) => {
+        const seen = new Set(prev.map((r) => r.id));
+        return [...prev, ...result.requests.filter((r) => !seen.has(r.id))];
+      });
+      setHasMore(result.hasMore);
+    } catch (err) {
+      if (tabRef.current === requested) setError((err as Error).message);
+    } finally {
+      loadingMoreRef.current = false;
+      setIsLoadingMore(false);
+    }
+  }, [hasMore, requests, tab]);
 
   const flash = (message: string) => {
     setNotice(message);
@@ -369,8 +401,12 @@ export const AccountRequestsPanel = ({ onClose, onBack, onPendingCountChange, on
           </div>
         )}
 
-        {/* Request list */}
-        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-3 space-y-2">
+        {/* Request list: one page at a time, older pages load as it is scrolled down */}
+        <ScrollShadowArea
+          wrapperClassName="flex-1"
+          className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2"
+          onReachEnd={loadMore}
+        >
           {isLoading && requests.length === 0 ? (
             <div className="flex items-center justify-center gap-2 py-12 text-xs text-sand-500">
               <Loader2 size={16} className="animate-spin" /> Loading requests...
@@ -585,7 +621,22 @@ export const AccountRequestsPanel = ({ onClose, onBack, onPendingCountChange, on
               );
             })
           )}
-        </div>
+          {requests.length > 0 && (
+            <div className="py-2 text-center text-[10px] text-sand-500">
+              {isLoadingMore ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <Loader2 size={11} className="animate-spin" /> Loading older requests...
+                </span>
+              ) : hasMore ? (
+                <button onClick={loadMore} className="cursor-pointer font-bold text-forest-700 hover:underline">
+                  Load more
+                </button>
+              ) : (
+                requests.length > ACCOUNT_REQUESTS_PAGE_SIZE && "No older requests"
+              )}
+            </div>
+          )}
+        </ScrollShadowArea>
       </div>
     </div>
   );
