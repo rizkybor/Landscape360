@@ -15,7 +15,10 @@ import {
   History,
   Megaphone,
   ShieldCheck,
+  Wand2,
+  Copy,
 } from "lucide-react";
+import { generatePassword } from "../lib/accountRequests";
 import { UserEmailComposer } from "./UserEmailComposer";
 import { BroadcastComposer } from "./BroadcastComposer";
 import { ScrollShadowArea } from "./ScrollShadowArea";
@@ -103,6 +106,15 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
   // Accounts ticked for a broadcast; none ticked = everyone shown
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showBroadcast, setShowBroadcast] = useState(false);
+  // Login details shown once after creating an account or resetting a password, so the
+  // admin can pass them on (the password is not shown again)
+  const [credentials, setCredentials] = useState<{
+    email: string;
+    name: string;
+    password: string;
+    kind: "created" | "reset";
+  } | null>(null);
+  const [showCredentialsEmail, setShowCredentialsEmail] = useState(false);
 
   const [planLimits, setPlanLimits] = useState<PlanStorageLimits | null>(null);
   const [showPlanLimits, setShowPlanLimits] = useState(false);
@@ -254,8 +266,24 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
       `Password for ${user.email} changed`,
     );
     if (ok) {
+      setCredentials({
+        email: user.email,
+        name: user.displayName || user.email.split("@")[0],
+        password: newPassword,
+        kind: "reset",
+      });
+      setShowCredentialsEmail(false);
       setPasswordEditId(null);
       setNewPassword("");
+    }
+  };
+
+  const copyText = async (text: string, done: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      flash(done);
+    } catch {
+      setError("Could not copy to clipboard");
     }
   };
 
@@ -334,6 +362,13 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
         role: form.role,
       });
       flash(`${form.email} created`);
+      setCredentials({
+        email: form.email.trim(),
+        name: form.displayName.trim() || form.email.trim().split("@")[0],
+        password: form.password,
+        kind: "created",
+      });
+      setShowCredentialsEmail(false);
       setForm({ email: "", password: "", displayName: "", plan: "Free", role: "pengguna360" });
       setShowCreate(false);
       await refresh();
@@ -639,8 +674,14 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handlePasswordReset(u)}
-              className={inputClass}
+              className={`${inputClass} font-mono`}
               autoComplete="new-password"
+              aria-label={`New password for ${u.email}`}
+            />
+            <PasswordTools
+              password={newPassword}
+              onGenerate={setNewPassword}
+              onCopy={() => copyText(newPassword, "Password copied")}
             />
             <button
               onClick={() => handlePasswordReset(u)}
@@ -851,6 +892,62 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
           </div>
         )}
 
+        {credentials && (
+          <div className="m-3 p-3 rounded-xl bg-forest-50 border border-forest-200 shrink-0">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <div className="text-xs font-bold text-forest-700 mb-1">
+                  {credentials.kind === "created" ? "Account created" : "Password changed"}
+                </div>
+                <div className="text-[11px] text-ink font-mono break-all">Email: {credentials.email}</div>
+                <div className="text-[11px] text-ink font-mono break-all">Password: {credentials.password}</div>
+                <div className="text-[10px] text-sand-600 mt-1">
+                  Send these login details to the user. The password is not shown again after you close this.
+                </div>
+              </div>
+              <button
+                onClick={() => setCredentials(null)}
+                className="cursor-pointer p-1 rounded-lg hover:bg-forest-100 text-sand-600 hover:text-ink"
+                title="Dismiss"
+              >
+                <X size={14} />
+              </button>
+            </div>
+            <div className="flex gap-2 mt-2">
+              <button
+                onClick={() =>
+                  copyText(`Email: ${credentials.email}\nPassword: ${credentials.password}`, "Login details copied")
+                }
+                className="cursor-pointer flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-forest-200 hover:bg-forest-100 text-forest-700 text-xs font-bold transition-colors"
+              >
+                <Copy size={12} /> Copy
+              </button>
+              <button
+                onClick={() => setShowCredentialsEmail((v) => !v)}
+                className="cursor-pointer flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-forest-800 hover:bg-forest-700 text-white text-xs font-bold transition-colors"
+              >
+                <Mail size={12} /> Email user
+              </button>
+            </div>
+            {showCredentialsEmail && (
+              <UserEmailComposer
+                email={credentials.email}
+                name={credentials.name}
+                plan=""
+                onClose={() => setShowCredentialsEmail(false)}
+                initialSubject={
+                  credentials.kind === "created" ? "Your Landscape 360 account" : "Your new Landscape 360 password"
+                }
+                initialMessage={`Hello ${credentials.name},\n\n${
+                  credentials.kind === "created"
+                    ? "Your Landscape 360 account has been created."
+                    : "Your Landscape 360 password has been reset."
+                }\n\nSign in at ${window.location.origin}\nEmail: ${credentials.email}\nPassword: ${credentials.password}\n\nPlease keep your password private.\n\nBest regards,\nLandscape 360 Admin`}
+              />
+            )}
+          </div>
+        )}
+
         {showBroadcast && (
           <BroadcastComposer
             sender={senderEmail}
@@ -921,16 +1018,24 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               className={inputClass}
             />
-            <input
-              type="text"
-              required
-              minLength={MIN_PASSWORD_LENGTH}
-              placeholder={`Password (min ${MIN_PASSWORD_LENGTH} chars)`}
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-              className={inputClass}
-              autoComplete="new-password"
-            />
+            <div className="flex gap-2">
+              <input
+                type="text"
+                required
+                minLength={MIN_PASSWORD_LENGTH}
+                placeholder={`Password (min ${MIN_PASSWORD_LENGTH} chars)`}
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                className={`${inputClass} font-mono`}
+                autoComplete="new-password"
+                aria-label="Password"
+              />
+              <PasswordTools
+                password={form.password}
+                onGenerate={(password) => setForm({ ...form, password })}
+                onCopy={() => copyText(form.password, "Password copied")}
+              />
+            </div>
             <input
               type="text"
               placeholder="Display name (optional)"
@@ -1027,3 +1132,36 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
     </div>
   );
 };
+
+// Generate a random password and copy it, next to a password field
+const PasswordTools = ({
+  password,
+  onGenerate,
+  onCopy,
+}: {
+  password: string;
+  onGenerate: (password: string) => void;
+  onCopy: () => void;
+}) => (
+  <>
+    <button
+      type="button"
+      onClick={() => onGenerate(generatePassword())}
+      className="cursor-pointer shrink-0 p-2 rounded-lg bg-sand-50 border border-sand-200 hover:bg-sand-100 text-sand-600 hover:text-ink transition-colors"
+      title="Generate password"
+      aria-label="Generate password"
+    >
+      <Wand2 size={14} />
+    </button>
+    <button
+      type="button"
+      onClick={onCopy}
+      disabled={!password}
+      className="cursor-pointer shrink-0 p-2 rounded-lg bg-sand-50 border border-sand-200 hover:bg-sand-100 text-sand-600 hover:text-ink transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+      title="Copy password"
+      aria-label="Copy password"
+    >
+      <Copy size={14} />
+    </button>
+  </>
+);

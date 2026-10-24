@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { UserManagementPanel } from './UserManagementPanel';
 import {
+  createUser,
   fetchLoginHistory,
   listUsers,
   updateUser,
@@ -317,5 +318,43 @@ describe('UserManagementPanel long lists', () => {
     // Reaching the end of the list renders the next rows (jsdom has no layout, so it
     // counts as reached right away)
     expect(await screen.findByText('member44@x.com')).toBeInTheDocument();
+  });
+});
+
+describe('UserManagementPanel passwords', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(listUsers).mockResolvedValue({ users, planStorageLimits: null });
+    vi.mocked(createUser).mockResolvedValue({ id: 'new' });
+    vi.mocked(updateUser).mockResolvedValue({ ok: true });
+  });
+
+  it('generates a password for a new user and shows the login details after creating it', async () => {
+    render(<UserManagementPanel currentUserId="admin" onClose={vi.fn()} />);
+    await screen.findByText('pro@x.com');
+    fireEvent.click(screen.getByRole('button', { name: /Add User/ }));
+
+    fireEvent.change(screen.getByPlaceholderText('Email'), { target: { value: 'new@x.com' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Generate password' }));
+    const password = (screen.getByLabelText('Password') as HTMLInputElement).value;
+    expect(password).toMatch(/^[A-Za-z0-9]{12}$/);
+
+    fireEvent.click(screen.getByRole('button', { name: /Create User/ }));
+    await waitFor(() => expect(createUser).toHaveBeenCalledWith(expect.objectContaining({ email: 'new@x.com', password })));
+    expect(await screen.findByText('Account created')).toBeInTheDocument();
+    expect(screen.getByText(`Password: ${password}`)).toBeInTheDocument();
+  });
+
+  it('generates a new password when resetting one', async () => {
+    render(<UserManagementPanel currentUserId="admin" onClose={vi.fn()} />);
+    await screen.findByText('pro@x.com');
+    fireEvent.click(within(rowOf('pro@x.com')).getByTitle('Reset password'));
+    fireEvent.click(within(rowOf('pro@x.com')).getByRole('button', { name: 'Generate password' }));
+    const password = (screen.getByLabelText('New password for pro@x.com') as HTMLInputElement).value;
+    expect(password).toHaveLength(12);
+
+    fireEvent.click(within(rowOf('pro@x.com')).getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(updateUser).toHaveBeenCalledWith({ id: 'u1', password }));
+    expect(await screen.findByText('Password changed')).toBeInTheDocument();
   });
 });
