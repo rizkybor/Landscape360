@@ -11,6 +11,7 @@ import { OfflineManager } from "./OfflineManager";
 import { RegionDrawingOverlay } from "./RegionDrawingOverlay";
 import { UserManagementPanel } from "./UserManagementPanel";
 import { AccountRequestsPanel } from "./AccountRequestsPanel";
+import { PoiManagerPanel } from "./PoiManagerPanel";
 import { AdminActivityFeed } from "./AdminActivityFeed";
 import { ChangePasswordForm } from "./ChangePasswordForm";
 import { PLANS, type Plan } from "../lib/adminUsers";
@@ -44,6 +45,7 @@ import {
   EyeOff,
   Pencil,
   KeyRound,
+  MapPin,
   Building2,
   Phone,
   X,
@@ -115,6 +117,7 @@ export const AuthControl = () => {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showUserManagement, setShowUserManagement] = useState(false);
   const [showAccountRequests, setShowAccountRequests] = useState(false);
+  const [showPoiManager, setShowPoiManager] = useState(false);
 
   // Cloud storage used by this account, refreshed whenever the menu opens
   const [storageUsage, setStorageUsage] = useState<MyStorageUsage | null>(null);
@@ -1157,6 +1160,15 @@ export const AuthControl = () => {
                             </span>
                           )}
                         </button>
+                        <button
+                          onClick={() => {
+                            setShowMenu(false);
+                            setShowPoiManager(true);
+                          }}
+                          className="cursor-pointer sm:col-span-2 flex items-center justify-center gap-2 p-3 rounded-xl bg-forest-50 hover:bg-forest-100 text-forest-700 border border-forest-200 transition-all font-medium text-sm"
+                        >
+                          <MapPin size={16} /> Points of Interest
+                        </button>
                       </div>
                     </div>
                   )}
@@ -1189,6 +1201,19 @@ export const AuthControl = () => {
             onClose={() => setShowOfflineManager(false)}
             onBack={() => {
               setShowOfflineManager(false);
+              setShowMenu(true);
+            }}
+          />,
+          document.body,
+        )}
+
+      {showPoiManager &&
+        isAdmin &&
+        createPortal(
+          <PoiManagerPanel
+            onClose={() => setShowPoiManager(false)}
+            onBack={() => {
+              setShowPoiManager(false);
               setShowMenu(true);
             }}
           />,

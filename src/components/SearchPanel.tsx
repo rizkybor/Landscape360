@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useMapStore } from "../store/useMapStore";
 import { useShallow } from "zustand/react/shallow";
 import { Search, X, MapPin, Loader2, CornerDownLeft, Mountain, Tent, Navigation, BadgeCheck, Crosshair } from "lucide-react";
-import customLocations from "../data/myDataLocation.json";
+import { usePoiStore } from "../store/usePoiStore";
 
 // Using the same token as in MapBoxContainer
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
@@ -124,7 +124,7 @@ export const SearchPanel = () => {
       // Local Search
       let customResults: SearchResult[] = [];
       if (!isCoordinate) {
-        customResults = (customLocations as any[])
+        customResults = (usePoiStore.getState().locations as any[])
           .filter((loc) => {
             const matchesName = loc.place_name.toLowerCase().includes(searchText.toLowerCase());
             const isNotWater = !loc.type || loc.type.toLowerCase() !== "water";
