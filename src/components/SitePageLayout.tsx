@@ -13,13 +13,21 @@ const SITE_LINKS = [
 ];
 
 // Links to the content pages; used in page footers and the map sidebar
-export const SiteLinks = ({ className = "", compact = false }: { className?: string; compact?: boolean }) => {
+export const SiteLinks = ({
+  className = "",
+  compact = false,
+  omit = [],
+}: {
+  className?: string;
+  compact?: boolean;
+  omit?: string[];
+}) => {
   const linkClass = compact
     ? "text-[10px] text-sand-500 hover:text-forest-700 transition-colors"
     : "text-xs text-sand-600 hover:text-forest-700 transition-colors";
   return (
     <nav className={`flex flex-wrap items-center justify-center gap-x-3 gap-y-1 ${className}`} aria-label="Site">
-      {SITE_LINKS.map((l) => (
+      {SITE_LINKS.filter((l) => !omit.includes(l.to)).map((l) => (
         <Link key={l.to} to={l.to} className={linkClass}>
           {compact ? l.short : l.label}
         </Link>
