@@ -29,7 +29,7 @@ import { NavigationControls } from "./NavigationControls";
 import { UserLocationMarker } from "./UserLocationMarker";
 import { WeatherWidget } from "./WeatherWidget";
 import { ErrorBoundary } from "./ErrorBoundary";
-import myDataLocation from "../data/myDataLocation.json";
+import { usePoiStore } from "../store/usePoiStore";
 
 // Lazy Load LiveTrackerLayer
 const LiveTrackerLayer = React.lazy(() =>
@@ -189,9 +189,16 @@ const MapBoxContainerComponent = ({
 
   const shouldShowMarkers = showCustomLocations && zoom >= 10;
 
+  // Points of interest: managed by the admin, readable by everyone, cached for offline
+  const poiLocations = usePoiStore((s) => s.locations);
+  const loadPois = usePoiStore((s) => s.load);
+  useEffect(() => {
+    loadPois();
+  }, [loadPois]);
+
   const locationById = useMemo(() => {
-    return new Map(myDataLocation.map((l) => [l.id, l] as const));
-  }, []);
+    return new Map(poiLocations.map((l) => [l.id, l] as const));
+  }, [poiLocations]);
 
   const closeSelectedLocation = useCallback(() => {
     setIsPopupVisible(false);
@@ -201,7 +208,7 @@ const MapBoxContainerComponent = ({
   const customLocationsGeoJSON = useMemo(() => {
     return {
       type: "FeatureCollection",
-      features: myDataLocation.map((location) => ({
+      features: poiLocations.map((location) => ({
         type: "Feature",
         geometry: {
           type: "Point",
@@ -224,7 +231,7 @@ const MapBoxContainerComponent = ({
         },
       })),
     } as const;
-  }, []);
+  }, [poiLocations]);
 
   const shouldHandlePOIClick = showCustomLocations && shouldShowMarkers;
 
