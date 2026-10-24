@@ -7,6 +7,7 @@ import { useMapStore } from "../store/useMapStore";
 import { useShallow } from "zustand/react/shallow";
 import { distance, point } from "@turf/turf";
 
+import { SosButton } from "./SosButton";
 interface NavigationControlsProps {
   mapRef: React.RefObject<MapRef | null>;
   onGeolocate: () => void;
@@ -944,6 +945,8 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
             )}
         </div>
       </div>
+      {/* S.O.S, for accounts the admin allowed (renders nothing otherwise) */}
+      <SosButton />
     </div>
   );
 };

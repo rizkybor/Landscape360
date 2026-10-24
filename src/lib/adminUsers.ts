@@ -34,6 +34,7 @@ export interface ManagedUser {
   createdAt: string;
   lastSignInAt: string | null;
   storage: UserStorage | null; // null until the storage migration has been run
+  canUseSos: boolean; // S.O.S button access (always true for the admin)
 }
 
 export type PlanStorageLimits = Record<Plan, number>; // MB
@@ -44,6 +45,7 @@ export interface NewUserInput {
   displayName?: string;
   plan: Plan;
   role: Role;
+  canUseSos?: boolean;
 }
 
 export interface UserUpdateInput {
@@ -53,6 +55,7 @@ export interface UserUpdateInput {
   password?: string;
   displayName?: string;
   storageLimitMb?: number | null; // null = back to the plan limit
+  canUseSos?: boolean;
 }
 
 const ENDPOINT = '/api/admin-users';

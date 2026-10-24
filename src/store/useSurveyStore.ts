@@ -54,6 +54,9 @@ interface SurveyState {
   subscriptionStatus: 'Free' | 'Pro' | 'Enterprise';
   userRole: 'pengguna360' | 'monitor360'; // New User Role
   isAdmin: boolean; // profiles.is_admin: full access regardless of plan/role
+  // S.O.S button, granted per account by the admin (profiles.can_use_sos); kept across
+  // reloads so it works offline
+  canUseSos: boolean;
 
   errorMessage: string | null;
   clearError: () =>  Promise<void>;
@@ -110,6 +113,7 @@ export const useSurveyStore = create<SurveyState>()(
   subscriptionStatus: 'Free',
   userRole: 'pengguna360', // Default
   isAdmin: false,
+  canUseSos: false,
 
   errorMessage: null,
   clearError: async () => {
@@ -128,6 +132,7 @@ export const useSurveyStore = create<SurveyState>()(
         subscriptionStatus: 'Free',
         userRole: 'pengguna360',
         isAdmin: false,
+        canUseSos: false,
         // Clear survey data on logout
         groups: [],
         activeGroupId: null,
@@ -151,6 +156,16 @@ export const useSurveyStore = create<SurveyState>()(
       .maybeSingle();
     const isAdmin = !adminCheck.error && adminCheck.data?.is_admin === true;
     set({ isAdmin });
+
+    // S.O.S permission. Only a successful answer changes it: offline the last known value
+    // stays, so the S.O.S button does not disappear where there is no signal
+    if (isAdmin) {
+      set({ canUseSos: true });
+    } else {
+      const sosCheck = await supabase.from('profiles').select('can_use_sos').eq('id', user.id).maybeSingle();
+      if (!sosCheck.error) set({ canUseSos: sosCheck.data?.can_use_sos === true });
+    }
+
     if (isAdmin) {
       set({ subscriptionStatus: 'Enterprise', userRole: 'monitor360' });
       return;
@@ -602,6 +617,7 @@ export const useSurveyStore = create<SurveyState>()(
         subscriptionStatus: state.subscriptionStatus,
         userRole: state.userRole, // Persist role
         isAdmin: state.isAdmin,
+        canUseSos: state.canUseSos,
         user: state.user // Persist user for instant auth state on reload
       }),
     }

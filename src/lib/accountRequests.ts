@@ -37,6 +37,7 @@ export interface ApproveRequestInput {
   plan: Plan;
   role: Role;
   displayName?: string;
+  canUseSos?: boolean;
 }
 
 const ENDPOINT = '/api/account-requests';

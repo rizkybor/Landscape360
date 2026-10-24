@@ -114,10 +114,19 @@ describe('AccountRequestsPanel', () => {
         plan: 'Pro',
         role: 'pengguna360',
         displayName: 'Budi Santoso',
+        canUseSos: false,
       }),
     );
     expect(await screen.findByText('Account created')).toBeInTheDocument();
     expect(screen.getByText(`Password: ${password}`)).toBeInTheDocument();
+  });
+
+  it('can allow the S.O.S button when approving', async () => {
+    render(<AccountRequestsPanel onClose={vi.fn()} />);
+    fireEvent.click(await screen.findByText('Approve'));
+    fireEvent.click(screen.getByLabelText('Allow S.O.S button'));
+    fireEvent.click(screen.getByText('Create Account'));
+    await waitFor(() => expect(approveAccountRequest).toHaveBeenCalledWith(expect.objectContaining({ canUseSos: true })));
   });
 
   it('rejects with an optional note', async () => {

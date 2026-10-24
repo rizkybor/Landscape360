@@ -69,6 +69,7 @@ interface ApproveForm {
   password: string;
   plan: Plan;
   role: Role;
+  canUseSos: boolean;
 }
 
 interface Props {
@@ -100,6 +101,7 @@ export const AccountRequestsPanel = ({ onClose, onBack, onPendingCountChange, on
     password: "",
     plan: "Free",
     role: "pengguna360",
+    canUseSos: false,
   });
   const [rejectId, setRejectId] = useState<string | null>(null);
   const [rejectNote, setRejectNote] = useState("");
@@ -194,6 +196,7 @@ export const AccountRequestsPanel = ({ onClose, onBack, onPendingCountChange, on
       password: generatePassword(),
       plan: r.requestedPlan,
       role: "pengguna360",
+      canUseSos: false,
     });
   };
 
@@ -211,6 +214,7 @@ export const AccountRequestsPanel = ({ onClose, onBack, onPendingCountChange, on
           plan: approveForm.plan,
           role: approveForm.role,
           displayName: approveForm.displayName.trim() || undefined,
+          canUseSos: approveForm.canUseSos,
         }),
       `Account created for ${r.email}`,
     );
@@ -593,7 +597,17 @@ export const AccountRequestsPanel = ({ onClose, onBack, onPendingCountChange, on
                           ))}
                         </select>
                       </div>
-                      <div className="flex justify-end gap-2">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <label className="flex items-center gap-1.5 text-[11px] text-sand-700 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={approveForm.canUseSos}
+                            onChange={(e) => setApproveForm({ ...approveForm, canUseSos: e.target.checked })}
+                            className="accent-brick-600"
+                          />
+                          Allow S.O.S button
+                        </label>
+                        <div className="flex gap-2">
                         <button
                           type="button"
                           onClick={closeForms}
@@ -609,6 +623,7 @@ export const AccountRequestsPanel = ({ onClose, onBack, onPendingCountChange, on
                           {isBusy ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
                           Create Account
                         </button>
+                        </div>
                       </div>
                     </form>
                   )}
