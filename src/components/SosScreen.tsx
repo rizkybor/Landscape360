@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Battery, Lightbulb, MessageSquare, Phone, Plus, Share2, Trash2, Users, Volume2, X } from "lucide-react";
+import { Battery, Check, CloudOff, Lightbulb, Loader2, MessageSquare, Phone, Plus, Send, Share2, Trash2, Users, Volume2, X } from "lucide-react";
 import {
   EMERGENCY_NUMBERS,
   MAX_EMERGENCY_CONTACTS,
@@ -15,6 +15,16 @@ import {
 } from "../lib/sos";
 import { toDMS, toUTM } from "../utils/surveyUtils";
 import { fetchTerrainRgbElevation } from "../utils/elevationUtils";
+import { flushSosOutbox, queueSosReport, type SosReport } from "../lib/sosAlerts";
+
+const REPORT_EVERY_MS = 30_000;
+
+type Delivery =
+  | { state: "idle" }
+  | { state: "sending" }
+  | { state: "sent"; at: number }
+  | { state: "waiting" } // offline: kept on the phone, sent when the signal is back
+  | { state: "error"; message: string };
 
 const COUNTDOWN_S = 5;
 
@@ -93,6 +103,45 @@ export const SosScreen = ({ userId, userName, practice = false, onClose }: Props
   const [light, setLight] = useState(false);
   const [lightOn, setLightOn] = useState(false);
   const siren = useSiren();
+
+  // --- Report to the admin (not in practice mode) ---
+  const clientId = useRef(crypto.randomUUID());
+  const [messageDraft, setMessageDraft] = useState("");
+  const [sentMessage, setSentMessage] = useState("");
+  const [delivery, setDelivery] = useState<Delivery>({ state: "idle" });
+  // Latest values for the timer, without restarting it on every GPS fix
+  const latest = useRef({ fix: null as SosFix | null, battery: null as number | null, message: "", startedAt: null as number | null });
+  useEffect(() => {
+    latest.current = { fix, battery, message: sentMessage, startedAt };
+  });
+
+  const report = useCallback(
+    async (status: SosReport["status"] = "active", message = latest.current.message) => {
+      const { fix: f, battery: b, startedAt: started } = latest.current;
+      if (practice || started === null) return;
+      if (!navigator.onLine) setDelivery({ state: "waiting" });
+      else setDelivery((d) => (d.state === "sent" ? d : { state: "sending" }));
+      try {
+        const done = await queueSosReport({
+          clientId: clientId.current,
+          startedAt: new Date(started).toISOString(),
+          status,
+          message,
+          fix: f,
+          battery: b,
+        });
+        setDelivery(done ? { state: "sent", at: Date.now() } : { state: "waiting" });
+      } catch (err) {
+        // No connection: the report stays in the outbox and goes out later
+        setDelivery(
+          !navigator.onLine || /fetch|network/i.test((err as Error).message)
+            ? { state: "waiting" }
+            : { state: "error", message: (err as Error).message },
+        );
+      }
+    },
+    [practice],
+  );
 
   // Countdown before the S.O.S screen activates (a last chance to cancel)
   useEffect(() => {
@@ -196,8 +245,38 @@ export const SosScreen = ({ userId, userName, practice = false, onClose }: Props
     return () => window.clearTimeout(timer);
   }, [light]);
 
+  // Report when S.O.S starts, then every 30 s with the latest location, and again as soon
+  // as the connection comes back
+  useEffect(() => {
+    if (!active || practice || startedAt === null) return;
+    report();
+    const timer = window.setInterval(() => report(), REPORT_EVERY_MS);
+    const onOnline = () => {
+      flushSosOutbox().catch(() => undefined);
+      report();
+    };
+    window.addEventListener("online", onOnline);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("online", onOnline);
+    };
+  }, [active, practice, startedAt, report]);
+
+  const sendMessage = () => {
+    const text = messageDraft.trim();
+    if (!text) return;
+    setSentMessage(text);
+    if (practice) {
+      flash("Practice: the message would be sent to the admin");
+      return;
+    }
+    report("active", text);
+  };
+
   const close = () => {
     siren.stop();
+    // Tell the admin the user is safe (sent later if there is no signal right now)
+    if (active && !practice && startedAt !== null) report("resolved").catch(() => undefined);
     onClose();
   };
 
@@ -319,6 +398,57 @@ export const SosScreen = ({ userId, userName, practice = false, onClose }: Props
               ) : (
                 <div className="text-sm font-bold">{gpsError ?? "Searching for GPS…"}</div>
               )}
+            </div>
+
+            {/* Report to the admin */}
+            <div className="rounded-2xl bg-black/15 p-4 space-y-2">
+              <div className="flex items-center justify-between gap-2 text-sm font-bold">
+                <span>Admin</span>
+                <span className="flex items-center gap-1.5 text-xs font-bold" aria-live="polite">
+                  {practice ? (
+                    "Practice: nothing is sent"
+                  ) : delivery.state === "sent" ? (
+                    <>
+                      <Check size={14} /> Sent to the admin{" "}
+                      {new Date(delivery.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    </>
+                  ) : delivery.state === "waiting" ? (
+                    <>
+                      <CloudOff size={14} /> Waiting for signal, sends automatically
+                    </>
+                  ) : delivery.state === "error" ? (
+                    <span className="text-right">Not sent: {delivery.message}</span>
+                  ) : (
+                    <>
+                      <Loader2 size={14} className="animate-spin" /> Sending to the admin…
+                    </>
+                  )}
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  value={messageDraft}
+                  onChange={(e) => setMessageDraft(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                  maxLength={500}
+                  placeholder="Message, e.g. sprained ankle at post 3, 2 people"
+                  aria-label="Message to the admin"
+                  className="min-w-0 flex-1 rounded-lg bg-white text-ink px-3 py-2 text-base outline-none"
+                />
+                <button
+                  onClick={sendMessage}
+                  disabled={!messageDraft.trim()}
+                  className="cursor-pointer shrink-0 px-3 rounded-lg bg-white text-brick-700 disabled:opacity-50"
+                  title="Send the message to the admin"
+                  aria-label="Send message"
+                >
+                  <Send size={18} />
+                </button>
+              </div>
+              {sentMessage && <p className="text-[11px] opacity-90">Message sent: “{sentMessage}”</p>}
+              <p className="text-[11px] opacity-80">
+                Your location, battery and time go to the admin every 30 s while this screen is open.
+              </p>
             </div>
 
             {/* Actions */}

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSurveyStore } from "../store/useSurveyStore";
 import { accountDisplayName } from "../lib/profileContact";
 import { SosScreen } from "./SosScreen";
+import { flushSosOutbox, pendingSosReports } from "../lib/sosAlerts";
 
 const HOLD_MS = 3000;
 const RING = 2 * Math.PI * 22;
@@ -44,6 +45,18 @@ export const SosButton = () => {
   useEffect(() => () => {
     if (frameRef.current) cancelAnimationFrame(frameRef.current);
   }, []);
+
+  // Reports that could not be sent yet (e.g. "I'm safe" pressed without signal) go out when
+  // the app opens or the connection comes back, even after the S.O.S screen was closed
+  useEffect(() => {
+    if (!user || !canUseSos) return;
+    const flush = () => {
+      if (pendingSosReports().length) flushSosOutbox().catch(() => undefined);
+    };
+    flush();
+    window.addEventListener("online", flush);
+    return () => window.removeEventListener("online", flush);
+  }, [user, canUseSos]);
 
   if (!user || !canUseSos) return null;
 
