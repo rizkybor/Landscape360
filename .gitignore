@@ -29,3 +29,11 @@ env
 scripts/create_user.js
 scripts/reset_password.js
 create_demo_user.ts
+
+# Internal documentation (kept local, not published to GitHub)
+MOBILE_APP_FLUTTER_PROMPT.md
+MOBILE_APP_PROMPT.md
+ARCHITECTURE.md
+SECURITY.md
+Tracker.md
+TrackRecorder.md
