@@ -62,7 +62,9 @@ export const ThreeScene = () => {
         this.camera.projectionMatrix = m;
         this.renderer.resetState();
         this.renderer.render(this.scene, this.camera);
-        this.map.triggerRepaint();
+        // No triggerRepaint() here: that would redraw the map every frame forever, even
+        // when nothing moves (heavy on the GPU and heats up phones). The map redraws on
+        // its own when the camera moves; marker changes call triggerRepaint() below.
       }
     };
 

@@ -2,21 +2,34 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabaseClient';
 import { useSurveyStore } from './useSurveyStore';
-import * as GeoTIFF from 'geotiff';
-import * as pdfjsLib from 'pdfjs-dist';
-import proj4 from 'proj4';
-import toProj4 from 'geotiff-geokeys-to-proj4';
+// The GeoTIFF, reprojection and PDF libraries are large (~2.5 MB) and only needed when a
+// basemap file is uploaded, so they load on first use instead of with the app.
+const IMPORTER_LOAD_ERROR =
+  'Could not load the map file importer. Check your internet connection and try again.';
 
-// @ts-ignore
-import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+const loadGeoTiffLibs = async () => {
+  const [GeoTIFF, { default: proj4 }, { default: toProj4 }] = await Promise.all([
+    import('geotiff'),
+    import('proj4'),
+    import('geotiff-geokeys-to-proj4'),
+  ]).catch(() => {
+    throw new Error(IMPORTER_LOAD_ERROR);
+  });
+  // Define WGS84
+  proj4.defs('EPSG:4326', '+proj=longlat +datum=WGS84 +no_defs');
+  return { GeoTIFF, proj4, toProj4 };
+};
 
-// Define WGS84
-proj4.defs('EPSG:4326', '+proj=longlat +datum=WGS84 +no_defs');
-
-// Use standard worker path from CDN or local public if configured
-// The version must match the installed package version exactly
-// Use ?url import for Vite compatibility if possible, but fallback to unpkg for now
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
+const loadPdfJs = async () => {
+  const [pdfjsLib, { default: pdfWorker }] = await Promise.all([
+    import('pdfjs-dist'),
+    import('pdfjs-dist/build/pdf.worker.min.mjs?url'),
+  ]).catch(() => {
+    throw new Error(IMPORTER_LOAD_ERROR);
+  });
+  pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
+  return pdfjsLib;
+};
 
 export interface CustomBasemap {
   id: string;
@@ -202,6 +215,7 @@ export const useCustomBasemapStore = create<CustomBasemapState>((set, get) => ({
 
         if (isTiff) {
             // Parse GeoTIFF Metadata
+            const { GeoTIFF, proj4, toProj4 } = await loadGeoTiffLibs();
             const arrayBuffer = await file.arrayBuffer();
             const tiff = await GeoTIFF.fromArrayBuffer(arrayBuffer);
             const image = await tiff.getImage();
@@ -329,6 +343,7 @@ export const useCustomBasemapStore = create<CustomBasemapState>((set, get) => ({
 
         } else if (isPdf) {
             // Parse GeoPDF Metadata (LGIDict or VP dict)
+            const pdfjsLib = await loadPdfJs();
             const arrayBuffer = await file.arrayBuffer();
             const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
             const pdf = await loadingTask.promise;

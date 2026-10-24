@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMapStore } from "../store/useMapStore";
+import { useShallow } from "zustand/react/shallow";
 import { useSurveyStore } from "../store/useSurveyStore";
 import { useTrackerStore } from "../store/useTrackerStore"; // Import Tracker Store
 import { useRouteStore } from "../store/useRouteStore";
@@ -39,6 +40,7 @@ import {
   HardDrive,
 } from "lucide-react";
 import landscapeLogo from "../assets/LandscapeLogo.svg";
+import { toDMS } from "../utils/surveyUtils";
 import streetsView from "../assets/Street-View.png";
 import outdoorsView from "../assets/Outdoors-View.png";
 import satelliteView from "../assets/Satellite-View.png";
@@ -77,7 +79,9 @@ export const ControlPanel = () => {
     mapStyle,
     setMapStyle,
     setInteractionMode,
-  } = useMapStore();
+  } = useMapStore(
+    useShallow((s) => ({ contourInterval: s.contourInterval, setContourInterval: s.setContourInterval, elevationExaggeration: s.elevationExaggeration, setElevationExaggeration: s.setElevationExaggeration, opacity: s.opacity, setOpacity: s.setOpacity, activeView: s.activeView, setActiveView: s.setActiveView, pitch: s.pitch, bearing: s.bearing, setPitch: s.setPitch, setBearing: s.setBearing, mouseControlMode: s.mouseControlMode, setMouseControlMode: s.setMouseControlMode, showContours: s.showContours, setShowContours: s.setShowContours, showGridDMS: s.showGridDMS, setShowGridDMS: s.setShowGridDMS, gridOpacity: s.gridOpacity, setGridOpacity: s.setGridOpacity, gridStep: s.gridStep, setGridStep: s.setGridStep, showSearch: s.showSearch, setShowSearch: s.setShowSearch, showWeather: s.showWeather, setShowWeather: s.setShowWeather, showCustomLocations: s.showCustomLocations, setShowCustomLocations: s.setShowCustomLocations, mapStyle: s.mapStyle, setMapStyle: s.setMapStyle, setInteractionMode: s.setInteractionMode })),
+  );
 
   const { isPlotMode, togglePlotMode, setPlotMode, user, subscriptionStatus, userRole, isAdmin } =
     useSurveyStore(); // Get userRole
@@ -155,7 +159,6 @@ export const ControlPanel = () => {
   const [activityNow, setActivityNow] = useState(() => Date.now());
   const [isJoystickDragging, setIsJoystickDragging] = useState(false);
   const [isOpen, setIsOpen] = useState(true);
-  const [isTerrainScrolled, setIsTerrainScrolled] = useState(false);
   const [isTerrainControlsOpen, setIsTerrainControlsOpen] = useState(false);
 
   const canRecordActivity =
@@ -458,10 +461,14 @@ export const ControlPanel = () => {
               </label>
 
               {/* Tools Carousel for Mobile, Grid for Desktop */}
-              <div
+              <ScrollShadowArea
+                horizontal={isMobile}
+                // On phones the carousel runs edge to edge; the wrapper takes the negative
+                // margin so the side shadows sit on the visible edges
+                wrapperClassName={isMobile ? "-mx-4" : ""}
                 className={`gap-3 ${
                   isMobile
-                    ? "flex overflow-x-auto pb-4 -mx-4 px-4 snap-x snap-mandatory scrollbar-hide"
+                    ? "flex overflow-x-auto pb-4 px-4 snap-x snap-mandatory scrollbar-hide"
                     : "grid grid-cols-1 max-h-55 overflow-y-auto pr-1"
                 }`}
               >
@@ -894,7 +901,7 @@ export const ControlPanel = () => {
                     )}
                   </div>
                 )}
-              </div>
+              </ScrollShadowArea>
 
               {/* Advanced Controls (Simulation/Broadcast) - Moved outside grid for better mobile layout */}
               {isLiveTrackingEnabled && !isMobile && (
@@ -1172,20 +1179,18 @@ export const ControlPanel = () => {
         </div>
 
         <div
-          className={`p-3 flex justify-between items-center border-b border-forest-950 transition-all duration-300 touch-none cursor-pointer bg-forest-900 hover:bg-forest-800 ${
-            isTerrainScrolled ? "shadow-lg shadow-sand-900/10" : ""
-          }`}
+          className="p-3 flex justify-between items-center gap-2 border-b border-forest-950 transition-all duration-300 touch-none cursor-pointer bg-forest-900 hover:bg-forest-800"
           onClick={() => {
             // Toggle terrain controls visibility (Mobile & Desktop)
             setIsTerrainControlsOpen(!isTerrainControlsOpen);
           }}
         >
-          <h6 className="font-bold flex items-center gap-1 text-xs text-gold-300 tracking-wider">
-            <Activity size={12} className="text-gold-300" />
-            TERRAIN CONTROLS{" "}
+          <h6 className="min-w-0 font-bold flex items-center gap-1.5 text-xs text-gold-300 tracking-wider whitespace-nowrap">
+            <Activity size={12} className="text-gold-300 shrink-0" />
+            TERRAIN CONTROLS
             {isTerrainControlsOpen && (
-              <small className="opacity-70 font-normal normal-case">
-                (Scroll for more)
+              <small className="truncate opacity-70 font-normal normal-case tracking-normal text-[9px]">
+                · scroll
               </small>
             )}
           </h6>
@@ -1201,16 +1206,12 @@ export const ControlPanel = () => {
         </div>
 
         {/* Scrollable Content Container with Collapsible State */}
-        <div
+        <ScrollShadowArea
           className={`overflow-y-auto custom-scrollbar transition-all duration-300 ease-in-out ${
             !isTerrainControlsOpen
               ? "max-h-0 opacity-0 overflow-hidden"
               : "max-h-[60vh] md:max-h-[50vh] opacity-100 p-4 space-y-4"
           }`}
-          onScroll={(e) => {
-            const target = e.target as HTMLDivElement;
-            setIsTerrainScrolled(target.scrollTop > 10);
-          }}
         >
           {/* Map Style Selector */}
           <div>
@@ -1539,7 +1540,7 @@ export const ControlPanel = () => {
 
             <SiteLinks compact omit={["/docs"]} className="mt-3 font-sans" />
           </div>
-        </div>
+        </ScrollShadowArea>
       </div>
 
       <GetStartedModal
@@ -1550,11 +1551,86 @@ export const ControlPanel = () => {
   );
 };
 
+// Scroll container with a soft shadow at each edge that still has content to scroll to,
+// so the edge of the scroll area is visible. `horizontal` watches left/right instead of
+// top/bottom (e.g. the tools carousel on phones).
+const ScrollShadowArea = ({
+  className,
+  wrapperClassName = "",
+  horizontal = false,
+  children,
+}: {
+  className: string;
+  wrapperClassName?: string;
+  horizontal?: boolean;
+  children: ReactNode;
+}) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [edges, setEdges] = useState({ start: false, end: false });
+
+  const update = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    const [pos, size, total] = horizontal
+      ? [el.scrollLeft, el.clientWidth, el.scrollWidth]
+      : [el.scrollTop, el.clientHeight, el.scrollHeight];
+    const start = pos > 2;
+    const end = pos + size < total - 2;
+    setEdges((prev) => (prev.start === start && prev.end === end ? prev : { start, end }));
+  }, [horizontal]);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    update();
+    if (typeof ResizeObserver === "undefined") return;
+    // Re-check when the area or its content changes size (opening, collapsing, new items)
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    Array.from(el.children).forEach((child) => observer.observe(child));
+    return () => observer.disconnect();
+  }, [update, children]);
+
+  const shadow = `pointer-events-none absolute z-10 transition-opacity duration-200 ${horizontal ? "inset-y-0 w-4" : "inset-x-0 h-3"}`;
+  const [startEdge, endEdge] = horizontal
+    ? ["left-0 bg-gradient-to-r", "right-0 bg-gradient-to-l"]
+    : ["top-0 bg-gradient-to-b", "bottom-0 bg-gradient-to-t"];
+  // The wrapper can shrink inside the panel's flex column (min-h-0), like the scroll area
+  // itself did before it was wrapped; otherwise its content spills out of the panel
+  return (
+    <div className={`relative flex flex-col min-h-0 ${wrapperClassName}`}>
+      <div ref={ref} className={`min-h-0 ${className}`} onScroll={update}>
+        {children}
+      </div>
+      <div aria-hidden className={`${shadow} ${startEdge} from-ink/15 to-transparent ${edges.start ? "opacity-100" : "opacity-0"}`} />
+      <div aria-hidden className={`${shadow} ${endEdge} from-ink/15 to-transparent ${edges.end ? "opacity-100" : "opacity-0"}`} />
+    </div>
+  );
+};
+
+const COORD_FORMAT_KEY = "l360-telemetry-coord-format";
+
 export const TelemetryOverlay = ({
   mapRef,
 }: {
   mapRef: React.RefObject<MapRef | null>;
 }) => {
+  // Decimal degrees or degrees-minutes-seconds, remembered per browser
+  const [coordFormat, setCoordFormat] = useState<"dd" | "dms">(() => {
+    try {
+      return localStorage.getItem(COORD_FORMAT_KEY) === "dms" ? "dms" : "dd";
+    } catch {
+      return "dd";
+    }
+  });
+  const changeCoordFormat = (format: "dd" | "dms") => {
+    setCoordFormat(format);
+    try {
+      localStorage.setItem(COORD_FORMAT_KEY, format);
+    } catch {
+      // Storage blocked: the choice lasts for this visit only
+    }
+  };
   const [info, setInfo] = useState<{
     lng: number;
     lat: number;
@@ -1564,7 +1640,9 @@ export const TelemetryOverlay = ({
     bearing: number;
   } | null>(null);
 
-  const { activeView: mode } = useMapStore();
+  const { activeView: mode } = useMapStore(
+    useShallow((s) => ({ activeView: s.activeView })),
+  );
   const lastUpdate = useRef(0);
   const rafId = useRef<number | null>(null);
 
@@ -1658,33 +1736,56 @@ export const TelemetryOverlay = ({
     <div className="fixed bottom-6 right-4 md:absolute md:bottom-8 md:right-8 z-30 md:z-10 bg-white/95 md:bg-sand-50 backdrop-blur-md md:backdrop-blur-xl border border-sand-200 p-3 md:p-4 rounded-xl text-ink text-xs font-mono pointer-events-none shadow-2xl overflow-hidden group max-w-[180px] md:max-w-none">
       <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none"></div>
 
+      <div className="relative z-10 flex items-center justify-between gap-3 mb-2">
+        <span className="text-[9px] uppercase tracking-widest text-sand-500">Position</span>
+        <div className="pointer-events-auto flex rounded-md border border-sand-200 bg-white p-0.5 text-[9px]" role="group" aria-label="Coordinate format">
+          {(["dd", "dms"] as const).map((format) => (
+            <button
+              key={format}
+              onClick={() => changeCoordFormat(format)}
+              aria-pressed={coordFormat === format}
+              title={format === "dd" ? "Decimal degrees" : "Degrees, minutes, seconds"}
+              className={`cursor-pointer px-1.5 py-0.5 rounded font-bold uppercase transition-colors ${
+                coordFormat === format ? "bg-forest-800 text-white" : "text-sand-600 hover:text-ink"
+              }`}
+            >
+              {format}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1 md:gap-y-2 relative z-10">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center gap-3">
           <span className="text-forest-700">Lng</span>
-          <span className="font-bold">{info.lng.toFixed(5)}</span>
+          <span className="font-bold whitespace-nowrap">
+            {coordFormat === "dms" ? toDMS(info.lng, false) : info.lng.toFixed(5)}
+          </span>
         </div>
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center gap-3">
           <span className="text-forest-700">Lat</span>
-          <span className="font-bold">{info.lat.toFixed(5)}</span>
+          <span className="font-bold whitespace-nowrap">
+            {coordFormat === "dms" ? toDMS(info.lat, true) : info.lat.toFixed(5)}
+          </span>
         </div>
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center gap-3">
           <span className="text-forest-700">Elev</span>
-          <span className="font-bold text-gold-700">
+          <span className="font-bold text-gold-700 whitespace-nowrap">
             {info.elev.toFixed(1)} mdpl
           </span>
         </div>
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center gap-3">
           <span className="text-forest-700">Slope</span>
           <span className="font-bold">{info.slope.toFixed(1)}°</span>
         </div>
 
         <div className="md:col-span-2 h-px bg-gradient-to-r from-transparent via-sand-200 to-transparent my-1"></div>
 
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center gap-3">
           <span className="text-forest-700">Pitch</span>
           <span>{info.pitch.toFixed(1)}°</span>
         </div>
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center gap-3">
           <span className="text-forest-700">Bearing</span>
           <span>{info.bearing.toFixed(1)}°</span>
         </div>

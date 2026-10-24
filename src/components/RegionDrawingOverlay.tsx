@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useMapStore } from '../store/useMapStore';
+import { useShallow } from 'zustand/react/shallow';
 import { useOfflineStore } from '../store/useOfflineStore';
 import type { OfflineRegion } from '../store/useOfflineStore';
 import { getTilesInBounds, getMapboxTileUrl, getMapboxVectorTileUrl, getTerrainTileUrl } from '../utils/tileUtils';
@@ -25,7 +26,9 @@ export const RegionDrawingOverlay = () => {
     setInteractionMode, 
     regionPoints, 
     clearRegionPoints 
-  } = useMapStore();
+  } = useMapStore(
+    useShallow((s) => ({ zoom: s.zoom, interactionMode: s.interactionMode, setInteractionMode: s.setInteractionMode, regionPoints: s.regionPoints, clearRegionPoints: s.clearRegionPoints })),
+  );
   const { regions, addRegion, updateRegionProgress } = useOfflineStore();
   const { user, subscriptionStatus: storeSubscriptionStatus } = useSurveyStore();
   

@@ -77,11 +77,14 @@ vi.mock('mapbox-gl', () => ({
 }));
 
 // Mock ResizeObserver
-const ResizeObserverMock = vi.fn(() => ({
-    observe: vi.fn(),
-    unobserve: vi.fn(),
-    disconnect: vi.fn(),
-}));
+// A regular function (not an arrow) so components can call it with `new`
+const ResizeObserverMock = vi.fn(function () {
+    return {
+        observe: vi.fn(),
+        unobserve: vi.fn(),
+        disconnect: vi.fn(),
+    };
+});
 vi.stubGlobal('ResizeObserver', ResizeObserverMock);
 
 // Mock Web Worker (not available in jsdom)

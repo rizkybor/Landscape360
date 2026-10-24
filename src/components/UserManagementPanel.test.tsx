@@ -65,7 +65,8 @@ describe('UserManagementPanel storage', () => {
   it('shows usage per account, the total, custom limits and unlimited admins', async () => {
     render(<UserManagementPanel currentUserId="admin" onClose={vi.fn()} />);
     expect(await screen.findByText('95.0 MB / 100.0 MB')).toBeInTheDocument();
-    expect(screen.getByText(/397.0 MB cloud storage used/)).toBeInTheDocument();
+    // Admins are not counted as users, nor in the storage total
+    expect(screen.getByText(/2 users · 395.0 MB cloud storage used/)).toBeInTheDocument();
     expect(within(rowOf('big@x.com')).getByText('custom')).toBeInTheDocument();
     expect(within(rowOf('admin@x.com')).getByText('2.00 MB / Unlimited')).toBeInTheDocument();
     expect(within(rowOf('admin@x.com')).queryByTitle('Storage limit')).not.toBeInTheDocument();
@@ -76,7 +77,8 @@ describe('UserManagementPanel storage', () => {
     await screen.findByText('pro@x.com');
     fireEvent.change(screen.getByTitle('Sort users'), { target: { value: 'storage' } });
     const emails = screen.getAllByText(/@x\.com$/).map((el) => el.textContent);
-    expect(emails).toEqual(['big@x.com', 'pro@x.com', 'admin@x.com']);
+    // The admin stays in its own section on top; users are sorted below it
+    expect(emails).toEqual(['admin@x.com', 'big@x.com', 'pro@x.com']);
   });
 
   it('filters by plan, role and accounts near their storage limit', async () => {
@@ -90,7 +92,7 @@ describe('UserManagementPanel storage', () => {
 
     fireEvent.change(screen.getByLabelText('Filter by plan'), { target: { value: 'Enterprise' } });
     expect(emails()).toEqual(['big@x.com']);
-    expect(screen.getByText('1 of 4')).toBeInTheDocument();
+    expect(screen.getByText('1 of 3')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
     fireEvent.change(screen.getByLabelText('Filter by role'), { target: { value: 'monitor360' } });
@@ -209,5 +211,75 @@ describe('UserManagementPanel email and login history', () => {
     await screen.findByText('pro@x.com');
     fireEvent.click(screen.getByTitle('Login history'));
     expect(await screen.findByText(/Login history is not enabled yet/)).toBeInTheDocument();
+  });
+});
+
+describe('UserManagementPanel administrators', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(listUsers).mockResolvedValue({ users, planStorageLimits: { Free: 10, Pro: 100, Enterprise: 1024 } });
+  });
+
+  it('lists admins in their own section, outside the user count', async () => {
+    render(<UserManagementPanel currentUserId="admin" onClose={vi.fn()} />);
+    await screen.findByText('pro@x.com');
+    const adminSection = screen.getByRole('region', { name: 'Administrators' });
+    expect(within(adminSection).getByText('admin@x.com')).toBeInTheDocument();
+    expect(within(adminSection).queryByText('pro@x.com')).not.toBeInTheDocument();
+    expect(screen.getByText('2 of 2')).toBeInTheDocument();
+  });
+
+  it('hides the admin section while user filters are on', async () => {
+    render(<UserManagementPanel currentUserId="admin" onClose={vi.fn()} />);
+    await screen.findByText('pro@x.com');
+    fireEvent.change(screen.getByLabelText('Filter by plan'), { target: { value: 'Pro' } });
+    expect(screen.queryByRole('region', { name: 'Administrators' })).not.toBeInTheDocument();
+  });
+});
+
+describe('UserManagementPanel broadcast', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(listUsers).mockResolvedValue({
+      users,
+      planStorageLimits: { Free: 10, Pro: 100, Enterprise: 1024 },
+    });
+  });
+
+  const openBroadcast = (count: number) => {
+    fireEvent.click(screen.getByRole('button', { name: `Broadcast (${count})` }));
+  };
+  const gmailLink = () => new URL(screen.getByRole('link', { name: /Open in Gmail/ }).getAttribute('href')!);
+
+  it('emails every account shown, in BCC, never the admin', async () => {
+    render(<UserManagementPanel currentUserId="admin" onClose={vi.fn()} />);
+    await screen.findByText('pro@x.com');
+    openBroadcast(2);
+
+    fireEvent.change(screen.getByLabelText('Subject'), { target: { value: 'Update' } });
+    fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'Hello all' } });
+    const url = gmailLink();
+    expect(url.searchParams.get('to')).toBe('admin@x.com');
+    expect(url.searchParams.get('bcc')?.split(',').sort()).toEqual(['big@x.com', 'pro@x.com']);
+    expect(url.searchParams.get('su')).toBe('Update');
+  });
+
+  it('emails only the ticked accounts', async () => {
+    render(<UserManagementPanel currentUserId="admin" onClose={vi.fn()} />);
+    await screen.findByText('pro@x.com');
+    expect(screen.queryByLabelText('Select admin@x.com')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText('Select big@x.com'));
+    openBroadcast(1);
+
+    fireEvent.change(screen.getByLabelText('Subject'), { target: { value: 'S' } });
+    fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'M' } });
+    expect(gmailLink().searchParams.get('bcc')).toBe('big@x.com');
+  });
+
+  it('keeps the Gmail link disabled until there is a subject and a message', async () => {
+    render(<UserManagementPanel currentUserId="admin" onClose={vi.fn()} />);
+    await screen.findByText('pro@x.com');
+    openBroadcast(2);
+    expect(screen.getByText(/Open in Gmail/).closest('a')).not.toHaveAttribute('href');
   });
 });

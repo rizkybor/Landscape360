@@ -13,8 +13,11 @@ import {
   HardDrive,
   Mail,
   History,
+  Megaphone,
+  ShieldCheck,
 } from "lucide-react";
 import { UserEmailComposer } from "./UserEmailComposer";
+import { BroadcastComposer } from "./BroadcastComposer";
 import { UserLoginHistory } from "./UserLoginHistory";
 import {
   PLANS,
@@ -92,6 +95,9 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
   const [planFilter, setPlanFilter] = useState<Plan | "all">("all");
   const [roleFilter, setRoleFilter] = useState<Role | "all">("all");
   const [nearLimitOnly, setNearLimitOnly] = useState(false);
+  // Accounts ticked for a broadcast; none ticked = everyone shown
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showBroadcast, setShowBroadcast] = useState(false);
 
   const [planLimits, setPlanLimits] = useState<PlanStorageLimits | null>(null);
   const [showPlanLimits, setShowPlanLimits] = useState(false);
@@ -126,10 +132,17 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
     refresh();
   }, [refresh]);
 
+  // Admin accounts are not counted as users: they are listed in their own section and left
+  // out of the filters, counts, totals and broadcasts
+  const adminUsers = useMemo(() => users.filter((u) => u.isAdmin), [users]);
+  const memberUsers = useMemo(() => users.filter((u) => !u.isAdmin), [users]);
+  const matchesQuery = (u: ManagedUser, q: string) =>
+    !q || u.email.toLowerCase().includes(q) || !!u.displayName?.toLowerCase().includes(q);
+
   const filteredUsers = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const matching = users.filter((u) => {
-      if (q && !u.email.toLowerCase().includes(q) && !u.displayName?.toLowerCase().includes(q)) return false;
+    const matching = memberUsers.filter((u) => {
+      if (!matchesQuery(u, q)) return false;
       if (planFilter !== "all" && u.plan !== planFilter) return false;
       if (roleFilter !== "all" && u.role !== roleFilter) return false;
       if (nearLimitOnly) {
@@ -140,7 +153,36 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
     });
     if (sortBy === "email") return matching;
     return [...matching].sort((a, b) => (b.storage?.usedBytes ?? 0) - (a.storage?.usedBytes ?? 0));
-  }, [users, query, sortBy, planFilter, roleFilter, nearLimitOnly]);
+  }, [memberUsers, query, sortBy, planFilter, roleFilter, nearLimitOnly]);
+
+  // Admins follow the search box only; plan, role and storage filters do not apply to them
+  const shownAdmins =
+    planFilter !== "all" || roleFilter !== "all" || nearLimitOnly
+      ? []
+      : adminUsers.filter((u) => matchesQuery(u, query.trim().toLowerCase()));
+
+  // Broadcast: the ticked users, or every user shown when none is ticked (never admins)
+  const allShownSelected = filteredUsers.length > 0 && filteredUsers.every((u) => selectedIds.has(u.id));
+  const broadcastRecipients = useMemo(
+    () =>
+      (selectedIds.size > 0 ? memberUsers.filter((u) => selectedIds.has(u.id)) : filteredUsers).map((u) => u.email),
+    [memberUsers, filteredUsers, selectedIds],
+  );
+  const senderEmail = users.find((u) => u.id === currentUserId)?.email ?? "";
+
+  const toggleSelected = (id: string) =>
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  const toggleAllShown = () =>
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      filteredUsers.forEach((u) => (allShownSelected ? next.delete(u.id) : next.add(u.id)));
+      return next;
+    });
 
   const hasFilters = planFilter !== "all" || roleFilter !== "all" || nearLimitOnly || query.trim() !== "";
   const resetFilters = () => {
@@ -151,8 +193,8 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
   };
 
   const totalUsedBytes = useMemo(
-    () => users.reduce((sum, u) => sum + (u.storage?.usedBytes ?? 0), 0),
-    [users],
+    () => memberUsers.reduce((sum, u) => sum + (u.storage?.usedBytes ?? 0), 0),
+    [memberUsers],
   );
   const storageEnabled = planLimits !== null;
 
@@ -288,6 +330,299 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
     }
   };
 
+  // One account row; index is null for the administrators section (no number, no tick)
+  const renderUserRow = (u: ManagedUser, index: number | null) => {
+    const isSelf = u.id === currentUserId;
+    const isBusy = busyId === u.id;
+    return (
+      <div
+        key={u.id}
+        className="p-3 rounded-xl bg-sand-50 border border-sand-100 hover:border-sand-200 transition-colors"
+      >
+        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3">
+          <div className="flex-1 min-w-0 flex items-start gap-3">
+            {index !== null && (
+              <input
+                type="checkbox"
+                checked={selectedIds.has(u.id)}
+                onChange={() => toggleSelected(u.id)}
+                className="cursor-pointer mt-2 shrink-0 accent-forest-700"
+                aria-label={`Select ${u.email}`}
+                title="Select for a broadcast"
+              />
+            )}
+            <span className="shrink-0 w-7 h-7 rounded-lg bg-sand-50 border border-sand-200 flex items-center justify-center text-[10px] font-mono font-bold text-sand-600">
+              {index !== null ? index + 1 : <ShieldCheck size={13} className="text-forest-700" />}
+            </span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-ink truncate">{u.email}</span>
+                {isSelf && (
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-gold-50 text-gold-700 shrink-0">
+                    You
+                  </span>
+                )}
+                {u.isAdmin && (
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-forest-900 text-gold-300 shrink-0">
+                    Admin
+                  </span>
+                )}
+                {!u.isAdmin && (
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded-full border shrink-0 ${PLAN_STYLES[u.plan] ?? PLAN_STYLES.Free}`}>
+                    {u.plan}
+                  </span>
+                )}
+              </div>
+              <div className="text-[10px] text-sand-500 truncate">
+                {u.displayName || "—"} · Joined {new Date(u.createdAt).toLocaleDateString()}
+                {` · Last login ${u.lastSignInAt ? new Date(u.lastSignInAt).toLocaleString() : "never"}`}
+              </div>
+              {u.storage && (() => {
+                const percent = usagePercent(u.storage.usedBytes, u.storage.limitBytes);
+                return (
+                  <div className="mt-1.5 max-w-xs" title={breakdownTitle(u)}>
+                    <div className="flex items-center justify-between text-[10px] text-sand-600">
+                      <span>
+                        {formatBytes(u.storage.usedBytes)} /{" "}
+                        {u.storage.limitBytes === null ? "Unlimited" : formatBytes(u.storage.limitBytes)}
+                      </span>
+                      {u.storage.overrideMb !== null && (
+                        <span className="text-[9px] px-1 rounded bg-forest-50 text-forest-700 border border-forest-200">
+                          custom
+                        </span>
+                      )}
+                    </div>
+                    <div className="h-1 bg-sand-200 rounded-full overflow-hidden mt-0.5">
+                      <div
+                        className={`h-full rounded-full ${usageBarClass(percent)}`}
+                        style={{ width: `${percent ?? 0}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })()}
+              </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 shrink-0">
+            {isBusy && <Loader2 size={14} className="animate-spin text-sand-600" />}
+            {u.isAdmin ? (
+              <span className="text-[10px] text-sand-600 px-2" title="Admins have access to every feature">
+                All access
+              </span>
+            ) : (
+            <>
+            <select
+              value={u.plan}
+              disabled={isSelf || isBusy}
+              onChange={(e) => handleFieldChange(u, { plan: e.target.value as Plan })}
+              className={selectClass}
+              title={isSelf ? "You cannot change your own plan" : "Plan"}
+            >
+              {PLANS.map((p) => (
+                <option key={p} value={p} className="bg-white">{p}</option>
+              ))}
+            </select>
+            <select
+              value={u.role}
+              disabled={isSelf || isBusy}
+              onChange={(e) => handleFieldChange(u, { role: e.target.value as Role })}
+              className={selectClass}
+              title={isSelf ? "You cannot change your own role" : "Role"}
+            >
+              {ROLES.map((r) => (
+                <option key={r} value={r} className="bg-white">{ROLE_LABELS[r]}</option>
+              ))}
+            </select>
+            </>
+            )}
+            <button
+              onClick={() => {
+                setEmailUserId(emailUserId === u.id ? null : u.id);
+                setHistoryUserId(null);
+                setQuotaEditId(null);
+                setPasswordEditId(null);
+                setConfirmDeleteId(null);
+              }}
+              disabled={isBusy}
+              className={`cursor-pointer p-1.5 rounded-lg hover:bg-sand-100 transition-colors disabled:opacity-50 ${
+                emailUserId === u.id ? "text-forest-700 bg-sand-100" : "text-sand-600 hover:text-ink"
+              }`}
+              title="Send email"
+            >
+              <Mail size={14} />
+            </button>
+            <button
+              onClick={() => {
+                setHistoryUserId(historyUserId === u.id ? null : u.id);
+                setEmailUserId(null);
+                setQuotaEditId(null);
+                setPasswordEditId(null);
+                setConfirmDeleteId(null);
+              }}
+              className={`cursor-pointer p-1.5 rounded-lg hover:bg-sand-100 transition-colors ${
+                historyUserId === u.id ? "text-forest-700 bg-sand-100" : "text-sand-600 hover:text-ink"
+              }`}
+              title="Login history"
+            >
+              <History size={14} />
+            </button>
+            {u.storage && !u.isAdmin && (
+              <button
+                onClick={() => {
+                  setEmailUserId(null);
+                  setHistoryUserId(null);
+                  setQuotaEditId(quotaEditId === u.id ? null : u.id);
+                  setQuotaValue(u.storage?.overrideMb != null ? String(u.storage.overrideMb) : "");
+                  setPasswordEditId(null);
+                  setConfirmDeleteId(null);
+                }}
+                disabled={isBusy}
+                className={`cursor-pointer p-1.5 rounded-lg hover:bg-sand-100 transition-colors disabled:opacity-50 ${
+                  quotaEditId === u.id ? "text-forest-700 bg-sand-100" : "text-sand-600 hover:text-ink"
+                }`}
+                title="Storage limit"
+              >
+                <HardDrive size={14} />
+              </button>
+            )}
+            <button
+              onClick={() => {
+                setPasswordEditId(passwordEditId === u.id ? null : u.id);
+                setNewPassword("");
+                setConfirmDeleteId(null);
+                setQuotaEditId(null);
+                setEmailUserId(null);
+                setHistoryUserId(null);
+              }}
+              disabled={isBusy}
+              className="cursor-pointer p-1.5 rounded-lg hover:bg-sand-100 text-sand-600 hover:text-ink transition-colors disabled:opacity-50"
+              title="Reset password"
+            >
+              <KeyRound size={14} />
+            </button>
+            {confirmDeleteId === u.id ? (
+              <>
+                <button
+                  onClick={() => handleDelete(u)}
+                  disabled={isBusy}
+                  className="cursor-pointer p-1.5 rounded-lg bg-brick-50 hover:bg-brick-100 text-brick-600 transition-colors"
+                  title="Confirm delete"
+                >
+                  <Check size={14} />
+                </button>
+                <button
+                  onClick={() => setConfirmDeleteId(null)}
+                  className="cursor-pointer p-1.5 rounded-lg hover:bg-sand-100 text-sand-600 transition-colors"
+                  title="Cancel"
+                >
+                  <X size={14} />
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => {
+                  setConfirmDeleteId(u.id);
+                  setPasswordEditId(null);
+                  setEmailUserId(null);
+                  setHistoryUserId(null);
+                  setQuotaEditId(null);
+                }}
+                disabled={isSelf || isBusy}
+                className="cursor-pointer p-1.5 rounded-lg hover:bg-brick-50 text-brick-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                title={isSelf ? "You cannot delete your own account" : "Delete user"}
+              >
+                <Trash2 size={14} />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {confirmDeleteId === u.id && (
+          <div className="mt-2 text-[10px] text-brick-600">
+            Delete {u.email} permanently? This cannot be undone.
+          </div>
+        )}
+
+        {emailUserId === u.id && (
+          <UserEmailComposer
+            email={u.email}
+            name={u.displayName || u.email.split("@")[0]}
+            plan={u.isAdmin ? "Admin" : u.plan}
+            onClose={() => setEmailUserId(null)}
+          />
+        )}
+
+        {historyUserId === u.id && (
+          <UserLoginHistory
+            userId={u.id}
+            lastSignInAt={u.lastSignInAt}
+            onClose={() => setHistoryUserId(null)}
+          />
+        )}
+
+        {quotaEditId === u.id && u.storage && (
+          <div className="mt-2 space-y-1.5">
+            <div className="flex gap-2">
+              <input
+                type="number"
+                min={0}
+                step="any"
+                autoFocus
+                placeholder={`Custom limit in MB (plan: ${planLimits ? formatMb(planLimits[u.plan] ?? 0) : "—"})`}
+                value={quotaValue}
+                onChange={(e) => setQuotaValue(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && quotaValue.trim() && handleQuotaSave(u, Number(quotaValue))}
+                className={inputClass}
+                aria-label="Custom storage limit in MB"
+              />
+              <button
+                onClick={() => handleQuotaSave(u, Number(quotaValue))}
+                disabled={isBusy || quotaValue.trim() === ""}
+                className="cursor-pointer shrink-0 px-3 rounded-lg bg-forest-800 hover:bg-forest-700 text-white text-xs font-bold transition-colors disabled:opacity-50"
+              >
+                Save
+              </button>
+              {u.storage.overrideMb !== null && (
+                <button
+                  onClick={() => handleQuotaSave(u, null)}
+                  disabled={isBusy}
+                  className="cursor-pointer shrink-0 px-3 rounded-lg bg-sand-100 hover:bg-sand-200 text-sand-700 text-xs font-bold transition-colors disabled:opacity-50"
+                >
+                  Use plan limit
+                </button>
+              )}
+            </div>
+            <div className="text-[10px] text-sand-500">
+              {breakdownTitle(u).replace(/\n/g, " · ")}
+            </div>
+          </div>
+        )}
+
+        {passwordEditId === u.id && (
+          <div className="mt-2 flex gap-2">
+            <input
+              type="text"
+              autoFocus
+              placeholder={`New password (min ${MIN_PASSWORD_LENGTH} chars)`}
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handlePasswordReset(u)}
+              className={inputClass}
+              autoComplete="new-password"
+            />
+            <button
+              onClick={() => handlePasswordReset(u)}
+              disabled={isBusy}
+              className="cursor-pointer shrink-0 px-3 rounded-lg bg-forest-800 hover:bg-forest-700 text-white text-xs font-bold transition-colors disabled:opacity-50"
+            >
+              Save
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
   return (
     <div
       className="fixed inset-0 z-[110] flex items-center justify-center md:p-4 bg-ink/40 backdrop-blur-sm md:backdrop-blur-md animate-in fade-in duration-300"
@@ -315,7 +650,7 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
             <div>
               <h2 className="text-sm font-bold text-ink">Manage Users</h2>
               <p className="text-[10px] text-sand-500">
-                {users.length} accounts
+                {memberUsers.length} {memberUsers.length === 1 ? "user" : "users"}
                 {storageEnabled && ` · ${formatBytes(totalUsedBytes)} cloud storage used`} · plan, role,
                 storage, password
               </p>
@@ -382,6 +717,17 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
 
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-2 px-3 py-2 border-b border-sand-100 shrink-0">
+          <label className="flex items-center gap-1.5 text-[11px] text-sand-600 cursor-pointer" title="Select every account shown">
+            <input
+              type="checkbox"
+              checked={allShownSelected}
+              onChange={toggleAllShown}
+              disabled={filteredUsers.length === 0}
+              className="cursor-pointer accent-forest-700"
+              aria-label="Select all shown"
+            />
+            <span className="hidden sm:inline">Select shown</span>
+          </label>
           <select
             value={planFilter}
             onChange={(e) => setPlanFilter(e.target.value as Plan | "all")}
@@ -419,8 +765,34 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
             </button>
           )}
           <span className="ml-auto text-[10px] text-sand-500">
-            {filteredUsers.length} of {users.length}
+            {filteredUsers.length} of {memberUsers.length}
+            {selectedIds.size > 0 && ` · ${selectedIds.size} selected`}
           </span>
+          {selectedIds.size > 0 && (
+            <button
+              onClick={() => setSelectedIds(new Set())}
+              className="cursor-pointer text-[10px] text-sand-600 hover:text-ink hover:underline"
+            >
+              Clear
+            </button>
+          )}
+          <button
+            onClick={() => setShowBroadcast((v) => !v)}
+            disabled={broadcastRecipients.length === 0}
+            aria-pressed={showBroadcast}
+            title={
+              selectedIds.size > 0
+                ? "Email the selected accounts via Gmail"
+                : "Email every account shown via Gmail (tick accounts to pick some)"
+            }
+            className={`cursor-pointer flex items-center gap-1 px-2 py-1 rounded-lg border text-[11px] font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+              showBroadcast
+                ? "bg-forest-800 border-forest-800 text-white"
+                : "bg-forest-50 border-forest-200 text-forest-700 hover:bg-forest-100"
+            }`}
+          >
+            <Megaphone size={12} /> Broadcast ({broadcastRecipients.length})
+          </button>
           {hasFilters && (
             <button
               onClick={resetFilters}
@@ -446,6 +818,14 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
               </button>
             )}
           </div>
+        )}
+
+        {showBroadcast && (
+          <BroadcastComposer
+            sender={senderEmail}
+            recipients={broadcastRecipients}
+            onClose={() => setShowBroadcast(false)}
+          />
         )}
 
         {/* Plan storage limits */}
@@ -573,291 +953,28 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
             <div className="flex items-center justify-center gap-2 py-12 text-xs text-sand-500">
               <Loader2 size={16} className="animate-spin" /> Loading users...
             </div>
-          ) : filteredUsers.length === 0 ? (
-            <div className="py-12 text-center text-xs text-sand-500">No users found</div>
           ) : (
-            filteredUsers.map((u, index) => {
-              const isSelf = u.id === currentUserId;
-              const isBusy = busyId === u.id;
-              return (
-                <div
-                  key={u.id}
-                  className="p-3 rounded-xl bg-sand-50 border border-sand-100 hover:border-sand-200 transition-colors"
-                >
-                  <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3">
-                    <div className="flex-1 min-w-0 flex items-start gap-3">
-                      <span className="shrink-0 w-7 h-7 rounded-lg bg-sand-50 border border-sand-200 flex items-center justify-center text-[10px] font-mono font-bold text-sand-600">
-                        {index + 1}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-ink truncate">{u.email}</span>
-                          {isSelf && (
-                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-gold-50 text-gold-700 shrink-0">
-                              You
-                            </span>
-                          )}
-                          {u.isAdmin && (
-                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-forest-900 text-gold-300 shrink-0">
-                              Admin
-                            </span>
-                          )}
-                          {!u.isAdmin && (
-                            <span className={`text-[9px] px-1.5 py-0.5 rounded-full border shrink-0 ${PLAN_STYLES[u.plan] ?? PLAN_STYLES.Free}`}>
-                              {u.plan}
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-[10px] text-sand-500 truncate">
-                          {u.displayName || "—"} · Joined {new Date(u.createdAt).toLocaleDateString()}
-                          {` · Last login ${u.lastSignInAt ? new Date(u.lastSignInAt).toLocaleString() : "never"}`}
-                        </div>
-                        {u.storage && (() => {
-                          const percent = usagePercent(u.storage.usedBytes, u.storage.limitBytes);
-                          return (
-                            <div className="mt-1.5 max-w-xs" title={breakdownTitle(u)}>
-                              <div className="flex items-center justify-between text-[10px] text-sand-600">
-                                <span>
-                                  {formatBytes(u.storage.usedBytes)} /{" "}
-                                  {u.storage.limitBytes === null ? "Unlimited" : formatBytes(u.storage.limitBytes)}
-                                </span>
-                                {u.storage.overrideMb !== null && (
-                                  <span className="text-[9px] px-1 rounded bg-forest-50 text-forest-700 border border-forest-200">
-                                    custom
-                                  </span>
-                                )}
-                              </div>
-                              <div className="h-1 bg-sand-200 rounded-full overflow-hidden mt-0.5">
-                                <div
-                                  className={`h-full rounded-full ${usageBarClass(percent)}`}
-                                  style={{ width: `${percent ?? 0}%` }}
-                                />
-                              </div>
-                            </div>
-                          );
-                        })()}
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {isBusy && <Loader2 size={14} className="animate-spin text-sand-600" />}
-                      {u.isAdmin ? (
-                        <span className="text-[10px] text-sand-600 px-2" title="Admins have access to every feature">
-                          All access
-                        </span>
-                      ) : (
-                      <>
-                      <select
-                        value={u.plan}
-                        disabled={isSelf || isBusy}
-                        onChange={(e) => handleFieldChange(u, { plan: e.target.value as Plan })}
-                        className={selectClass}
-                        title={isSelf ? "You cannot change your own plan" : "Plan"}
-                      >
-                        {PLANS.map((p) => (
-                          <option key={p} value={p} className="bg-white">{p}</option>
-                        ))}
-                      </select>
-                      <select
-                        value={u.role}
-                        disabled={isSelf || isBusy}
-                        onChange={(e) => handleFieldChange(u, { role: e.target.value as Role })}
-                        className={selectClass}
-                        title={isSelf ? "You cannot change your own role" : "Role"}
-                      >
-                        {ROLES.map((r) => (
-                          <option key={r} value={r} className="bg-white">{ROLE_LABELS[r]}</option>
-                        ))}
-                      </select>
-                      </>
-                      )}
-                      <button
-                        onClick={() => {
-                          setEmailUserId(emailUserId === u.id ? null : u.id);
-                          setHistoryUserId(null);
-                          setQuotaEditId(null);
-                          setPasswordEditId(null);
-                          setConfirmDeleteId(null);
-                        }}
-                        disabled={isBusy}
-                        className={`cursor-pointer p-1.5 rounded-lg hover:bg-sand-100 transition-colors disabled:opacity-50 ${
-                          emailUserId === u.id ? "text-forest-700 bg-sand-100" : "text-sand-600 hover:text-ink"
-                        }`}
-                        title="Send email"
-                      >
-                        <Mail size={14} />
-                      </button>
-                      <button
-                        onClick={() => {
-                          setHistoryUserId(historyUserId === u.id ? null : u.id);
-                          setEmailUserId(null);
-                          setQuotaEditId(null);
-                          setPasswordEditId(null);
-                          setConfirmDeleteId(null);
-                        }}
-                        className={`cursor-pointer p-1.5 rounded-lg hover:bg-sand-100 transition-colors ${
-                          historyUserId === u.id ? "text-forest-700 bg-sand-100" : "text-sand-600 hover:text-ink"
-                        }`}
-                        title="Login history"
-                      >
-                        <History size={14} />
-                      </button>
-                      {u.storage && !u.isAdmin && (
-                        <button
-                          onClick={() => {
-                            setEmailUserId(null);
-                            setHistoryUserId(null);
-                            setQuotaEditId(quotaEditId === u.id ? null : u.id);
-                            setQuotaValue(u.storage?.overrideMb != null ? String(u.storage.overrideMb) : "");
-                            setPasswordEditId(null);
-                            setConfirmDeleteId(null);
-                          }}
-                          disabled={isBusy}
-                          className={`cursor-pointer p-1.5 rounded-lg hover:bg-sand-100 transition-colors disabled:opacity-50 ${
-                            quotaEditId === u.id ? "text-forest-700 bg-sand-100" : "text-sand-600 hover:text-ink"
-                          }`}
-                          title="Storage limit"
-                        >
-                          <HardDrive size={14} />
-                        </button>
-                      )}
-                      <button
-                        onClick={() => {
-                          setPasswordEditId(passwordEditId === u.id ? null : u.id);
-                          setNewPassword("");
-                          setConfirmDeleteId(null);
-                          setQuotaEditId(null);
-                          setEmailUserId(null);
-                          setHistoryUserId(null);
-                        }}
-                        disabled={isBusy}
-                        className="cursor-pointer p-1.5 rounded-lg hover:bg-sand-100 text-sand-600 hover:text-ink transition-colors disabled:opacity-50"
-                        title="Reset password"
-                      >
-                        <KeyRound size={14} />
-                      </button>
-                      {confirmDeleteId === u.id ? (
-                        <>
-                          <button
-                            onClick={() => handleDelete(u)}
-                            disabled={isBusy}
-                            className="cursor-pointer p-1.5 rounded-lg bg-brick-50 hover:bg-brick-100 text-brick-600 transition-colors"
-                            title="Confirm delete"
-                          >
-                            <Check size={14} />
-                          </button>
-                          <button
-                            onClick={() => setConfirmDeleteId(null)}
-                            className="cursor-pointer p-1.5 rounded-lg hover:bg-sand-100 text-sand-600 transition-colors"
-                            title="Cancel"
-                          >
-                            <X size={14} />
-                          </button>
-                        </>
-                      ) : (
-                        <button
-                          onClick={() => {
-                            setConfirmDeleteId(u.id);
-                            setPasswordEditId(null);
-                            setEmailUserId(null);
-                            setHistoryUserId(null);
-                            setQuotaEditId(null);
-                          }}
-                          disabled={isSelf || isBusy}
-                          className="cursor-pointer p-1.5 rounded-lg hover:bg-brick-50 text-brick-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                          title={isSelf ? "You cannot delete your own account" : "Delete user"}
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {confirmDeleteId === u.id && (
-                    <div className="mt-2 text-[10px] text-brick-600">
-                      Delete {u.email} permanently? This cannot be undone.
-                    </div>
-                  )}
-
-                  {emailUserId === u.id && (
-                    <UserEmailComposer
-                      email={u.email}
-                      name={u.displayName || u.email.split("@")[0]}
-                      plan={u.isAdmin ? "Admin" : u.plan}
-                      onClose={() => setEmailUserId(null)}
-                    />
-                  )}
-
-                  {historyUserId === u.id && (
-                    <UserLoginHistory
-                      userId={u.id}
-                      lastSignInAt={u.lastSignInAt}
-                      onClose={() => setHistoryUserId(null)}
-                    />
-                  )}
-
-                  {quotaEditId === u.id && u.storage && (
-                    <div className="mt-2 space-y-1.5">
-                      <div className="flex gap-2">
-                        <input
-                          type="number"
-                          min={0}
-                          step="any"
-                          autoFocus
-                          placeholder={`Custom limit in MB (plan: ${planLimits ? formatMb(planLimits[u.plan] ?? 0) : "—"})`}
-                          value={quotaValue}
-                          onChange={(e) => setQuotaValue(e.target.value)}
-                          onKeyDown={(e) => e.key === "Enter" && quotaValue.trim() && handleQuotaSave(u, Number(quotaValue))}
-                          className={inputClass}
-                          aria-label="Custom storage limit in MB"
-                        />
-                        <button
-                          onClick={() => handleQuotaSave(u, Number(quotaValue))}
-                          disabled={isBusy || quotaValue.trim() === ""}
-                          className="cursor-pointer shrink-0 px-3 rounded-lg bg-forest-800 hover:bg-forest-700 text-white text-xs font-bold transition-colors disabled:opacity-50"
-                        >
-                          Save
-                        </button>
-                        {u.storage.overrideMb !== null && (
-                          <button
-                            onClick={() => handleQuotaSave(u, null)}
-                            disabled={isBusy}
-                            className="cursor-pointer shrink-0 px-3 rounded-lg bg-sand-100 hover:bg-sand-200 text-sand-700 text-xs font-bold transition-colors disabled:opacity-50"
-                          >
-                            Use plan limit
-                          </button>
-                        )}
-                      </div>
-                      <div className="text-[10px] text-sand-500">
-                        {breakdownTitle(u).replace(/\n/g, " · ")}
-                      </div>
-                    </div>
-                  )}
-
-                  {passwordEditId === u.id && (
-                    <div className="mt-2 flex gap-2">
-                      <input
-                        type="text"
-                        autoFocus
-                        placeholder={`New password (min ${MIN_PASSWORD_LENGTH} chars)`}
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && handlePasswordReset(u)}
-                        className={inputClass}
-                        autoComplete="new-password"
-                      />
-                      <button
-                        onClick={() => handlePasswordReset(u)}
-                        disabled={isBusy}
-                        className="cursor-pointer shrink-0 px-3 rounded-lg bg-forest-800 hover:bg-forest-700 text-white text-xs font-bold transition-colors disabled:opacity-50"
-                      >
-                        Save
-                      </button>
-                    </div>
-                  )}
-                </div>
-              );
-            })
+            <>
+              {shownAdmins.length > 0 && (
+                <section className="space-y-2 pb-2 mb-1 border-b border-sand-200" aria-label="Administrators">
+                  <h3 className="flex items-center gap-1.5 px-1 text-[10px] font-bold uppercase tracking-wider text-sand-500">
+                    <ShieldCheck size={12} /> Administrators
+                    <span className="font-normal normal-case tracking-normal">· not counted as users</span>
+                  </h3>
+                  {shownAdmins.map((u) => renderUserRow(u, null))}
+                </section>
+              )}
+              {shownAdmins.length > 0 && (
+                <h3 className="px-1 pt-1 text-[10px] font-bold uppercase tracking-wider text-sand-500">
+                  Users
+                </h3>
+              )}
+              {filteredUsers.length === 0 ? (
+                <div className="py-12 text-center text-xs text-sand-500">No users found</div>
+              ) : (
+                filteredUsers.map((u, index) => renderUserRow(u, index))
+              )}
+            </>
           )}
         </div>
       </div>

@@ -94,6 +94,27 @@ registerRoute(
   })
 );
 
+// On-demand modules left out of the precache (PDF / GeoTIFF import, PDF export,
+// screenshots; see globIgnores in vite.config.ts). Cached the first time they are used so
+// those features keep working offline afterwards. File names are content-hashed, so a
+// cached copy never goes stale.
+registerRoute(
+  ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith('/assets/') && /\.m?js$/.test(url.pathname),
+  new CacheFirst({
+    cacheName: 'lazy-modules',
+    plugins: [
+      new CacheableResponsePlugin({ statuses: [200] }),
+      // Never keep an HTML page (e.g. an SPA fallback for a file that no longer exists)
+      // under a script URL, or that script would stay broken
+      {
+        cacheWillUpdate: async ({ response }) =>
+          response.headers.get('content-type')?.includes('javascript') ? response : null,
+      },
+      new ExpirationPlugin({ maxEntries: 60, maxAgeSeconds: 90 * 24 * 60 * 60, purgeOnQuotaError: true }),
+    ],
+  })
+);
+
 // 6. STATIC ASSETS (Images, Fonts not in precache)
 // CacheFirst: Once cached, never fetch again until expired
 registerRoute(

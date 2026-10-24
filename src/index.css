@@ -117,5 +117,15 @@ html, body, #root {
   overflow: hidden;
 }
 
+/* PERFORMANCE: no backdrop blur on phones. Panels over the map are already near-opaque,
+   and a blur behind them is recomputed every time the map redraws, which keeps the GPU
+   busy (and the phone warm) while panning. */
+@media (max-width: 767px) {
+  [class*="backdrop-blur"] {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
+
 /* Mapbox GL CSS */
 @import 'mapbox-gl/dist/mapbox-gl.css';
