@@ -27,6 +27,7 @@ import { MarkedLocationLayer } from "./MarkedLocationLayer";
 import { SearchPanel } from "./SearchPanel";
 import { NavigationControls } from "./NavigationControls";
 import { UserLocationMarker } from "./UserLocationMarker";
+import { SosAdminLayer } from "./SosAdminLayer";
 import { WeatherWidget } from "./WeatherWidget";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { usePoiStore } from "../store/usePoiStore";
@@ -925,6 +926,11 @@ const MapBoxContainerComponent = ({
         {/* User Location Indicator */}
         <ErrorBoundary fallback={null}>
           <UserLocationMarker initialLocation={initialLocation} />
+        </ErrorBoundary>
+
+        {/* Admin: active S.O.S alerts (banner + markers) */}
+        <ErrorBoundary fallback={null}>
+          <SosAdminLayer />
         </ErrorBoundary>
 
         {/* Custom Location Markers - GeoJSON + Cluster */}

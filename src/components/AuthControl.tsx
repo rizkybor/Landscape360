@@ -12,6 +12,7 @@ import { RegionDrawingOverlay } from "./RegionDrawingOverlay";
 import { UserManagementPanel } from "./UserManagementPanel";
 import { AccountRequestsPanel } from "./AccountRequestsPanel";
 import { PoiManagerPanel } from "./PoiManagerPanel";
+import { useSosAlertsStore } from "../store/useSosAlertsStore";
 import { SosScreen } from "./SosScreen";
 import { AdminActivityFeed } from "./AdminActivityFeed";
 import { ChangePasswordForm } from "./ChangePasswordForm";
@@ -48,6 +49,7 @@ import {
   KeyRound,
   MapPin,
   LifeBuoy,
+  Siren,
   Building2,
   Phone,
   X,
@@ -113,6 +115,8 @@ export const AuthControl = () => {
     useShallow((s) => ({ interactionMode: s.interactionMode })),
   );
   const { regions } = useOfflineStore();
+  const activeSosCount = useSosAlertsStore((s) => s.active.length);
+  const openSosAlerts = useSosAlertsStore((s) => s.openPanel);
 
   const [showMenu, setShowMenu] = useState(false);
   const [showOfflineManager, setShowOfflineManager] = useState(false);
@@ -1181,6 +1185,20 @@ export const AuthControl = () => {
                           className="cursor-pointer sm:col-span-2 flex items-center justify-center gap-2 p-3 rounded-xl bg-forest-50 hover:bg-forest-100 text-forest-700 border border-forest-200 transition-all font-medium text-sm"
                         >
                           <MapPin size={16} /> Points of Interest
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowMenu(false);
+                            openSosAlerts();
+                          }}
+                          className="cursor-pointer sm:col-span-2 flex items-center justify-center gap-2 p-3 rounded-xl bg-brick-50 hover:bg-brick-100 text-brick-700 border border-brick-200 transition-all font-medium text-sm"
+                        >
+                          <Siren size={16} /> S.O.S Alerts
+                          {activeSosCount > 0 && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brick-600 text-white animate-pulse">
+                              {activeSosCount} active
+                            </span>
+                          )}
                         </button>
                       </div>
                     </div>
