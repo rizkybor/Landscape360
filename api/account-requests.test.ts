@@ -63,10 +63,16 @@ describe('POST /api/account-requests', () => {
     ]);
   });
 
-  it.each(['organization', 'phone', 'message', 'fullName', 'email'])('requires %s', async (field) => {
+  it.each(['message', 'fullName', 'email'])('requires %s', async (field) => {
     const res = await submit({ ...valid, [field]: '  ' });
     expect(res.status).toBe(400);
     expect(inserts).toEqual([]);
+  });
+
+  it('accepts a request without organization or phone', async () => {
+    const res = await submit({ ...valid, organization: '', phone: '' });
+    expect(res.status).toBe(201);
+    expect(inserts).toEqual([expect.objectContaining({ organization: null, phone: null })]);
   });
 
   it.each(['0812', '+6281234567890123', 'call me maybe'])('rejects the phone number %s', async (phone) => {

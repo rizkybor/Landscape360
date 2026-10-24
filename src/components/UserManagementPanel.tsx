@@ -19,6 +19,7 @@ import {
 import { UserEmailComposer } from "./UserEmailComposer";
 import { BroadcastComposer } from "./BroadcastComposer";
 import { ScrollShadowArea } from "./ScrollShadowArea";
+import { whatsappUrl } from "../lib/profileContact";
 import { UserLoginHistory } from "./UserLoginHistory";
 import {
   PLANS,
@@ -386,6 +387,23 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
                   </span>
                 )}
               </div>
+              {(u.organization || u.phone) && (
+                <div className="text-[10px] text-sand-600 truncate">
+                  {u.organization}
+                  {u.organization && u.phone && " · "}
+                  {u.phone && (
+                    <a
+                      href={whatsappUrl(u.phone) ?? undefined}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-forest-700 hover:underline"
+                      title="Chat on WhatsApp"
+                    >
+                      {u.phone}
+                    </a>
+                  )}
+                </div>
+              )}
               <div className="text-[10px] text-sand-500 truncate">
                 {u.displayName || "—"} · Joined {new Date(u.createdAt).toLocaleDateString()}
                 {` · Last login ${u.lastSignInAt ? new Date(u.lastSignInAt).toLocaleString() : "never"}`}

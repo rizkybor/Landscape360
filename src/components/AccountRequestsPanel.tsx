@@ -33,6 +33,7 @@ import {
 } from "../lib/accountRequests";
 import { UserEmailComposer } from "./UserEmailComposer";
 import { ScrollShadowArea } from "./ScrollShadowArea";
+import { whatsappUrl } from "../lib/profileContact";
 
 const ROLE_LABELS: Record<Role, string> = {
   pengguna360: "User",
@@ -439,14 +440,30 @@ export const AccountRequestsPanel = ({ onClose, onBack, onPendingCountChange, on
                       </div>
                       <div className="text-[11px] text-sand-700 truncate">{r.email}</div>
                       <div className="text-[10px] text-sand-500 truncate">
-                        {[r.organization, r.phone].filter(Boolean).join(" · ") || "—"} · Requested{" "}
+                        {r.organization || (!r.phone && "—")}
+                        {r.organization && r.phone && " · "}
+                        {r.phone && (
+                          <a
+                            href={whatsappUrl(r.phone) ?? undefined}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:text-forest-700 hover:underline"
+                            title="Chat on WhatsApp"
+                          >
+                            {r.phone}
+                          </a>
+                        )}
+                        {" · Requested "}
                         {new Date(r.createdAt).toLocaleDateString()}
                         {r.reviewedAt && ` · Reviewed ${new Date(r.reviewedAt).toLocaleDateString()}`}
                       </div>
                       {r.message && (
-                        <p className="mt-1.5 text-[11px] text-sand-700 whitespace-pre-wrap break-words bg-white border border-sand-100 rounded-lg p-2">
-                          {r.message}
-                        </p>
+                        <div className="mt-1.5 bg-white border border-sand-100 rounded-lg p-2">
+                          <div className="text-[9px] font-bold uppercase tracking-wider text-sand-500 mb-0.5">
+                            Message
+                          </div>
+                          <p className="text-[11px] text-sand-700 whitespace-pre-wrap break-words">{r.message}</p>
+                        </div>
                       )}
                       {r.adminNote && (
                         <div className="mt-1 text-[10px] text-brick-600">Note: {r.adminNote}</div>

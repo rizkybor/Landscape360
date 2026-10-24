@@ -26,6 +26,8 @@ export interface ManagedUser {
   id: string;
   email: string;
   displayName: string | null;
+  organization: string | null; // from the account request (null before the contact migration)
+  phone: string | null;
   plan: Plan;
   role: Role;
   isAdmin: boolean;
