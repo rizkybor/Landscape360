@@ -10,10 +10,11 @@ import { OfflineManager } from "./OfflineManager";
 import { RegionDrawingOverlay } from "./RegionDrawingOverlay";
 import { UserManagementPanel } from "./UserManagementPanel";
 import { AccountRequestsPanel } from "./AccountRequestsPanel";
+import { AdminActivityFeed } from "./AdminActivityFeed";
 import { PLANS, type Plan } from "../lib/adminUsers";
 import { submitAccountRequest } from "../lib/accountRequests";
 import { SEEN_AT_KEY, useAccountRequestAlerts } from "../services/useAccountRequestAlerts";
-import { recordLogin } from "../lib/loginHistory";
+import { recordLogin, recordLogout } from "../lib/loginHistory";
 import {
   STORAGE_CATEGORY_LABELS,
   fetchMyStorageUsage,
@@ -275,6 +276,7 @@ export const AuthControl = () => {
   };
 
   const handleLogout = async () => {
+    await recordLogout();
     await supabase.auth.signOut();
     setShowMenu(false);
     setShowLogoutConfirm(false);
@@ -694,7 +696,7 @@ export const AuthControl = () => {
         createPortal(
           <div className="fixed inset-0 z-[100] flex items-center justify-center md:p-6 bg-ink/40 backdrop-blur-sm md:backdrop-blur-md animate-in fade-in duration-200">
             <div
-              className="relative w-full h-full md:h-auto md:max-h-[90vh] md:max-w-3xl bg-white border-0 md:border md:border-sand-200 rounded-none md:rounded-2xl overflow-hidden flex flex-col shadow-2xl"
+              className={`relative w-full h-full md:h-auto md:max-h-[90vh] md:max-w-3xl ${isAdmin ? "xl:max-w-6xl" : ""} bg-white border-0 md:border md:border-sand-200 rounded-none md:rounded-2xl overflow-hidden flex flex-col shadow-2xl`}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
@@ -715,7 +717,11 @@ export const AuthControl = () => {
                 </button>
               </div>
 
-              <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar md:grid md:grid-cols-[300px_1fr]">
+              <div
+                className={`flex-1 min-h-0 overflow-y-auto custom-scrollbar md:grid md:grid-cols-[300px_1fr] ${
+                  isAdmin ? "xl:grid-cols-[300px_1fr_320px]" : ""
+                }`}
+              >
                 {/* Left: profile & usage */}
                 <aside className="p-5 md:p-6 bg-sand-50/60 border-b md:border-b-0 md:border-r border-sand-100 space-y-6">
                   {isEditingProfile ? (
@@ -1001,6 +1007,9 @@ export const AuthControl = () => {
                     </div>
                   )}
                 </section>
+
+                {/* Right: activity of all users (admin only) */}
+                {isAdmin && <AdminActivityFeed />}
               </div>
 
               {/* Footer */}
@@ -1039,6 +1048,10 @@ export const AuthControl = () => {
           <UserManagementPanel
             currentUserId={user.id}
             onClose={() => setShowUserManagement(false)}
+            onBack={() => {
+              setShowUserManagement(false);
+              setShowMenu(true);
+            }}
           />,
           document.body,
         )}
@@ -1048,6 +1061,10 @@ export const AuthControl = () => {
         createPortal(
           <AccountRequestsPanel
             onClose={() => setShowAccountRequests(false)}
+            onBack={() => {
+              setShowAccountRequests(false);
+              setShowMenu(true);
+            }}
             onSeen={markRequestsSeen}
           />,
           document.body,

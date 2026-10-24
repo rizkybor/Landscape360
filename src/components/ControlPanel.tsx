@@ -180,6 +180,22 @@ export const ControlPanel = () => {
     return () => clearInterval(id);
   }, [isActivityRecording]);
 
+  // Mobile: Navigator Mode opens its own bottom sheet, so lower this one out of the way
+  // and bring it back when Navigator Mode ends (only if it was open before)
+  const reopenAfterNavigator = useRef(false);
+  useEffect(() => {
+    if (!isMobile) return;
+    if (isPlotMode) {
+      setIsOpen((open) => {
+        reopenAfterNavigator.current = open;
+        return false;
+      });
+    } else if (reopenAfterNavigator.current) {
+      reopenAfterNavigator.current = false;
+      setIsOpen(true);
+    }
+  }, [isPlotMode, isMobile]);
+
   // Swipe Down to Close Logic (Mobile)
   const touchStart = useRef<number | null>(null);
   const [touchOffset, setTouchOffset] = useState(0);

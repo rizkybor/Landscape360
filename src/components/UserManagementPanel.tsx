@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Users,
   X,
+  ChevronLeft,
   Plus,
   RefreshCw,
   Search,
@@ -48,6 +49,9 @@ const PLAN_STYLES: Record<Plan, string> = {
   Enterprise: "bg-gold-50 text-gold-700 border-gold-200",
 };
 
+// Same threshold as the red usage bar
+const NEAR_LIMIT_PERCENT = 90;
+
 const selectClass =
   "cursor-pointer bg-sand-50 border border-sand-200 rounded-lg px-2 py-1 text-[11px] text-ink outline-none focus:border-forest-300 disabled:opacity-50 disabled:cursor-not-allowed";
 const inputClass =
@@ -56,6 +60,7 @@ const inputClass =
 interface Props {
   currentUserId: string;
   onClose: () => void;
+  onBack?: () => void;
 }
 
 const breakdownTitle = (u: ManagedUser) =>
@@ -65,7 +70,7 @@ const breakdownTitle = (u: ManagedUser) =>
         .join("\n")
     : "";
 
-export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
+export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) => {
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -80,6 +85,9 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
   const [quotaEditId, setQuotaEditId] = useState<string | null>(null);
   const [quotaValue, setQuotaValue] = useState("");
   const [sortBy, setSortBy] = useState<"email" | "storage">("email");
+  const [planFilter, setPlanFilter] = useState<Plan | "all">("all");
+  const [roleFilter, setRoleFilter] = useState<Role | "all">("all");
+  const [nearLimitOnly, setNearLimitOnly] = useState(false);
 
   const [planLimits, setPlanLimits] = useState<PlanStorageLimits | null>(null);
   const [showPlanLimits, setShowPlanLimits] = useState(false);
@@ -116,16 +124,27 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
 
   const filteredUsers = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const matching = !q
-      ? users
-      : users.filter(
-          (u) =>
-            u.email.toLowerCase().includes(q) ||
-            u.displayName?.toLowerCase().includes(q),
-        );
+    const matching = users.filter((u) => {
+      if (q && !u.email.toLowerCase().includes(q) && !u.displayName?.toLowerCase().includes(q)) return false;
+      if (planFilter !== "all" && u.plan !== planFilter) return false;
+      if (roleFilter !== "all" && u.role !== roleFilter) return false;
+      if (nearLimitOnly) {
+        const percent = u.storage ? usagePercent(u.storage.usedBytes, u.storage.limitBytes) : null;
+        if (percent === null || percent < NEAR_LIMIT_PERCENT) return false;
+      }
+      return true;
+    });
     if (sortBy === "email") return matching;
     return [...matching].sort((a, b) => (b.storage?.usedBytes ?? 0) - (a.storage?.usedBytes ?? 0));
-  }, [users, query, sortBy]);
+  }, [users, query, sortBy, planFilter, roleFilter, nearLimitOnly]);
+
+  const hasFilters = planFilter !== "all" || roleFilter !== "all" || nearLimitOnly || query.trim() !== "";
+  const resetFilters = () => {
+    setQuery("");
+    setPlanFilter("all");
+    setRoleFilter("all");
+    setNearLimitOnly(false);
+  };
 
   const totalUsedBytes = useMemo(
     () => users.reduce((sum, u) => sum + (u.storage?.usedBytes ?? 0), 0),
@@ -277,6 +296,15 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
         {/* Header */}
         <div className="flex items-center justify-between gap-3 p-4 border-b border-sand-200 shrink-0">
           <div className="flex items-center gap-3">
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="cursor-pointer p-1.5 -ml-1 text-sand-600 hover:text-ink hover:bg-sand-100 rounded-lg transition-colors"
+                title="Back to User Account"
+              >
+                <ChevronLeft size={20} />
+              </button>
+            )}
             <div className="p-2 rounded-lg bg-forest-50 text-forest-700">
               <Users size={18} />
             </div>
@@ -346,6 +374,57 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
           >
             <Plus size={14} /> Add User
           </button>
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-2 px-3 py-2 border-b border-sand-100 shrink-0">
+          <select
+            value={planFilter}
+            onChange={(e) => setPlanFilter(e.target.value as Plan | "all")}
+            className={selectClass}
+            aria-label="Filter by plan"
+          >
+            <option value="all" className="bg-white">All plans</option>
+            {PLANS.map((p) => (
+              <option key={p} value={p} className="bg-white">{p}</option>
+            ))}
+          </select>
+          <select
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value as Role | "all")}
+            className={selectClass}
+            aria-label="Filter by role"
+          >
+            <option value="all" className="bg-white">All roles</option>
+            {ROLES.map((r) => (
+              <option key={r} value={r} className="bg-white">{ROLE_LABELS[r]}</option>
+            ))}
+          </select>
+          {storageEnabled && (
+            <button
+              onClick={() => setNearLimitOnly((v) => !v)}
+              aria-pressed={nearLimitOnly}
+              className={`cursor-pointer px-2 py-1 rounded-lg border text-[11px] transition-colors ${
+                nearLimitOnly
+                  ? "bg-brick-50 border-brick-200 text-brick-600 font-bold"
+                  : "bg-sand-50 border-sand-200 text-sand-600 hover:bg-sand-100"
+              }`}
+              title={`Accounts using ${NEAR_LIMIT_PERCENT}% or more of their storage limit`}
+            >
+              Near storage limit
+            </button>
+          )}
+          <span className="ml-auto text-[10px] text-sand-500">
+            {filteredUsers.length} of {users.length}
+          </span>
+          {hasFilters && (
+            <button
+              onClick={resetFilters}
+              className="cursor-pointer text-[10px] font-bold text-forest-700 hover:underline"
+            >
+              Reset
+            </button>
+          )}
         </div>
 
         {(error || notice) && (

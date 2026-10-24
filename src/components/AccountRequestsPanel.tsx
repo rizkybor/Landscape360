@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Inbox,
   X,
+  ChevronLeft,
   RefreshCw,
   Trash2,
   Check,
@@ -69,13 +70,14 @@ interface ApproveForm {
 
 interface Props {
   onClose: () => void;
+  onBack?: () => void;
   onPendingCountChange?: (count: number) => void;
   // Called whenever the pending list is shown, with the newest request in it, so the
   // "new request" notification can be cleared
   onSeen?: (latestCreatedAt: string | null) => void;
 }
 
-export const AccountRequestsPanel = ({ onClose, onPendingCountChange, onSeen }: Props) => {
+export const AccountRequestsPanel = ({ onClose, onBack, onPendingCountChange, onSeen }: Props) => {
   const [tab, setTab] = useState<RequestStatus | "all">("pending");
   const [requests, setRequests] = useState<AccountRequest[]>([]);
   const [pendingCount, setPendingCount] = useState(0);
@@ -235,6 +237,15 @@ export const AccountRequestsPanel = ({ onClose, onPendingCountChange, onSeen }: 
         {/* Header */}
         <div className="flex items-center justify-between gap-3 p-4 border-b border-sand-200 shrink-0">
           <div className="flex items-center gap-3">
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="cursor-pointer p-1.5 -ml-1 text-sand-600 hover:text-ink hover:bg-sand-100 rounded-lg transition-colors"
+                title="Back to User Account"
+              >
+                <ChevronLeft size={20} />
+              </button>
+            )}
             <div className="p-2 rounded-lg bg-forest-50 text-forest-700">
               <Inbox size={18} />
             </div>

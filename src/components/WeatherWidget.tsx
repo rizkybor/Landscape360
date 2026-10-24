@@ -28,6 +28,7 @@ interface WeatherData {
 interface DailyForecast {
   date: string;
   dayName: string;
+  dayShort: string;
   temps: number[];
   weather: string; // Most frequent weather or midday weather
 }
@@ -128,6 +129,9 @@ export const WeatherWidget = () => {
                 dayName: dateObj.toLocaleDateString("id-ID", {
                   weekday: "long",
                 }),
+                dayShort: dateObj.toLocaleDateString("id-ID", {
+                  weekday: "short",
+                }),
                 temps: temps,
                 weather: weather,
               };
@@ -188,36 +192,36 @@ export const WeatherWidget = () => {
         text-ink font-sans
         transition-all duration-300
         
-        /* Mobile: Top Full Width */
-        top-2 left-4 right-4 w-auto
+        /* Mobile: compact card between the Controls button (left) and the map controls (right) */
+        top-4 left-24 right-18 w-auto max-h-[calc(100dvh-8rem)] overflow-y-auto custom-scrollbar
         
         /* Desktop: Fixed Right Sidebar (Adjusted to avoid overlapping with top-right icons) */
-        md:top-4 md:right-18 md:left-auto md:w-64
+        md:top-4 md:right-18 md:left-auto md:w-64 md:max-h-none md:overflow-visible
         
         animate-in fade-in slide-in-from-top-4 md:slide-in-from-right-8
     `}
     >
       {/* Header */}
       <div
-        className="p-3 bg-sand-50 border-b border-sand-200 flex justify-between items-center cursor-pointer hover:bg-sand-100 transition-colors"
+        className="px-3 py-2 md:p-3 bg-sand-50 border-b border-sand-200 flex justify-between items-center gap-2 cursor-pointer hover:bg-sand-100 transition-colors"
         onClick={() => setIsMinimized(true)}
       >
-        <div className="flex items-center gap-2">
-          <MapPin size={14} className="text-brick-600" />
-          <span className="text-xs font-bold uppercase tracking-wider">
+        <div className="flex items-center gap-2 min-w-0">
+          <MapPin size={14} className="text-brick-600 shrink-0" />
+          <span className="text-[11px] md:text-xs font-bold uppercase tracking-wider truncate">
             {locationName}
           </span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <div className="text-[10px] text-sand-600">BMKG</div>
           <ChevronUp size={14} className="text-sand-600" />
         </div>
       </div>
 
       {/* Content */}
-      <div className="p-4">
+      <div className="p-3 md:p-4">
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-6 gap-2 text-sand-600">
+          <div className="flex flex-col items-center justify-center py-3 md:py-6 gap-2 text-sand-600">
             <Loader2 size={24} className="animate-spin text-forest-700" />
             <span className="text-xs">Memuat Data...</span>
           </div>
@@ -226,15 +230,15 @@ export const WeatherWidget = () => {
         ) : current ? (
           <>
             {/* Current Weather */}
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <div className="text-4xl font-bold text-ink flex items-start">
+            <div className="flex items-center justify-between gap-2 mb-3 md:mb-6">
+              <div className="min-w-0">
+                <div className="text-3xl md:text-4xl font-bold text-ink flex items-start">
                   {current.t.toFixed(0)}
-                  <span className="text-lg text-forest-700 font-normal mt-1">
+                  <span className="text-base md:text-lg text-forest-700 font-normal mt-1">
                     °C
                   </span>
                 </div>
-                <div className="text-xs text-sand-700 mt-1">
+                <div className="text-[11px] md:text-xs text-sand-700 mt-0.5 md:mt-1 truncate">
                   {current.weather_desc}
                 </div>
               </div>
@@ -251,10 +255,10 @@ export const WeatherWidget = () => {
             </div>
 
             {/* Forecast List */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-[10px] text-sand-500 font-bold uppercase tracking-widest mb-2">
-                <Calendar size={10} />3 Hari Kedepan
-              </div>
+            <div className="flex items-center gap-2 text-[10px] text-sand-500 font-bold uppercase tracking-widest mb-2">
+              <Calendar size={10} />3 Hari Kedepan
+            </div>
+            <div className="grid grid-cols-3 gap-1.5 md:grid-cols-1 md:gap-3">
 
               {forecast.map((day, idx) => {
                 const Icon = WEATHER_ICONS[day.weather] || Cloud;
@@ -264,22 +268,24 @@ export const WeatherWidget = () => {
                 return (
                   <div
                     key={idx}
-                    className="flex items-center justify-between p-2 rounded-lg bg-sand-50 hover:bg-sand-100 transition-colors"
+                    className="flex flex-col md:flex-row items-center md:justify-between gap-1 md:gap-0 p-1.5 md:p-2 rounded-lg bg-sand-50 hover:bg-sand-100 transition-colors text-center md:text-left"
+                    title={`${day.dayName}: ${day.weather}`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 flex justify-center">
+                    <div className="flex flex-col-reverse md:flex-row items-center gap-1 md:gap-3">
+                      <div className="md:w-8 flex justify-center">
                         <Icon size={18} className="text-forest-700" />
                       </div>
                       <div>
-                        <div className="text-xs font-bold text-ink">
-                          {day.dayName}
+                        <div className="text-[11px] md:text-xs font-bold text-ink">
+                          <span className="md:hidden">{day.dayShort}</span>
+                          <span className="hidden md:inline">{day.dayName}</span>
                         </div>
-                        <div className="text-[10px] text-sand-600">
+                        <div className="hidden md:block text-[10px] text-sand-600">
                           {day.weather}
                         </div>
                       </div>
                     </div>
-                    <div className="text-xs font-mono text-right">
+                    <div className="text-[11px] md:text-xs font-mono md:text-right">
                       <span className="text-ink">{maxTemp}°</span>
                       <span className="text-sand-500 mx-1">/</span>
                       <span className="text-forest-700">{minTemp}°</span>
@@ -293,7 +299,7 @@ export const WeatherWidget = () => {
       </div>
 
       {/* Footer */}
-      <div className="p-2 bg-white/90 text-[9px] text-center text-sand-400">
+      <div className="p-1.5 md:p-2 bg-white/90 text-[8px] md:text-[9px] text-center text-sand-400 truncate">
         <a
           href="https://www.bmkg.go.id/"
           target="_blank"
