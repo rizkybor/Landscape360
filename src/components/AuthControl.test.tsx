@@ -7,16 +7,23 @@ import { useMapStore } from '../store/useMapStore';
 import { useOfflineStore } from '../store/useOfflineStore';
 import { fetchAccountRequestSummary, submitAccountRequest } from '../lib/accountRequests';
 import { supabase } from '../lib/supabaseClient';
+import { changeMyPassword } from '../lib/accountPassword';
 
 // Mocks
 vi.mock('../store/useSurveyStore');
+vi.mock('../lib/accountPassword', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../lib/accountPassword')>()),
+  changeMyPassword: vi.fn(),
+}));
 vi.mock('../store/useMapStore');
 vi.mock('../store/useOfflineStore');
 vi.mock('../lib/accountRequests', () => ({
+  ACCOUNT_REQUESTS_PAGE_SIZE: 20,
   submitAccountRequest: vi.fn(() => Promise.resolve({ ok: true })),
   listAccountRequests: vi.fn(() =>
     Promise.resolve({
       requests: [{ id: 'r1', email: 'new@x.com', fullName: 'New Person', organization: 'Org', phone: '0812345678', requestedPlan: 'Free', message: 'Hi', status: 'pending', adminNote: null, userId: null, reviewedAt: null, createdAt: '2026-10-24T09:15:00.123456+00:00' }],
+      hasMore: false,
       pendingCount: 1,
     }),
   ),
@@ -34,7 +41,9 @@ vi.mock('../lib/supabaseClient', () => ({
     from: vi.fn(() => ({
       select: vi.fn(() => ({
         eq: vi.fn(() => ({
-          single: vi.fn(() => Promise.resolve({ data: null }))
+          single: vi.fn(() => Promise.resolve({ data: null })),
+          // profile contact (organization / phone) of the signed-in user
+          maybeSingle: vi.fn(() => Promise.resolve({ data: null, error: null })),
         }))
       }))
     }))
@@ -234,6 +243,36 @@ describe('AuthControl', () => {
     expect(signOutButtons).toHaveLength(2);
     fireEvent.click(signOutButtons[0]);
     expect(await screen.findByText(/Are you sure|sign out of/i)).toBeInTheDocument();
+  });
+
+  it('lets a signed-in user change their own password from User Account', async () => {
+    (useSurveyStore as any).mockReturnValue({
+      user: { id: 'u1', email: 'u1@x.com', user_metadata: { display_name: 'Budi Santoso' } },
+      setUser: vi.fn(),
+      loadSavedSurveys: vi.fn(),
+      savedSurveys: [],
+      subscriptionStatus: 'Free',
+      userRole: 'pengguna360',
+      isAdmin: false,
+    });
+    vi.mocked(changeMyPassword).mockResolvedValue(undefined);
+    render(<AuthControl />);
+    fireEvent.click(await screen.findByText('Budi Santoso'));
+    fireEvent.click(screen.getByRole('button', { name: /Change password/ }));
+
+    fireEvent.change(screen.getByLabelText('Current password'), { target: { value: 'oldpass123' } });
+    fireEvent.change(screen.getByLabelText('New password (min 8 characters)'), { target: { value: 'newpass123' } });
+    fireEvent.change(screen.getByLabelText('Confirm new password'), { target: { value: 'newpass123' } });
+    fireEvent.click(screen.getByRole('button', { name: /Update Password/ }));
+
+    await waitFor(() =>
+      expect(changeMyPassword).toHaveBeenCalledWith(
+        'u1@x.com',
+        { current: 'oldpass123', next: 'newpass123' },
+        { signOutOtherDevices: true },
+      ),
+    );
+    expect(await screen.findByText('Password updated')).toBeInTheDocument();
   });
 
   // Note: Testing the Modal opening requires interaction which is covered in other E2E-like tests or simple click tests.

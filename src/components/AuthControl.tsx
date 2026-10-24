@@ -12,6 +12,7 @@ import { RegionDrawingOverlay } from "./RegionDrawingOverlay";
 import { UserManagementPanel } from "./UserManagementPanel";
 import { AccountRequestsPanel } from "./AccountRequestsPanel";
 import { AdminActivityFeed } from "./AdminActivityFeed";
+import { ChangePasswordForm } from "./ChangePasswordForm";
 import { PLANS, type Plan } from "../lib/adminUsers";
 import { submitAccountRequest } from "../lib/accountRequests";
 import { SEEN_AT_KEY, useAccountRequestAlerts } from "../services/useAccountRequestAlerts";
@@ -42,6 +43,7 @@ import {
   Eye,
   EyeOff,
   Pencil,
+  KeyRound,
   Building2,
   Phone,
   X,
@@ -191,6 +193,8 @@ export const AuthControl = () => {
   const [editOrganization, setEditOrganization] = useState("");
   const [editPhone, setEditPhone] = useState("");
   const [profileError, setProfileError] = useState<string | null>(null);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [passwordNotice, setPasswordNotice] = useState<string | null>(null);
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -874,6 +878,16 @@ export const AuthControl = () => {
                         )}
                       </button>
                     </form>
+                  ) : isChangingPassword ? (
+                    <ChangePasswordForm
+                      email={currentUser.email}
+                      onClose={() => setIsChangingPassword(false)}
+                      onChanged={() => {
+                        setIsChangingPassword(false);
+                        setPasswordNotice("Password updated");
+                        setTimeout(() => setPasswordNotice(null), 4000);
+                      }}
+                    />
                   ) : (
                     <div className="flex md:flex-col items-center md:text-center gap-4">
                       {usesLogoAvatar ? (
@@ -904,6 +918,7 @@ export const AuthControl = () => {
                               setEditOrganization(contact?.organization ?? "");
                               setEditPhone(contact?.phone ?? "");
                               setProfileError(null);
+                              setIsChangingPassword(false);
                               setIsEditingProfile(true);
                             }}
                             className="cursor-pointer shrink-0 p-1.5 text-sand-500 hover:text-ink hover:bg-sand-100 rounded-lg transition-colors"
@@ -955,6 +970,21 @@ export const AuthControl = () => {
                             </button>
                           )}
                         </div>
+                        <button
+                          onClick={() => {
+                            setIsEditingProfile(false);
+                            setPasswordNotice(null);
+                            setIsChangingPassword(true);
+                          }}
+                          className="cursor-pointer mt-3 inline-flex items-center gap-1.5 text-[11px] font-bold text-forest-700 hover:underline"
+                        >
+                          <KeyRound size={12} /> Change password
+                        </button>
+                        {passwordNotice && (
+                          <p className="mt-1 text-[11px] text-forest-700 flex items-center md:justify-center gap-1">
+                            <Check size={12} /> {passwordNotice}
+                          </p>
+                        )}
                       </div>
                     </div>
                   )}
