@@ -161,11 +161,11 @@ export const SurveyorPanel = () => {
         fixed z-[60] transition-all duration-300
         ${
           position.x === 0 && position.y === 0
-            ? "bottom-4 right-4 w-[180px] max-w-[85vw] md:bottom-auto md:top-28 md:right-4 md:w-80"
+            ? "left-2 right-2 bottom-[calc(0.5rem+env(safe-area-inset-bottom))] md:left-auto md:bottom-auto md:top-28 md:right-4 md:w-80"
             : "w-auto md:w-80"
         }
-        bg-white/95 md:bg-white/95 backdrop-blur-md border border-gold-200 rounded-xl text-ink shadow-2xl overflow-hidden font-mono
-        max-h-[60vh] md:max-h-[75vh] flex flex-col
+        bg-white/95 md:bg-white/95 backdrop-blur-md border border-gold-200 rounded-2xl md:rounded-xl text-ink shadow-2xl overflow-hidden font-mono
+        max-h-[45vh] md:max-h-[75vh] flex flex-col
       `}
       style={{
         transform:
@@ -180,20 +180,30 @@ export const SurveyorPanel = () => {
       {/* Header */}
       <div
         onMouseDown={onMouseDown}
+        onClick={(e) => {
+          // Mobile bottom sheet: tap the header to collapse or expand it
+          if (window.innerWidth >= 768 || (e.target as HTMLElement).closest("button")) return;
+          setIsMinimized((v) => !v);
+        }}
         className="
-          bg-gold-50
-          p-2 md:p-3
+          relative bg-gold-50
+          px-3 pt-3 pb-2 md:p-3
           flex justify-between items-center
           border-b border-gold-200
           select-none shrink-0
           cursor-default md:cursor-move md:active:cursor-grabbing
         "
       >
-        <h3 className="font-bold text-gold-700 flex items-center gap-1 md:gap-2 text-xs md:text-sm">
+        <div className="md:hidden absolute top-1 left-1/2 -translate-x-1/2 w-10 h-1 rounded-full bg-gold-200"></div>
+        <h3 className="font-bold text-gold-700 flex items-center gap-2 text-sm min-w-0">
           <GripHorizontal size={12} className="opacity-40 hidden md:block" />
-          <span className="hidden md:inline">📐</span>
-          <span className="md:hidden">Nav Tool</span>
-          <span className="hidden md:inline">Navigator Tool</span>
+          <span>📐</span>
+          <span className="truncate">Navigator Tool</span>
+          {activeGroup && (
+            <span className="md:hidden text-[10px] font-normal text-sand-600 truncate">
+              · {activeGroup.points.length} pts
+            </span>
+          )}
         </h3>
 
         <div className="flex gap-1 md:gap-2 items-center">
@@ -201,7 +211,7 @@ export const SurveyorPanel = () => {
             <button
               onClick={() => saveCurrentSurvey()}
               disabled={isSyncing}
-              className="cursor-pointer text-forest-700 hover:text-forest-700 px-2 flex items-center gap-1 text-[10px] md:text-xs"
+              className="cursor-pointer text-forest-700 hover:text-forest-700 px-2 py-1.5 md:py-0 flex items-center gap-1 text-xs"
               title="Save Survey"
             >
               {isSyncing ? (
@@ -209,13 +219,13 @@ export const SurveyorPanel = () => {
               ) : (
                 <Save size={14} />
               )}
-              <span className="hidden md:inline">Save</span>
+              <span>Save</span>
             </button>
           )}
 
           <button
             onClick={() => setIsMinimized(!isMinimized)}
-            className="cursor-pointer text-sand-600 hover:text-ink text-[10px] md:text-sm px-1"
+            className="cursor-pointer text-sand-600 hover:text-ink text-xs md:text-sm px-2 py-1.5 md:px-1 md:py-0"
           >
             {isMinimized ? "Show" : "Hide"}
           </button>
@@ -224,9 +234,9 @@ export const SurveyorPanel = () => {
             onClick={() => {
               handleClose();
             }}
-            className="cursor-pointer text-sand-600 hover:text-ink p-1"
+            className="cursor-pointer text-sand-600 hover:text-ink p-1.5 md:p-1"
           >
-            <X size={14} />
+            <X size={16} />
           </button>
         </div>
       </div>
@@ -255,7 +265,7 @@ export const SurveyorPanel = () => {
                   setActiveGroup(g.id);
                   setConfirmDeleteId(null);
                 }}
-                className={`cursor-pointer px-3 py-1 rounded-full text-[10px] whitespace-nowrap transition-colors flex items-center gap-1 border ${
+                className={`cursor-pointer px-3 py-1.5 md:py-1 rounded-full text-[11px] md:text-[10px] whitespace-nowrap transition-colors flex items-center gap-1 border ${
                   g.id === activeGroupId
                     ? "bg-gold-400 text-ink border-gold-400 font-bold"
                     : "bg-sand-50 text-sand-600 border-sand-200 hover:bg-sand-100"
@@ -272,14 +282,14 @@ export const SurveyorPanel = () => {
             <button
               onClick={createGroup}
               title="New sheet (N)"
-              className="cursor-pointer shrink-0 px-3 py-1 rounded-full text-[10px] bg-forest-50 text-forest-700 border border-forest-200 hover:bg-forest-100 transition-colors flex items-center gap-1"
+              className="cursor-pointer shrink-0 px-3 py-1.5 md:py-1 rounded-full text-[11px] md:text-[10px] bg-forest-50 text-forest-700 border border-forest-200 hover:bg-forest-100 transition-colors flex items-center gap-1"
             >
               <Plus size={10} /> New
             </button>
           </div>
 
           {activeGroup ? (
-            <div className="p-4 overflow-y-auto custom-scrollbar flex-1 min-h-0">
+            <div className="p-3 md:p-4 overflow-y-auto custom-scrollbar flex-1 min-h-0 overscroll-contain">
               {/* Active Group Header */}
               <div className="flex justify-between items-center mb-4 pb-2 border-b border-sand-100">
                 <div className="flex items-center gap-2 flex-1 mr-2">
@@ -419,21 +429,21 @@ export const SurveyorPanel = () => {
                           <div className="flex gap-1 shrink-0 ml-1">
                             <button
                               onClick={() => copyCoords(p)}
-                              className="cursor-pointer p-1 rounded text-sand-600 hover:bg-sand-100 active:scale-70 transition-all"
+                              className="cursor-pointer p-1.5 md:p-1 rounded text-sand-600 hover:bg-sand-100 active:scale-70 transition-all"
                               title="Copy Coordinates"
                             >
-                              <Copy size={10} />
+                              <Copy size={12} className="md:w-2.5 md:h-2.5" />
                             </button>
                             <button
                               onClick={() => removePoint(activeGroup.id, p.id)}
-                              className="cursor-pointer p-1 hover:bg-brick-50 text-brick-600 rounded"
+                              className="cursor-pointer p-1.5 md:p-1 hover:bg-brick-50 text-brick-600 rounded"
                               title="Remove Point"
                             >
-                              <X size={10} />
+                              <X size={12} className="md:w-2.5 md:h-2.5" />
                             </button>
                           </div>
                         </div>
-                        <div className="text-[9px] text-sand-600 font-mono mt-1 pl-4">
+                        <div className="text-[10px] md:text-[9px] text-sand-600 font-mono mt-1 pl-4">
                           {/* <div>
                             {p.lat.toFixed(5)} ({toDMS(p.lat, true)}), {p.lng.toFixed(5)} ({toDMS(p.lng, false)})
                           </div>
@@ -526,7 +536,7 @@ export const SurveyorPanel = () => {
               {activeGroup.points.length > 0 && (
                 <button
                   onClick={() => clearPoints(activeGroup.id)}
-                  className="w-full py-2 bg-brick-50 hover:bg-brick-50 text-brick-600 text-[10px] rounded border border-brick-200 transition-colors mt-4"
+                  className="cursor-pointer w-full py-2.5 md:py-2 bg-brick-50 hover:bg-brick-50 text-brick-600 text-xs md:text-[10px] rounded border border-brick-200 transition-colors mt-4"
                 >
                   Clear Points
                 </button>

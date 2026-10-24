@@ -79,6 +79,32 @@ describe('UserManagementPanel storage', () => {
     expect(emails).toEqual(['big@x.com', 'pro@x.com', 'admin@x.com']);
   });
 
+  it('filters by plan, role and accounts near their storage limit', async () => {
+    vi.mocked(listUsers).mockResolvedValue({
+      users: [...users, user({ id: 'u3', email: 'mon@x.com', plan: 'Free', role: 'monitor360', storage: null })],
+      planStorageLimits: { Free: 10, Pro: 100, Enterprise: 1024 },
+    });
+    render(<UserManagementPanel currentUserId="admin" onClose={vi.fn()} />);
+    await screen.findByText('pro@x.com');
+    const emails = () => screen.getAllByText(/@x\.com$/).map((el) => el.textContent);
+
+    fireEvent.change(screen.getByLabelText('Filter by plan'), { target: { value: 'Enterprise' } });
+    expect(emails()).toEqual(['big@x.com']);
+    expect(screen.getByText('1 of 4')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+    fireEvent.change(screen.getByLabelText('Filter by role'), { target: { value: 'monitor360' } });
+    expect(emails()).toEqual(['mon@x.com']);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Near storage limit' }));
+    expect(emails()).toEqual(['pro@x.com']);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+    expect(emails()).toHaveLength(4);
+    expect(screen.queryByRole('button', { name: 'Reset' })).not.toBeInTheDocument();
+  });
+
   it('sets and clears a custom limit for one account', async () => {
     render(<UserManagementPanel currentUserId="admin" onClose={vi.fn()} />);
     await screen.findByText('pro@x.com');

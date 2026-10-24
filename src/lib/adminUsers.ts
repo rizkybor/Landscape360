@@ -96,6 +96,27 @@ export const fetchLoginHistory = (userId: string) =>
     `?loginHistory=${encodeURIComponent(userId)}`,
   );
 
+export type ActivityType = 'login' | 'logout' | 'request';
+
+export interface ActivityEvent {
+  id: string;
+  type: ActivityType;
+  email: string | null;
+  name: string | null; // requester's name (account requests only)
+  detail: string | null; // user agent for sign-ins/outs, "<plan> · <status>" for requests
+  at: string;
+}
+
+// Each flag is false until the matching migration has been run
+export interface ActivityAvailability {
+  logins: boolean;
+  logouts: boolean;
+  requests: boolean;
+}
+
+export const fetchActivity = () =>
+  request<{ activity: ActivityEvent[]; available: ActivityAvailability }>('GET', undefined, '?activity=1');
+
 export const updatePlanStorageLimits =(planStorageLimits: Partial<PlanStorageLimits>) =>
   request<{ ok: true }>('PUT', { planStorageLimits });
 

@@ -1,23 +1,13 @@
 import { useEffect, useState } from "react";
 import { History, Loader2, X } from "lucide-react";
 import { fetchLoginHistory, type LoginEvent } from "../lib/adminUsers";
-import { describeUserAgent } from "../lib/loginHistory";
+import { describeUserAgent, timeAgo } from "../lib/loginHistory";
 
 interface Props {
   userId: string;
   lastSignInAt: string | null;
   onClose: () => void;
 }
-
-const timeAgo = (iso: string) => {
-  const minutes = Math.round((Date.now() - Date.parse(iso)) / 60000);
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes} min ago`;
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours} h ago`;
-  const days = Math.round(hours / 24);
-  return days < 30 ? `${days} d ago` : `${Math.round(days / 30)} mo ago`;
-};
 
 // Latest sign-ins of one account (admin only)
 export const UserLoginHistory = ({ userId, lastSignInAt, onClose }: Props) => {

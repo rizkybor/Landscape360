@@ -6,6 +6,7 @@
  *
  *   GET    /api/admin-users           -> list users with plan, role & storage usage, plus plan storage limits
  *   GET    /api/admin-users?loginHistory=<uuid> -> latest sign-ins of one user (time & browser)
+ *   GET    /api/admin-users?activity=1 -> latest sign-ins, sign-outs and account requests of all users
  *   POST   /api/admin-users           -> create user { email, password, displayName?, plan, role }
  *   PATCH  /api/admin-users           -> update user { id, plan?, role?, password?, displayName?, storageLimitMb? }
  *                                        (storageLimitMb: number = custom quota, null = back to the plan limit)
@@ -24,6 +25,9 @@ const MIN_PASSWORD_LENGTH = 8;
 const MAX_STORAGE_LIMIT_MB = 1_000_000;
 // PostgREST / Postgres codes for a function or table that does not exist yet
 const MISSING_OBJECT_CODES = ['PGRST202', 'PGRST205', '42883', '42P01'];
+// Postgres code for a column that does not exist yet (login_events.event before 20261024000008)
+const MISSING_COLUMN_CODE = '42703';
+const ACTIVITY_LIMIT = 60;
 
 class HttpError extends Error {
   status: number;
@@ -192,12 +196,13 @@ async function handleList(supabase: SupabaseClient) {
 }
 
 async function handleLoginHistory(supabase: SupabaseClient, userId: string) {
-  const { data, error } = await supabase
-    .from('login_events')
-    .select('id, user_agent, created_at')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-    .limit(30);
+  const query = (onlyLogins: boolean) => {
+    const q = supabase.from('login_events').select('id, user_agent, created_at').eq('user_id', userId);
+    return (onlyLogins ? q.eq('event', 'login') : q).order('created_at', { ascending: false }).limit(30);
+  };
+  let { data, error } = await query(true);
+  // Before the activity log migration every event is a sign-in
+  if (error?.code === MISSING_COLUMN_CODE) ({ data, error } = await query(false));
   if (error) {
     // Login history migration not run yet
     if (MISSING_OBJECT_CODES.includes(error.code ?? '')) return json({ logins: [], available: false });
@@ -206,6 +211,74 @@ async function handleLoginHistory(supabase: SupabaseClient, userId: string) {
   return json({
     available: true,
     logins: (data ?? []).map((e) => ({ id: e.id, userAgent: e.user_agent, signedInAt: e.created_at })),
+  });
+}
+
+interface LoginEventRow {
+  id: number;
+  user_id: string;
+  user_agent: string | null;
+  created_at: string;
+  event?: 'login' | 'logout';
+}
+
+// Latest sign-ins, sign-outs and account requests of all users, newest first
+async function handleActivity(supabase: SupabaseClient) {
+  const loginEvents = (withEvent: boolean) =>
+    supabase
+      .from('login_events')
+      .select(withEvent ? 'id, user_id, user_agent, created_at, event' : 'id, user_id, user_agent, created_at')
+      .order('created_at', { ascending: false })
+      .limit(ACTIVITY_LIMIT);
+
+  const [eventsResult, requestsResult] = await Promise.all([
+    loginEvents(true),
+    supabase
+      .from('account_requests')
+      .select('id, email, full_name, requested_plan, status, created_at')
+      .order('created_at', { ascending: false })
+      .limit(ACTIVITY_LIMIT),
+  ]);
+
+  let events = eventsResult;
+  if (events.error?.code === MISSING_COLUMN_CODE) events = await loginEvents(false);
+  const eventsMissing = MISSING_OBJECT_CODES.includes(events.error?.code ?? '');
+  const requestsMissing = MISSING_OBJECT_CODES.includes(requestsResult.error?.code ?? '');
+  if (events.error && !eventsMissing) throw new HttpError(500, events.error.message);
+  if (requestsResult.error && !requestsMissing) throw new HttpError(500, requestsResult.error.message);
+
+  const eventRows = (eventsMissing ? [] : (events.data ?? [])) as unknown as LoginEventRow[];
+  const userIds = [...new Set(eventRows.map((e) => e.user_id))];
+  const { data: profiles, error: profilesError } = userIds.length
+    ? await supabase.from('profiles').select('id, email').in('id', userIds)
+    : { data: [], error: null };
+  if (profilesError) throw new HttpError(500, profilesError.message);
+  const emailOf = new Map((profiles ?? []).map((p) => [p.id, p.email as string | null]));
+
+  const activity = [
+    ...eventRows.map((e) => ({
+      id: `${e.event ?? 'login'}-${e.id}`,
+      type: e.event ?? 'login',
+      email: emailOf.get(e.user_id) ?? null,
+      name: null,
+      detail: e.user_agent,
+      at: e.created_at,
+    })),
+    ...(requestsMissing ? [] : (requestsResult.data ?? [])).map((r) => ({
+      id: `request-${r.id}`,
+      type: 'request',
+      email: r.email,
+      name: r.full_name,
+      detail: `${r.requested_plan} · ${r.status}`,
+      at: r.created_at,
+    })),
+  ]
+    .sort((a, b) => Date.parse(b.at) - Date.parse(a.at))
+    .slice(0, ACTIVITY_LIMIT);
+
+  return json({
+    activity,
+    available: { logins: !eventsMissing, logouts: !eventsMissing && events === eventsResult, requests: !requestsMissing },
   });
 }
 
@@ -344,8 +417,10 @@ const withAdmin = (handler: Handler) => async (request: Request) => {
 };
 
 export const GET = withAdmin((request, supabase) => {
-  const loginHistory = new URL(request.url).searchParams.get('loginHistory');
-  return loginHistory ? handleLoginHistory(supabase, loginHistory) : handleList(supabase);
+  const params = new URL(request.url).searchParams;
+  const loginHistory = params.get('loginHistory');
+  if (loginHistory) return handleLoginHistory(supabase, loginHistory);
+  return params.has('activity') ? handleActivity(supabase) : handleList(supabase);
 });
 export const POST = withAdmin((request, supabase) => handleCreate(request, supabase));
 export const PATCH = withAdmin(handleUpdate);
