@@ -246,6 +246,7 @@ async function handleApprove(
   const displayName = optionalString(body.displayName, 'displayName', 120);
   const plan = optionalString(body.plan, 'plan', 20) ?? 'Free';
   const role = optionalString(body.role, 'role', 20) ?? 'pengguna360';
+  const canUseSos = body.canUseSos === true;
 
   if (!password || password.length < MIN_PASSWORD_LENGTH) {
     throw new HttpError(400, `Password must be at least ${MIN_PASSWORD_LENGTH} characters`);
@@ -266,10 +267,16 @@ async function handleApprove(
   // The signup trigger may already have inserted a Free profile; upsert overrides it.
   // Organization and phone from the request go on the account too (columns added by
   // 20261024000009_profile_contact.sql; without them the account is still created).
+  // S.O.S access when the admin ticked it (20261024000014; without the column the account is
+  // still created, without S.O.S)
   const profile = { id: data.user.id, email: pending.email, status_subscribe: plan, status_user: role };
+  const sos = canUseSos ? { can_use_sos: true } : {};
   let { error: profileError } = await supabase
     .from('profiles')
-    .upsert({ ...profile, organization: pending.organization, phone: pending.phone }, { onConflict: 'id' });
+    .upsert({ ...profile, ...sos, organization: pending.organization, phone: pending.phone }, { onConflict: 'id' });
+  if (profileError && MISSING_COLUMN_CODES.includes(profileError.code ?? '')) {
+    ({ error: profileError } = await supabase.from('profiles').upsert({ ...profile, ...sos }, { onConflict: 'id' }));
+  }
   if (profileError && MISSING_COLUMN_CODES.includes(profileError.code ?? '')) {
     ({ error: profileError } = await supabase.from('profiles').upsert(profile, { onConflict: 'id' }));
   }

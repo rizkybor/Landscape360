@@ -32,6 +32,7 @@ const user = (overrides: Partial<ManagedUser>): ManagedUser => ({
   displayName: 'Pro User',
   organization: null,
   phone: null,
+  canUseSos: false,
   plan: 'Pro',
   role: 'pengguna360',
   isAdmin: false,
@@ -373,5 +374,48 @@ describe('UserManagementPanel passwords', () => {
     fireEvent.click(within(rowOf('pro@x.com')).getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(updateUser).toHaveBeenCalledWith({ id: 'u1', password }));
     expect(await screen.findByText('Password changed')).toBeInTheDocument();
+  });
+});
+
+describe('UserManagementPanel S.O.S access', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(listUsers).mockResolvedValue({
+      users: [...users, user({ id: 'u3', email: 'sos@x.com', canUseSos: true, storage: null })],
+      planStorageLimits: null,
+    });
+    vi.mocked(updateUser).mockResolvedValue({ ok: true });
+  });
+
+  it('turns S.O.S on and off per account; the admin always has it', async () => {
+    render(<UserManagementPanel currentUserId="admin" onClose={vi.fn()} />);
+    await screen.findByText('pro@x.com');
+    expect(within(rowOf('admin@x.com')).getByRole('button', { name: 'SOS' })).toBeDisabled();
+
+    const proSos = within(rowOf('pro@x.com')).getByRole('button', { name: 'SOS' });
+    expect(proSos).toHaveAttribute('aria-pressed', 'false');
+    fireEvent.click(proSos);
+    await waitFor(() => expect(updateUser).toHaveBeenCalledWith({ id: 'u1', canUseSos: true }));
+    await waitFor(() => expect(within(rowOf('pro@x.com')).getByRole('button', { name: 'SOS' })).toHaveAttribute('aria-pressed', 'true'));
+  });
+
+  it('filters the accounts that have S.O.S', async () => {
+    render(<UserManagementPanel currentUserId="admin" onClose={vi.fn()} />);
+    await screen.findByText('pro@x.com');
+    fireEvent.click(screen.getByRole('button', { name: 'S.O.S access' }));
+    const emails = screen.getAllByText(/@x\.com$/).map((el) => el.textContent);
+    expect(emails).toEqual(['sos@x.com']);
+  });
+
+  it('can allow S.O.S when adding a user', async () => {
+    vi.mocked(createUser).mockResolvedValue({ id: 'n' });
+    render(<UserManagementPanel currentUserId="admin" onClose={vi.fn()} />);
+    await screen.findByText('pro@x.com');
+    fireEvent.click(screen.getByRole('button', { name: /Add User/ }));
+    fireEvent.change(screen.getByPlaceholderText('Email'), { target: { value: 'n@x.com' } });
+    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'Password123' } });
+    fireEvent.click(screen.getByLabelText('Allow S.O.S button'));
+    fireEvent.click(screen.getByRole('button', { name: /Create User/ }));
+    await waitFor(() => expect(createUser).toHaveBeenCalledWith(expect.objectContaining({ email: 'n@x.com', canUseSos: true })));
   });
 });

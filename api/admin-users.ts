@@ -9,7 +9,7 @@
  *   GET    /api/admin-users?activity=1[&before=<iso>][&type=login|logout|request][&limit=n]
  *                                     -> a page of sign-ins, sign-outs and account requests, newest first
  *   POST   /api/admin-users           -> create user { email, password, displayName?, plan, role }
- *   PATCH  /api/admin-users           -> update user { id, plan?, role?, password?, displayName?, storageLimitMb? }
+ *   PATCH  /api/admin-users           -> update user { id, plan?, role?, password?, displayName?, storageLimitMb?, canUseSos? }
  *                                        (storageLimitMb: number = custom quota, null = back to the plan limit)
  *   PUT    /api/admin-users           -> set plan storage limits { planStorageLimits: { Free?, Pro?, Enterprise? } } (MB)
  *   DELETE /api/admin-users?id=<uuid> -> delete user
@@ -155,20 +155,28 @@ async function listAllUsers(supabase: SupabaseClient): Promise<User[]> {
 }
 
 async function handleList(supabase: SupabaseClient) {
-  const [users, profilesResult, storage] = await Promise.all([
-    listAllUsers(supabase),
-    supabase.from('profiles').select(`${PROFILE_COLUMNS}, organization, phone`),
-    loadStorage(supabase),
-  ]);
-  let { data: profiles, error } = profilesResult as {
-    data: { id: string; status_subscribe: string; status_user: string; is_admin: boolean; organization?: string | null; phone?: string | null }[] | null;
-    error: { code?: string; message: string } | null;
+  type ProfileRow = {
+    id: string;
+    status_subscribe: string;
+    status_user: string;
+    is_admin: boolean;
+    organization?: string | null;
+    phone?: string | null;
+    can_use_sos?: boolean;
   };
-  // Before the profile contact migration there are no organization / phone columns
-  if (error?.code === MISSING_COLUMN_CODE) {
-    ({ data: profiles, error } = await supabase.from('profiles').select(PROFILE_COLUMNS));
-  }
-  if (error) throw new HttpError(500, error.message);
+  // Optional columns come from later migrations (contact: 0009, S.O.S: 0014); fall back to
+  // fewer columns while one of them has not been run
+  const loadProfiles = async () => {
+    let last: { code?: string; message: string } | null = null;
+    for (const extra of [', organization, phone, can_use_sos', ', organization, phone', ', can_use_sos', '']) {
+      const { data, error } = await supabase.from('profiles').select(`${PROFILE_COLUMNS}${extra}`);
+      if (!error) return (data ?? []) as unknown as ProfileRow[];
+      last = error;
+      if (error.code !== MISSING_COLUMN_CODE) break;
+    }
+    throw new HttpError(500, last?.message ?? 'Could not load profiles');
+  };
+  const [users, profiles, storage] = await Promise.all([listAllUsers(supabase), loadProfiles(), loadStorage(supabase)]);
 
   const profileMap = new Map(profiles?.map((p) => [p.id, p]));
 
@@ -185,6 +193,8 @@ async function handleList(supabase: SupabaseClient) {
             | string
             | undefined) ?? null,
         organization: profile?.organization ?? null,
+        // The admin always has S.O.S
+        canUseSos: profile?.is_admin === true || profile?.can_use_sos === true,
         phone: profile?.phone ?? null,
         plan: profile?.status_subscribe ?? 'Free',
         role: profile?.status_user ?? 'pengguna360',
@@ -352,6 +362,7 @@ async function handleCreate(request: Request, supabase: SupabaseClient) {
   const displayName = optionalString(body.displayName, 'displayName');
   const plan = optionalString(body.plan, 'plan') ?? 'Free';
   const role = optionalString(body.role, 'role') ?? 'pengguna360';
+  const canUseSos = body.canUseSos === true;
 
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     throw new HttpError(400, 'A valid email is required');
@@ -373,7 +384,7 @@ async function handleCreate(request: Request, supabase: SupabaseClient) {
   const { error: profileError } = await supabase
     .from('profiles')
     .upsert(
-      { id: data.user.id, email, status_subscribe: plan, status_user: role },
+      { id: data.user.id, email, status_subscribe: plan, status_user: role, ...(canUseSos && { can_use_sos: true }) },
       { onConflict: 'id' },
     );
   if (profileError) {
@@ -396,12 +407,14 @@ async function handleUpdate(request: Request, supabase: SupabaseClient, admin: U
   validateRole(role);
   validatePassword(password);
   const hasStorageLimit = 'storageLimitMb' in body;
+  const hasSos = 'canUseSos' in body;
+  if (hasSos && typeof body.canUseSos !== 'boolean') throw new HttpError(400, 'canUseSos must be true or false');
   const storageLimitMb =
     !hasStorageLimit || body.storageLimitMb === null
       ? null
       : validateStorageLimit(body.storageLimitMb, 'storageLimitMb');
 
-  if (plan !== undefined || role !== undefined || hasStorageLimit) {
+  if (plan !== undefined || role !== undefined || hasStorageLimit || hasSos) {
     const { data: target, error } = await supabase
       .from('profiles')
       .select('is_admin')
@@ -409,7 +422,7 @@ async function handleUpdate(request: Request, supabase: SupabaseClient, admin: U
       .maybeSingle();
     if (error) throw new HttpError(500, error.message);
     if (target?.is_admin || id === admin.id) {
-      throw new HttpError(400, 'Admin accounts have full access; plan, role and storage limits do not apply');
+      throw new HttpError(400, 'Admin accounts have full access; plan, role, storage limits and S.O.S do not apply');
     }
   }
 
@@ -422,16 +435,20 @@ async function handleUpdate(request: Request, supabase: SupabaseClient, admin: U
     if (error) throw new HttpError(400, error.message);
   }
 
-  if (plan !== undefined || role !== undefined || hasStorageLimit) {
+  if (plan !== undefined || role !== undefined || hasStorageLimit || hasSos) {
     const { error } = await supabase
       .from('profiles')
       .update({
         ...(plan !== undefined && { status_subscribe: plan }),
         ...(role !== undefined && { status_user: role }),
         ...(hasStorageLimit && { storage_limit_mb: storageLimitMb }),
+        ...(hasSos && { can_use_sos: body.canUseSos }),
         updated_at: new Date().toISOString(),
       })
       .eq('id', id);
+    if (error?.code === MISSING_COLUMN_CODE && hasSos) {
+      throw new HttpError(400, 'Run the 20261024000014_sos_permission migration to manage S.O.S access');
+    }
     if (error) throw new HttpError(400, error.message);
   }
 

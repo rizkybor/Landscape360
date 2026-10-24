@@ -12,6 +12,7 @@ import { RegionDrawingOverlay } from "./RegionDrawingOverlay";
 import { UserManagementPanel } from "./UserManagementPanel";
 import { AccountRequestsPanel } from "./AccountRequestsPanel";
 import { PoiManagerPanel } from "./PoiManagerPanel";
+import { SosScreen } from "./SosScreen";
 import { AdminActivityFeed } from "./AdminActivityFeed";
 import { ChangePasswordForm } from "./ChangePasswordForm";
 import { PLANS, type Plan } from "../lib/adminUsers";
@@ -46,6 +47,7 @@ import {
   Pencil,
   KeyRound,
   MapPin,
+  LifeBuoy,
   Building2,
   Phone,
   X,
@@ -104,6 +106,7 @@ export const AuthControl = () => {
     subscriptionStatus,
     userRole,
     isAdmin,
+    canUseSos,
   } = useSurveyStore();
 
   const { interactionMode } = useMapStore(
@@ -197,6 +200,7 @@ export const AuthControl = () => {
   const [editPhone, setEditPhone] = useState("");
   const [profileError, setProfileError] = useState<string | null>(null);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [showSosPractice, setShowSosPractice] = useState(false);
   const [passwordNotice, setPasswordNotice] = useState<string | null>(null);
 
   const handleSaveProfile = async (e: React.FormEvent) => {
@@ -983,6 +987,15 @@ export const AuthControl = () => {
                         >
                           <KeyRound size={12} /> Change password
                         </button>
+                        {(canUseSos || isAdmin) && (
+                          <button
+                            onClick={() => setShowSosPractice(true)}
+                            className="cursor-pointer mt-1.5 md:ml-0 ml-3 inline-flex items-center gap-1.5 text-[11px] font-bold text-brick-600 hover:underline"
+                            title="Try the S.O.S screen without calling or sending anything"
+                          >
+                            <LifeBuoy size={12} /> Practice S.O.S
+                          </button>
+                        )}
                         {passwordNotice && (
                           <p className="mt-1 text-[11px] text-forest-700 flex items-center md:justify-center gap-1">
                             <Check size={12} /> {passwordNotice}
@@ -1206,6 +1219,15 @@ export const AuthControl = () => {
           />,
           document.body,
         )}
+
+      {showSosPractice && user && (
+        <SosScreen
+          practice
+          userId={user.id}
+          userName={accountDisplayName(user) || user.email || ""}
+          onClose={() => setShowSosPractice(false)}
+        />
+      )}
 
       {showPoiManager &&
         isAdmin &&

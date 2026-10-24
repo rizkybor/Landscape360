@@ -103,6 +103,7 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
   const [planFilter, setPlanFilter] = useState<Plan | "all">("all");
   const [roleFilter, setRoleFilter] = useState<Role | "all">("all");
   const [nearLimitOnly, setNearLimitOnly] = useState(false);
+  const [sosOnly, setSosOnly] = useState(false);
   // Accounts ticked for a broadcast; none ticked = everyone shown
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showBroadcast, setShowBroadcast] = useState(false);
@@ -129,6 +130,7 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
     displayName: "",
     plan: "Free" as Plan,
     role: "pengguna360" as Role,
+    canUseSos: false,
   });
 
   const refresh = useCallback(async () => {
@@ -162,6 +164,7 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
       if (!matchesQuery(u, q)) return false;
       if (planFilter !== "all" && u.plan !== planFilter) return false;
       if (roleFilter !== "all" && u.role !== roleFilter) return false;
+      if (sosOnly && !u.canUseSos) return false;
       if (nearLimitOnly) {
         const percent = u.storage ? usagePercent(u.storage.usedBytes, u.storage.limitBytes) : null;
         if (percent === null || percent < NEAR_LIMIT_PERCENT) return false;
@@ -170,10 +173,10 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
     });
     if (sortBy === "email") return matching;
     return [...matching].sort((a, b) => (b.storage?.usedBytes ?? 0) - (a.storage?.usedBytes ?? 0));
-  }, [memberUsers, query, sortBy, planFilter, roleFilter, nearLimitOnly]);
+  }, [memberUsers, query, sortBy, planFilter, roleFilter, nearLimitOnly, sosOnly]);
 
   // Rows rendered so far; starts over at one page whenever the search, filters or sort change
-  const listKey = [query, planFilter, roleFilter, nearLimitOnly, sortBy].join("|");
+  const listKey = [query, planFilter, roleFilter, nearLimitOnly, sosOnly, sortBy].join("|");
   const [rowWindow, setRowWindow] = useState({ key: listKey, count: USER_ROWS_PAGE });
   const rowLimit = rowWindow.key === listKey ? rowWindow.count : USER_ROWS_PAGE;
   const showMoreRows = () => {
@@ -183,7 +186,7 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
 
   // Admins follow the search box only; plan, role and storage filters do not apply to them
   const shownAdmins =
-    planFilter !== "all" || roleFilter !== "all" || nearLimitOnly
+    planFilter !== "all" || roleFilter !== "all" || nearLimitOnly || sosOnly
       ? []
       : adminUsers.filter((u) => matchesQuery(u, query.trim().toLowerCase()));
 
@@ -210,12 +213,13 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
       return next;
     });
 
-  const hasFilters = planFilter !== "all" || roleFilter !== "all" || nearLimitOnly || query.trim() !== "";
+  const hasFilters = planFilter !== "all" || roleFilter !== "all" || nearLimitOnly || sosOnly || query.trim() !== "";
   const resetFilters = () => {
     setQuery("");
     setPlanFilter("all");
     setRoleFilter("all");
     setNearLimitOnly(false);
+    setSosOnly(false);
   };
 
   const totalUsedBytes = useMemo(
@@ -253,6 +257,16 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
     if (ok) {
       setUsers((prev) => prev.map((u) => (u.id === user.id ? { ...u, ...changes } : u)));
     }
+  };
+
+  const handleSosToggle = async (user: ManagedUser) => {
+    const canUseSos = !user.canUseSos;
+    const ok = await runAction(
+      user.id,
+      () => updateUser({ id: user.id, canUseSos }),
+      `S.O.S ${canUseSos ? "enabled" : "disabled"} for ${user.email}`,
+    );
+    if (ok) setUsers((prev) => prev.map((u) => (u.id === user.id ? { ...u, canUseSos } : u)));
   };
 
   const handlePasswordReset = async (user: ManagedUser) => {
@@ -360,6 +374,7 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
         displayName: form.displayName.trim() || undefined,
         plan: form.plan,
         role: form.role,
+        canUseSos: form.canUseSos,
       });
       flash(`${form.email} created`);
       setCredentials({
@@ -369,7 +384,7 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
         kind: "created",
       });
       setShowCredentialsEmail(false);
-      setForm({ email: "", password: "", displayName: "", plan: "Free", role: "pengguna360" });
+      setForm({ email: "", password: "", displayName: "", plan: "Free", role: "pengguna360", canUseSos: false });
       setShowCreate(false);
       await refresh();
     } catch (err) {
@@ -552,6 +567,25 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
                 <HardDrive size={14} />
               </button>
             )}
+            <button
+              onClick={() => handleSosToggle(u)}
+              disabled={isBusy || u.isAdmin}
+              aria-pressed={u.canUseSos}
+              className={`cursor-pointer px-2 py-1 rounded-lg border text-[10px] font-bold tracking-wide transition-colors disabled:cursor-not-allowed ${
+                u.canUseSos
+                  ? "bg-brick-600 border-brick-600 text-white hover:bg-brick-700"
+                  : "bg-white border-sand-200 text-sand-500 hover:bg-sand-100"
+              } ${isBusy ? "opacity-50" : ""}`}
+              title={
+                u.isAdmin
+                  ? "The admin always has S.O.S"
+                  : u.canUseSos
+                    ? "S.O.S allowed: click to turn it off"
+                    : "S.O.S not allowed: click to allow it"
+              }
+            >
+              SOS
+            </button>
             <button
               onClick={() => {
                 setPasswordEditId(passwordEditId === u.id ? null : u.id);
@@ -836,6 +870,18 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
               Near storage limit
             </button>
           )}
+          <button
+            onClick={() => setSosOnly((v) => !v)}
+            aria-pressed={sosOnly}
+            className={`cursor-pointer px-2 py-1 rounded-lg border text-[11px] transition-colors ${
+              sosOnly
+                ? "bg-brick-50 border-brick-200 text-brick-600 font-bold"
+                : "bg-sand-50 border-sand-200 text-sand-600 hover:bg-sand-100"
+            }`}
+            title="Accounts allowed to use the S.O.S button"
+          >
+            S.O.S access
+          </button>
           <span className="ml-auto text-[10px] text-sand-500">
             {filteredUsers.length} of {memberUsers.length}
             {selectedIds.size > 0 && ` · ${selectedIds.size} selected`}
@@ -1063,7 +1109,17 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
                 ))}
               </select>
             </div>
-            <div className="md:col-span-2 flex justify-end gap-2">
+            <div className="md:col-span-2 flex flex-wrap items-center justify-between gap-2">
+              <label className="flex items-center gap-1.5 text-[11px] text-sand-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.canUseSos}
+                  onChange={(e) => setForm({ ...form, canUseSos: e.target.checked })}
+                  className="accent-brick-600"
+                />
+                Allow S.O.S button
+              </label>
+              <div className="flex gap-2">
               <button
                 type="button"
                 onClick={() => setShowCreate(false)}
@@ -1079,6 +1135,7 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
                 {isCreating ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
                 Create User
               </button>
+              </div>
             </div>
           </form>
         )}
