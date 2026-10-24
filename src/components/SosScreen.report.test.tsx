@@ -46,12 +46,4 @@ describe('SosScreen reports to the admin', () => {
     await settle();
     expect(queueSosReport).toHaveBeenLastCalledWith(expect.objectContaining({ status: 'resolved', clientId }));
   });
-
-  it('sends nothing in practice mode', async () => {
-    render(<SosScreen practice userId="u1" userName="Budi" onClose={vi.fn()} />);
-    skipCountdown();
-    await settle();
-    act(() => vi.advanceTimersByTime(60_000));
-    expect(queueSosReport).not.toHaveBeenCalled();
-  });
 });

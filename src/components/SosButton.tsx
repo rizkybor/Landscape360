@@ -7,10 +7,11 @@ import { flushSosOutbox, pendingSosReports } from "../lib/sosAlerts";
 const HOLD_MS = 3000;
 const RING = 2 * Math.PI * 22;
 
-// Red S.O.S button on the map, for accounts the admin allowed (and the admin). Hold it for
-// 3 s to open the S.O.S screen, so a tap in a pocket does nothing.
+// Red S.O.S button on the map, for accounts the admin allowed. Hold it for 3 s to open the
+// S.O.S screen, so a tap in a pocket does nothing. The admin has it in User Account instead.
 export const SosButton = () => {
   const user = useSurveyStore((s) => s.user);
+  const isAdmin = useSurveyStore((s) => s.isAdmin);
   const canUseSos = useSurveyStore((s) => s.canUseSos || s.isAdmin);
   const [progress, setProgress] = useState(0);
   const [open, setOpen] = useState(false);
@@ -58,7 +59,7 @@ export const SosButton = () => {
     return () => window.removeEventListener("online", flush);
   }, [user, canUseSos]);
 
-  if (!user || !canUseSos) return null;
+  if (!user || !canUseSos || isAdmin) return null;
 
   return (
     <>

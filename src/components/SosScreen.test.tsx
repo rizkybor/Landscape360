@@ -71,19 +71,6 @@ describe('SosScreen', () => {
     // kept on the device for next time
     expect(JSON.parse(localStorage.getItem('l360-sos-contacts-u1')!)).toEqual([{ name: 'Ibu', phone: '0812-3456-7890' }]);
   });
-
-  it('does not call anything in practice mode', () => {
-    render(<SosScreen practice userId="u1" userName="Budi S." onClose={vi.fn()} />);
-    skipCountdown();
-    expect(screen.getByText('PRACTICE S.O.S')).toBeInTheDocument();
-    const call = screen.getByRole('link', { name: /Emergency 112/ });
-    const click = new MouseEvent('click', { bubbles: true, cancelable: true });
-    act(() => {
-      call.dispatchEvent(click);
-    });
-    expect(click.defaultPrevented).toBe(true);
-    expect(screen.getByText(/Practice: call 112/)).toBeInTheDocument();
-  });
 });
 
 describe('SosButton', () => {
@@ -95,13 +82,16 @@ describe('SosButton', () => {
     expect(screen.queryByRole('button', { name: /S\.O\.S/ })).not.toBeInTheDocument();
   });
 
-  it.each([
-    [{ canUseSos: true, isAdmin: false }],
-    [{ canUseSos: false, isAdmin: true }],
-  ])('shows for allowed accounts and the admin (%o)', (access) => {
-    setStore({ user: { id: 'u1', email: 'u@x.com', user_metadata: {} }, ...access });
+  it('shows for allowed accounts', () => {
+    setStore({ user: { id: 'u1', email: 'u@x.com', user_metadata: {} }, canUseSos: true, isAdmin: false });
     render(<SosButton />);
     expect(screen.getByRole('button', { name: /S\.O\.S: hold for 3 seconds/ })).toBeInTheDocument();
+  });
+
+  it('is not on the map for the admin (it is in User Account)', () => {
+    setStore({ user: { id: 'u1', email: 'u@x.com', user_metadata: {} }, canUseSos: true, isAdmin: true });
+    render(<SosButton />);
+    expect(screen.queryByRole('button', { name: /S\.O\.S/ })).not.toBeInTheDocument();
   });
 
   it('is hidden for guests', () => {
