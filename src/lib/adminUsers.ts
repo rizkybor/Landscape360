@@ -8,6 +8,20 @@ export const MIN_PASSWORD_LENGTH = 8;
 export type Plan = (typeof PLANS)[number];
 export type Role = (typeof ROLES)[number];
 
+export interface StorageBreakdown {
+  tracks: number;
+  locations: number;
+  surveys: number;
+  basemaps: number;
+}
+
+export interface UserStorage {
+  usedBytes: number;
+  limitBytes: number | null; // null = unlimited (admin)
+  overrideMb: number | null; // custom quota set by the admin; null = plan limit
+  breakdown: StorageBreakdown;
+}
+
 export interface ManagedUser {
   id: string;
   email: string;
@@ -17,7 +31,10 @@ export interface ManagedUser {
   isAdmin: boolean;
   createdAt: string;
   lastSignInAt: string | null;
+  storage: UserStorage | null; // null until the storage migration has been run
 }
+
+export type PlanStorageLimits = Record<Plan, number>; // MB
 
 export interface NewUserInput {
   email: string;
@@ -33,6 +50,7 @@ export interface UserUpdateInput {
   role?: Role;
   password?: string;
   displayName?: string;
+  storageLimitMb?: number | null; // null = back to the plan limit
 }
 
 const ENDPOINT = '/api/admin-users';
@@ -61,8 +79,25 @@ async function request<T>(method: string, body?: unknown, query = ''): Promise<T
   return payload as T;
 }
 
-export const listUsers = async () =>
-  (await request<{ users: ManagedUser[] }>('GET')).users;
+export const listUsers = () =>
+  request<{ users: ManagedUser[]; planStorageLimits: PlanStorageLimits | null }>('GET');
+
+export interface LoginEvent {
+  id: number;
+  userAgent: string | null;
+  signedInAt: string;
+}
+
+// available = false until the login history migration has been run
+export const fetchLoginHistory = (userId: string) =>
+  request<{ logins: LoginEvent[]; available: boolean }>(
+    'GET',
+    undefined,
+    `?loginHistory=${encodeURIComponent(userId)}`,
+  );
+
+export const updatePlanStorageLimits =(planStorageLimits: Partial<PlanStorageLimits>) =>
+  request<{ ok: true }>('PUT', { planStorageLimits });
 
 export const createUser = (input: NewUserInput) =>
   request<{ id: string }>('POST', input);

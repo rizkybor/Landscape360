@@ -21,6 +21,8 @@ import { RegionSelectionLayer } from "./RegionSelectionLayer";
 import { SurveyorPanel } from "./SurveyorPanel";
 import { TrackRecorderPanel } from "./TrackRecorderPanel";
 import { TrackRecorderLayer } from "./TrackRecorderLayer";
+import { MarkedLocationPanel } from "./MarkedLocationPanel";
+import { MarkedLocationLayer } from "./MarkedLocationLayer";
 import { SearchPanel } from "./SearchPanel";
 import { NavigationControls } from "./NavigationControls";
 import { UserLocationMarker } from "./UserLocationMarker";
@@ -887,6 +889,8 @@ const MapBoxContainerComponent = ({
 
         <TrackRecorderLayer />
 
+        {user && <MarkedLocationLayer />}
+
         {mode === "3D" && (
           <Suspense fallback={null}>
             <ThreeScene />
@@ -1150,6 +1154,7 @@ const MapBoxContainerComponent = ({
 
       {showControls && <SurveyorPanel />}
       {showControls && <TrackRecorderPanel />}
+      {showControls && <MarkedLocationPanel />}
       {showControls && <SearchPanel />}
       {showControls && <WeatherWidget />}
       {/* Custom Basemap Manager */}

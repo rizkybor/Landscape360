@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TrackRecorderPanel } from './TrackRecorderPanel';
 import { useSurveyStore } from '../store/useSurveyStore';
@@ -78,6 +78,36 @@ describe('TrackRecorderPanel', () => {
     expect(screen.getByText('Rinjani summit')).toBeInTheDocument();
     expect(screen.getByText('by owner@example.com')).toBeInTheDocument();
     expect(screen.getByTitle('Remove from my list')).toBeInTheDocument();
+  });
+
+  it.each([
+    ['Free', false, false],
+    ['Pro', false, true],
+    ['Enterprise', false, true],
+    ['Free', true, true],
+  ])('rename on a cloud track: %s (admin: %s) -> %s', async (plan, isAdmin, canRename) => {
+    mockAccount(plan, isAdmin);
+    const track = {
+      id: 't1', userId: 'u1', name: 'Gede Pangrango', mode: 'online' as const, status: 'completed' as const,
+      startedAt: 1, endedAt: 2, elapsedMs: 1000, lastResumedAt: null, distanceM: 1500, movingTimeMs: 1000,
+      elevationGainM: 120, elevationLossM: 0, maxAltM: null, minAltM: null, pointCount: 10,
+      syncError: null, updatedAt: 2,
+    };
+    render(<TrackRecorderPanel />);
+    fireEvent.click(screen.getByRole('button', { name: /^My Tracks/ }));
+    await waitFor(() => expect(useTrackRecorderStore.getState().isLoadingTracks).toBe(false));
+
+    act(() => {
+      useTrackRecorderStore.setState({
+        tracks: [
+          { ...track, syncStatus: 'remote', syncedAt: 2 },
+          { ...track, id: 't2', name: 'On this device', syncStatus: 'local', syncedAt: null },
+        ],
+      });
+    });
+
+    // Tracks that never left the device can always be renamed
+    expect(screen.getAllByTitle('Rename')).toHaveLength(canRename ? 2 : 1);
   });
 
   it('shows a compact REC indicator when hidden during a recording', async () => {

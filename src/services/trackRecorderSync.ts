@@ -104,8 +104,10 @@ export const fetchRemotePoints = async (trackId: string): Promise<TrackPoint[]> 
   return ((data?.points ?? []) as CompactPoint[]).map(fromCompact);
 };
 
+// Name-only update (rename_recorded_track in 20261024000004_storage_quotas.sql) so Pro
+// accounts can rename without being allowed to change recorded data
 export const renameRemoteTrack = async (trackId: string, name: string) => {
-  const { error } = await supabase.from('recorded_tracks').update({ name }).eq('id', trackId);
+  const { error } = await supabase.rpc('rename_recorded_track', { p_track_id: trackId, p_name: name });
   if (error) throw new Error(error.message);
 };
 

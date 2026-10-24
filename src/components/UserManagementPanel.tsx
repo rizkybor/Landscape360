@@ -9,7 +9,12 @@ import {
   KeyRound,
   Check,
   Loader2,
+  HardDrive,
+  Mail,
+  History,
 } from "lucide-react";
+import { UserEmailComposer } from "./UserEmailComposer";
+import { UserLoginHistory } from "./UserLoginHistory";
 import {
   PLANS,
   ROLES,
@@ -18,10 +23,19 @@ import {
   createUser,
   updateUser,
   deleteUser,
+  updatePlanStorageLimits,
   type ManagedUser,
   type Plan,
+  type PlanStorageLimits,
   type Role,
 } from "../lib/adminUsers";
+import {
+  STORAGE_CATEGORY_LABELS,
+  formatBytes,
+  formatMb,
+  usageBarClass,
+  usagePercent,
+} from "../lib/storageUsage";
 
 const ROLE_LABELS: Record<Role, string> = {
   pengguna360: "User",
@@ -44,6 +58,13 @@ interface Props {
   onClose: () => void;
 }
 
+const breakdownTitle = (u: ManagedUser) =>
+  u.storage
+    ? (Object.keys(STORAGE_CATEGORY_LABELS) as (keyof typeof STORAGE_CATEGORY_LABELS)[])
+        .map((key) => `${STORAGE_CATEGORY_LABELS[key]}: ${formatBytes(u.storage!.breakdown[key])}`)
+        .join("\n")
+    : "";
+
 export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -54,6 +75,16 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [passwordEditId, setPasswordEditId] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState("");
+  const [emailUserId, setEmailUserId] = useState<string | null>(null);
+  const [historyUserId, setHistoryUserId] = useState<string | null>(null);
+  const [quotaEditId, setQuotaEditId] = useState<string | null>(null);
+  const [quotaValue, setQuotaValue] = useState("");
+  const [sortBy, setSortBy] = useState<"email" | "storage">("email");
+
+  const [planLimits, setPlanLimits] = useState<PlanStorageLimits | null>(null);
+  const [showPlanLimits, setShowPlanLimits] = useState(false);
+  const [planLimitForm, setPlanLimitForm] = useState<Record<Plan, string>>({ Free: "", Pro: "", Enterprise: "" });
+  const [isSavingPlanLimits, setIsSavingPlanLimits] = useState(false);
 
   const [showCreate, setShowCreate] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -69,7 +100,9 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
     setIsLoading(true);
     setError(null);
     try {
-      setUsers(await listUsers());
+      const result = await listUsers();
+      setUsers(result.users);
+      setPlanLimits(result.planStorageLimits);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -83,13 +116,22 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
 
   const filteredUsers = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return users;
-    return users.filter(
-      (u) =>
-        u.email.toLowerCase().includes(q) ||
-        u.displayName?.toLowerCase().includes(q),
-    );
-  }, [users, query]);
+    const matching = !q
+      ? users
+      : users.filter(
+          (u) =>
+            u.email.toLowerCase().includes(q) ||
+            u.displayName?.toLowerCase().includes(q),
+        );
+    if (sortBy === "email") return matching;
+    return [...matching].sort((a, b) => (b.storage?.usedBytes ?? 0) - (a.storage?.usedBytes ?? 0));
+  }, [users, query, sortBy]);
+
+  const totalUsedBytes = useMemo(
+    () => users.reduce((sum, u) => sum + (u.storage?.usedBytes ?? 0), 0),
+    [users],
+  );
+  const storageEnabled = planLimits !== null;
 
   const flash = (message: string) => {
     setNotice(message);
@@ -135,6 +177,56 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
     if (ok) {
       setPasswordEditId(null);
       setNewPassword("");
+    }
+  };
+
+  const handleQuotaSave = async (user: ManagedUser, storageLimitMb: number | null) => {
+    if (storageLimitMb !== null && (!Number.isFinite(storageLimitMb) || storageLimitMb < 0)) {
+      setError("Storage limit must be a number of MB (0 or more)");
+      return;
+    }
+    const ok = await runAction(
+      user.id,
+      () => updateUser({ id: user.id, storageLimitMb }),
+      storageLimitMb === null
+        ? `${user.email} now uses the ${user.plan} plan limit`
+        : `${user.email} storage limit set to ${formatMb(storageLimitMb)}`,
+    );
+    if (ok) {
+      setQuotaEditId(null);
+      await refresh();
+    }
+  };
+
+  const openPlanLimits = () => {
+    if (planLimits) {
+      setPlanLimitForm({
+        Free: String(planLimits.Free ?? ""),
+        Pro: String(planLimits.Pro ?? ""),
+        Enterprise: String(planLimits.Enterprise ?? ""),
+      });
+    }
+    setShowPlanLimits((v) => !v);
+  };
+
+  const handlePlanLimitsSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const values = Object.fromEntries(PLANS.map((p) => [p, Number(planLimitForm[p])])) as PlanStorageLimits;
+    if (PLANS.some((p) => planLimitForm[p].trim() === "" || !Number.isFinite(values[p]) || values[p] < 0)) {
+      setError("Each plan limit must be a number of MB (0 or more)");
+      return;
+    }
+    setIsSavingPlanLimits(true);
+    setError(null);
+    try {
+      await updatePlanStorageLimits(values);
+      flash("Plan storage limits saved");
+      setShowPlanLimits(false);
+      await refresh();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setIsSavingPlanLimits(false);
     }
   };
 
@@ -191,7 +283,9 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
             <div>
               <h2 className="text-sm font-bold text-ink">Manage Users</h2>
               <p className="text-[10px] text-sand-500">
-                {users.length} accounts · create, edit plan & role, reset password, delete
+                {users.length} accounts
+                {storageEnabled && ` · ${formatBytes(totalUsedBytes)} cloud storage used`} · plan, role,
+                storage, password
               </p>
             </div>
           </div>
@@ -225,6 +319,27 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
               className={`${inputClass} pl-9`}
             />
           </div>
+          {storageEnabled && (
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as "email" | "storage")}
+              className={`${selectClass} py-2 shrink-0`}
+              title="Sort users"
+            >
+              <option value="email" className="bg-white">Sort: Email</option>
+              <option value="storage" className="bg-white">Sort: Storage used</option>
+            </select>
+          )}
+          <button
+            onClick={openPlanLimits}
+            disabled={!storageEnabled}
+            className={`cursor-pointer shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+              showPlanLimits ? "bg-forest-50 border-forest-200 text-forest-700" : "bg-sand-50 border-sand-200 text-sand-700 hover:bg-sand-100"
+            }`}
+            title={storageEnabled ? "Storage limits per plan" : "Run the storage quota migration to enable storage limits"}
+          >
+            <HardDrive size={14} /> Storage
+          </button>
           <button
             onClick={() => setShowCreate((v) => !v)}
             className="cursor-pointer shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg bg-forest-800 hover:bg-forest-700 text-white text-xs font-bold transition-colors"
@@ -248,6 +363,54 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
               </button>
             )}
           </div>
+        )}
+
+        {/* Plan storage limits */}
+        {showPlanLimits && storageEnabled && (
+          <form
+            onSubmit={handlePlanLimitsSave}
+            className="m-3 p-3 rounded-xl bg-forest-50 border border-forest-200 space-y-2 shrink-0"
+          >
+            <div className="text-xs font-bold text-forest-700">Cloud storage limit per plan</div>
+            <p className="text-[10px] text-sand-600">
+              Counts tracks, marked locations, surveys and custom basemaps. Accounts with a custom
+              limit keep it; the admin account is unlimited. Lowering a limit never deletes data, it
+              only blocks new data until the account is back under the limit.
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {PLANS.map((p) => (
+                <label key={p} className="space-y-1">
+                  <span className="text-[10px] font-bold text-sand-600">{p} (MB)</span>
+                  <input
+                    type="number"
+                    min={0}
+                    step="any"
+                    value={planLimitForm[p]}
+                    onChange={(e) => setPlanLimitForm({ ...planLimitForm, [p]: e.target.value })}
+                    className={inputClass}
+                    aria-label={`${p} storage limit in MB`}
+                  />
+                </label>
+              ))}
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowPlanLimits(false)}
+                className="cursor-pointer px-3 py-2 rounded-lg bg-white hover:bg-sand-100 text-sand-700 text-xs transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSavingPlanLimits}
+                className="cursor-pointer flex items-center gap-1.5 px-3 py-2 rounded-lg bg-forest-800 hover:bg-forest-700 text-white text-xs font-bold transition-colors disabled:opacity-50"
+              >
+                {isSavingPlanLimits ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                Save Limits
+              </button>
+            </div>
+          </form>
         )}
 
         {/* Create form */}
@@ -364,8 +527,32 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
                         </div>
                         <div className="text-[10px] text-sand-500 truncate">
                           {u.displayName || "—"} · Joined {new Date(u.createdAt).toLocaleDateString()}
-                          {u.lastSignInAt && ` · Last login ${new Date(u.lastSignInAt).toLocaleDateString()}`}
+                          {` · Last login ${u.lastSignInAt ? new Date(u.lastSignInAt).toLocaleString() : "never"}`}
                         </div>
+                        {u.storage && (() => {
+                          const percent = usagePercent(u.storage.usedBytes, u.storage.limitBytes);
+                          return (
+                            <div className="mt-1.5 max-w-xs" title={breakdownTitle(u)}>
+                              <div className="flex items-center justify-between text-[10px] text-sand-600">
+                                <span>
+                                  {formatBytes(u.storage.usedBytes)} /{" "}
+                                  {u.storage.limitBytes === null ? "Unlimited" : formatBytes(u.storage.limitBytes)}
+                                </span>
+                                {u.storage.overrideMb !== null && (
+                                  <span className="text-[9px] px-1 rounded bg-forest-50 text-forest-700 border border-forest-200">
+                                    custom
+                                  </span>
+                                )}
+                              </div>
+                              <div className="h-1 bg-sand-200 rounded-full overflow-hidden mt-0.5">
+                                <div
+                                  className={`h-full rounded-full ${usageBarClass(percent)}`}
+                                  style={{ width: `${percent ?? 0}%` }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })()}
                         </div>
                     </div>
 
@@ -403,9 +590,62 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
                       )}
                       <button
                         onClick={() => {
+                          setEmailUserId(emailUserId === u.id ? null : u.id);
+                          setHistoryUserId(null);
+                          setQuotaEditId(null);
+                          setPasswordEditId(null);
+                          setConfirmDeleteId(null);
+                        }}
+                        disabled={isBusy}
+                        className={`cursor-pointer p-1.5 rounded-lg hover:bg-sand-100 transition-colors disabled:opacity-50 ${
+                          emailUserId === u.id ? "text-forest-700 bg-sand-100" : "text-sand-600 hover:text-ink"
+                        }`}
+                        title="Send email"
+                      >
+                        <Mail size={14} />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setHistoryUserId(historyUserId === u.id ? null : u.id);
+                          setEmailUserId(null);
+                          setQuotaEditId(null);
+                          setPasswordEditId(null);
+                          setConfirmDeleteId(null);
+                        }}
+                        className={`cursor-pointer p-1.5 rounded-lg hover:bg-sand-100 transition-colors ${
+                          historyUserId === u.id ? "text-forest-700 bg-sand-100" : "text-sand-600 hover:text-ink"
+                        }`}
+                        title="Login history"
+                      >
+                        <History size={14} />
+                      </button>
+                      {u.storage && !u.isAdmin && (
+                        <button
+                          onClick={() => {
+                            setEmailUserId(null);
+                            setHistoryUserId(null);
+                            setQuotaEditId(quotaEditId === u.id ? null : u.id);
+                            setQuotaValue(u.storage?.overrideMb != null ? String(u.storage.overrideMb) : "");
+                            setPasswordEditId(null);
+                            setConfirmDeleteId(null);
+                          }}
+                          disabled={isBusy}
+                          className={`cursor-pointer p-1.5 rounded-lg hover:bg-sand-100 transition-colors disabled:opacity-50 ${
+                            quotaEditId === u.id ? "text-forest-700 bg-sand-100" : "text-sand-600 hover:text-ink"
+                          }`}
+                          title="Storage limit"
+                        >
+                          <HardDrive size={14} />
+                        </button>
+                      )}
+                      <button
+                        onClick={() => {
                           setPasswordEditId(passwordEditId === u.id ? null : u.id);
                           setNewPassword("");
                           setConfirmDeleteId(null);
+                          setQuotaEditId(null);
+                          setEmailUserId(null);
+                          setHistoryUserId(null);
                         }}
                         disabled={isBusy}
                         className="cursor-pointer p-1.5 rounded-lg hover:bg-sand-100 text-sand-600 hover:text-ink transition-colors disabled:opacity-50"
@@ -436,6 +676,9 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
                           onClick={() => {
                             setConfirmDeleteId(u.id);
                             setPasswordEditId(null);
+                            setEmailUserId(null);
+                            setHistoryUserId(null);
+                            setQuotaEditId(null);
                           }}
                           disabled={isSelf || isBusy}
                           className="cursor-pointer p-1.5 rounded-lg hover:bg-brick-50 text-brick-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
@@ -450,6 +693,61 @@ export const UserManagementPanel = ({ currentUserId, onClose }: Props) => {
                   {confirmDeleteId === u.id && (
                     <div className="mt-2 text-[10px] text-brick-600">
                       Delete {u.email} permanently? This cannot be undone.
+                    </div>
+                  )}
+
+                  {emailUserId === u.id && (
+                    <UserEmailComposer
+                      email={u.email}
+                      name={u.displayName || u.email.split("@")[0]}
+                      plan={u.isAdmin ? "Admin" : u.plan}
+                      onClose={() => setEmailUserId(null)}
+                    />
+                  )}
+
+                  {historyUserId === u.id && (
+                    <UserLoginHistory
+                      userId={u.id}
+                      lastSignInAt={u.lastSignInAt}
+                      onClose={() => setHistoryUserId(null)}
+                    />
+                  )}
+
+                  {quotaEditId === u.id && u.storage && (
+                    <div className="mt-2 space-y-1.5">
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          min={0}
+                          step="any"
+                          autoFocus
+                          placeholder={`Custom limit in MB (plan: ${planLimits ? formatMb(planLimits[u.plan] ?? 0) : "—"})`}
+                          value={quotaValue}
+                          onChange={(e) => setQuotaValue(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && quotaValue.trim() && handleQuotaSave(u, Number(quotaValue))}
+                          className={inputClass}
+                          aria-label="Custom storage limit in MB"
+                        />
+                        <button
+                          onClick={() => handleQuotaSave(u, Number(quotaValue))}
+                          disabled={isBusy || quotaValue.trim() === ""}
+                          className="cursor-pointer shrink-0 px-3 rounded-lg bg-forest-800 hover:bg-forest-700 text-white text-xs font-bold transition-colors disabled:opacity-50"
+                        >
+                          Save
+                        </button>
+                        {u.storage.overrideMb !== null && (
+                          <button
+                            onClick={() => handleQuotaSave(u, null)}
+                            disabled={isBusy}
+                            className="cursor-pointer shrink-0 px-3 rounded-lg bg-sand-100 hover:bg-sand-200 text-sand-700 text-xs font-bold transition-colors disabled:opacity-50"
+                          >
+                            Use plan limit
+                          </button>
+                        )}
+                      </div>
+                      <div className="text-[10px] text-sand-500">
+                        {breakdownTitle(u).replace(/\n/g, " · ")}
+                      </div>
                     </div>
                   )}
 

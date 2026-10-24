@@ -4,9 +4,12 @@
  * Only accounts with profiles.is_admin = true may call these endpoints. Requests
  * must send the caller's Supabase access token as `Authorization: Bearer <token>`.
  *
- *   GET    /api/admin-users           -> list users with plan & role
+ *   GET    /api/admin-users           -> list users with plan, role & storage usage, plus plan storage limits
+ *   GET    /api/admin-users?loginHistory=<uuid> -> latest sign-ins of one user (time & browser)
  *   POST   /api/admin-users           -> create user { email, password, displayName?, plan, role }
- *   PATCH  /api/admin-users           -> update user { id, plan?, role?, password?, displayName? }
+ *   PATCH  /api/admin-users           -> update user { id, plan?, role?, password?, displayName?, storageLimitMb? }
+ *                                        (storageLimitMb: number = custom quota, null = back to the plan limit)
+ *   PUT    /api/admin-users           -> set plan storage limits { planStorageLimits: { Free?, Pro?, Enterprise? } } (MB)
  *   DELETE /api/admin-users?id=<uuid> -> delete user
  *
  * Requires SUPABASE_SERVICE_ROLE_KEY and SUPABASE_URL (or VITE_SUPABASE_URL)
@@ -18,6 +21,9 @@ import { createClient, type SupabaseClient, type User } from '@supabase/supabase
 const PLANS = ['Free', 'Pro', 'Enterprise'];
 const ROLES = ['pengguna360', 'monitor360'];
 const MIN_PASSWORD_LENGTH = 8;
+const MAX_STORAGE_LIMIT_MB = 1_000_000;
+// PostgREST / Postgres codes for a function or table that does not exist yet
+const MISSING_OBJECT_CODES = ['PGRST202', 'PGRST205', '42883', '42P01'];
 
 class HttpError extends Error {
   status: number;
@@ -92,6 +98,43 @@ function validatePassword(password: string | undefined) {
   }
 }
 
+function validateStorageLimit(value: unknown, field: string): number {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > MAX_STORAGE_LIMIT_MB) {
+    throw new HttpError(400, `${field} must be a number of MB between 0 and ${MAX_STORAGE_LIMIT_MB}`);
+  }
+  return Math.round(value * 100) / 100;
+}
+
+interface StorageRow {
+  user_id: string;
+  tracks_bytes: number;
+  locations_bytes: number;
+  surveys_bytes: number;
+  basemaps_bytes: number;
+  used_bytes: number;
+  limit_bytes: number | null;
+  override_mb: number | null;
+}
+
+// Storage usage per user, or null while the storage migration has not been run yet
+async function loadStorage(supabase: SupabaseClient) {
+  const [overview, limits] = await Promise.all([
+    supabase.rpc('admin_storage_overview'),
+    supabase.from('plan_storage_limits').select('plan, limit_mb'),
+  ]);
+  const error = overview.error ?? limits.error;
+  if (error) {
+    if (MISSING_OBJECT_CODES.includes(error.code ?? '')) return null;
+    throw new HttpError(500, error.message);
+  }
+  return {
+    byUser: new Map(((overview.data ?? []) as StorageRow[]).map((row) => [row.user_id, row])),
+    planLimits: Object.fromEntries(
+      ((limits.data ?? []) as { plan: string; limit_mb: number }[]).map((l) => [l.plan, Number(l.limit_mb)]),
+    ),
+  };
+}
+
 async function listAllUsers(supabase: SupabaseClient): Promise<User[]> {
   const users: User[] = [];
   const perPage = 1000;
@@ -105,11 +148,12 @@ async function listAllUsers(supabase: SupabaseClient): Promise<User[]> {
 }
 
 async function handleList(supabase: SupabaseClient) {
-  const users = await listAllUsers(supabase);
-
-  const { data: profiles, error } = await supabase
-    .from('profiles')
-    .select('id, status_subscribe, status_user, is_admin');
+  const [users, profilesResult, storage] = await Promise.all([
+    listAllUsers(supabase),
+    supabase.from('profiles').select('id, status_subscribe, status_user, is_admin'),
+    loadStorage(supabase),
+  ]);
+  const { data: profiles, error } = profilesResult;
   if (error) throw new HttpError(500, error.message);
 
   const profileMap = new Map(profiles?.map((p) => [p.id, p]));
@@ -117,6 +161,7 @@ async function handleList(supabase: SupabaseClient) {
   const result = users
     .map((u) => {
       const profile = profileMap.get(u.id);
+      const usage = storage?.byUser.get(u.id);
       return {
         id: u.id,
         email: u.email ?? '',
@@ -126,11 +171,59 @@ async function handleList(supabase: SupabaseClient) {
         isAdmin: profile?.is_admin === true,
         createdAt: u.created_at,
         lastSignInAt: u.last_sign_in_at ?? null,
+        storage: usage
+          ? {
+              usedBytes: Number(usage.used_bytes),
+              limitBytes: usage.limit_bytes === null ? null : Number(usage.limit_bytes),
+              overrideMb: usage.override_mb === null ? null : Number(usage.override_mb),
+              breakdown: {
+                tracks: Number(usage.tracks_bytes),
+                locations: Number(usage.locations_bytes),
+                surveys: Number(usage.surveys_bytes),
+                basemaps: Number(usage.basemaps_bytes),
+              },
+            }
+          : null,
       };
     })
     .sort((a, b) => a.email.localeCompare(b.email));
 
-  return json({ users: result });
+  return json({ users: result, planStorageLimits: storage?.planLimits ?? null });
+}
+
+async function handleLoginHistory(supabase: SupabaseClient, userId: string) {
+  const { data, error } = await supabase
+    .from('login_events')
+    .select('id, user_agent, created_at')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(30);
+  if (error) {
+    // Login history migration not run yet
+    if (MISSING_OBJECT_CODES.includes(error.code ?? '')) return json({ logins: [], available: false });
+    throw new HttpError(500, error.message);
+  }
+  return json({
+    available: true,
+    logins: (data ?? []).map((e) => ({ id: e.id, userAgent: e.user_agent, signedInAt: e.created_at })),
+  });
+}
+
+async function handlePlanLimits(request: Request, supabase: SupabaseClient) {
+  const body = await readBody(request);
+  const limits = body.planStorageLimits;
+  if (!limits || typeof limits !== 'object') throw new HttpError(400, 'planStorageLimits is required');
+
+  const rows = Object.entries(limits as Record<string, unknown>).map(([plan, value]) => {
+    if (!PLANS.includes(plan)) throw new HttpError(400, `plan must be one of ${PLANS.join(', ')}`);
+    return { plan, limit_mb: validateStorageLimit(value, `${plan} limit`), updated_at: new Date().toISOString() };
+  });
+  if (rows.length === 0) throw new HttpError(400, 'planStorageLimits is empty');
+
+  const { error } = await supabase.from('plan_storage_limits').upsert(rows, { onConflict: 'plan' });
+  if (error) throw new HttpError(500, error.message);
+
+  return json({ ok: true });
 }
 
 async function handleCreate(request: Request, supabase: SupabaseClient) {
@@ -183,8 +276,13 @@ async function handleUpdate(request: Request, supabase: SupabaseClient, admin: U
   validatePlan(plan);
   validateRole(role);
   validatePassword(password);
+  const hasStorageLimit = 'storageLimitMb' in body;
+  const storageLimitMb =
+    !hasStorageLimit || body.storageLimitMb === null
+      ? null
+      : validateStorageLimit(body.storageLimitMb, 'storageLimitMb');
 
-  if (plan !== undefined || role !== undefined) {
+  if (plan !== undefined || role !== undefined || hasStorageLimit) {
     const { data: target, error } = await supabase
       .from('profiles')
       .select('is_admin')
@@ -192,7 +290,7 @@ async function handleUpdate(request: Request, supabase: SupabaseClient, admin: U
       .maybeSingle();
     if (error) throw new HttpError(500, error.message);
     if (target?.is_admin || id === admin.id) {
-      throw new HttpError(400, 'Admin accounts have full access; plan and role do not apply');
+      throw new HttpError(400, 'Admin accounts have full access; plan, role and storage limits do not apply');
     }
   }
 
@@ -204,12 +302,13 @@ async function handleUpdate(request: Request, supabase: SupabaseClient, admin: U
     if (error) throw new HttpError(400, error.message);
   }
 
-  if (plan !== undefined || role !== undefined) {
+  if (plan !== undefined || role !== undefined || hasStorageLimit) {
     const { error } = await supabase
       .from('profiles')
       .update({
         ...(plan !== undefined && { status_subscribe: plan }),
         ...(role !== undefined && { status_user: role }),
+        ...(hasStorageLimit && { storage_limit_mb: storageLimitMb }),
         updated_at: new Date().toISOString(),
       })
       .eq('id', id);
@@ -244,7 +343,11 @@ const withAdmin = (handler: Handler) => async (request: Request) => {
   }
 };
 
-export const GET = withAdmin((_request, supabase) => handleList(supabase));
+export const GET = withAdmin((request, supabase) => {
+  const loginHistory = new URL(request.url).searchParams.get('loginHistory');
+  return loginHistory ? handleLoginHistory(supabase, loginHistory) : handleList(supabase);
+});
 export const POST = withAdmin((request, supabase) => handleCreate(request, supabase));
 export const PATCH = withAdmin(handleUpdate);
+export const PUT = withAdmin((request, supabase) => handlePlanLimits(request, supabase));
 export const DELETE = withAdmin(handleDelete);

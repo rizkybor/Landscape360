@@ -509,7 +509,11 @@ export const useCustomBasemapStore = create<CustomBasemapState>((set, get) => ({
             .select()
             .single();
 
-        if (dbError) throw dbError;
+        if (dbError) {
+            // e.g. the storage quota rejected it: don't leave the uploaded file behind
+            await supabase.storage.from('custom-basemaps').remove([filePath]);
+            throw dbError;
+        }
 
         // Refresh list
         await get().loadBasemaps();

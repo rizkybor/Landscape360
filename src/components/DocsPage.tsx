@@ -12,6 +12,11 @@ import {
   Globe,
   CloudSun,
   Navigation,
+  MapPinned,
+  Footprints,
+  UserPlus,
+  ShieldCheck,
+  HardDrive,
 } from "lucide-react";
 import streetsView from "../assets/Street-View.png";
 import outdoorsView from "../assets/Outdoors-View.png";
@@ -127,6 +132,9 @@ export const DocsPage = ({ onBack }: Props) => {
                 </span>
                 <span className="px-3 py-1 rounded-full bg-sand-50 border border-sand-200 text-xs text-sand-700">
                   Reliable Offline Maps
+                </span>
+                <span className="px-3 py-1 rounded-full bg-sand-50 border border-sand-200 text-xs text-sand-700">
+                  Marked Locations & Sharing
                 </span>
               </div>
             </div>
@@ -269,6 +277,56 @@ export const DocsPage = ({ onBack }: Props) => {
                     and verified sources. Optimized for large datasets via clustering
                     and GPU-rendered layers (no heavy DOM markers). Click a POI to open details,
                     then click the map or the close button to dismiss.
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-white border border-sand-200 rounded-xl p-4 flex gap-4 items-start group hover:border-gold-200 transition-all">
+                <div className="w-8 h-8 rounded-lg bg-gold-50 flex items-center justify-center text-gold-700 shrink-0">
+                  <MapPinned size={16} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-ink mb-1">
+                    Marked Locations
+                  </h4>
+                  <p className="text-xs text-sand-600 leading-relaxed">
+                    Open <strong>Marked Locations</strong> in Tools &amp; Exploration to save
+                    camps, water sources, summits and more with full details. Share them with
+                    other users by <strong>email or name</strong> and export as{" "}
+                    <strong>GPX</strong>.
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-white border border-sand-200 rounded-xl p-4 flex gap-4 items-start group hover:border-forest-200 transition-all">
+                <div className="w-8 h-8 rounded-lg bg-forest-50 flex items-center justify-center text-forest-700 shrink-0">
+                  <Footprints size={16} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-ink mb-1">
+                    Track Recorder
+                  </h4>
+                  <p className="text-xs text-sand-600 leading-relaxed">
+                    Record personal GPS tracks <strong>online or offline</strong> with distance,
+                    duration and elevation, then share them by email or download them as GPX.
+                    Recording is available for Enterprise accounts; Pro accounts can view, rename,
+                    export and delete their tracks.
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-white border border-sand-200 rounded-xl p-4 flex gap-4 items-start group hover:border-forest-200 transition-all">
+                <div className="w-8 h-8 rounded-lg bg-forest-50 flex items-center justify-center text-forest-700 shrink-0">
+                  <UserPlus size={16} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-ink mb-1">
+                    Request an Account
+                  </h4>
+                  <p className="text-xs text-sand-600 leading-relaxed">
+                    New here? Click <strong>Sign In / Register</strong>, then{" "}
+                    <strong>Request Account</strong> and fill in the form. The admin reviews it
+                    and emails you your login details.
                   </p>
                 </div>
               </div>
@@ -1309,6 +1367,303 @@ export const DocsPage = ({ onBack }: Props) => {
                       real-world terrain features."
                     </p>
                   </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Marked Locations */}
+          <section className="space-y-8 pt-8 border-t border-sand-100">
+            <div className="flex items-center gap-3 text-ink mb-6">
+              <div className="p-2 bg-gold-50 rounded-lg border border-gold-200">
+                <MapPinned className="w-5 h-5 text-gold-700" />
+              </div>
+              <h3 className="text-2xl font-bold">Marked Locations</h3>
+              <span className="px-2 py-1 rounded bg-gold-50 text-[10px] text-gold-700 font-bold uppercase border border-gold-200">
+                All Accounts
+              </span>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="bg-white border border-sand-200 rounded-xl p-6 space-y-4">
+                <h4 className="text-lg font-bold text-ink">Save Places That Matter</h4>
+                <p className="text-xs text-sand-600 leading-relaxed">
+                  Keep your own list of important places on the map: one location
+                  or hundreds. Each location stores its <strong>name</strong>,{" "}
+                  <strong>category</strong>, <strong>coordinates</strong> (decimal and
+                  DMS), <strong>elevation</strong>, <strong>area / address</strong>,{" "}
+                  <strong>contact</strong>, a <strong>description</strong> and up to 10{" "}
+                  <strong>tags</strong>.
+                </p>
+
+                <div className="space-y-3">
+                  {[
+                    {
+                      title: "Add a location",
+                      desc: "Open Marked Locations in Tools & Exploration and press Add. Set the position with Pick on map (elevation is filled in from the terrain), Map center, My GPS, or type the latitude and longitude.",
+                    },
+                    {
+                      title: "Find it again",
+                      desc: "Search by name, tag or area. Click a location in the list to fly to it, or click its marker on the map to see every detail, get Directions, or copy the coordinates.",
+                    },
+                    {
+                      title: "Export",
+                      desc: "Download the listed or selected locations as a GPX file, ready for Garmin, OsmAnd, Avenza and most GPS apps.",
+                    },
+                  ].map((step, i) => (
+                    <div key={step.title} className="flex items-start gap-3 p-3 bg-sand-50 rounded-lg border border-sand-100">
+                      <div className="mt-0.5 text-gold-700 font-bold text-[10px]">
+                        {String(i + 1).padStart(2, "0")}
+                      </div>
+                      <div>
+                        <strong className="text-ink text-xs block">{step.title}</strong>
+                        <p className="text-[10px] text-sand-600">{step.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div>
+                  <h5 className="text-xs font-bold text-sand-600 uppercase tracking-wider mb-2">
+                    Categories
+                  </h5>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      "Point of Interest",
+                      "Camp / Basecamp",
+                      "Summit",
+                      "Water Source",
+                      "Shelter / Pos",
+                      "Viewpoint",
+                      "Trailhead",
+                      "Hazard",
+                      "Cave",
+                      "Parking",
+                    ].map((c) => (
+                      <span key={c} className="px-2 py-1 rounded bg-gold-50 border border-gold-200 text-[10px] text-gold-700 font-bold">
+                        {c}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="bg-white border border-sand-200 rounded-xl p-6 space-y-3">
+                  <h4 className="text-lg font-bold text-ink">Share with Other Users</h4>
+                  <p className="text-xs text-sand-600 leading-relaxed">
+                    Share one location, or tick several and share them all at once, with
+                    another Landscape 360 account. Type their <strong>email</strong> or
+                    their exact <strong>display name</strong>; if several accounts use the
+                    same name, share by email instead.
+                  </p>
+                  <ul className="space-y-2 text-[11px] text-sand-700">
+                    <li className="flex gap-2">
+                      <span className="text-gold-700">•</span> Recipients find it under the{" "}
+                      <strong>Shared</strong> tab and on their map. They can view it but not
+                      change it.
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="text-gold-700">•</span> Owners can see who has access
+                      and remove it at any time. Recipients can remove a shared location from
+                      their own list.
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="text-gold-700">•</span> Email addresses of other users
+                      are always shown masked (e.g. <span className="font-mono">s***@gmail.com</span>).
+                    </li>
+                  </ul>
+                  <div className="flex flex-wrap gap-3 pt-2 text-[10px] text-sand-600">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-3 h-3 rounded-full bg-forest-700 ring-2 ring-white shadow" /> Ring: white = yours
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-3 h-3 rounded-full bg-forest-700 ring-2 ring-gold-300 shadow" /> gold = shared with you
+                    </span>
+                  </div>
+                </div>
+
+                <div className="bg-white border border-sand-200 rounded-xl p-6">
+                  <h4 className="text-sm font-bold text-ink mb-3">Limits by Account</h4>
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="text-left text-[10px] uppercase tracking-wider text-sand-500 border-b border-sand-200">
+                        <th className="py-2 font-bold">Account</th>
+                        <th className="py-2 font-bold">Locations</th>
+                        <th className="py-2 font-bold">Share</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-sand-700">
+                      <tr className="border-b border-sand-100">
+                        <td className="py-2 font-bold">Free</td>
+                        <td className="py-2 font-mono">10</td>
+                        <td className="py-2">Receive only</td>
+                      </tr>
+                      <tr className="border-b border-sand-100">
+                        <td className="py-2 font-bold">Pro</td>
+                        <td className="py-2 font-mono">100</td>
+                        <td className="py-2 text-forest-700 font-bold">✓</td>
+                      </tr>
+                      <tr className="border-b border-sand-100">
+                        <td className="py-2 font-bold">Enterprise</td>
+                        <td className="py-2 font-mono">1,000</td>
+                        <td className="py-2 text-forest-700 font-bold">✓</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 font-bold">Admin</td>
+                        <td className="py-2 font-mono">Unlimited</td>
+                        <td className="py-2 text-forest-700 font-bold">✓ + All Users</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <p className="text-[10px] text-sand-500 mt-3 leading-relaxed">
+                    Every account can receive shared locations. The admin's{" "}
+                    <strong>All Users</strong> tab lists, edits and deletes every account's
+                    locations and can show them all on the map. Locations need an internet
+                    connection to load and save.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Accounts & Access */}
+          <section className="space-y-8 pt-8 border-t border-sand-100">
+            <div className="flex items-center gap-3 text-ink mb-6">
+              <div className="p-2 bg-forest-50 rounded-lg border border-forest-200">
+                <ShieldCheck className="w-5 h-5 text-forest-700" />
+              </div>
+              <h3 className="text-2xl font-bold">Accounts & Access</h3>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="bg-white border border-sand-200 rounded-xl p-6 space-y-3">
+                <h4 className="text-lg font-bold text-ink flex items-center gap-2">
+                  <UserPlus size={18} className="text-forest-700" /> Request an Account
+                </h4>
+                <p className="text-xs text-sand-600 leading-relaxed">
+                  Accounts are created by the admin. To get one, click{" "}
+                  <strong>Sign In / Register</strong> and then <strong>Request Account</strong>.
+                  Fill in your email, full name, and optionally your organization, phone /
+                  WhatsApp, the plan you need and a short message.
+                </p>
+                <ul className="space-y-2 text-[11px] text-sand-700">
+                  <li className="flex gap-2">
+                    <span className="text-forest-700">•</span> The admin reviews your request and
+                    emails your login details once it is approved.
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-forest-700">•</span> Only one open request per email
+                    address is kept, so there is no need to send it twice.
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-forest-700">•</span> Forgot your password? Use{" "}
+                    <strong>Forgot Password</strong> in the same window to contact the admin.
+                  </li>
+                </ul>
+              </div>
+
+              <div className="bg-white border border-sand-200 rounded-xl p-6 space-y-3">
+                <h4 className="text-lg font-bold text-ink flex items-center gap-2">
+                  <ShieldCheck size={18} className="text-forest-700" /> Admin Tools
+                  <span className="px-2 py-0.5 rounded bg-forest-900 text-[10px] text-gold-300 font-bold uppercase">
+                    Admin
+                  </span>
+                </h4>
+                <p className="text-xs text-sand-600 leading-relaxed">
+                  The admin account has access to every feature regardless of plan, and two
+                  extra entries in the <strong>User Account</strong> menu:
+                </p>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3 p-3 bg-sand-50 rounded-lg border border-sand-100">
+                    <div className="mt-0.5 text-forest-700 font-bold text-[10px]">01</div>
+                    <div>
+                      <strong className="text-ink text-xs block">Account Requests</strong>
+                      <p className="text-[10px] text-sand-600">
+                        Pending requests show as a badge. <strong>Approve</strong> creates the
+                        account with the chosen plan, role and a generated password, then shows
+                        the login details to copy or email. <strong>Reject</strong> can include
+                        an internal note.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 bg-sand-50 rounded-lg border border-sand-100">
+                    <div className="mt-0.5 text-forest-700 font-bold text-[10px]">02</div>
+                    <div>
+                      <strong className="text-ink text-xs block">Manage Users & Plans</strong>
+                      <p className="text-[10px] text-sand-600">
+                        Create accounts, change plan and role, reset passwords and delete
+                        users. Each account shows its cloud storage usage; the admin can sort
+                        by usage, give one account a custom limit, and change the default limit
+                        of every plan with the <strong>Storage</strong> button.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 bg-sand-50 rounded-lg border border-sand-100">
+                    <div className="mt-0.5 text-forest-700 font-bold text-[10px]">03</div>
+                    <div>
+                      <strong className="text-ink text-xs block">Send Email</strong>
+                      <p className="text-[10px] text-sand-600">
+                        Write to any account from a template (account information, plan
+                        updated, storage almost full) or a blank message, then{" "}
+                        <strong>Open in Gmail</strong>: the email opens ready to send, and the
+                        admin picks the sender and presses Send. Approved account requests can
+                        receive their login details the same way.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 bg-sand-50 rounded-lg border border-sand-100">
+                    <div className="mt-0.5 text-forest-700 font-bold text-[10px]">04</div>
+                    <div>
+                      <strong className="text-ink text-xs block">Login History</strong>
+                      <p className="text-[10px] text-sand-600">
+                        See when each account last signed in, and its latest sign-ins with the
+                        device and browser used.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white border border-sand-200 rounded-xl p-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <h4 className="text-lg font-bold text-ink flex items-center gap-2">
+                    <HardDrive size={18} className="text-forest-700" /> Cloud Storage
+                  </h4>
+                  <p className="text-xs text-sand-600 leading-relaxed">
+                    Every account has a cloud storage limit shared by its{" "}
+                    <strong>recorded tracks</strong>, <strong>marked locations</strong>,{" "}
+                    <strong>surveys</strong> and <strong>custom basemaps</strong>. Your usage
+                    is shown in the <strong>User Account</strong> menu (hover it for the
+                    breakdown per feature).
+                  </p>
+                  <p className="text-xs text-sand-600 leading-relaxed">
+                    When the limit is reached, new data is not saved until you delete
+                    something or the admin raises your limit. Deleting or shortening data
+                    always works, and nothing is ever removed automatically. Offline maps are
+                    stored on your device and have their own limits.
+                  </p>
+                </div>
+                <div className="bg-forest-50 rounded-lg border border-forest-200 p-4 space-y-2">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-forest-700 mb-1">
+                    Default limits
+                  </div>
+                  {[
+                    ["Free", "10 MB"],
+                    ["Pro", "100 MB"],
+                    ["Enterprise", "1 GB"],
+                    ["Admin", "Unlimited"],
+                  ].map(([plan, limit]) => (
+                    <div key={plan} className="flex justify-between items-center text-xs text-forest-700 border-b border-forest-200 last:border-0 pb-1">
+                      <span>{plan}</span>
+                      <span className="font-bold font-mono">{limit}</span>
+                    </div>
+                  ))}
+                  <p className="text-[10px] text-forest-700 italic pt-1">
+                    The admin can change these defaults and set custom limits per account.
+                  </p>
                 </div>
               </div>
             </div>

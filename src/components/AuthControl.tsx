@@ -7,6 +7,18 @@ import { useOfflineStore } from "../store/useOfflineStore";
 import { OfflineManager } from "./OfflineManager";
 import { RegionDrawingOverlay } from "./RegionDrawingOverlay";
 import { UserManagementPanel } from "./UserManagementPanel";
+import { AccountRequestsPanel } from "./AccountRequestsPanel";
+import { PLANS, type Plan } from "../lib/adminUsers";
+import { submitAccountRequest, listAccountRequests } from "../lib/accountRequests";
+import { recordLogin } from "../lib/loginHistory";
+import {
+  STORAGE_CATEGORY_LABELS,
+  fetchMyStorageUsage,
+  formatBytes,
+  usageBarClass,
+  usagePercent,
+  type MyStorageUsage,
+} from "../lib/storageUsage";
 import {
   LogIn,
   LogOut,
@@ -21,6 +33,7 @@ import {
   X,
   Check,
   Users,
+  Inbox,
 } from "lucide-react";
 
 // Set to true to show the Upgrade button (opens the Upgrade Plan modal) again
@@ -52,6 +65,25 @@ export const AuthControl = () => {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showUserManagement, setShowUserManagement] = useState(false);
+  const [showAccountRequests, setShowAccountRequests] = useState(false);
+  const [pendingRequestCount, setPendingRequestCount] = useState(0);
+
+  // Cloud storage used by this account, refreshed whenever the menu opens
+  const [storageUsage, setStorageUsage] = useState<MyStorageUsage | null>(null);
+  useEffect(() => {
+    if (!user || !showMenu) return;
+    fetchMyStorageUsage()
+      .then(setStorageUsage)
+      .catch(() => setStorageUsage(null)); // storage migration not run yet
+  }, [user, showMenu]);
+
+  // Admin: pending request count for the badge in the user menu
+  useEffect(() => {
+    if (!isAdmin || !showMenu) return;
+    listAccountRequests("pending")
+      .then((result) => setPendingRequestCount(result.pendingCount))
+      .catch(() => setPendingRequestCount(0));
+  }, [isAdmin, showMenu]);
 
   useEffect(() => {
     // Check active session
@@ -80,6 +112,14 @@ export const AuthControl = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [requestForm, setRequestForm] = useState({
+    fullName: "",
+    organization: "",
+    phone: "",
+    requestedPlan: "Free" as Plan,
+    message: "",
+    website: "", // honeypot
+  });
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
@@ -145,19 +185,30 @@ export const AuthControl = () => {
           password,
         });
         if (error) throw error;
+        recordLogin();
       } else {
-        // Registration: Send request via email instead of direct signup
-        const subject = encodeURIComponent("Request Account for Landscape360");
-        const body = encodeURIComponent(
-          `Dear Admin,\n\nI would like to request an account for the Landscape360 application.\n\nMy Email: ${email.trim()}\n\nThank you.`,
-        );
-        window.location.href = `mailto:contact@jcdigital.co.id?subject=${subject}&body=${body}`;
-
+        // Registration: the request is stored for the admin to approve or reject
+        await submitAccountRequest({
+          email: email.trim(),
+          fullName: requestForm.fullName.trim(),
+          organization: requestForm.organization.trim() || undefined,
+          phone: requestForm.phone.trim() || undefined,
+          requestedPlan: requestForm.requestedPlan,
+          message: requestForm.message.trim() || undefined,
+          website: requestForm.website,
+        });
+        setRequestForm({
+          fullName: "",
+          organization: "",
+          phone: "",
+          requestedPlan: "Free",
+          message: "",
+          website: "",
+        });
         setMessage({
           type: "success",
-          text: "Opening email client to send request...",
+          text: "Request sent. The admin will review it and email your login details.",
         });
-        // Optional: Switch back to login view or keep as is
       }
     } catch (err: any) {
       // Improve error message for common cases
@@ -285,6 +336,94 @@ export const AuthControl = () => {
                         />
                       </div>
                     </div>
+
+                    {!isForgotPassword && !isLoginView && (
+                      <>
+                        <div className="space-y-1">
+                          <label className="text-[10px] uppercase font-bold text-sand-500 tracking-wider ml-1">
+                            Full Name
+                          </label>
+                          <input
+                            type="text"
+                            value={requestForm.fullName}
+                            onChange={(e) => setRequestForm({ ...requestForm, fullName: e.target.value })}
+                            className="w-full bg-sand-50 border border-sand-200 rounded-xl py-3 px-4 text-sm text-ink placeholder-sand-400 focus:border-forest-300 focus:ring-1 focus:ring-forest-300 focus:bg-white/90 transition-all outline-none"
+                            required
+                            maxLength={120}
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="text-[10px] uppercase font-bold text-sand-500 tracking-wider ml-1">
+                              Organization
+                            </label>
+                            <input
+                              type="text"
+                              value={requestForm.organization}
+                              onChange={(e) => setRequestForm({ ...requestForm, organization: e.target.value })}
+                              className="w-full bg-sand-50 border border-sand-200 rounded-xl py-3 px-4 text-sm text-ink placeholder-sand-400 focus:border-forest-300 focus:ring-1 focus:ring-forest-300 focus:bg-white/90 transition-all outline-none"
+                              maxLength={120}
+                              placeholder="Optional"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] uppercase font-bold text-sand-500 tracking-wider ml-1">
+                              Phone / WhatsApp
+                            </label>
+                            <input
+                              type="tel"
+                              value={requestForm.phone}
+                              onChange={(e) => setRequestForm({ ...requestForm, phone: e.target.value })}
+                              className="w-full bg-sand-50 border border-sand-200 rounded-xl py-3 px-4 text-sm text-ink placeholder-sand-400 focus:border-forest-300 focus:ring-1 focus:ring-forest-300 focus:bg-white/90 transition-all outline-none"
+                              maxLength={30}
+                              placeholder="Optional"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] uppercase font-bold text-sand-500 tracking-wider ml-1">
+                            Plan
+                          </label>
+                          <select
+                            value={requestForm.requestedPlan}
+                            onChange={(e) => setRequestForm({ ...requestForm, requestedPlan: e.target.value as Plan })}
+                            className="cursor-pointer w-full bg-sand-50 border border-sand-200 rounded-xl py-3 px-4 text-sm text-ink focus:border-forest-300 focus:ring-1 focus:ring-forest-300 transition-all outline-none"
+                          >
+                            {PLANS.map((p) => (
+                              <option key={p} value={p} className="bg-white">{p}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] uppercase font-bold text-sand-500 tracking-wider ml-1">
+                            Message
+                          </label>
+                          <textarea
+                            value={requestForm.message}
+                            onChange={(e) => setRequestForm({ ...requestForm, message: e.target.value })}
+                            className="w-full bg-sand-50 border border-sand-200 rounded-xl py-3 px-4 text-sm text-ink placeholder-sand-400 focus:border-forest-300 focus:ring-1 focus:ring-forest-300 focus:bg-white/90 transition-all outline-none resize-none"
+                            rows={3}
+                            maxLength={1000}
+                            placeholder="Optional: what will you use Landscape360 for?"
+                          />
+                        </div>
+
+                        {/* Honeypot: hidden from people, filled in by bots */}
+                        <input
+                          type="text"
+                          name="website"
+                          value={requestForm.website}
+                          onChange={(e) => setRequestForm({ ...requestForm, website: e.target.value })}
+                          className="hidden"
+                          tabIndex={-1}
+                          autoComplete="off"
+                          aria-hidden="true"
+                        />
+                      </>
+                    )}
 
                     {!isForgotPassword && isLoginView && (
                       <div className="space-y-1">
@@ -671,6 +810,35 @@ export const AuthControl = () => {
                               </div>
                             </div>
                           </div>
+                          {storageUsage && (() => {
+                            const percent = usagePercent(storageUsage.usedBytes, storageUsage.limitBytes);
+                            return (
+                              <div
+                                className="col-span-2 bg-sand-50 rounded-lg p-2 border border-sand-100"
+                                title={(Object.keys(STORAGE_CATEGORY_LABELS) as (keyof typeof STORAGE_CATEGORY_LABELS)[])
+                                  .map((k) => `${STORAGE_CATEGORY_LABELS[k]}: ${formatBytes(storageUsage.breakdown[k])}`)
+                                  .join("\n")}
+                              >
+                                <div className="text-[9px] text-sand-500 uppercase font-bold mb-1">
+                                  Cloud Storage
+                                </div>
+                                <div className="flex items-end justify-between gap-2">
+                                  <span className={`text-xs font-bold ${percent !== null && percent >= 90 ? "text-brick-600" : "text-ink"}`}>
+                                    {formatBytes(storageUsage.usedBytes)}{" "}
+                                    <span className="text-sand-500 font-normal">
+                                      / {storageUsage.limitBytes === null ? "Unlimited" : formatBytes(storageUsage.limitBytes)}
+                                    </span>
+                                  </span>
+                                  <div className="w-20 h-1 bg-sand-200 rounded-full overflow-hidden mb-1">
+                                    <div
+                                      className={`h-full rounded-full ${usageBarClass(percent)}`}
+                                      style={{ width: `${percent ?? 0}%` }}
+                                    ></div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </div>
                       </div>
                     </div>
@@ -785,6 +953,24 @@ export const AuthControl = () => {
                   </button>
                 )}
 
+                {/* Admin: Account Requests */}
+                {isAdmin && (
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      setShowAccountRequests(true);
+                    }}
+                    className="cursor-pointer w-full mb-3 flex items-center justify-center gap-2 p-3 rounded-xl bg-forest-50 hover:bg-forest-100 text-forest-700 border border-forest-200 transition-all font-medium text-sm"
+                  >
+                    <Inbox size={16} /> Account Requests
+                    {pendingRequestCount > 0 && (
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gold-400 text-white">
+                        {pendingRequestCount}
+                      </span>
+                    )}
+                  </button>
+                )}
+
                 {/* Logout Button */}
                 <button
                   onClick={() => setShowLogoutConfirm(true)}
@@ -817,6 +1003,16 @@ export const AuthControl = () => {
           <UserManagementPanel
             currentUserId={user.id}
             onClose={() => setShowUserManagement(false)}
+          />,
+          document.body,
+        )}
+
+      {showAccountRequests &&
+        isAdmin &&
+        createPortal(
+          <AccountRequestsPanel
+            onClose={() => setShowAccountRequests(false)}
+            onPendingCountChange={setPendingRequestCount}
           />,
           document.body,
         )}
