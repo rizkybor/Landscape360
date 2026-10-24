@@ -23,6 +23,7 @@ import outdoorsView from "../assets/Outdoors-View.png";
 import satelliteView from "../assets/Satellite-View.png";
 import landscapeLogo from "../assets/LandscapeLogo.svg";
 import { SEO } from "./SEO";
+import { SiteLinks } from "./SitePageLayout";
 
 interface Props {
   onBack?: () => void;
@@ -1966,6 +1967,8 @@ export const DocsPage = ({ onBack }: Props) => {
                   </div>
                 </div>
               </div>
+
+              <SiteLinks className="mb-8" />
 
               <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-8 border-t border-sand-100 opacity-40 text-[10px] tracking-widest uppercase font-medium text-sand-500">
                 <div className="flex items-center gap-4">

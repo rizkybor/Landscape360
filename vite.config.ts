@@ -70,7 +70,9 @@ export default defineConfig({
     }),
   ],
   build: {
-    sourcemap: true, // Enable sourcemaps for debugging production issues
+    // No public source maps: they expose the full source code. Set to 'hidden' locally if
+    // you need them to debug a production stack trace (and don't deploy the .map files).
+    sourcemap: false,
     rollupOptions: {
       output: {
         manualChunks: {
