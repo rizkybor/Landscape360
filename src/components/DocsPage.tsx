@@ -173,11 +173,11 @@ export const DocsPage = ({ onBack }: Props) => {
 
           {/* Quick Start Overview */}
           <section>
-            <div className="flex items-center gap-3 text-ink mb-6">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-ink mb-4 sm:mb-6">
               <div className="p-2 bg-gold-50 rounded-lg border border-gold-200">
                 <Zap className="w-5 h-5 text-gold-700" />
               </div>
-              <h3 className="text-2xl font-bold">Quick Start Overview</h3>
+              <h3 className="text-lg sm:text-2xl font-bold leading-tight">Quick Start Overview</h3>
             </div>
 
             <div className="grid md:grid-cols-2 gap-4">
@@ -346,11 +346,11 @@ export const DocsPage = ({ onBack }: Props) => {
 
           {/* Plans & Features */}
           <section>
-            <div className="flex items-center gap-3 text-ink mb-2">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-ink mb-2">
               <div className="p-2 bg-forest-50 rounded-lg border border-forest-200">
                 <Layers className="w-5 h-5 text-forest-700" />
               </div>
-              <h3 className="text-2xl font-bold">Plans & Features</h3>
+              <h3 className="text-lg sm:text-2xl font-bold leading-tight">Plans & Features</h3>
             </div>
             <p className="text-sm text-sand-600 mb-6">
               Every account starts on <strong>Free</strong>. Pro and Enterprise unlock more
@@ -458,16 +458,16 @@ export const DocsPage = ({ onBack }: Props) => {
               ))}
             </div>
 
-            <div className="bg-white border border-sand-200 rounded-xl p-5 overflow-x-auto">
+            <div className="bg-white border border-sand-200 rounded-xl p-4 sm:p-5 overflow-x-auto">
               <h4 className="text-sm font-bold text-ink mb-3 flex items-center gap-2">
                 <HardDrive size={16} className="text-forest-700" /> Limits & Storage
               </h4>
-              <table className="w-full text-xs min-w-[420px]">
+              <table className="w-full text-[11px] sm:text-xs sm:min-w-[420px]">
                 <thead>
-                  <tr className="text-left text-[10px] uppercase tracking-wider text-sand-500 border-b border-sand-200">
-                    <th className="py-2 pr-3 font-bold">Limit</th>
-                    <th className="py-2 pr-3 font-bold">Free</th>
-                    <th className="py-2 pr-3 font-bold">Pro</th>
+                  <tr className="text-left text-[9px] sm:text-[10px] uppercase tracking-wide sm:tracking-wider text-sand-500 border-b border-sand-200">
+                    <th className="py-2 pr-2 sm:pr-3 font-bold">Limit</th>
+                    <th className="py-2 pr-2 sm:pr-3 font-bold">Free</th>
+                    <th className="py-2 pr-2 sm:pr-3 font-bold">Pro</th>
                     <th className="py-2 font-bold">Enterprise</th>
                   </tr>
                 </thead>
@@ -483,9 +483,9 @@ export const DocsPage = ({ onBack }: Props) => {
                     ["Custom basemap storage", "—", "—", "5 MB"],
                   ].map(([label, ...values]) => (
                     <tr key={label} className="border-b border-sand-100 last:border-0">
-                      <td className="py-2 pr-3 font-bold text-ink">{label}</td>
+                      <td className="py-2 pr-2 sm:pr-3 font-bold text-ink">{label}</td>
                       {values.map((v, i) => (
-                        <td key={i} className="py-2 pr-3 font-mono">{v}</td>
+                        <td key={i} className="py-2 pr-2 sm:pr-3 font-mono whitespace-nowrap">{v}</td>
                       ))}
                     </tr>
                   ))}
@@ -504,11 +504,11 @@ export const DocsPage = ({ onBack }: Props) => {
 
           {/* New Features Grid */}
           <section>
-            <div className="flex items-center gap-3 text-ink mb-6">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-ink mb-4 sm:mb-6">
               <div className="p-2 bg-forest-50 rounded-lg border border-forest-200">
                 <Globe className="w-5 h-5 text-forest-700" />
               </div>
-              <h3 className="text-2xl font-bold">Visualization & Styles</h3>
+              <h3 className="text-lg sm:text-2xl font-bold leading-tight">Visualization & Styles</h3>
             </div>
 
             <div className="grid md:grid-cols-3 gap-4">
@@ -591,15 +591,15 @@ export const DocsPage = ({ onBack }: Props) => {
             <div className="space-y-8">
               {/* Navigation Controls */}
               <section>
-                <div className="flex items-center gap-3 text-ink mb-6">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-ink mb-4 sm:mb-6">
                   <div className="p-2 bg-gold-50 rounded-lg border border-gold-200">
                     <MousePointer className="w-5 h-5 text-gold-700" />
                   </div>
-                  <h3 className="text-2xl font-bold">Navigation Controls</h3>
+                  <h3 className="text-lg sm:text-2xl font-bold leading-tight">Navigation Controls</h3>
                 </div>
 
                 <div className="bg-white border border-sand-200 rounded-xl p-1 overflow-hidden">
-                  <div className="grid grid-cols-2 divide-x divide-sand-200">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-sand-200">
                     <div className="p-5 space-y-4">
                       <div className="flex items-center gap-2 text-sm font-bold text-ink">
                         <Map size={14} className="text-forest-700" /> Desktop
@@ -667,11 +667,11 @@ export const DocsPage = ({ onBack }: Props) => {
 
               {/* Navigator Mode */}
               <section>
-                <div className="flex items-center gap-3 text-ink mb-6">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-ink mb-4 sm:mb-6">
                   <div className="p-2 bg-gold-50 rounded-lg border border-gold-200">
                     <Activity className="w-5 h-5 text-gold-700" />
                   </div>
-                  <h3 className="text-2xl font-bold">Navigator Mode</h3>
+                  <h3 className="text-lg sm:text-2xl font-bold leading-tight">Navigator Mode</h3>
                 </div>
 
                 <div className="bg-gradient-to-br from-gold-50 to-transparent border border-gold-200 rounded-xl p-6 relative overflow-hidden">
@@ -728,11 +728,11 @@ export const DocsPage = ({ onBack }: Props) => {
 
               {/* Split Screen Feature */}
               <section>
-                <div className="flex items-center gap-3 text-ink mb-6">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-ink mb-4 sm:mb-6">
                   <div className="p-2 bg-forest-50 rounded-lg border border-forest-200">
                     <Activity className="w-5 h-5 text-forest-700" />
                   </div>
-                  <h3 className="text-2xl font-bold">Split Screen</h3>
+                  <h3 className="text-lg sm:text-2xl font-bold leading-tight">Split Screen</h3>
                 </div>
 
                 <div className="bg-white border border-sand-200 rounded-xl p-6 relative overflow-hidden group hover:border-forest-200 transition-all duration-300">
@@ -860,7 +860,7 @@ export const DocsPage = ({ onBack }: Props) => {
                     </div>
                   </div>
 
-                  <h4 className="text-lg font-bold text-ink mb-2">
+                  <h4 className="text-base sm:text-lg font-bold text-ink mb-2">
                     Synchronized Dual-View
                   </h4>
                   <p className="text-xs text-sand-600 leading-relaxed mb-4">
@@ -881,11 +881,11 @@ export const DocsPage = ({ onBack }: Props) => {
               </section>
               {/* Weather Info */}
               <section>
-                <div className="flex items-center gap-3 text-ink mb-6">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-ink mb-4 sm:mb-6">
                   <div className="p-2 bg-forest-50 rounded-lg border border-forest-200">
                     <CloudSun className="w-5 h-5 text-forest-700" />
                   </div>
-                  <h3 className="text-2xl font-bold">Weather Intelligence</h3>
+                  <h3 className="text-lg sm:text-2xl font-bold leading-tight">Weather Intelligence</h3>
                 </div>
 
                 <div className="bg-white border border-sand-200 rounded-xl p-6 relative overflow-hidden group hover:border-forest-200 transition-all duration-300">
@@ -917,7 +917,7 @@ export const DocsPage = ({ onBack }: Props) => {
                     </div>
                   </div>
 
-                  <h4 className="text-lg font-bold text-ink mb-2">
+                  <h4 className="text-base sm:text-lg font-bold text-ink mb-2">
                     Real-time Atmospheric Data
                   </h4>
                   <p className="text-xs text-sand-600 leading-relaxed mb-4">
@@ -940,16 +940,19 @@ export const DocsPage = ({ onBack }: Props) => {
 
               {/* GPS Tracker */}
               <section>
-                <div className="flex items-center gap-3 text-ink mb-6">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-ink mb-4 sm:mb-6">
                   <div className="p-2 bg-forest-50 rounded-lg border border-forest-200">
                     <Navigation size={20} className="text-forest-700" />
                   </div>
-                  <h3 className="text-2xl font-bold">Realtime GPS Tracking</h3>
-                  <span className="px-2 py-1 rounded bg-forest-50 text-[10px] text-forest-700 font-bold uppercase border border-forest-200">
-                    Live Now
-                  </span>
-                  <span className="px-2 py-1 rounded bg-forest-50 text-[10px] text-forest-700 font-bold uppercase border border-forest-200">
-                    Pro
+                  <h3 className="text-lg sm:text-2xl font-bold leading-tight">Realtime GPS Tracking</h3>
+                  {/* Badges stay together when the row wraps on phones */}
+                  <span className="flex items-center gap-2">
+                    <span className="px-2 py-1 rounded bg-forest-50 text-[10px] text-forest-700 font-bold uppercase border border-forest-200 whitespace-nowrap">
+                      Live Now
+                    </span>
+                    <span className="px-2 py-1 rounded bg-forest-50 text-[10px] text-forest-700 font-bold uppercase border border-forest-200 whitespace-nowrap">
+                      Pro
+                    </span>
                   </span>
                 </div>
 
@@ -1013,34 +1016,34 @@ export const DocsPage = ({ onBack }: Props) => {
                       </svg>
                       <div className="relative flex items-center justify-center gap-2 px-2.5 py-1 rounded-full bg-white/85 backdrop-blur-sm shadow-sm">
                         <div className="w-3 h-3 bg-forest-700 rounded-full animate-ping"></div>
-                        <span className="text-sm font-bold text-ink">
+                        <span className="text-xs sm:text-sm font-bold text-ink whitespace-nowrap">
                           Live Position
                         </span>
                       </div>
                     </div>
                     <div className="aspect-video bg-forest-50 rounded-lg border border-forest-200 flex flex-col justify-center px-4 relative overflow-hidden">
                       <div className="space-y-2">
-                        <div className="flex justify-between text-[10px] text-sand-600">
+                        <div className="flex justify-between gap-3 text-[10px] text-sand-600">
                           <span>Status</span>
                           <span className="text-forest-700 font-bold">
                             ONLINE
                           </span>
                         </div>
-                        <div className="flex justify-between text-[10px] text-sand-600">
+                        <div className="flex justify-between gap-3 text-[10px] text-sand-600">
                           <span>Mode</span>
-                          <span className="text-ink font-mono">
+                          <span className="text-ink font-mono text-right">
                             Broadcast / Monitor
                           </span>
                         </div>
-                        <div className="flex justify-between text-[10px] text-sand-600">
+                        <div className="flex justify-between gap-3 text-[10px] text-sand-600">
                           <span>Timezone</span>
-                          <span className="text-ink font-mono">
+                          <span className="text-ink font-mono text-right">
                             WIB (UTC+7)
                           </span>
                         </div>
-                        <div className="flex justify-between text-[10px] text-sand-600">
+                        <div className="flex justify-between gap-3 text-[10px] text-sand-600">
                           <span>Latency</span>
-                          <span className="text-ink font-mono">
+                          <span className="text-ink font-mono text-right">
                             &lt; 100ms
                           </span>
                         </div>
@@ -1048,7 +1051,7 @@ export const DocsPage = ({ onBack }: Props) => {
                     </div>
                   </div>
 
-                  <h4 className="text-lg font-bold text-ink mb-2">
+                  <h4 className="text-base sm:text-lg font-bold text-ink mb-2">
                     Command Center & Field Tracking
                   </h4>
                   <p className="text-xs text-sand-600 leading-relaxed mb-4">
@@ -1099,11 +1102,11 @@ export const DocsPage = ({ onBack }: Props) => {
             <div className="space-y-8">
               {/* Terrain & Analysis Tools */}
               <section>
-                <div className="flex items-center gap-3 text-ink mb-6">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-ink mb-4 sm:mb-6">
                   <div className="p-2 bg-forest-50 rounded-lg border border-forest-200">
                     <Layers className="w-5 h-5 text-forest-700" />
                   </div>
-                  <h3 className="text-2xl font-bold">Terrain Analysis</h3>
+                  <h3 className="text-lg sm:text-2xl font-bold leading-tight">Terrain Analysis</h3>
                 </div>
 
                 <div className="bg-white border border-sand-200 rounded-xl p-6 space-y-6">
@@ -1175,11 +1178,11 @@ export const DocsPage = ({ onBack }: Props) => {
 
               {/* Geospatial Grid System */}
               <section>
-                <div className="flex items-center gap-3 text-ink mb-6">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-ink mb-4 sm:mb-6">
                   <div className="p-2 bg-forest-50 rounded-lg border border-forest-200">
                     <Globe className="w-5 h-5 text-forest-700" />
                   </div>
-                  <h3 className="text-2xl font-bold">Geospatial Grid System</h3>
+                  <h3 className="text-lg sm:text-2xl font-bold leading-tight">Geospatial Grid System</h3>
                 </div>
 
                 <div className="bg-white border border-sand-200 rounded-xl p-6 space-y-6">
@@ -1256,11 +1259,11 @@ export const DocsPage = ({ onBack }: Props) => {
 
               {/* Export & Capture */}
               <section>
-                <div className="flex items-center gap-3 text-ink mb-6">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-ink mb-4 sm:mb-6">
                   <div className="p-2 bg-brick-50 rounded-lg border border-brick-200">
                     <Camera className="w-5 h-5 text-brick-600" />
                   </div>
-                  <h3 className="text-2xl font-bold">Export Tools</h3>
+                  <h3 className="text-lg sm:text-2xl font-bold leading-tight">Export Tools</h3>
                 </div>
 
                 <div className="bg-white border border-sand-200 rounded-xl p-6">
@@ -1353,7 +1356,7 @@ export const DocsPage = ({ onBack }: Props) => {
 
           {/* Video Tutorial */}
           {/* <section className="space-y-8 pt-8 border-t border-sand-100">
-            <div className="flex items-center gap-3 text-ink mb-6">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-ink mb-4 sm:mb-6">
               <div className="p-2 bg-brick-50 rounded-lg border border-brick-200">
                  <svg 
                     viewBox="0 0 24 24" 
@@ -1368,7 +1371,7 @@ export const DocsPage = ({ onBack }: Props) => {
                     <path d="m10 15 5-3-5-3z" />
                  </svg>
               </div>
-              <h3 className="text-2xl font-bold">Video Tutorials</h3>
+              <h3 className="text-lg sm:text-2xl font-bold leading-tight">Video Tutorials</h3>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6"> */}
@@ -1418,17 +1421,17 @@ export const DocsPage = ({ onBack }: Props) => {
 
           {/* Real-time Telemetry & Tooltips */}
           <section className="space-y-8 pt-8 border-t border-sand-100">
-            <div className="flex items-center gap-3 text-ink mb-6">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-ink mb-4 sm:mb-6">
               <div className="p-2 bg-gold-50 rounded-lg border border-gold-200">
                 <Activity className="w-5 h-5 text-gold-700" />
               </div>
-              <h3 className="text-2xl font-bold">Real-time Telemetry</h3>
+              <h3 className="text-lg sm:text-2xl font-bold leading-tight">Real-time Telemetry</h3>
             </div>
 
             <div className="space-y-12">
               {/* Navigator Tooltip */}
               <div className="space-y-4">
-                <h4 className="text-lg font-bold text-ink">
+                <h4 className="text-base sm:text-lg font-bold text-ink">
                   Navigator Tooltip
                 </h4>
                 <p className="text-xs text-sand-600 leading-relaxed">
@@ -1476,7 +1479,7 @@ export const DocsPage = ({ onBack }: Props) => {
 
               {/* Telemetry Overlay */}
               <div className="space-y-4">
-                <h4 className="text-lg font-bold text-ink">
+                <h4 className="text-base sm:text-lg font-bold text-ink">
                   Survey Data Panel
                 </h4>
                 <p className="text-xs text-sand-600 leading-relaxed">
@@ -1485,9 +1488,9 @@ export const DocsPage = ({ onBack }: Props) => {
                 </p>
 
                 <div className="bg-white border border-sand-200 rounded-xl p-4 relative overflow-hidden">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <div className="flex justify-between border-b border-sand-200 pb-1">
+                      <div className="flex justify-between gap-3 border-b border-sand-200 pb-1">
                         <span className="text-[10px] text-forest-700">Lat</span>
                         <span className="text-[10px] font-mono text-ink">
                           -6.68397{" "}
@@ -1496,7 +1499,7 @@ export const DocsPage = ({ onBack }: Props) => {
                           </span>
                         </span>
                       </div>
-                      <div className="flex justify-between border-b border-sand-200 pb-1">
+                      <div className="flex justify-between gap-3 border-b border-sand-200 pb-1">
                         <span className="text-[10px] text-forest-700">Lng</span>
                         <span className="text-[10px] font-mono text-ink">
                           106.97216{" "}
@@ -1505,7 +1508,7 @@ export const DocsPage = ({ onBack }: Props) => {
                           </span>
                         </span>
                       </div>
-                      <div className="flex justify-between border-b border-sand-200 pb-1">
+                      <div className="flex justify-between gap-3 border-b border-sand-200 pb-1">
                         <span className="text-[10px] text-forest-700">Elev</span>
                         <span className="text-[10px] font-mono text-gold-700">
                           1214.3 mdpl
@@ -1513,13 +1516,13 @@ export const DocsPage = ({ onBack }: Props) => {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <div className="flex justify-between border-b border-sand-200 pb-1">
+                      <div className="flex justify-between gap-3 border-b border-sand-200 pb-1">
                         <span className="text-[10px] text-forest-700">Pitch</span>
                         <span className="text-[10px] font-mono text-ink">
                           0.0°
                         </span>
                       </div>
-                      <div className="flex justify-between border-b border-sand-200 pb-1">
+                      <div className="flex justify-between gap-3 border-b border-sand-200 pb-1">
                         <span className="text-[10px] text-forest-700">
                           Bearing
                         </span>
@@ -1616,12 +1619,12 @@ export const DocsPage = ({ onBack }: Props) => {
 
           {/* Custom Basemaps */}
           <section className="space-y-8 pt-8 border-t border-sand-100">
-            <div className="flex items-center gap-3 text-ink mb-6">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-ink mb-4 sm:mb-6">
               <div className="p-2 bg-forest-50 rounded-lg border border-forest-200">
                 <Layers className="w-5 h-5 text-forest-700" />
               </div>
-              <h3 className="text-2xl font-bold">Custom Basemaps Manager</h3>
-              <span className="px-2 py-1 rounded bg-forest-50 text-[10px] text-forest-700 font-bold uppercase border border-forest-200">
+              <h3 className="text-lg sm:text-2xl font-bold leading-tight">Custom Basemaps Manager</h3>
+              <span className="px-2 py-1 rounded bg-forest-50 text-[10px] text-forest-700 font-bold uppercase border border-forest-200 whitespace-nowrap">
                 Enterprise
               </span>
             </div>
@@ -1631,7 +1634,7 @@ export const DocsPage = ({ onBack }: Props) => {
 
               <div className="grid md:grid-cols-2 gap-6 relative z-10">
                 <div className="space-y-4">
-                  <h4 className="text-lg font-bold text-ink">
+                  <h4 className="text-base sm:text-lg font-bold text-ink">
                     Bring Your Own Maps
                   </h4>
                   <p className="text-xs text-sand-600 leading-relaxed">
@@ -1703,11 +1706,11 @@ export const DocsPage = ({ onBack }: Props) => {
 
           {/* Marked Locations */}
           <section className="space-y-8 pt-8 border-t border-sand-100">
-            <div className="flex items-center gap-3 text-ink mb-6">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-ink mb-4 sm:mb-6">
               <div className="p-2 bg-gold-50 rounded-lg border border-gold-200">
                 <MapPinned className="w-5 h-5 text-gold-700" />
               </div>
-              <h3 className="text-2xl font-bold">Marked Locations</h3>
+              <h3 className="text-lg sm:text-2xl font-bold leading-tight">Marked Locations</h3>
               <span className="px-2 py-1 rounded bg-gold-50 text-[10px] text-gold-700 font-bold uppercase border border-gold-200">
                 All Accounts
               </span>
@@ -1715,7 +1718,7 @@ export const DocsPage = ({ onBack }: Props) => {
 
             <div className="grid md:grid-cols-2 gap-6">
               <div className="bg-white border border-sand-200 rounded-xl p-6 space-y-4">
-                <h4 className="text-lg font-bold text-ink">Save Places That Matter</h4>
+                <h4 className="text-base sm:text-lg font-bold text-ink">Save Places That Matter</h4>
                 <p className="text-xs text-sand-600 leading-relaxed">
                   Keep your own list of important places on the map: one location
                   or hundreds. Each location stores its <strong>name</strong>,{" "}
@@ -1779,7 +1782,7 @@ export const DocsPage = ({ onBack }: Props) => {
 
               <div className="space-y-6">
                 <div className="bg-white border border-sand-200 rounded-xl p-6 space-y-3">
-                  <h4 className="text-lg font-bold text-ink">Share with Other Users</h4>
+                  <h4 className="text-base sm:text-lg font-bold text-ink">Share with Other Users</h4>
                   <p className="text-xs text-sand-600 leading-relaxed">
                     Share one location, or tick several and share them all at once, with
                     another Landscape 360 account. Type their <strong>email</strong> or
@@ -1788,18 +1791,21 @@ export const DocsPage = ({ onBack }: Props) => {
                   </p>
                   <ul className="space-y-2 text-[11px] text-sand-700">
                     <li className="flex gap-2">
-                      <span className="text-gold-700">•</span> Recipients find it under the{" "}
+                      <span className="text-gold-700">•</span>
+                    <span>Recipients find it under the{" "}
                       <strong>Shared</strong> tab and on their map. They can view it but not
-                      change it.
+                      change it.</span>
                     </li>
                     <li className="flex gap-2">
-                      <span className="text-gold-700">•</span> Owners can see who has access
+                      <span className="text-gold-700">•</span>
+                    <span>Owners can see who has access
                       and remove it at any time. Recipients can remove a shared location from
-                      their own list.
+                      their own list.</span>
                     </li>
                     <li className="flex gap-2">
-                      <span className="text-gold-700">•</span> Email addresses of other users
-                      are always shown masked (e.g. <span className="font-mono">s***@gmail.com</span>).
+                      <span className="text-gold-700">•</span>
+                    <span>Email addresses of other users
+                      are always shown masked (e.g. <span className="font-mono">s***@gmail.com</span>).</span>
                     </li>
                   </ul>
                   <div className="flex flex-wrap gap-3 pt-2 text-[10px] text-sand-600">
@@ -1851,43 +1857,46 @@ export const DocsPage = ({ onBack }: Props) => {
 
           {/* Accounts & Access */}
           <section className="space-y-8 pt-8 border-t border-sand-100">
-            <div className="flex items-center gap-3 text-ink mb-6">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-ink mb-4 sm:mb-6">
               <div className="p-2 bg-forest-50 rounded-lg border border-forest-200">
                 <ShieldCheck className="w-5 h-5 text-forest-700" />
               </div>
-              <h3 className="text-2xl font-bold">Accounts & Access</h3>
+              <h3 className="text-lg sm:text-2xl font-bold leading-tight">Accounts & Access</h3>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
               <div className="bg-white border border-sand-200 rounded-xl p-6 space-y-3">
-                <h4 className="text-lg font-bold text-ink flex items-center gap-2">
+                <h4 className="text-base sm:text-lg font-bold text-ink flex items-center gap-2">
                   <UserPlus size={18} className="text-forest-700" /> Request an Account
                 </h4>
                 <p className="text-xs text-sand-600 leading-relaxed">
                   To get an account, click <strong>Sign In / Register</strong> and then{" "}
-                  <strong>Request Account</strong>. All fields are required: email, full name,
-                  organization, phone / WhatsApp and a short message about how you will use
-                  Landscape 360. New accounts start on the <strong>Free</strong> plan; Pro and
+                  <strong>Request Account</strong>. Fill in your email, full name and a short
+                  message about how you will use Landscape 360; organization and phone /
+                  WhatsApp are optional. New accounts start on the <strong>Free</strong> plan; Pro and
                   Enterprise are available as an upgrade once your account is active.
                 </p>
                 <ul className="space-y-2 text-[11px] text-sand-700">
                   <li className="flex gap-2">
-                    <span className="text-forest-700">•</span> Our team reviews your request and
-                    emails your login details once it is approved.
+                    <span className="text-forest-700">•</span>
+                    <span>Our team reviews your request and
+                    emails your login details once it is approved.</span>
                   </li>
                   <li className="flex gap-2">
-                    <span className="text-forest-700">•</span> Only one open request per email
-                    address is kept, so there is no need to send it twice.
+                    <span className="text-forest-700">•</span>
+                    <span>Only one open request per email
+                    address is kept, so there is no need to send it twice.</span>
                   </li>
                   <li className="flex gap-2">
-                    <span className="text-forest-700">•</span> Forgot your password? Use{" "}
-                    <strong>Forgot Password</strong> in the same window to contact us.
+                    <span className="text-forest-700">•</span>
+                    <span>Forgot your password? Use{" "}
+                    <strong>Forgot Password</strong> in the same window to contact us.</span>
                   </li>
                 </ul>
               </div>
 
               <div className="bg-white border border-sand-200 rounded-xl p-6 space-y-3">
-                <h4 className="text-lg font-bold text-ink flex items-center gap-2">
+                <h4 className="text-base sm:text-lg font-bold text-ink flex items-center gap-2">
                   <HardDrive size={18} className="text-forest-700" /> Cloud Storage
                 </h4>
                 <p className="text-xs text-sand-600 leading-relaxed">
@@ -1924,7 +1933,7 @@ export const DocsPage = ({ onBack }: Props) => {
           {SHOW_PRICING && (
           <section className="space-y-8 pt-8 border-t border-sand-100">
             <div className="text-center max-w-2xl mx-auto space-y-3">
-              <h3 className="text-2xl font-bold text-ink">Pricing & Plans</h3>
+              <h3 className="text-lg sm:text-2xl font-bold leading-tight text-ink">Pricing & Plans</h3>
               <p className="text-sm text-sand-600">
                 Flexible options for individual users and professional teams.
               </p>
@@ -1938,7 +1947,7 @@ export const DocsPage = ({ onBack }: Props) => {
                     Starter
                   </span>
                 </div>
-                <h4 className="text-2xl font-bold text-ink mb-1">Free</h4>
+                <h4 className="text-xl sm:text-2xl font-bold text-ink mb-1">Free</h4>
                 <p className="text-xs text-sand-600 mb-6">
                   Basic exploration tools
                 </p>
@@ -1986,7 +1995,7 @@ export const DocsPage = ({ onBack }: Props) => {
                     Rp 85.000
                   </span>
                 </div>
-                <h4 className="text-2xl font-bold text-ink mb-1">
+                <h4 className="text-xl sm:text-2xl font-bold text-ink mb-1">
                   Rp 10.000
                   <span className="text-sm font-normal text-sand-500">
                     /bln
@@ -2034,7 +2043,7 @@ export const DocsPage = ({ onBack }: Props) => {
                     Enterprise
                   </span>
                 </div>   
-                <h4 className="text-2xl font-bold text-ink mb-6">
+                <h4 className="text-xl sm:text-2xl font-bold text-ink mb-6">
                   Available Upon Request
                 </h4>
 
