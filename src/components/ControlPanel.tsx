@@ -432,7 +432,6 @@ export const ControlPanel = () => {
                 <BookOpen size={10} /> Docs
               </button>
             </div>
-            <SiteLinks compact className="mb-2" />
             <div className="flex justify-center relative z-50">
               <AuthControl />
             </div>
@@ -1521,6 +1520,8 @@ export const ControlPanel = () => {
 
               <div className="opacity-50">@2026</div>
             </div>
+
+            <SiteLinks compact omit={["/docs"]} className="mt-3 font-sans" />
           </div>
         </div>
       </div>
