@@ -95,10 +95,13 @@ describe('AuthControl', () => {
     return { form, email, fullName, organization, phone, message, plan };
   };
 
-  it('makes every Request Account field mandatory and only allows the Free plan', () => {
+  it('requires email, name and message, keeps organization and phone optional, and only allows the Free plan', () => {
     const { email, fullName, organization, phone, message, plan } = openRequestForm();
-    for (const field of [email, fullName, organization, phone, message]) {
+    for (const field of [email, fullName, message]) {
       expect(field).toBeRequired();
+    }
+    for (const field of [organization, phone]) {
+      expect(field).not.toBeRequired();
     }
     expect(plan).toHaveValue('Free');
     const options = Array.from(plan.querySelectorAll('option'));

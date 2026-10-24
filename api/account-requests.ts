@@ -31,6 +31,8 @@ const REQUESTABLE_PLANS = ['Free'];
 
 // Flood guard for the public endpoint: new requests accepted per hour across all visitors
 const MAX_REQUESTS_PER_HOUR = 30;
+// Postgres / PostgREST codes for a column that does not exist yet (before a migration)
+const MISSING_COLUMN_CODES = ['42703', 'PGRST204'];
 
 class HttpError extends Error {
   status: number;
@@ -112,8 +114,8 @@ async function handleSubmit(request: Request) {
 
   if (!email || !EMAIL_PATTERN.test(email)) throw new HttpError(400, 'A valid email is required');
   if (!fullName) throw new HttpError(400, 'Full name is required');
-  if (!organization) throw new HttpError(400, 'Organization is required');
-  if (!phone || !PHONE_PATTERN.test(phone)) {
+  // Organization and phone are optional; a phone, when given, must be valid
+  if (phone && !PHONE_PATTERN.test(phone)) {
     throw new HttpError(400, 'A valid phone / WhatsApp number (8 to 15 digits) is required');
   }
   if (!message) throw new HttpError(400, 'Message is required');
@@ -225,7 +227,7 @@ async function handleList(request: Request, supabase: SupabaseClient) {
 async function getPendingRequest(supabase: SupabaseClient, id: string) {
   const { data, error } = await supabase
     .from('account_requests')
-    .select('id, email, full_name, status')
+    .select('id, email, full_name, organization, phone, status')
     .eq('id', id)
     .maybeSingle();
   if (error) throw new HttpError(500, error.message);
@@ -261,13 +263,16 @@ async function handleApprove(
   });
   if (error || !data.user) throw new HttpError(400, error?.message ?? 'Failed to create user');
 
-  // The signup trigger may already have inserted a Free profile; upsert overrides it
-  const { error: profileError } = await supabase
+  // The signup trigger may already have inserted a Free profile; upsert overrides it.
+  // Organization and phone from the request go on the account too (columns added by
+  // 20261024000009_profile_contact.sql; without them the account is still created).
+  const profile = { id: data.user.id, email: pending.email, status_subscribe: plan, status_user: role };
+  let { error: profileError } = await supabase
     .from('profiles')
-    .upsert(
-      { id: data.user.id, email: pending.email, status_subscribe: plan, status_user: role },
-      { onConflict: 'id' },
-    );
+    .upsert({ ...profile, organization: pending.organization, phone: pending.phone }, { onConflict: 'id' });
+  if (profileError && MISSING_COLUMN_CODES.includes(profileError.code ?? '')) {
+    ({ error: profileError } = await supabase.from('profiles').upsert(profile, { onConflict: 'id' }));
+  }
   if (profileError) {
     throw new HttpError(500, `User created but profile update failed: ${profileError.message}`);
   }

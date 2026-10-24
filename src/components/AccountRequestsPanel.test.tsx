@@ -56,6 +56,17 @@ describe('AccountRequestsPanel', () => {
     expect(listAccountRequests).toHaveBeenLastCalledWith('pending', pendingRequest.createdAt);
   });
 
+  it("shows the requester's message to the admin", async () => {
+    vi.mocked(listAccountRequests).mockResolvedValue({
+      requests: [{ ...pendingRequest, message: 'Untuk pendakian\nGunung Gede bulan depan' }],
+      hasMore: false,
+      pendingCount: 1,
+    });
+    render(<AccountRequestsPanel onClose={vi.fn()} />);
+    expect(await screen.findByText('Message')).toBeInTheDocument();
+    expect(screen.getByText(/Gunung Gede bulan depan/)).toBeInTheDocument();
+  });
+
   it('reports the newest pending request so the notification can be cleared', async () => {
     const onSeen = vi.fn();
     vi.mocked(listAccountRequests).mockResolvedValue({

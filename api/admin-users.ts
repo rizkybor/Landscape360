@@ -28,6 +28,7 @@ const MAX_STORAGE_LIMIT_MB = 1_000_000;
 const MISSING_OBJECT_CODES = ['PGRST202', 'PGRST205', '42883', '42P01'];
 // Postgres code for a column that does not exist yet (login_events.event before 20261024000008)
 const MISSING_COLUMN_CODE = '42703';
+const PROFILE_COLUMNS = 'id, status_subscribe, status_user, is_admin';
 const ACTIVITY_PAGE_SIZE = 20;
 const ACTIVITY_MAX_PAGE_SIZE = 100;
 
@@ -156,10 +157,17 @@ async function listAllUsers(supabase: SupabaseClient): Promise<User[]> {
 async function handleList(supabase: SupabaseClient) {
   const [users, profilesResult, storage] = await Promise.all([
     listAllUsers(supabase),
-    supabase.from('profiles').select('id, status_subscribe, status_user, is_admin'),
+    supabase.from('profiles').select(`${PROFILE_COLUMNS}, organization, phone`),
     loadStorage(supabase),
   ]);
-  const { data: profiles, error } = profilesResult;
+  let { data: profiles, error } = profilesResult as {
+    data: { id: string; status_subscribe: string; status_user: string; is_admin: boolean; organization?: string | null; phone?: string | null }[] | null;
+    error: { code?: string; message: string } | null;
+  };
+  // Before the profile contact migration there are no organization / phone columns
+  if (error?.code === MISSING_COLUMN_CODE) {
+    ({ data: profiles, error } = await supabase.from('profiles').select(PROFILE_COLUMNS));
+  }
   if (error) throw new HttpError(500, error.message);
 
   const profileMap = new Map(profiles?.map((p) => [p.id, p]));
@@ -171,7 +179,13 @@ async function handleList(supabase: SupabaseClient) {
       return {
         id: u.id,
         email: u.email ?? '',
-        displayName: (u.user_metadata?.display_name as string | undefined) ?? null,
+        // display_name is the one name field; older accounts may only have full_name or name
+        displayName:
+          ((u.user_metadata?.display_name || u.user_metadata?.full_name || u.user_metadata?.name) as
+            | string
+            | undefined) ?? null,
+        organization: profile?.organization ?? null,
+        phone: profile?.phone ?? null,
         plan: profile?.status_subscribe ?? 'Free',
         role: profile?.status_user ?? 'pengguna360',
         isAdmin: profile?.is_admin === true,
@@ -402,7 +416,8 @@ async function handleUpdate(request: Request, supabase: SupabaseClient, admin: U
   if (password !== undefined || displayName !== undefined) {
     const { error } = await supabase.auth.admin.updateUserById(id, {
       ...(password !== undefined && { password }),
-      ...(displayName !== undefined && { user_metadata: { display_name: displayName } }),
+      // full_name too, for older code that still reads it
+      ...(displayName !== undefined && { user_metadata: { display_name: displayName, full_name: displayName } }),
     });
     if (error) throw new HttpError(400, error.message);
   }

@@ -17,6 +17,13 @@ import { submitAccountRequest } from "../lib/accountRequests";
 import { SEEN_AT_KEY, useAccountRequestAlerts } from "../services/useAccountRequestAlerts";
 import { recordLogin, recordLogout } from "../lib/loginHistory";
 import {
+  accountDisplayName,
+  fetchMyContact,
+  isValidPhone,
+  updateMyContact,
+  type ProfileContact,
+} from "../lib/profileContact";
+import {
   STORAGE_CATEGORY_LABELS,
   fetchMyStorageUsage,
   formatBytes,
@@ -35,6 +42,8 @@ import {
   Eye,
   EyeOff,
   Pencil,
+  Building2,
+  Phone,
   X,
   Check,
   Users,
@@ -114,6 +123,17 @@ export const AuthControl = () => {
       .catch(() => setStorageUsage(null)); // storage migration not run yet
   }, [user, showMenu]);
 
+  // Organization and phone from the account (null until the profile contact migration)
+  const [contact, setContact] = useState<ProfileContact | null>(null);
+  useEffect(() => {
+    if (!user || !showMenu) return;
+    let active = true;
+    fetchMyContact(user.id).then((result) => active && setContact(result));
+    return () => {
+      active = false;
+    };
+  }, [user, showMenu]);
+
   // Admin: notification for account requests that arrived since Account Requests was last opened
   const requestsSeenAt =
     (user?.user_metadata?.[SEEN_AT_KEY] as string | undefined) ?? null;
@@ -168,18 +188,32 @@ export const AuthControl = () => {
   // Profile Edit State
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editName, setEditName] = useState("");
+  const [editOrganization, setEditOrganization] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [profileError, setProfileError] = useState<string | null>(null);
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isValidPhone(editPhone)) {
+      setProfileError("Phone / WhatsApp number must have 8 to 15 digits");
+      return;
+    }
+    setProfileError(null);
     setLoading(true);
     try {
+      // display_name is the one name field (full_name kept in step for older code)
+      const name = editName.trim();
       const { data, error } = await supabase.auth.updateUser({
-        data: {
-          full_name: editName,
-        },
+        data: { display_name: name, full_name: name },
       });
 
       if (error) throw error;
+
+      if (contact) {
+        const next = { organization: editOrganization.trim() || null, phone: editPhone.trim() || null };
+        await updateMyContact(next);
+        setContact(next);
+      }
 
       // Update local user state immediately
       if (data.user) {
@@ -190,7 +224,7 @@ export const AuthControl = () => {
       setIsEditingProfile(false);
       setMessage({ type: "success", text: "Profile updated successfully" });
     } catch (err: any) {
-      setMessage({ type: "error", text: err.message });
+      setProfileError(err.message);
     } finally {
       setLoading(false);
     }
@@ -225,8 +259,8 @@ export const AuthControl = () => {
         recordLogin();
       } else {
         // Registration: the request is stored for the admin to approve or reject
-        const phoneDigits = requestForm.phone.replace(/\D/g, "").length;
-        if (phoneDigits < 8 || phoneDigits > 15) {
+        // Phone is optional; when given it must have 8 to 15 digits
+        if (!isValidPhone(requestForm.phone)) {
           throw new Error("Phone / WhatsApp number must have 8 to 15 digits");
         }
         await submitAccountRequest({
@@ -401,28 +435,26 @@ export const AuthControl = () => {
                         <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-1">
                             <label className="text-[10px] uppercase font-bold text-sand-500 tracking-wider ml-1">
-                              Organization <span className="text-brick-600">*</span>
+                              Organization <span className="font-normal normal-case tracking-normal text-sand-400">(optional)</span>
                             </label>
                             <input
                               type="text"
                               value={requestForm.organization}
                               onChange={(e) => setRequestForm({ ...requestForm, organization: e.target.value })}
                               className="w-full bg-sand-50 border border-sand-200 rounded-xl py-3 px-4 text-sm text-ink placeholder-sand-400 focus:border-forest-300 focus:ring-1 focus:ring-forest-300 focus:bg-white/90 transition-all outline-none"
-                              required
                               maxLength={120}
                               placeholder="Company, club or university"
                             />
                           </div>
                           <div className="space-y-1">
                             <label className="text-[10px] uppercase font-bold text-sand-500 tracking-wider ml-1">
-                              Phone / WhatsApp <span className="text-brick-600">*</span>
+                              Phone / WhatsApp <span className="font-normal normal-case tracking-normal text-sand-400">(optional)</span>
                             </label>
                             <input
                               type="tel"
                               value={requestForm.phone}
                               onChange={(e) => setRequestForm({ ...requestForm, phone: e.target.value })}
                               className="w-full bg-sand-50 border border-sand-200 rounded-xl py-3 px-4 text-sm text-ink placeholder-sand-400 focus:border-forest-300 focus:ring-1 focus:ring-forest-300 focus:bg-white/90 transition-all outline-none"
-                              required
                               maxLength={20}
                               pattern="\+?[0-9][0-9\s\-]{6,18}[0-9]"
                               title="Phone number with 8 to 15 digits, e.g. +62 812 3456 7890"
@@ -685,9 +717,7 @@ export const AuthControl = () => {
           </div>
         )}
         <span className="max-w-[80px] truncate">
-          {currentUser.user_metadata?.full_name ||
-            currentUser.user_metadata?.name ||
-            currentUser.email}
+          {accountDisplayName(currentUser) || currentUser.email}
         </span>
         {isSyncing && (
           <Loader2 size={12} className="animate-spin text-forest-700" />
@@ -733,7 +763,7 @@ export const AuthControl = () => {
                       className="space-y-3 bg-white p-4 rounded-xl border border-sand-200"
                     >
                       <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-bold text-ink">Edit Name</h3>
+                        <h3 className="text-sm font-bold text-ink">Edit Profile</h3>
                         <button
                           type="button"
                           onClick={() => setIsEditingProfile(false)}
@@ -748,8 +778,33 @@ export const AuthControl = () => {
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
                         placeholder="Display Name"
+                        aria-label="Display name"
+                        maxLength={120}
                         className="w-full bg-sand-50 border border-sand-200 rounded-lg px-3 py-2 text-sm text-ink focus:border-forest-600 outline-none"
                       />
+                      {contact && (
+                        <>
+                          <input
+                            type="text"
+                            value={editOrganization}
+                            onChange={(e) => setEditOrganization(e.target.value)}
+                            placeholder="Organization (optional)"
+                            aria-label="Organization"
+                            maxLength={120}
+                            className="w-full bg-sand-50 border border-sand-200 rounded-lg px-3 py-2 text-sm text-ink focus:border-forest-600 outline-none"
+                          />
+                          <input
+                            type="tel"
+                            value={editPhone}
+                            onChange={(e) => setEditPhone(e.target.value)}
+                            placeholder="Phone / WhatsApp (optional)"
+                            aria-label="Phone / WhatsApp"
+                            maxLength={30}
+                            className="w-full bg-sand-50 border border-sand-200 rounded-lg px-3 py-2 text-sm text-ink focus:border-forest-600 outline-none"
+                          />
+                        </>
+                      )}
+                      {profileError && <p className="text-[11px] text-brick-600">{profileError}</p>}
                       <button
                         type="submit"
                         disabled={loading}
@@ -786,26 +841,37 @@ export const AuthControl = () => {
                       <div className="min-w-0 flex-1 md:w-full">
                         <div className="flex items-center md:justify-center gap-1">
                           <h3 className="font-bold text-lg text-ink truncate">
-                            {currentUser.user_metadata?.full_name ||
-                              currentUser.user_metadata?.name ||
-                              "User L360"}
+                            {accountDisplayName(currentUser) || "User L360"}
                           </h3>
                           <button
                             onClick={() => {
-                              setEditName(
-                                currentUser.user_metadata?.full_name ||
-                                  currentUser.user_metadata?.name ||
-                                  "",
-                              );
+                              setEditName(accountDisplayName(currentUser));
+                              setEditOrganization(contact?.organization ?? "");
+                              setEditPhone(contact?.phone ?? "");
+                              setProfileError(null);
                               setIsEditingProfile(true);
                             }}
                             className="cursor-pointer shrink-0 p-1.5 text-sand-500 hover:text-ink hover:bg-sand-100 rounded-lg transition-colors"
-                            title="Edit Name"
+                            title="Edit profile"
                           >
                             <Pencil size={14} />
                           </button>
                         </div>
                         <p className="text-xs text-sand-600 truncate">{currentUser.email}</p>
+                        {(contact?.organization || contact?.phone) && (
+                          <div className="mt-1 space-y-0.5 text-[11px] text-sand-600">
+                            {contact.organization && (
+                              <p className="flex items-center md:justify-center gap-1 truncate">
+                                <Building2 size={11} className="shrink-0" /> {contact.organization}
+                              </p>
+                            )}
+                            {contact.phone && (
+                              <p className="flex items-center md:justify-center gap-1 truncate">
+                                <Phone size={11} className="shrink-0" /> {contact.phone}
+                              </p>
+                            )}
+                          </div>
+                        )}
                         <div className="flex flex-wrap md:justify-center items-center gap-1.5 mt-3">
                           <span
                             className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${

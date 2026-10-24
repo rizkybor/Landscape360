@@ -29,6 +29,8 @@ const user = (overrides: Partial<ManagedUser>): ManagedUser => ({
   id: 'u1',
   email: 'pro@x.com',
   displayName: 'Pro User',
+  organization: null,
+  phone: null,
   plan: 'Pro',
   role: 'pengguna360',
   isAdmin: false,
@@ -281,6 +283,18 @@ describe('UserManagementPanel broadcast', () => {
     await screen.findByText('pro@x.com');
     openBroadcast(2);
     expect(screen.getByText(/Open in Gmail/).closest('a')).not.toHaveAttribute('href');
+  });
+});
+
+describe('UserManagementPanel contact details', () => {
+  it('shows organization and phone, with a WhatsApp link', async () => {
+    vi.mocked(listUsers).mockResolvedValue({
+      users: [user({ organization: 'Makopala UBL', phone: '0812-3456-7890' })],
+      planStorageLimits: null,
+    });
+    render(<UserManagementPanel currentUserId="admin" onClose={vi.fn()} />);
+    expect(await screen.findByText('Makopala UBL', { exact: false })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '0812-3456-7890' })).toHaveAttribute('href', 'https://wa.me/6281234567890');
   });
 });
 
