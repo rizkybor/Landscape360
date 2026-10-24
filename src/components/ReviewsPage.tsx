@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { EyeOff, Eye, Loader2, MessageSquare, Pencil, Reply, Star, Trash2, X, Check } from "lucide-react";
 import { SitePageLayout } from "./SitePageLayout";
+import { LoadMoreSentinel } from "./LoadMoreSentinel";
 import { AuthControl } from "./AuthControl";
 import { useSurveyStore } from "../store/useSurveyStore";
 import {
@@ -342,7 +343,12 @@ export const ReviewsPage = () => {
   const [myReview, setMyReview] = useState<MyReview | null>(null);
   const [myReviewLoaded, setMyReviewLoaded] = useState(false);
 
+  // The filter a response belongs to; pages for an older filter are dropped
+  const filterRef = useRef(filter);
+  const loadingMoreRef = useRef(false);
+
   const load = useCallback(async () => {
+    filterRef.current = filter;
     setIsLoading(true);
     setError(null);
     try {
@@ -368,15 +374,25 @@ export const ReviewsPage = () => {
     // isAdmin changes what the list contains (hidden reviews)
   }, [load, isAdmin]);
 
+  // Next page, loaded as the list is scrolled to its end (or with the button)
   const loadMore = async () => {
+    if (!hasMore || loadingMoreRef.current || isLoading) return;
+    const requested = filter;
+    loadingMoreRef.current = true;
     setIsLoadingMore(true);
     try {
-      const next = await listReviews(filter, reviews.length);
-      setReviews((prev) => [...prev, ...next]);
+      const next = await listReviews(requested, reviews.length);
+      if (filterRef.current !== requested) return;
+      setReviews((prev) => {
+        // Offsets can overlap when reviews are added meanwhile
+        const seen = new Set(prev.map((r) => r.id));
+        return [...prev, ...next.filter((r) => !seen.has(r.id))];
+      });
       setHasMore(next.length === REVIEWS_PAGE_SIZE);
     } catch (err) {
-      setError((err as Error).message);
+      if (filterRef.current === requested) setError((err as Error).message);
     } finally {
+      loadingMoreRef.current = false;
       setIsLoadingMore(false);
     }
   };
@@ -476,6 +492,7 @@ export const ReviewsPage = () => {
               reviews.map((r) => <ReviewCard key={`${r.id}-${r.updatedAt}-${r.adminReplyAt}-${r.isHidden}`} review={r} isAdmin={isAdmin} onChanged={load} />)
             )}
 
+            {hasMore && !isLoading && <LoadMoreSentinel onVisible={loadMore} disabled={isLoadingMore} />}
             {hasMore && (
               <div className="flex justify-center pt-2">
                 <button
@@ -483,7 +500,13 @@ export const ReviewsPage = () => {
                   disabled={isLoadingMore}
                   className="cursor-pointer flex items-center gap-2 px-4 py-2 rounded-xl border border-sand-200 hover:bg-sand-50 text-sm font-bold text-sand-700 disabled:opacity-50"
                 >
-                  {isLoadingMore && <Loader2 size={14} className="animate-spin" />} Load more reviews
+                  {isLoadingMore ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" /> Loading more reviews...
+                    </>
+                  ) : (
+                    "Load more reviews"
+                  )}
                 </button>
               </div>
             )}

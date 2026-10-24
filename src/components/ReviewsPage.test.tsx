@@ -133,3 +133,37 @@ describe('ReviewsPage', () => {
     await waitFor(() => expect(api.listReviews).toHaveBeenLastCalledWith(4, 0));
   });
 });
+
+describe('ReviewsPage long lists', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    signedInAs(null);
+    vi.mocked(api.fetchReviewSummary).mockResolvedValue({ total: 25, average: 4, counts: { 1: 0, 2: 0, 3: 0, 4: 25, 5: 0 } });
+    vi.mocked(api.fetchMyReview).mockResolvedValue(null);
+    // A full first page, then a second page that overlaps it by one review
+    const firstPage = Array.from({ length: api.REVIEWS_PAGE_SIZE }, (_, i) =>
+      review({ id: `p1-${i}`, authorName: `Reviewer ${i}.` }),
+    );
+    const secondPage = [firstPage[19], review({ id: 'p2-0', authorName: 'Last One.' })];
+    vi.mocked(api.listReviews).mockImplementation(async (_rating, offset = 0) => (offset === 0 ? firstPage : secondPage));
+    // The end of the list is "on screen" as soon as it is watched
+    vi.stubGlobal(
+      'IntersectionObserver',
+      vi.fn(function (this: unknown, callback: IntersectionObserverCallback) {
+        return {
+          observe: () => callback([{ isIntersecting: true } as IntersectionObserverEntry], this as IntersectionObserver),
+          disconnect: vi.fn(),
+        };
+      }),
+    );
+  });
+
+  it('loads the next page when the list is scrolled to its end, without duplicates', async () => {
+    renderPage();
+    expect(await screen.findByText('Last One.')).toBeInTheDocument();
+    expect(api.listReviews).toHaveBeenLastCalledWith(null, api.REVIEWS_PAGE_SIZE);
+    expect(screen.getAllByText('Reviewer 19.')).toHaveLength(1);
+    // The second page was short, so there is nothing more to load
+    expect(screen.queryByRole('button', { name: /Load more reviews/ })).not.toBeInTheDocument();
+  });
+});
