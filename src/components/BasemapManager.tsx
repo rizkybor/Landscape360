@@ -5,7 +5,7 @@ import { useCustomBasemapStore } from "../store/useCustomBasemapStore";
 import { Upload, X, Map as MapIcon, Eye, EyeOff, Trash2, AlertCircle, Loader2, Layers, ScanEye, Settings } from "lucide-react";
 
 export const BasemapManager = ({ onClose, onZoomToLayer }: { onClose: () => void; onZoomToLayer?: (bounds: any) => void }) => {
-  const { subscriptionStatus, userRole } = useSurveyStore();
+  const { subscriptionStatus } = useSurveyStore();
   const { 
     basemaps, 
     uploadBasemap, 
@@ -44,8 +44,9 @@ export const BasemapManager = ({ onClose, onZoomToLayer }: { onClose: () => void
       }
   });
 
-  // Access Control
-  const canAccess = userRole === 'monitor360' && subscriptionStatus === 'Enterprise';
+  // Access Control: every Enterprise account (Monitor or User role); the admin counts as
+  // Enterprise. Same rule as can_upload_custom_basemaps() in the database
+  const canAccess = subscriptionStatus === 'Enterprise';
 
   if (!canAccess) {
       return (
@@ -53,9 +54,8 @@ export const BasemapManager = ({ onClose, onZoomToLayer }: { onClose: () => void
               <AlertCircle className="w-16 h-16 text-gold-700 mb-4" />
               <h3 className="text-xl font-bold text-ink mb-2">Feature Locked</h3>
               <p className="text-sm text-sand-600 mb-6 text-center leading-relaxed">
-                  Custom Basemaps are exclusively available for <br/>
-                  <span className="text-ink font-bold">Enterprise</span> users with <br/>
-                  <span className="text-forest-700 font-bold">Monitoring360</span> access.
+                  Custom Basemaps are available for <br/>
+                  <span className="text-ink font-bold">Enterprise</span> accounts.
               </p>
               <button 
                 onClick={onClose}

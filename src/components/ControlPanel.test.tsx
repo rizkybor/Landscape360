@@ -117,6 +117,24 @@ describe('ControlPanel', () => {
     expect(screen.queryByTestId('icon-navigation')).not.toBeInTheDocument();
   });
 
+  it.each([
+    ['Enterprise', 'monitor360', true],
+    ['Enterprise', 'pengguna360', true],
+    ['Pro', 'pengguna360', false],
+    ['Free', 'pengguna360', false],
+  ])('shows the Basemaps tool for %s / %s: %s', (subscriptionStatus, userRole, visible) => {
+    (useSurveyStore as any).mockReturnValue({
+      isPlotMode: false,
+      togglePlotMode: vi.fn(),
+      user: { id: 'u' },
+      subscriptionStatus,
+      userRole,
+    });
+    renderComponent();
+    if (visible) expect(screen.getByText('Basemaps')).toBeInTheDocument();
+    else expect(screen.queryByText('Basemaps')).not.toBeInTheDocument();
+  });
+
   it('should show "GPS Tracking" and Navigation icon for Pro User (Not Monitor)', () => {
     (useSurveyStore as any).mockReturnValue({
       isPlotMode: false,
