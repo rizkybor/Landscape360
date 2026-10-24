@@ -399,7 +399,8 @@ export const PlottingLayer = () => {
           type="line"
           paint={{
             'line-color': ['get', 'color'],
-            'line-width': ['case', ['match', ['get', 'type'], 'preview', true, false], 2, 3],
+            // Thinner on phones, so the line does not hide the map under it
+            'line-width': ['case', ['match', ['get', 'type'], 'preview', true, false], isMobile ? 1.5 : 2, isMobile ? 2 : 3],
             'line-dasharray': ['case', ['match', ['get', 'type'], 'preview', true, false], [2, 2], [1]],
             'line-opacity': ['case', ['get', 'isActive'], 1, 0.6]
           }}
@@ -439,7 +440,7 @@ export const PlottingLayer = () => {
               style={{ zIndex: 120 }}
           >
               <div
-                  className={`${isMobile ? 'w-5 h-5' : 'w-3 h-3'} rounded-full bg-white border-2 shadow cursor-move`}
+                  className={`${isMobile ? 'w-4 h-4' : 'w-3 h-3'} rounded-full bg-white border-2 shadow cursor-move`}
                   style={{ borderColor: selected!.group.color }}
                   title="Drag to shape the curve"
               />
@@ -459,15 +460,15 @@ export const PlottingLayer = () => {
             >
                 <div 
                   className={`
-                    ${isMobile ? 'bg-white shadow-md' : 'bg-white/90 backdrop-blur-md shadow-lg'} rounded-lg border border-sand-200 
+                    ${isMobile ? 'bg-white/85 shadow-sm rounded-md' : 'bg-white/90 backdrop-blur-md shadow-lg rounded-lg'} border border-sand-200 
                     flex flex-col items-center transform transition-all duration-200 cursor-default select-none
-                    ${isHovered ? 'scale-110 px-3 py-2' : (isMobile ? 'scale-100 px-2 py-1' : 'scale-100 px-2 py-0.5 hover:scale-105')}
+                    ${isHovered ? 'scale-110 px-3 py-2' : (isMobile ? 'scale-100 px-1.5 py-px' : 'scale-100 px-2 py-0.5 hover:scale-105')}
                   `}
                   onMouseEnter={() => setHoveredLabelId(label.id)}
                   onMouseLeave={() => setHoveredLabelId(null)}
                   onClick={() => isMobile && setHoveredLabelId(isHovered ? null : label.id)} // Toggle on mobile tap
                 >
-                    <span className={`${isMobile ? 'text-[11px]' : 'text-[10px]'} font-extrabold text-sand-300 leading-tight drop-shadow-sm whitespace-nowrap`}>{label.text}</span>
+                    <span className={`${isMobile ? 'text-[9px] text-sand-600' : 'text-[10px] text-sand-300'} font-extrabold leading-tight drop-shadow-sm whitespace-nowrap`}>{label.text}</span>
                     
                     {/* Always show subtext (Azimuth) if requested, or keep it hover only? User asked for "reactive azimuth near + icon" */}
                     {/* But this is for existing lines. Let's keep hover logic here but maybe enhance style? */}
@@ -530,7 +531,8 @@ export const PlottingLayer = () => {
             >
                 <PointGesture
                     map={mapRef?.getMap() ?? null}
-                    className="relative flex flex-col items-center group cursor-grab active:cursor-grabbing"
+                    // On phones the dot is small; the padding keeps a finger-sized touch target
+                    className={`relative flex flex-col items-center group cursor-grab active:cursor-grabbing ${isMobile ? 'p-2' : ''}`}
                     onMouseEnter={() => setHoveredLabelId(label.id)}
                     onMouseLeave={() => setHoveredLabelId(null)}
                     onTap={() => {
@@ -547,19 +549,21 @@ export const PlottingLayer = () => {
                     {/* The Dot/Square Visual */}
                     <div 
                         className={`
-                            border-2 border-black shadow-sm transition-all duration-200
+                            ${isMobile ? 'border-[1.5px]' : 'border-2'} border-black shadow-sm transition-all duration-200
                             ${label.hasCustomName ? 'rounded-[1px] rotate-45' : 'rounded-full'}
-                            ${label.isActive ? (isMobile ? 'w-6 h-6' : 'w-4 h-4') : (isMobile ? 'w-4 h-4' : 'w-3 h-3')} 
+                            ${label.isActive ? (isMobile ? 'w-3.5 h-3.5' : 'w-4 h-4') : (isMobile ? 'w-2.5 h-2.5' : 'w-3 h-3')} 
                             ${isHovered || isDragging ? 'scale-125' : 'scale-100'}
                         `}
                         style={{ backgroundColor: label.hasCustomName ? '#6366f1' : label.color }}
                     ></div>
 
-                    {/* The Label (Positioned Above) */}
+                    {/* The Label (Positioned Above). On phones it shows the name only (details on
+                        tap or drag) and only for the active sheet, to keep the map visible */}
+                    {(!isMobile || label.isActive || isHovered || isDragging) && (
                     <div 
                       className={`
-                        absolute bottom-full mb-2
-                        flex flex-col ${isMobile ? 'bg-white/95' : 'bg-white/95 backdrop-blur-md'} rounded-lg shadow-2xl 
+                        absolute bottom-full ${isMobile ? 'mb-0' : 'mb-2'}
+                        flex flex-col ${isMobile ? 'bg-white/95 rounded-md shadow-md' : 'bg-white/95 backdrop-blur-md rounded-lg shadow-2xl'} 
                         ${label.hasCustomName ? 'border-forest-300' : 'border-gold-200'} 
                         border overflow-hidden transform transition-all duration-200 select-none
                         ${isHovered || isDragging ? 'scale-105 min-w-[140px] opacity-100' : 'scale-100 min-w-0 opacity-100'}
@@ -570,10 +574,12 @@ export const PlottingLayer = () => {
                         <div className={`
                             ${label.hasCustomName ? 'bg-forest-50 border-forest-200' : 'bg-gold-50 border-gold-200'} 
                             flex justify-between items-center
-                            ${isHovered || isDragging ? 'px-2.5 py-1.5 border-b' : 'px-2 py-1 gap-2'}
+                            ${isHovered || isDragging ? 'px-2.5 py-1.5 border-b gap-2' : (isMobile ? 'px-1.5 py-px' : 'px-2 py-1 gap-2')}
                         `}>
-                            <span className={`text-[10px] font-bold ${label.hasCustomName ? 'text-forest-700' : 'text-gold-700'} uppercase tracking-wider whitespace-nowrap`}>{label.name}</span>
-                            <span className={`text-[9px] font-mono ${label.hasCustomName ? 'text-forest-700' : 'text-gold-700'} font-bold whitespace-nowrap`}>{label.elev.toFixed(1)} mdpl</span>
+                            <span className={`${isMobile && !isHovered && !isDragging ? 'text-[8px] tracking-wide' : 'text-[10px] tracking-wider'} font-bold ${label.hasCustomName ? 'text-forest-700' : 'text-gold-700'} uppercase whitespace-nowrap`}>{label.name}</span>
+                            {(!isMobile || isHovered || isDragging) && (
+                              <span className={`text-[9px] font-mono ${label.hasCustomName ? 'text-forest-700' : 'text-gold-700'} font-bold whitespace-nowrap`}>{label.elev.toFixed(1)} mdpl</span>
+                            )}
                         </div>
                         
                         {/* Body - Only visible on Hover/Drag */}
@@ -590,6 +596,7 @@ export const PlottingLayer = () => {
                             </div>
                         )}
                     </div>
+                    )}
                 </PointGesture>
             </Marker>
           );
