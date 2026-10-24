@@ -57,6 +57,10 @@ const selectClass =
 const inputClass =
   "w-full bg-sand-50 border border-sand-200 rounded-lg px-3 py-2 text-xs text-ink placeholder:text-sand-500 outline-none focus:border-forest-300";
 
+// 16px text on phones so iOS Safari does not zoom in when the search box is focused
+const searchInputClass =
+  "w-full bg-sand-50 border border-sand-200 rounded-lg pl-9 pr-3 py-2 text-base sm:text-xs text-ink placeholder:text-sand-500 outline-none focus:border-forest-300";
+
 interface Props {
   currentUserId: string;
   onClose: () => void;
@@ -337,21 +341,21 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
         </div>
 
         {/* Toolbar */}
-        <div className="flex items-center gap-2 p-3 border-b border-sand-100 shrink-0">
-          <div className="relative flex-1">
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 p-3 border-b border-sand-100 shrink-0">
+          <div className="relative w-full sm:w-auto sm:flex-1 min-w-0">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-sand-500" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search email or name..."
-              className={`${inputClass} pl-9`}
+              className={searchInputClass}
             />
           </div>
           {storageEnabled && (
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as "email" | "storage")}
-              className={`${selectClass} py-2 shrink-0`}
+              className={`${selectClass} py-2 flex-1 sm:flex-none min-w-0`}
               title="Sort users"
             >
               <option value="email" className="bg-white">Sort: Email</option>

@@ -18,13 +18,13 @@ export const LoadingOverlay = ({ onComplete }: { onComplete?: () => void }) => {
 
   return (
     <div className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black text-white pointer-events-auto transition-opacity duration-500 ${isClosing ? 'opacity-0' : 'opacity-100'}`}>
-      <div className="text-center relative overflow-hidden p-8">
-        <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-4 relative z-10 animate-fade-in-up">
+      <div className="text-center relative overflow-hidden p-6 md:p-8">
+        <h1 className="text-4xl md:text-7xl font-bold tracking-tight mb-3 md:mb-4 relative z-10 animate-fade-in-up">
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-white to-blue-400 bg-[length:200%_auto] animate-shine">
             Landscape 360
           </span>
         </h1>
-        <p className="text-sm md:text-lg text-blue-200/80 uppercase tracking-[0.3em] font-light animate-fade-in-up-delay">
+        <p className="text-[10px] md:text-lg text-blue-200/80 uppercase tracking-[0.25em] md:tracking-[0.3em] font-light animate-fade-in-up-delay">
           Explore without Limits, Guided by Precision
         </p>
         
@@ -40,7 +40,7 @@ export const LoadingOverlay = ({ onComplete }: { onComplete?: () => void }) => {
                 onComplete?.();
             }, 500);
           }}
-          className="cursor-pointer mt-12 px-8 py-3 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/30 rounded-full text-sm font-medium tracking-wider uppercase transition-all duration-300 animate-fade-in-up-delay-2 group"
+          className="cursor-pointer mt-8 md:mt-12 px-6 py-2 md:px-8 md:py-3 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/30 rounded-full text-[11px] md:text-sm font-medium tracking-wider uppercase transition-all duration-300 animate-fade-in-up-delay-2 group"
         >
           <span className="group-hover:text-blue-300 transition-colors">Start Your Journey</span>
         </button>
