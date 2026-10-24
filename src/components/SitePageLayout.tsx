@@ -50,7 +50,8 @@ interface Props {
 export const SitePageLayout = ({ title, subtitle, icon: Icon, seoDescription, path, headerAction, children }: Props) => {
   const navigate = useNavigate();
   return (
-    <div className="h-screen bg-white text-ink font-sans overflow-hidden flex flex-col">
+    // 100dvh: on phones 100vh is taller than the visible area (browser bars), hiding the footer
+    <div className="h-screen h-dvh bg-white text-ink font-sans overflow-hidden flex flex-col">
       <SEO title={title} description={seoDescription} url={`https://landscape360.jcdigital.co.id${path}`} />
 
       <header className="shrink-0 sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-sand-200">
@@ -76,10 +77,12 @@ export const SitePageLayout = ({ title, subtitle, icon: Icon, seoDescription, pa
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto custom-scrollbar">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12">{children}</div>
+      {/* Column layout: the content fills the free height, so the footer sits at the bottom
+          of the screen on short pages and after the content on long ones */}
+      <main className="flex-1 overflow-y-auto custom-scrollbar flex flex-col">
+        <div className="flex-1 w-full max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12">{children}</div>
 
-        <footer className="border-t border-sand-100 py-8 px-4 text-center space-y-3">
+        <footer className="shrink-0 border-t border-sand-100 py-8 px-4 text-center space-y-3">
           <SiteLinks />
           <p className="text-[10px] uppercase tracking-widest text-sand-400">
             © {new Date().getFullYear()} Landscape 360 · contact@jcdigital.co.id
