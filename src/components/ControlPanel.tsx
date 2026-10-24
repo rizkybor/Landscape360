@@ -201,10 +201,12 @@ export const ControlPanel = () => {
     }
   }, [isPlotMode, isMobile]);
 
-  // Swipe Down to Close Logic (Mobile)
+  // Swipe Down to Close Logic (Mobile). A touch only becomes a drag once the finger moves,
+  // so tapping a button in the header (e.g. Sign In) does not re-render this whole panel.
   const touchStart = useRef<number | null>(null);
   const [touchOffset, setTouchOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const DRAG_START_PX = 6;
   // const toolsScrollRef = useRef<HTMLDivElement | null>(null);
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -219,11 +221,10 @@ export const ControlPanel = () => {
       return;
 
     touchStart.current = e.targetTouches[0].clientY;
-    setIsDragging(true);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isMobile || touchStart.current === null || !isDragging) return;
+    if (!isMobile || touchStart.current === null) return;
 
     const target = e.target as HTMLElement;
     if (
@@ -236,6 +237,8 @@ export const ControlPanel = () => {
     const diff = currentY - touchStart.current;
 
     // Only allow dragging downwards (closing) and prevent default scroll if dragging
+    if (!isDragging && diff < DRAG_START_PX) return;
+    if (!isDragging) setIsDragging(true);
     if (diff > 0) {
       setTouchOffset(diff);
       // e.preventDefault(); // Don't prevent default blindly to allow scrolling if needed, but here we want to capture the drag
@@ -245,6 +248,9 @@ export const ControlPanel = () => {
   const handleTouchEnd = () => {
     if (!isMobile || touchStart.current === null) return;
 
+    touchStart.current = null;
+    if (!isDragging) return; // a tap, nothing to reset
+
     if (touchOffset > 50) {
       // Reduced threshold for easier closing
       setIsOpen(false);
@@ -252,7 +258,6 @@ export const ControlPanel = () => {
 
     setTouchOffset(0);
     setIsDragging(false);
-    touchStart.current = null;
   };
 
   // const handleToolsScroll = useCallback(() => {

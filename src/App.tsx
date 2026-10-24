@@ -49,8 +49,10 @@ function App() {
       {/* The start screen is for the map only; content pages open directly */}
       {isLoading && pathname === '/' && <LoadingOverlay onComplete={handleStart} />}
 
-      {(!isLoading || pathname !== '/') && (
-        <Suspense fallback={
+      {/* The map mounts right away, under the start screen, so its heavy first load happens
+          while the start screen is shown. Waiting for "Start" made the first taps on the
+          panel (e.g. Sign In) feel stuck while the map was still loading. */}
+      <Suspense fallback={
             <div className="fixed inset-0 flex items-center justify-center bg-ink/40 text-ink">
                 <Loader2 size={32} className="animate-spin text-forest-700" />
             </div>
@@ -63,8 +65,7 @@ function App() {
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
             </Routes>
-        </Suspense>
-      )}
+      </Suspense>
     </>
   );
 }

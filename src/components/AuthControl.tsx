@@ -338,27 +338,39 @@ export const AuthControl = () => {
           createPortal(
             <div className="fixed inset-0 z-[100] flex items-center justify-center md:p-4 bg-ink/40 backdrop-blur-sm md:backdrop-blur-md animate-in fade-in duration-200">
               <div
-                className="relative w-full h-full md:h-auto md:max-w-md bg-white border-0 md:border md:border-sand-200 rounded-none md:rounded-2xl overflow-hidden flex flex-col justify-center"
+                className="relative w-full h-full md:h-auto md:max-h-[92vh] md:max-w-md bg-white border-0 md:border md:border-sand-200 rounded-none md:rounded-2xl overflow-hidden flex flex-col"
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Glow Decor */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-1 bg-gradient-to-r from-transparent via-forest-700 to-transparent"></div>
 
                 {/* Background Effects */}
-                <div className="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-forest-50 blur-[100px] rounded-full pointer-events-none"></div>
-                <div className="absolute bottom-0 left-0 -mb-16 -ml-16 w-64 h-64 bg-gold-50 blur-[100px] rounded-full pointer-events-none"></div>
+                {/* Large blurs are costly to paint on phones: desktop only */}
+                <div className="hidden md:block absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-forest-50 blur-[100px] rounded-full pointer-events-none"></div>
+                <div className="hidden md:block absolute bottom-0 left-0 -mb-16 -ml-16 w-64 h-64 bg-gold-50 blur-[100px] rounded-full pointer-events-none"></div>
 
-                <div className="p-8 relative z-10 overflow-y-auto custom-scrollbar flex-1 flex flex-col justify-center">
+                {/* The form sits in the middle when it fits and scrolls from the top when
+                    it is taller than the screen (Request Account on a phone) */}
+                <div className="relative z-10 overflow-y-auto custom-scrollbar flex-1 flex flex-col px-5 pt-[calc(3.5rem+env(safe-area-inset-top))] pb-[calc(1.5rem+env(safe-area-inset-bottom))] md:p-8">
+                  <div className="my-auto w-full max-w-sm mx-auto">
                   {/* Header */}
-                  <div className="text-center mb-8">
-                    <h2 className="text-2xl font-bold text-ink mb-2 tracking-tight">
+                  <div className="text-center mb-6 md:mb-8">
+                    <img
+                      src={landscapeLogo}
+                      alt="Landscape 360"
+                      className="w-14 h-14 md:w-16 md:h-16 mx-auto mb-3 object-contain"
+                    />
+                    <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-forest-700 mb-3">
+                      Landscape 360
+                    </div>
+                    <h2 className="text-xl md:text-2xl font-bold text-ink mb-1.5 md:mb-2 tracking-tight">
                       {isForgotPassword
                         ? "Reset Password"
                         : isLoginView
                           ? "Welcome Back"
                           : "Request Account"}
                     </h2>
-                    <p className="text-sm text-sand-600 font-mono tracking-wide">
+                    <p className="text-[11px] md:text-sm text-sand-600 font-mono tracking-wide">
                       {isForgotPassword
                         ? "REQUEST RESET VIA EMAIL"
                         : isLoginView
@@ -378,7 +390,7 @@ export const AuthControl = () => {
                   )}
 
                   {/* Form */}
-                  <form onSubmit={handleEmailAuth} className="space-y-5">
+                  <form onSubmit={handleEmailAuth} className="space-y-4 md:space-y-5">
                     <div className="space-y-1">
                       <label className="text-[10px] uppercase font-bold text-sand-500 tracking-wider ml-1">
                         Email Address
@@ -407,7 +419,7 @@ export const AuthControl = () => {
                           type="email"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          className="w-full bg-sand-50 border border-sand-200 rounded-xl py-3 pl-10 pr-4 text-sm text-ink placeholder-sand-400 focus:border-forest-300 focus:ring-1 focus:ring-forest-300 focus:bg-white/90 transition-all outline-none"
+                          className="w-full bg-sand-50 border border-sand-200 rounded-xl py-3 pl-10 pr-4 text-base sm:text-sm text-ink placeholder-sand-400 focus:border-forest-300 focus:ring-1 focus:ring-forest-300 focus:bg-white/90 transition-all outline-none"
                           required
                           pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
                           title="Please enter a valid email address"
@@ -426,13 +438,13 @@ export const AuthControl = () => {
                             type="text"
                             value={requestForm.fullName}
                             onChange={(e) => setRequestForm({ ...requestForm, fullName: e.target.value })}
-                            className="w-full bg-sand-50 border border-sand-200 rounded-xl py-3 px-4 text-sm text-ink placeholder-sand-400 focus:border-forest-300 focus:ring-1 focus:ring-forest-300 focus:bg-white/90 transition-all outline-none"
+                            className="w-full bg-sand-50 border border-sand-200 rounded-xl py-3 px-4 text-base sm:text-sm text-ink placeholder-sand-400 focus:border-forest-300 focus:ring-1 focus:ring-forest-300 focus:bg-white/90 transition-all outline-none"
                             required
                             maxLength={120}
                           />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-3">
                           <div className="space-y-1">
                             <label className="text-[10px] uppercase font-bold text-sand-500 tracking-wider ml-1">
                               Organization <span className="font-normal normal-case tracking-normal text-sand-400">(optional)</span>
@@ -441,7 +453,7 @@ export const AuthControl = () => {
                               type="text"
                               value={requestForm.organization}
                               onChange={(e) => setRequestForm({ ...requestForm, organization: e.target.value })}
-                              className="w-full bg-sand-50 border border-sand-200 rounded-xl py-3 px-4 text-sm text-ink placeholder-sand-400 focus:border-forest-300 focus:ring-1 focus:ring-forest-300 focus:bg-white/90 transition-all outline-none"
+                              className="w-full bg-sand-50 border border-sand-200 rounded-xl py-3 px-4 text-base sm:text-sm text-ink placeholder-sand-400 focus:border-forest-300 focus:ring-1 focus:ring-forest-300 focus:bg-white/90 transition-all outline-none"
                               maxLength={120}
                               placeholder="Company, club or university"
                             />
@@ -454,7 +466,7 @@ export const AuthControl = () => {
                               type="tel"
                               value={requestForm.phone}
                               onChange={(e) => setRequestForm({ ...requestForm, phone: e.target.value })}
-                              className="w-full bg-sand-50 border border-sand-200 rounded-xl py-3 px-4 text-sm text-ink placeholder-sand-400 focus:border-forest-300 focus:ring-1 focus:ring-forest-300 focus:bg-white/90 transition-all outline-none"
+                              className="w-full bg-sand-50 border border-sand-200 rounded-xl py-3 px-4 text-base sm:text-sm text-ink placeholder-sand-400 focus:border-forest-300 focus:ring-1 focus:ring-forest-300 focus:bg-white/90 transition-all outline-none"
                               maxLength={20}
                               pattern="\+?[0-9][0-9\s\-]{6,18}[0-9]"
                               title="Phone number with 8 to 15 digits, e.g. +62 812 3456 7890"
@@ -470,7 +482,7 @@ export const AuthControl = () => {
                           <select
                             value={requestForm.requestedPlan}
                             onChange={(e) => setRequestForm({ ...requestForm, requestedPlan: e.target.value as Plan })}
-                            className="cursor-pointer w-full bg-sand-50 border border-sand-200 rounded-xl py-3 px-4 text-sm text-ink focus:border-forest-300 focus:ring-1 focus:ring-forest-300 transition-all outline-none"
+                            className="cursor-pointer w-full bg-sand-50 border border-sand-200 rounded-xl py-3 px-4 text-base sm:text-sm text-ink focus:border-forest-300 focus:ring-1 focus:ring-forest-300 transition-all outline-none"
                           >
                             {PLANS.map((p) => (
                               <option key={p} value={p} disabled={p !== "Free"} className="bg-white">
@@ -491,7 +503,7 @@ export const AuthControl = () => {
                           <textarea
                             value={requestForm.message}
                             onChange={(e) => setRequestForm({ ...requestForm, message: e.target.value })}
-                            className="w-full bg-sand-50 border border-sand-200 rounded-xl py-3 px-4 text-sm text-ink placeholder-sand-400 focus:border-forest-300 focus:ring-1 focus:ring-forest-300 focus:bg-white/90 transition-all outline-none resize-none"
+                            className="w-full bg-sand-50 border border-sand-200 rounded-xl py-3 px-4 text-base sm:text-sm text-ink placeholder-sand-400 focus:border-forest-300 focus:ring-1 focus:ring-forest-300 focus:bg-white/90 transition-all outline-none resize-none"
                             rows={3}
                             required
                             maxLength={1000}
@@ -546,7 +558,7 @@ export const AuthControl = () => {
                             type={showPassword ? "text" : "password"}
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full bg-sand-50 border border-sand-200 rounded-xl py-3 pl-10 pr-12 text-sm text-ink placeholder-sand-400 focus:border-forest-300 focus:ring-1 focus:ring-forest-300 focus:bg-white/90 transition-all outline-none"
+                            className="w-full bg-sand-50 border border-sand-200 rounded-xl py-3 pl-10 pr-12 text-base sm:text-sm text-ink placeholder-sand-400 focus:border-forest-300 focus:ring-1 focus:ring-forest-300 focus:bg-white/90 transition-all outline-none"
                             required
                             minLength={8}
                           />
@@ -601,7 +613,7 @@ export const AuthControl = () => {
                   </form>
 
                   {/* Footer Links */}
-                  <div className="mt-8 pt-6 border-t border-sand-100 flex flex-col items-center gap-4 text-sm">
+                  <div className="mt-6 md:mt-8 pt-5 md:pt-6 border-t border-sand-100 flex flex-col items-center gap-4 text-sm">
                     {!isForgotPassword && (
                       <div className="text-sand-600">
                         {isLoginView
@@ -631,6 +643,34 @@ export const AuthControl = () => {
                         : "Forgot Password? (Request via Email)"}
                     </button>
                   </div>
+
+                  {/* Credits, phones only (the sidebar shows them on desktop) */}
+                  <div className="md:hidden mt-8 text-center text-[10px] text-sand-500 font-mono">
+                    <div className="uppercase tracking-[0.2em] mb-1 text-[9px] text-sand-400">
+                      In Collaboration With
+                    </div>
+                    <div className="font-bold text-sand-600 uppercase tracking-wider leading-relaxed">
+                      <a
+                        href="https://instagram.com/jendelacakradigital"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-forest-700 transition-colors"
+                      >
+                        Jendela Cakra Digital
+                      </a>{" "}
+                      &amp;{" "}
+                      <a
+                        href="https://instagram.com/makopala_ubl"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-forest-700 transition-colors"
+                      >
+                        Makopala Univ. Budi Luhur
+                      </a>
+                    </div>
+                    <div className="opacity-50 mt-0.5">@2026</div>
+                  </div>
+                  </div>
                 </div>
 
                 {/* Close Button - Moved to bottom for better stacking */}
@@ -639,7 +679,7 @@ export const AuthControl = () => {
                     e.stopPropagation();
                     setShowMenu(false);
                   }}
-                  className="absolute top-4 right-4 text-sand-600 hover:text-ink transition-colors z-[60] p-2 hover:bg-sand-100 rounded-full cursor-pointer"
+                  className="absolute top-[calc(0.75rem+env(safe-area-inset-top))] right-3 md:top-4 md:right-4 text-sand-600 hover:text-ink transition-colors z-[60] p-2 bg-white/90 shadow-sm md:bg-transparent md:shadow-none hover:bg-sand-100 rounded-full cursor-pointer"
                   title="Close Modal"
                 >
                   <svg
