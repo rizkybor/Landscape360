@@ -31,6 +31,16 @@ interface Props {
 // Set to true to show the Pricing & Plans section again
 const SHOW_PRICING = false;
 
+const UPGRADE_EMAIL = "contact@jcdigital.co.id";
+
+// Upgrade requests go by email; the message is prefilled so users only add their details
+const upgradeMailto = (plan: string) =>
+  `mailto:${UPGRADE_EMAIL}?subject=${encodeURIComponent(
+    `Landscape 360 upgrade request: ${plan} plan`,
+  )}&body=${encodeURIComponent(
+    `Hello Landscape 360 team,\n\nI would like to upgrade my account to the ${plan} plan.\n\nAccount email: \nName: \nOrganization: \n\nThank you.`,
+  )}`;
+
 export const DocsPage = ({ onBack }: Props) => {
   return (
     <div className="h-screen bg-white text-ink font-sans overflow-hidden flex flex-col">
@@ -325,11 +335,169 @@ export const DocsPage = ({ onBack }: Props) => {
                   </h4>
                   <p className="text-xs text-sand-600 leading-relaxed">
                     New here? Click <strong>Sign In / Register</strong>, then{" "}
-                    <strong>Request Account</strong> and fill in the form. The admin reviews it
+                    <strong>Request Account</strong> and fill in the form. Our team reviews it
                     and emails you your login details.
                   </p>
                 </div>
               </div>
+            </div>
+          </section>
+
+          {/* Plans & Features */}
+          <section>
+            <div className="flex items-center gap-3 text-ink mb-2">
+              <div className="p-2 bg-forest-50 rounded-lg border border-forest-200">
+                <Layers className="w-5 h-5 text-forest-700" />
+              </div>
+              <h3 className="text-2xl font-bold">Plans & Features</h3>
+            </div>
+            <p className="text-sm text-sand-600 mb-6">
+              Every account starts on <strong>Free</strong>. Pro and Enterprise unlock more
+              features and higher limits. To upgrade, send a request by email to{" "}
+              <a href={upgradeMailto("Pro or Enterprise")} className="font-bold text-forest-700 hover:underline">
+                contact@jcdigital.co.id
+              </a>{" "}
+              with the email of your Landscape 360 account and the plan you need.
+            </p>
+
+            <div className="bg-sand-50 border border-sand-200 rounded-xl p-4 mb-4">
+              <h4 className="text-xs font-bold text-sand-600 uppercase tracking-wider mb-2">
+                Included in every plan
+              </h4>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  "2D & 3D terrain",
+                  "Contour lines",
+                  "DMS coordinate grid",
+                  "Streets, Outdoors & Satellite styles",
+                  "Split screen",
+                  "Location search",
+                  "Weather",
+                  "Route planner",
+                  "Navigator survey tools",
+                  "Points of interest",
+                  "PNG / JPG / PDF export",
+                  "Receive shared locations & tracks",
+                ].map((f) => (
+                  <span key={f} className="px-2 py-1 rounded-full bg-white border border-sand-200 text-[11px] text-sand-700">
+                    {f}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-4 mb-6">
+              {[
+                {
+                  plan: "Free",
+                  tagline: "Explore and plan your trips",
+                  badge: "bg-sand-100 text-sand-700 border-sand-300",
+                  card: "border-sand-200",
+                  features: [
+                    "1 offline map (up to 1 MB)",
+                    "2 saved surveys",
+                    "10 marked locations",
+                    "View your tracks and tracks shared with you",
+                    "10 MB cloud storage",
+                  ],
+                },
+                {
+                  plan: "Pro",
+                  tagline: "For hikers and field professionals",
+                  badge: "bg-forest-50 text-forest-700 border-forest-200",
+                  card: "border-forest-200",
+                  features: [
+                    "3 offline maps (up to 10 MB each)",
+                    "4 saved surveys",
+                    "100 marked locations, share by email or name",
+                    "GPS Tracking: broadcast your location and record activities (GPX)",
+                    "Rename your cloud tracks",
+                    "100 MB cloud storage",
+                  ],
+                },
+                {
+                  plan: "Enterprise",
+                  tagline: "For teams, clubs and organizations",
+                  badge: "bg-gold-50 text-gold-700 border-gold-200",
+                  card: "border-gold-200",
+                  features: [
+                    "10 offline maps (up to 25 MB each)",
+                    "10 saved surveys",
+                    "1,000 marked locations, share by email or name",
+                    "Track Recorder: record online or offline, share and export GPX",
+                    "GPS Tracking: broadcast your location",
+                    "Team Monitor: follow every active member live (Monitor accounts)",
+                    "Custom Basemaps: GeoTIFF / GeoPDF overlays (Monitor accounts)",
+                    "1 GB cloud storage",
+                  ],
+                },
+              ].map((p) => (
+                <div key={p.plan} className={`bg-white border ${p.card} rounded-xl p-5 flex flex-col`}>
+                  <span className={`self-start text-[10px] font-bold px-2 py-1 rounded border uppercase tracking-wider ${p.badge}`}>
+                    {p.plan}
+                  </span>
+                  <p className="text-xs text-sand-600 mt-2 mb-4">{p.tagline}</p>
+                  <ul className="space-y-2 text-xs text-sand-700 flex-1">
+                    {p.features.map((f) => (
+                      <li key={f} className="flex gap-2">
+                        <span className="text-forest-700 font-bold">✓</span>
+                        <span>{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  {p.plan !== "Free" && (
+                    <a
+                      href={upgradeMailto(p.plan)}
+                      className="mt-5 block w-full py-2 text-center rounded-lg bg-forest-800 hover:bg-forest-700 text-xs font-bold text-white transition-colors"
+                    >
+                      Request {p.plan} Upgrade
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-white border border-sand-200 rounded-xl p-5 overflow-x-auto">
+              <h4 className="text-sm font-bold text-ink mb-3 flex items-center gap-2">
+                <HardDrive size={16} className="text-forest-700" /> Limits & Storage
+              </h4>
+              <table className="w-full text-xs min-w-[420px]">
+                <thead>
+                  <tr className="text-left text-[10px] uppercase tracking-wider text-sand-500 border-b border-sand-200">
+                    <th className="py-2 pr-3 font-bold">Limit</th>
+                    <th className="py-2 pr-3 font-bold">Free</th>
+                    <th className="py-2 pr-3 font-bold">Pro</th>
+                    <th className="py-2 font-bold">Enterprise</th>
+                  </tr>
+                </thead>
+                <tbody className="text-sand-700">
+                  {[
+                    ["Cloud storage", "10 MB", "100 MB", "1 GB"],
+                    ["Offline maps", "1", "3", "10"],
+                    ["Size per offline map", "1 MB", "10 MB", "25 MB"],
+                    ["Saved surveys", "2", "4", "10"],
+                    ["Marked locations", "10", "100", "1,000"],
+                    ["Share locations", "—", "✓", "✓"],
+                    ["Record tracks", "—", "—", "✓"],
+                    ["Custom basemap storage", "—", "—", "5 MB"],
+                  ].map(([label, ...values]) => (
+                    <tr key={label} className="border-b border-sand-100 last:border-0">
+                      <td className="py-2 pr-3 font-bold text-ink">{label}</td>
+                      {values.map((v, i) => (
+                        <td key={i} className="py-2 pr-3 font-mono">{v}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className="text-[10px] text-sand-500 mt-3 leading-relaxed">
+                <strong>Cloud storage</strong> is shared by your recorded tracks, marked
+                locations, surveys and custom basemaps; your usage is shown in the{" "}
+                <strong>User Account</strong> menu. <strong>Offline maps</strong> are saved on
+                your device and do not use cloud storage. When a limit is reached nothing is
+                deleted: new data is simply not saved until you free up space. Need more? Request
+                it by email to {UPGRADE_EMAIL}.
+              </p>
             </div>
           </section>
 
@@ -1504,22 +1672,15 @@ export const DocsPage = ({ onBack }: Props) => {
                         <td className="py-2 font-mono">100</td>
                         <td className="py-2 text-forest-700 font-bold">✓</td>
                       </tr>
-                      <tr className="border-b border-sand-100">
+                      <tr>
                         <td className="py-2 font-bold">Enterprise</td>
                         <td className="py-2 font-mono">1,000</td>
                         <td className="py-2 text-forest-700 font-bold">✓</td>
                       </tr>
-                      <tr>
-                        <td className="py-2 font-bold">Admin</td>
-                        <td className="py-2 font-mono">Unlimited</td>
-                        <td className="py-2 text-forest-700 font-bold">✓ + All Users</td>
-                      </tr>
                     </tbody>
                   </table>
                   <p className="text-[10px] text-sand-500 mt-3 leading-relaxed">
-                    Every account can receive shared locations. The admin's{" "}
-                    <strong>All Users</strong> tab lists, edits and deletes every account's
-                    locations and can show them all on the map. Locations need an internet
+                    Every account can receive shared locations. Locations need an internet
                     connection to load and save.
                   </p>
                 </div>
@@ -1542,14 +1703,15 @@ export const DocsPage = ({ onBack }: Props) => {
                   <UserPlus size={18} className="text-forest-700" /> Request an Account
                 </h4>
                 <p className="text-xs text-sand-600 leading-relaxed">
-                  Accounts are created by the admin. To get one, click{" "}
-                  <strong>Sign In / Register</strong> and then <strong>Request Account</strong>.
-                  Fill in your email, full name, and optionally your organization, phone /
-                  WhatsApp, the plan you need and a short message.
+                  To get an account, click <strong>Sign In / Register</strong> and then{" "}
+                  <strong>Request Account</strong>. All fields are required: email, full name,
+                  organization, phone / WhatsApp and a short message about how you will use
+                  Landscape 360. New accounts start on the <strong>Free</strong> plan; Pro and
+                  Enterprise are available as an upgrade once your account is active.
                 </p>
                 <ul className="space-y-2 text-[11px] text-sand-700">
                   <li className="flex gap-2">
-                    <span className="text-forest-700">•</span> The admin reviews your request and
+                    <span className="text-forest-700">•</span> Our team reviews your request and
                     emails your login details once it is approved.
                   </li>
                   <li className="flex gap-2">
@@ -1558,113 +1720,41 @@ export const DocsPage = ({ onBack }: Props) => {
                   </li>
                   <li className="flex gap-2">
                     <span className="text-forest-700">•</span> Forgot your password? Use{" "}
-                    <strong>Forgot Password</strong> in the same window to contact the admin.
+                    <strong>Forgot Password</strong> in the same window to contact us.
                   </li>
                 </ul>
               </div>
 
               <div className="bg-white border border-sand-200 rounded-xl p-6 space-y-3">
                 <h4 className="text-lg font-bold text-ink flex items-center gap-2">
-                  <ShieldCheck size={18} className="text-forest-700" /> Admin Tools
-                  <span className="px-2 py-0.5 rounded bg-forest-900 text-[10px] text-gold-300 font-bold uppercase">
-                    Admin
-                  </span>
+                  <HardDrive size={18} className="text-forest-700" /> Cloud Storage
                 </h4>
                 <p className="text-xs text-sand-600 leading-relaxed">
-                  The admin account has access to every feature regardless of plan, and two
-                  extra entries in the <strong>User Account</strong> menu:
+                  Every account has a cloud storage limit shared by its{" "}
+                  <strong>recorded tracks</strong>, <strong>marked locations</strong>,{" "}
+                  <strong>surveys</strong> and <strong>custom basemaps</strong>. Your usage
+                  is shown in the <strong>User Account</strong> menu (hover it for the
+                  breakdown per feature).
                 </p>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3 p-3 bg-sand-50 rounded-lg border border-sand-100">
-                    <div className="mt-0.5 text-forest-700 font-bold text-[10px]">01</div>
-                    <div>
-                      <strong className="text-ink text-xs block">Account Requests</strong>
-                      <p className="text-[10px] text-sand-600">
-                        Pending requests show as a badge. <strong>Approve</strong> creates the
-                        account with the chosen plan, role and a generated password, then shows
-                        the login details to copy or email. <strong>Reject</strong> can include
-                        an internal note.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 p-3 bg-sand-50 rounded-lg border border-sand-100">
-                    <div className="mt-0.5 text-forest-700 font-bold text-[10px]">02</div>
-                    <div>
-                      <strong className="text-ink text-xs block">Manage Users & Plans</strong>
-                      <p className="text-[10px] text-sand-600">
-                        Create accounts, change plan and role, reset passwords and delete
-                        users. Each account shows its cloud storage usage; the admin can sort
-                        by usage, give one account a custom limit, and change the default limit
-                        of every plan with the <strong>Storage</strong> button.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 p-3 bg-sand-50 rounded-lg border border-sand-100">
-                    <div className="mt-0.5 text-forest-700 font-bold text-[10px]">03</div>
-                    <div>
-                      <strong className="text-ink text-xs block">Send Email</strong>
-                      <p className="text-[10px] text-sand-600">
-                        Write to any account from a template (account information, plan
-                        updated, storage almost full) or a blank message, then{" "}
-                        <strong>Open in Gmail</strong>: the email opens ready to send, and the
-                        admin picks the sender and presses Send. Approved account requests can
-                        receive their login details the same way.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 p-3 bg-sand-50 rounded-lg border border-sand-100">
-                    <div className="mt-0.5 text-forest-700 font-bold text-[10px]">04</div>
-                    <div>
-                      <strong className="text-ink text-xs block">Login History</strong>
-                      <p className="text-[10px] text-sand-600">
-                        See when each account last signed in, and its latest sign-ins with the
-                        device and browser used.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white border border-sand-200 rounded-xl p-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <h4 className="text-lg font-bold text-ink flex items-center gap-2">
-                    <HardDrive size={18} className="text-forest-700" /> Cloud Storage
-                  </h4>
-                  <p className="text-xs text-sand-600 leading-relaxed">
-                    Every account has a cloud storage limit shared by its{" "}
-                    <strong>recorded tracks</strong>, <strong>marked locations</strong>,{" "}
-                    <strong>surveys</strong> and <strong>custom basemaps</strong>. Your usage
-                    is shown in the <strong>User Account</strong> menu (hover it for the
-                    breakdown per feature).
-                  </p>
-                  <p className="text-xs text-sand-600 leading-relaxed">
-                    When the limit is reached, new data is not saved until you delete
-                    something or the admin raises your limit. Deleting or shortening data
-                    always works, and nothing is ever removed automatically. Offline maps are
-                    stored on your device and have their own limits.
-                  </p>
-                </div>
-                <div className="bg-forest-50 rounded-lg border border-forest-200 p-4 space-y-2">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-forest-700 mb-1">
-                    Default limits
-                  </div>
+                <div className="bg-forest-50 rounded-lg border border-forest-200 p-3 space-y-1.5">
                   {[
                     ["Free", "10 MB"],
                     ["Pro", "100 MB"],
                     ["Enterprise", "1 GB"],
-                    ["Admin", "Unlimited"],
                   ].map(([plan, limit]) => (
                     <div key={plan} className="flex justify-between items-center text-xs text-forest-700 border-b border-forest-200 last:border-0 pb-1">
                       <span>{plan}</span>
                       <span className="font-bold font-mono">{limit}</span>
                     </div>
                   ))}
-                  <p className="text-[10px] text-forest-700 italic pt-1">
-                    The admin can change these defaults and set custom limits per account.
-                  </p>
                 </div>
+                <p className="text-xs text-sand-600 leading-relaxed">
+                  When the limit is reached, new data is not saved until you delete
+                  something. Deleting or shortening data always works, and nothing is ever
+                  removed automatically. Offline maps are stored on your device and have
+                  their own limits. Need more space? Contact us at{" "}
+                  <strong>contact@jcdigital.co.id</strong>.
+                </p>
               </div>
             </div>
           </section>

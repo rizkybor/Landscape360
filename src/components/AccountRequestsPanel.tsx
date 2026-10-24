@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Inbox,
   X,
@@ -25,6 +25,7 @@ import {
   rejectAccountRequest,
   deleteAccountRequest,
   generatePassword,
+  latestCreatedAt,
   type AccountRequest,
   type RequestStatus,
 } from "../lib/accountRequests";
@@ -69,9 +70,12 @@ interface ApproveForm {
 interface Props {
   onClose: () => void;
   onPendingCountChange?: (count: number) => void;
+  // Called whenever the pending list is shown, with the newest request in it, so the
+  // "new request" notification can be cleared
+  onSeen?: (latestCreatedAt: string | null) => void;
 }
 
-export const AccountRequestsPanel = ({ onClose, onPendingCountChange }: Props) => {
+export const AccountRequestsPanel = ({ onClose, onPendingCountChange, onSeen }: Props) => {
   const [tab, setTab] = useState<RequestStatus | "all">("pending");
   const [requests, setRequests] = useState<AccountRequest[]>([]);
   const [pendingCount, setPendingCount] = useState(0);
@@ -94,6 +98,12 @@ export const AccountRequestsPanel = ({ onClose, onPendingCountChange }: Props) =
   const [credentials, setCredentials] = useState<{ email: string; password: string } | null>(null);
   const [showCredentialsEmail, setShowCredentialsEmail] = useState(false);
 
+  // Latest callback without reloading the list when its identity changes
+  const onSeenRef = useRef(onSeen);
+  useEffect(() => {
+    onSeenRef.current = onSeen;
+  }, [onSeen]);
+
   const refresh = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -102,6 +112,7 @@ export const AccountRequestsPanel = ({ onClose, onPendingCountChange }: Props) =
       setRequests(result.requests);
       setPendingCount(result.pendingCount);
       onPendingCountChange?.(result.pendingCount);
+      if (tab === "pending") onSeenRef.current?.(latestCreatedAt(result.requests));
     } catch (err) {
       setError((err as Error).message);
     } finally {

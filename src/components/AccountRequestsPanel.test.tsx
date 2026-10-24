@@ -44,6 +44,25 @@ describe('AccountRequestsPanel', () => {
     vi.mocked(rejectAccountRequest).mockResolvedValue({ ok: true });
   });
 
+  it('reports the newest pending request so the notification can be cleared', async () => {
+    const onSeen = vi.fn();
+    vi.mocked(listAccountRequests).mockResolvedValue({
+      requests: [
+        { ...pendingRequest, id: 'old', createdAt: '2026-10-23T08:00:00.000001+00:00' },
+        { ...pendingRequest, id: 'new', createdAt: '2026-10-24T09:15:00.123456+00:00' },
+      ],
+      pendingCount: 2,
+    });
+    render(<AccountRequestsPanel onClose={vi.fn()} onSeen={onSeen} />);
+    await waitFor(() => expect(onSeen).toHaveBeenCalledWith('2026-10-24T09:15:00.123456+00:00'));
+
+    // Other tabs do not count as having seen the pending requests
+    onSeen.mockClear();
+    fireEvent.click(screen.getByText('Approved'));
+    await waitFor(() => expect(listAccountRequests).toHaveBeenCalledWith('approved'));
+    expect(onSeen).not.toHaveBeenCalled();
+  });
+
   it('lists pending requests and reports the pending count', async () => {
     const onPendingCountChange = vi.fn();
     render(<AccountRequestsPanel onClose={vi.fn()} onPendingCountChange={onPendingCountChange} />);
