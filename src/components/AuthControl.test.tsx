@@ -174,8 +174,9 @@ describe('AuthControl', () => {
     expect(await screen.findByLabelText('3 new account requests')).toHaveTextContent('3');
 
     fireEvent.click(screen.getByText('Admin User'));
-    // Admin: the S.O.S button is in User Account
-    expect(screen.getByRole('button', { name: 'S.O.S' })).toBeInTheDocument();
+    // Admin: the S.O.S button sits right before Sign Out in the footer
+    const sos = screen.getByRole('button', { name: 'S.O.S' });
+    expect(sos.nextElementSibling).toBe(screen.getByRole('button', { name: /Sign Out/ }));
     const requestsButton = screen.getByRole('button', { name: /Account Requests/ });
     expect(requestsButton).toHaveTextContent('3 new');
 
@@ -228,7 +229,7 @@ describe('AuthControl', () => {
     if (!usesLogo) expect(screen.getAllByText('S').length).toBeGreaterThan(0);
   });
 
-  it('offers Sign Out in the header (always visible on phones) as well as in the footer', async () => {
+  it('offers Sign Out once, in the footer', async () => {
     (useSurveyStore as any).mockReturnValue({
       user: { id: 'u1', email: 'u1@x.com', user_metadata: { display_name: 'Budi Santoso' } },
       setUser: vi.fn(),
@@ -242,7 +243,8 @@ describe('AuthControl', () => {
     fireEvent.click(await screen.findByText('Budi Santoso'));
 
     const signOutButtons = screen.getAllByRole('button', { name: /Sign Out/ });
-    expect(signOutButtons).toHaveLength(2);
+    expect(signOutButtons).toHaveLength(1);
+    expect(screen.queryByRole('button', { name: 'S.O.S' })).not.toBeInTheDocument(); // admin only
     fireEvent.click(signOutButtons[0]);
     expect(await screen.findByText(/Are you sure|sign out of/i)).toBeInTheDocument();
   });
