@@ -643,34 +643,37 @@ export const AuthControl = () => {
                         : "Forgot Password? (Request via Email)"}
                     </button>
                   </div>
+                  </div>
 
-                  {/* Credits, phones only (the sidebar shows them on desktop) */}
-                  <div className="md:hidden mt-8 text-center text-[10px] text-sand-500 font-mono">
-                    <div className="uppercase tracking-[0.2em] mb-1 text-[9px] text-sand-400">
-                      In Collaboration With
+                  {/* Credits: Sign In on phones only (the sidebar shows them on desktop).
+                      Outside the centred block, so they sit at the bottom of the screen. */}
+                  {isLoginView && !isForgotPassword && (
+                    <div className="md:hidden pt-6 text-center text-[8px] text-sand-500 font-mono">
+                      <div className="uppercase tracking-[0.2em] mb-0.5 text-sand-400">
+                        In Collaboration With
+                      </div>
+                      <div className="text-[9px] font-bold text-sand-600 uppercase tracking-wider leading-relaxed">
+                        <a
+                          href="https://instagram.com/jendelacakradigital"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:text-forest-700 transition-colors"
+                        >
+                          Jendela Cakra Digital
+                        </a>{" "}
+                        &amp;{" "}
+                        <a
+                          href="https://instagram.com/makopala_ubl"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:text-forest-700 transition-colors"
+                        >
+                          Makopala Univ. Budi Luhur
+                        </a>
+                      </div>
+                      <div className="opacity-50">@2026</div>
                     </div>
-                    <div className="font-bold text-sand-600 uppercase tracking-wider leading-relaxed">
-                      <a
-                        href="https://instagram.com/jendelacakradigital"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:text-forest-700 transition-colors"
-                      >
-                        Jendela Cakra Digital
-                      </a>{" "}
-                      &amp;{" "}
-                      <a
-                        href="https://instagram.com/makopala_ubl"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:text-forest-700 transition-colors"
-                      >
-                        Makopala Univ. Budi Luhur
-                      </a>
-                    </div>
-                    <div className="opacity-50 mt-0.5">@2026</div>
-                  </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* Close Button - Moved to bottom for better stacking */}
