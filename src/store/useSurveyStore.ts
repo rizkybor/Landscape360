@@ -10,7 +10,23 @@ export interface SurveyPoint {
   lat: number;
   elevation: number; // Surface elevation
   name?: string;
+  // How the survey line bends at this point: a curve through it (default, also for
+  // surveys saved before this option) or a sharp corner
+  corner?: PointCorner;
+  // Bezier handle dragged out from this point (meters east/north): the line leaves the
+  // point in this direction and arrives from the opposite one
+  handle?: SurveyHandle;
 }
+
+export interface SurveyHandle {
+  east: number;
+  north: number;
+}
+
+export type PointCorner = 'smooth' | 'sharp';
+
+export const ANGLE_STEPS = [0, 15, 45, 90] as const;
+export type AngleStep = (typeof ANGLE_STEPS)[number]; // 0 = free angle
 
 export interface SurveyGroup {
   id: string;
@@ -52,6 +68,13 @@ interface SurveyState {
 
   togglePlotMode: () => void;
   setPlotMode: (active: boolean) => void;
+
+  // Navigator straight mode: new points join with a straight line and a sharp corner,
+  // at any angle (step 0) or snapped to a multiple of angleStep degrees
+  isStraightMode: boolean;
+  angleStep: AngleStep;
+  toggleStraightMode: () => void;
+  setAngleStep: (step: AngleStep) => void;
   
   // Group actions
   createGroup: () => void;
@@ -61,7 +84,11 @@ interface SurveyState {
   updatePointName: (groupId: string, pointId: string, name: string) => void;
 
   // Point actions (affects active group)
-  addPoint: (point: Omit<SurveyPoint, 'id'>) => void;
+  // sharpenLast: make the current last point a sharp corner (used by 90° snapping)
+  addPoint: (point: Omit<SurveyPoint, 'id'>, options?: { sharpenLast?: boolean }) => void;
+  setPointCorner: (groupId: string, pointId: string, corner: PointCorner) => void;
+  setPointHandle: (groupId: string, pointId: string, handle: SurveyHandle | null) => void;
+  setGroupCorners: (groupId: string, corner: PointCorner) => void;
   updatePointPosition: (groupId: string, pointId: string, lat: number, lng: number, elevation?: number) => void;
   removePoint: (groupId: string, pointId: string) => void;
   clearPoints: (groupId: string) => void;
@@ -390,6 +417,11 @@ export const useSurveyStore = create<SurveyState>()(
   togglePlotMode: () => set((state) => ({ isPlotMode: !state.isPlotMode })),
   setPlotMode: (active) => set({ isPlotMode: active }),
 
+  isStraightMode: false,
+  angleStep: 0,
+  toggleStraightMode: () => set((state) => ({ isStraightMode: !state.isStraightMode })),
+  setAngleStep: (angleStep) => set({ angleStep }),
+
   createGroup: () => {
     set((state) => {
       const id = crypto.randomUUID();
@@ -448,7 +480,7 @@ export const useSurveyStore = create<SurveyState>()(
     get().saveCurrentSurvey();
   },
   
-  addPoint: (point) => {
+  addPoint: (point, options) => {
     set((state) => {
       if (!state.activeGroupId && state.groups.length === 0) {
         // Auto-create first group if none exists
@@ -467,9 +499,13 @@ export const useSurveyStore = create<SurveyState>()(
   
       const newPoint = { ...point, id: crypto.randomUUID() };
       return {
-        groups: state.groups.map(g => 
-          g.id === activeId ? { ...g, points: [...g.points, newPoint] } : g
-        )
+        groups: state.groups.map(g => {
+          if (g.id !== activeId) return g;
+          const points = options?.sharpenLast
+            ? g.points.map((p, i) => (i === g.points.length - 1 ? { ...p, corner: 'sharp' as const, handle: undefined } : p))
+            : g.points;
+          return { ...g, points: [...points, newPoint] };
+        })
       };
     });
     get().saveCurrentSurvey();
@@ -499,6 +535,42 @@ export const useSurveyStore = create<SurveyState>()(
     get().saveCurrentSurvey();
   },
 
+  setPointCorner: (groupId, pointId, corner) => {
+    set((state) => ({
+      groups: state.groups.map(g =>
+        g.id === groupId
+          ? { ...g, points: g.points.map(p => (p.id === pointId ? { ...p, corner, handle: undefined } : p)) }
+          : g
+      )
+    }));
+    get().saveCurrentSurvey();
+  },
+
+  setPointHandle: (groupId, pointId, handle) => {
+    set((state) => ({
+      groups: state.groups.map(g =>
+        g.id === groupId
+          ? {
+              ...g,
+              points: g.points.map(p =>
+                p.id === pointId ? { ...p, corner: 'smooth' as const, handle: handle ?? undefined } : p
+              )
+            }
+          : g
+      )
+    }));
+    get().saveCurrentSurvey();
+  },
+
+  setGroupCorners: (groupId, corner) => {
+    set((state) => ({
+      groups: state.groups.map(g =>
+        g.id === groupId ? { ...g, points: g.points.map(p => ({ ...p, corner, handle: undefined })) } : g
+      )
+    }));
+    get().saveCurrentSurvey();
+  },
+
   removePoint: (groupId, pointId) => {
     set((state) => ({
       groups: state.groups.map(g => 
@@ -523,6 +595,8 @@ export const useSurveyStore = create<SurveyState>()(
         // Only persist these fields
         groups: state.groups, 
         activeGroupId: state.activeGroupId,
+        isStraightMode: state.isStraightMode,
+        angleStep: state.angleStep,
         currentSurveyId: state.currentSurveyId,
         savedSurveys: state.savedSurveys, // Persist list of surveys for offline access
         subscriptionStatus: state.subscriptionStatus,

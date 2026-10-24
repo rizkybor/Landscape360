@@ -14,6 +14,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { useMapStore } from "../store/useMapStore";
+import { useShallow } from "zustand/react/shallow";
 
 interface WeatherData {
   datetime: string;
@@ -51,7 +52,9 @@ const WEATHER_ICONS: Record<string, any> = {
 const DEFAULT_ADM4 = "31.71.03.1001";
 
 export const WeatherWidget = () => {
-  const { showWeather } = useMapStore();
+  const { showWeather } = useMapStore(
+    useShallow((s) => ({ showWeather: s.showWeather })),
+  );
   const [loading, setLoading] = useState(true);
   const [forecast, setForecast] = useState<DailyForecast[]>([]);
   const [current, setCurrent] = useState<WeatherData | null>(null);

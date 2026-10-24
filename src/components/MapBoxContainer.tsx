@@ -15,6 +15,7 @@ import MapGL, { Source, Layer, Popup, useMap } from "react-map-gl/mapbox";
 import type { MapRef, MapMouseEvent } from "react-map-gl/mapbox";
 import type { MapSourceDataEvent } from "mapbox-gl";
 import { useMapStore } from "../store/useMapStore";
+import { useShallow } from "zustand/react/shallow";
 import { ControlPanel, TelemetryOverlay } from "./ControlPanel";
 import { useRouteStore } from "../store/useRouteStore";
 import { RegionSelectionLayer } from "./RegionSelectionLayer";
@@ -156,7 +157,9 @@ const MapBoxContainerComponent = ({
     setBounds,
     triggerFlyTo,
     flyToDestination,
-  } = useMapStore();
+  } = useMapStore(
+    useShallow((s) => ({ center: s.center, zoom: s.zoom, pitch: s.pitch, bearing: s.bearing, activeView: s.activeView, elevationExaggeration: s.elevationExaggeration, mouseControlMode: s.mouseControlMode, interactionMode: s.interactionMode, addRegionPoint: s.addRegionPoint, showContours: s.showContours, showCustomLocations: s.showCustomLocations, mapStyle: s.mapStyle, setCenter: s.setCenter, setZoom: s.setZoom, setPitch: s.setPitch, setBearing: s.setBearing, setBounds: s.setBounds, triggerFlyTo: s.triggerFlyTo, flyToDestination: s.flyToDestination })),
+  );
 
   const mode = overrideViewMode || activeView;
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
@@ -321,10 +324,12 @@ const MapBoxContainerComponent = ({
         isInteracting.current = true;
       }
 
-      // Throttle store updates
-      // On mobile 3D, we limit state sync to 30fps (approx 33ms) to save CPU for the map renderer
+      // Throttle store updates. Split screen needs every frame to keep the two maps in step;
+      // a single map only needs occasional updates while moving (handleMoveEnd does the
+      // final sync), which keeps the panels that read the view from re-rendering every frame
       const now = Date.now();
-      const throttleLimit = isMobile && mode === "3D" ? 33 : 0; // 0 = sync every frame on desktop
+      const isSplitScreen = overrideViewMode !== undefined;
+      const throttleLimit = isSplitScreen ? (isMobile && mode === "3D" ? 33 : 0) : 150;
 
       if (now - lastStoreUpdate.current >= throttleLimit) {
         lastStoreUpdate.current = now;
@@ -351,7 +356,7 @@ const MapBoxContainerComponent = ({
         }
       }
     },
-    [setCenter, setZoom, setPitch, setBearing, setBounds, isMobile, mode],
+    [setCenter, setZoom, setPitch, setBearing, setBounds, isMobile, mode, overrideViewMode],
   );
 
   // Sync Store -> Map (Imperative) - RESTORED to fix view behavior
@@ -792,15 +797,6 @@ const MapBoxContainerComponent = ({
           pitch: mode === "3D" ? pitch : 0,
           bearing: bearing,
         }}
-        // PERFORMANCE: Limit pixel ratio on high-DPI mobile screens (Retina/OLED)
-        // Rendering 3x/4x on mobile kills GPU. Cap at 2x or 1.5x.
-        // Note: react-map-gl passes extra props to mapbox-gl constructor if not in its prop types? 
-        // Actually, we might need to handle this carefully.
-        // Mapbox GL JS default is window.devicePixelRatio.
-        // We can't easily change it via prop in react-map-gl v7 without 'mapLib' or custom logic, 
-        // but let's try setting it if supported, otherwise rely on CSS scaling.
-        // actually, react-map-gl doesn't expose pixelRatio in MapProps. 
-        // We can force it via style or just rely on disabling heavy features.
         
         minZoom={2}
         maxZoom={20}
@@ -863,20 +859,29 @@ const MapBoxContainerComponent = ({
           />
         )}
 
+        {/* Optional layers sit in error boundaries: if one fails (a WebGL error on some
+            phones, or its lazy chunk cannot load offline), only that layer disappears
+            instead of the whole app going blank */}
         {showContours && (
-          <Suspense fallback={null}>
-            <ContourLayer />
-          </Suspense>
+          <ErrorBoundary fallback={null}>
+            <Suspense fallback={null}>
+              <ContourLayer />
+            </Suspense>
+          </ErrorBoundary>
         )}
 
-        <Suspense fallback={null}>
-          <GridDMSLayer />
-        </Suspense>
+        <ErrorBoundary fallback={null}>
+          <Suspense fallback={null}>
+            <GridDMSLayer />
+          </Suspense>
+        </ErrorBoundary>
 
         {isPlotMode && (
-          <Suspense fallback={null}>
-            <PlottingLayer />
-          </Suspense>
+          <ErrorBoundary fallback={null}>
+            <Suspense fallback={null}>
+              <PlottingLayer />
+            </Suspense>
+          </ErrorBoundary>
         )}
 
         {isRoutePlannerEnabled && (
@@ -892,9 +897,11 @@ const MapBoxContainerComponent = ({
         {user && <MarkedLocationLayer />}
 
         {mode === "3D" && (
-          <Suspense fallback={null}>
-            <ThreeScene />
-          </Suspense>
+          <ErrorBoundary fallback={null}>
+            <Suspense fallback={null}>
+              <ThreeScene />
+            </Suspense>
+          </ErrorBoundary>
         )}
 
         {/* Map Synchronization Logic (Restored to component) */}
@@ -909,7 +916,9 @@ const MapBoxContainerComponent = ({
         )}
 
         {/* User Location Indicator */}
-        <UserLocationMarker initialLocation={initialLocation} />
+        <ErrorBoundary fallback={null}>
+          <UserLocationMarker initialLocation={initialLocation} />
+        </ErrorBoundary>
 
         {/* Custom Location Markers - GeoJSON + Cluster */}
         {showCustomLocations && shouldShowMarkers && (

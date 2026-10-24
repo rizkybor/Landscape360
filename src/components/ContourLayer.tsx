@@ -2,11 +2,14 @@ import { useEffect, useState } from 'react';
 import { Source, Layer, useMap } from 'react-map-gl/mapbox';
 import { generateContours } from '../utils/TurfContourProvider';
 import { useMapStore } from '../store/useMapStore';
+import { useShallow } from 'zustand/react/shallow';
 import type { FeatureCollection, LineString, MultiLineString } from 'geojson';
 
 export const ContourLayer = () => {
   const { current: mapRef } = useMap();
-  const { contourInterval, opacity } = useMapStore();
+  const { contourInterval, opacity } = useMapStore(
+    useShallow((s) => ({ contourInterval: s.contourInterval, opacity: s.opacity })),
+  );
   const [contours, setContours] = useState<FeatureCollection<LineString | MultiLineString> | null>(null);
 
   useEffect(() => {

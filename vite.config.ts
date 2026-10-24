@@ -17,6 +17,20 @@ export default defineConfig({
       injectManifest: {
         maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // Increased to 10MB for larger assets
         globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff2}'], // Explicitly cache these types
+        // Large modules only used on demand are cached when first used (see sw.ts) instead of
+        // being downloaded by every visitor on install: basemap import (GeoTIFF, PDF,
+        // reprojection), PDF export and screenshots
+        globIgnores: [
+          '**/pdf.worker*',
+          '**/assets/pdf-*',
+          '**/assets/main-dist-*',
+          '**/assets/geotiff-*',
+          '**/assets/lerc-*',
+          '**/assets/zstd-*',
+          '**/assets/jspdf*',
+          '**/assets/html2canvas*',
+          '**/assets/jszip*',
+        ],
       },
       workbox: {
         cleanupOutdatedCaches: true,

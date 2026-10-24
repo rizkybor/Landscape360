@@ -5,6 +5,7 @@ import { LOGO_AVATAR_EMAILS } from "../config";
 import landscapeLogo from "../assets/LandscapeLogo.svg";
 import { useSurveyStore } from "../store/useSurveyStore";
 import { useMapStore } from "../store/useMapStore";
+import { useShallow } from "zustand/react/shallow";
 import { useOfflineStore } from "../store/useOfflineStore";
 import { OfflineManager } from "./OfflineManager";
 import { RegionDrawingOverlay } from "./RegionDrawingOverlay";
@@ -92,7 +93,9 @@ export const AuthControl = () => {
     isAdmin,
   } = useSurveyStore();
 
-  const { interactionMode } = useMapStore();
+  const { interactionMode } = useMapStore(
+    useShallow((s) => ({ interactionMode: s.interactionMode })),
+  );
   const { regions } = useOfflineStore();
 
   const [showMenu, setShowMenu] = useState(false);

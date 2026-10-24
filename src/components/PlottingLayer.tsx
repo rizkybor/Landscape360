@@ -1,18 +1,45 @@
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo, useRef, type ReactNode } from 'react';
 import { Source, Layer, useMap, Marker } from 'react-map-gl/mapbox';
 import { useSurveyStore } from '../store/useSurveyStore';
-import { getAzimuthData, formatDegrees, formatDistance, toDMS } from '../utils/surveyUtils';
+import { getAzimuthData, formatDegrees, formatDistance, toDMS, snapToAngle, buildSurveyLine, segmentMidpoints, handleFromDrag, handleEnds } from '../utils/surveyUtils';
 import { getElevationAtPoint } from '../utils/elevationUtils';
-import * as turf from '@turf/turf';
-import type { MapMouseEvent } from 'mapbox-gl';
+import type { LngLat, Map as MapboxMap, MapMouseEvent } from 'mapbox-gl';
+import type { SurveyHandle } from '../store/useSurveyStore';
 import type { FeatureCollection } from 'geojson';
+
+// Straight mode (or Shift held, which also snaps to 90°): a new point of the active sheet
+// joins with a straight line, a sharp corner at the point it turns from, and its direction
+// snapped to the chosen angle step (any angle when the step is 0).
+const placeNewPoint = (target: [number, number], shiftKey: boolean): { coords: [number, number]; straight: boolean } => {
+  const { groups, activeGroupId, isStraightMode, angleStep } = useSurveyStore.getState();
+  if (!isStraightMode && !shiftKey) return { coords: target, straight: false };
+  const step = shiftKey ? 90 : angleStep;
+  const points = (groups.find((g) => g.id === activeGroupId) || groups[0])?.points ?? [];
+  if (!step || points.length === 0) return { coords: target, straight: true };
+  const last = points[points.length - 1];
+  const prev = points.length >= 2 ? points[points.length - 2] : null;
+  return {
+    coords: snapToAngle(prev && [prev.lng, prev.lat], [last.lng, last.lat], target, step),
+    straight: true,
+  };
+};
 
 export const PlottingLayer = () => {
   const { current: mapRef } = useMap();
-  const { isPlotMode, groups, activeGroupId, addPoint, updatePointPosition } = useSurveyStore();
+  const { isPlotMode, groups, activeGroupId, addPoint, updatePointPosition, setPointHandle } = useSurveyStore();
   const [cursorLocation, setCursorLocation] = useState<[number, number] | null>(null);
   const [hoveredLabelId, setHoveredLabelId] = useState<string | null>(null);
   const [draggedPointId, setDraggedPointId] = useState<string | null>(null);
+  // Bezier handle being dragged (shown live, saved when the drag ends)
+  const [curveDraft, setCurveDraftState] = useState<{ pointId: string; handle: SurveyHandle } | null>(null);
+  // Also kept in a ref so ending a drag always saves the latest handle
+  const curveDraftRef = useRef<{ pointId: string; handle: SurveyHandle } | null>(null);
+  const setCurveDraft = (draft: { pointId: string; handle: SurveyHandle } | null) => {
+      curveDraftRef.current = draft;
+      setCurveDraftState(draft);
+  };
+  // Point whose Bezier handles are shown for editing
+  const [selectedPointId, setSelectedPointId] = useState<string | null>(null);
 
   const activeGroup = groups.find(g => g.id === activeGroupId) || groups[0];
 
@@ -47,12 +74,13 @@ export const PlottingLayer = () => {
       // Ignore clicks that ended a map pan or happened in Space-pan mode
       if (didDragRef.current || isSpaceHeldRef.current) return;
       
-      const { lng, lat } = e.lngLat;
+      const { coords: [lng, lat], straight } = placeNewPoint([e.lngLat.lng, e.lngLat.lat], e.originalEvent.shiftKey);
       
       // Query elevation using robust utility
       const elevation = await getElevationAtPoint(map, lng, lat);
 
-      addPoint({ lng, lat, elevation });
+      // In straight mode the line turns with a sharp corner at the previous point
+      addPoint({ lng, lat, elevation }, { sharpenLast: straight });
     };
 
     const handleMouseMove = (e: MapMouseEvent) => {
@@ -70,7 +98,7 @@ export const PlottingLayer = () => {
             // Panning: hide the preview line and keep the hand cursor
             setCursorLocation(null);
         } else {
-            setCursorLocation([e.lngLat.lng, e.lngLat.lat]);
+            setCursorLocation(placeNewPoint([e.lngLat.lng, e.lngLat.lat], e.originalEvent.shiftKey).coords);
         }
         updateCursor();
     };
@@ -202,6 +230,45 @@ export const PlottingLayer = () => {
     }));
   }, [groups, activeGroupId]);
 
+  // Groups as drawn: with the handle being dragged applied
+  const renderGroups = useMemo(
+      () => curveDraft
+          ? groups.map(g => ({
+              ...g,
+              points: g.points.map(p => p.id === curveDraft.pointId ? { ...p, corner: 'smooth' as const, handle: curveDraft.handle } : p)
+            }))
+          : groups,
+      [groups, curveDraft]
+  );
+
+  const findPoint = (pointId: string) => {
+      for (const g of renderGroups) {
+          const point = g.points.find(p => p.id === pointId);
+          if (point) return { group: g, point };
+      }
+      return null;
+  };
+
+  const startCurve = (pointId: string) => {
+      setSelectedPointId(pointId);
+      setCursorLocation(null);
+  };
+
+  const dragCurve = (pointId: string, lngLat: LngLat) => {
+      const found = findPoint(pointId);
+      if (found) setCurveDraft({ pointId, handle: handleFromDrag(found.point, [lngLat.lng, lngLat.lat]) });
+  };
+
+  const endCurve = () => {
+      const draft = curveDraftRef.current;
+      if (!draft) return;
+      const found = findPoint(draft.pointId);
+      // A tiny drag removes the handle (back to an automatic curve)
+      const tooShort = Math.hypot(draft.handle.east, draft.handle.north) < 0.5;
+      if (found) setPointHandle(found.group.id, draft.pointId, tooShort ? null : draft.handle);
+      setCurveDraft(null);
+  };
+
   // Calculate lines and measurement labels for Markers
   const { baseLines, baseLabels } = useMemo(() => {
       const lines: FeatureCollection = {
@@ -218,38 +285,19 @@ export const PlottingLayer = () => {
           color: string;
       }> = [];
 
-      groups.forEach(g => {
+      renderGroups.forEach(g => {
           if (g.points.length >= 2) {
-              // Continuous line for visual
-              const coordinates = g.points.map(p => [p.lng, p.lat]);
-              
-              // Create curved line using Bezier Spline
-              let geometry: any = { type: 'LineString', coordinates };
-              
-              try {
-                  if (coordinates.length >= 2) {
-                      const line = turf.lineString(coordinates);
-                      // sharpness: 0.85 is default. Lower is curvier, higher is straighter.
-                      const curved = turf.bezierSpline(line, {
-                          resolution: 10000,
-                          sharpness: 0.85 
-                      });
-                      geometry = curved.geometry;
-                  }
-              } catch (e) {
-                  console.warn("Failed to generate curve, falling back to straight line", e);
-              }
-
+              const midpoints = segmentMidpoints(g.points);
+              // Curves through smooth points, sharp corners at sharp points (e.g. 90° turns)
               lines.features.push({
                   type: 'Feature',
-                  geometry: geometry,
+                  geometry: { type: 'LineString', coordinates: buildSurveyLine(g.points) },
                   properties: { 
                       groupId: g.id, 
                       color: g.color,
                       isActive: g.id === activeGroupId 
                   }
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              } as any);
+              });
 
               // Calculate labels and accumulated distance
               let accumulatedDistance = 0;
@@ -261,9 +309,8 @@ export const PlottingLayer = () => {
                   
                   accumulatedDistance += data.horizontalDistance;
 
-                  // Midpoint
-                  const midLng = (p1.lng + p2.lng) / 2;
-                  const midLat = (p1.lat + p2.lat) / 2;
+                  // Middle of the drawn segment (on the curve when it bends)
+                  const [midLng, midLat] = midpoints[i];
 
                   labels.push({
                       id: `${g.id}-${i}`,
@@ -278,7 +325,23 @@ export const PlottingLayer = () => {
           }
       });
       return { baseLines: lines, baseLabels: labels };
-  }, [groups, activeGroupId]);
+  }, [renderGroups, activeGroupId]);
+
+  // Bezier handles of the selected point (active sheet only)
+  const selected = selectedPointId && isPlotMode ? findPoint(selectedPointId) : null;
+  const selectedHandle = selected && selected.group.id === activeGroup?.id && selected.point.handle
+      ? { point: selected.point, groupId: selected.group.id, ends: handleEnds(selected.point, selected.point.handle) }
+      : null;
+  const handleLines: FeatureCollection = {
+      type: 'FeatureCollection',
+      features: selectedHandle
+          ? [{
+              type: 'Feature',
+              geometry: { type: 'LineString', coordinates: [selectedHandle.ends.in, [selectedHandle.point.lng, selectedHandle.point.lat], selectedHandle.ends.out] },
+              properties: { color: selected!.group.color }
+            }]
+          : []
+  };
 
   // Copy so the preview below never mutates the memoized results
   const linesGeoJSON: FeatureCollection = { ...baseLines, features: [...baseLines.features] };
@@ -341,11 +404,47 @@ export const PlottingLayer = () => {
             'line-opacity': ['case', ['get', 'isActive'], 1, 0.6]
           }}
           layout={{
-              'line-join': 'round',
+              'line-join': 'miter',
               'line-cap': 'round'
           }}
         />
       </Source>
+
+      {/* Bezier handles of the selected point */}
+      <Source id="survey-handles" type="geojson" data={handleLines}>
+        <Layer
+          id="survey-handles-path"
+          type="line"
+          paint={{ 'line-color': ['get', 'color'], 'line-width': 1.5, 'line-dasharray': [2, 1.5] }}
+        />
+      </Source>
+      {selectedHandle && (['out', 'in'] as const).map(side => (
+          <Marker
+              key={side}
+              longitude={selectedHandle.ends[side][0]}
+              latitude={selectedHandle.ends[side][1]}
+              anchor="center"
+              draggable
+              onDragStart={() => setDraggedPointId(`handle-${side}`)}
+              onDrag={(e) => {
+                  const p = selectedHandle.point;
+                  const h = handleFromDrag(p, [e.lngLat.lng, e.lngLat.lat]);
+                  // The two handles stay opposite each other, like a smooth pen-tool point
+                  setCurveDraft({ pointId: p.id, handle: side === 'out' ? h : { east: -h.east, north: -h.north } });
+              }}
+              onDragEnd={() => {
+                  endCurve();
+                  setTimeout(() => setDraggedPointId(null), 100);
+              }}
+              style={{ zIndex: 120 }}
+          >
+              <div
+                  className={`${isMobile ? 'w-5 h-5' : 'w-3 h-3'} rounded-full bg-white border-2 shadow cursor-move`}
+                  style={{ borderColor: selected!.group.color }}
+                  title="Drag to shape the curve"
+              />
+          </Marker>
+      ))}
 
       {/* Professional Measurement Markers */}
       {measurementLabels.map((label) => {
@@ -427,22 +526,23 @@ export const PlottingLayer = () => {
                 longitude={label.lng}
                 latitude={label.lat}
                 anchor="center" // Changed to center so the dot is at the coordinate
-                draggable={true}
-                onDragStart={() => onMarkerDragStart(label.id)}
-                onDrag={(e) => onMarkerDrag(label.id, e)}
-                onDragEnd={(e) => onMarkerDragEnd(label.id, e)}
                 style={{ zIndex: isDragging ? 100 : (isHovered ? 60 : 2) }}
             >
-                <div 
+                <PointGesture
+                    map={mapRef?.getMap() ?? null}
                     className="relative flex flex-col items-center group cursor-grab active:cursor-grabbing"
                     onMouseEnter={() => setHoveredLabelId(label.id)}
                     onMouseLeave={() => setHoveredLabelId(null)}
-                    onClick={(e) => {
-                        if (isMobile) {
-                            e.stopPropagation();
-                            setHoveredLabelId(isHovered ? null : label.id);
-                        }
+                    onTap={() => {
+                        setSelectedPointId(label.id);
+                        if (isMobile) setHoveredLabelId(isHovered ? null : label.id);
                     }}
+                    onMoveStart={() => onMarkerDragStart(label.id)}
+                    onMove={(lngLat) => onMarkerDrag(label.id, { lngLat })}
+                    onMoveEnd={(lngLat) => onMarkerDragEnd(label.id, { lngLat })}
+                    onCurveStart={() => startCurve(label.id)}
+                    onCurve={(lngLat) => dragCurve(label.id, lngLat)}
+                    onCurveEnd={endCurve}
                 >
                     {/* The Dot/Square Visual */}
                     <div 
@@ -490,10 +590,123 @@ export const PlottingLayer = () => {
                             </div>
                         )}
                     </div>
-                </div>
+                </PointGesture>
             </Marker>
           );
       })}
     </>
+  );
+};
+
+const LONG_PRESS_MS = 350;
+const MOVE_TOLERANCE_PX = 5;
+
+interface PointGestureProps {
+  map: MapboxMap | null;
+  className?: string;
+  children: ReactNode;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
+  onTap: () => void;
+  onMoveStart: () => void;
+  onMove: (lngLat: LngLat) => void;
+  onMoveEnd: (lngLat: LngLat) => void;
+  onCurveStart: () => void;
+  onCurve: (lngLat: LngLat) => void;
+  onCurveEnd: () => void;
+}
+
+// Gestures on a survey point, like a pen tool: drag right away to move the point;
+// press and hold (or Alt + drag) and then drag to pull out a Bezier handle and bend
+// the line; tap to select it. Events are stopped here so the map neither pans nor
+// adds a point underneath.
+const PointGesture = ({ map, className, children, onMouseEnter, onMouseLeave, ...handlers }: PointGestureProps) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const handlersRef = useRef(handlers);
+  useEffect(() => {
+    handlersRef.current = handlers;
+  });
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !map) return;
+
+    const stop = (e: Event) => e.stopPropagation();
+    const stopped = ['mousedown', 'mouseup', 'click', 'dblclick', 'touchstart', 'touchmove', 'touchend', 'contextmenu'];
+    stopped.forEach(type => el.addEventListener(type, stop));
+
+    let gesture: { pointerId: number; x: number; y: number; mode: 'pending' | 'move' | 'curve'; timer?: number } | null = null;
+
+    const toLngLat = (e: PointerEvent) => {
+      const rect = map.getCanvasContainer().getBoundingClientRect();
+      return map.unproject([e.clientX - rect.left, e.clientY - rect.top]);
+    };
+
+    const enterCurve = () => {
+      if (!gesture) return;
+      gesture.mode = 'curve';
+      navigator.vibrate?.(15);
+      handlersRef.current.onCurveStart();
+    };
+
+    const onDown = (e: PointerEvent) => {
+      if (e.button !== 0 || gesture) return;
+      e.stopPropagation();
+      try {
+        el.setPointerCapture(e.pointerId);
+      } catch {
+        // Some browsers refuse capture for an inactive pointer; the gesture still works
+      }
+      gesture = { pointerId: e.pointerId, x: e.clientX, y: e.clientY, mode: 'pending' };
+      if (e.altKey) enterCurve();
+      else gesture.timer = window.setTimeout(() => gesture?.mode === 'pending' && enterCurve(), LONG_PRESS_MS);
+    };
+
+    const onMove = (e: PointerEvent) => {
+      if (!gesture || e.pointerId !== gesture.pointerId) return;
+      if (gesture.mode === 'pending') {
+        if (Math.hypot(e.clientX - gesture.x, e.clientY - gesture.y) <= MOVE_TOLERANCE_PX) return;
+        clearTimeout(gesture.timer);
+        gesture.mode = 'move';
+        handlersRef.current.onMoveStart();
+      }
+      if (gesture.mode === 'move') handlersRef.current.onMove(toLngLat(e));
+      else handlersRef.current.onCurve(toLngLat(e));
+    };
+
+    const onUp = (e: PointerEvent) => {
+      if (!gesture || e.pointerId !== gesture.pointerId) return;
+      clearTimeout(gesture.timer);
+      const { mode } = gesture;
+      gesture = null;
+      if (mode === 'move') handlersRef.current.onMoveEnd(toLngLat(e));
+      else if (mode === 'curve') handlersRef.current.onCurveEnd();
+      else if (e.type === 'pointerup') handlersRef.current.onTap();
+    };
+
+    el.addEventListener('pointerdown', onDown);
+    el.addEventListener('pointermove', onMove);
+    el.addEventListener('pointerup', onUp);
+    el.addEventListener('pointercancel', onUp);
+    return () => {
+      if (gesture) clearTimeout(gesture.timer);
+      stopped.forEach(type => el.removeEventListener(type, stop));
+      el.removeEventListener('pointerdown', onDown);
+      el.removeEventListener('pointermove', onMove);
+      el.removeEventListener('pointerup', onUp);
+      el.removeEventListener('pointercancel', onUp);
+    };
+  }, [map]);
+
+  return (
+    <div
+      ref={ref}
+      className={className}
+      style={{ touchAction: 'none' }}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
+      {children}
+    </div>
   );
 };

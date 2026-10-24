@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useMapStore } from "../store/useMapStore";
+import { useShallow } from "zustand/react/shallow";
 import { Search, X, MapPin, Loader2, CornerDownLeft, Mountain, Tent, Navigation, BadgeCheck, Crosshair } from "lucide-react";
 import customLocations from "../data/myDataLocation.json";
 
@@ -15,7 +16,9 @@ interface SearchResult {
 }
 
 export const SearchPanel = () => {
-  const { showSearch, setShowSearch, setCenter, setZoom } = useMapStore();
+  const { showSearch, setShowSearch, setCenter, setZoom } = useMapStore(
+    useShallow((s) => ({ showSearch: s.showSearch, setShowSearch: s.setShowSearch, setCenter: s.setCenter, setZoom: s.setZoom })),
+  );
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);

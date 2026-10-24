@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useSurveyStore } from "../store/useSurveyStore";
-import type { SurveyGroup, SurveyPoint } from "../store/useSurveyStore";
+import { ANGLE_STEPS } from "../store/useSurveyStore";
+import type { AngleStep, SurveyGroup, SurveyPoint } from "../store/useSurveyStore";
 import {
   getAzimuthData,
   formatDegrees,
@@ -18,7 +19,13 @@ import {
   Check,
   Save,
   Loader2,
+  CornerDownRight,
+  Spline,
+  Info,
 } from "lucide-react";
+
+const LINE_HINT =
+  "Drag a point to move it. Press and hold a point, then drag, to bend the line (desktop: Alt + drag). Tap a point to show its curve handles.";
 
 export const SurveyorPanel = () => {
   const {
@@ -38,6 +45,12 @@ export const SurveyorPanel = () => {
     user,
     errorMessage,
     clearError,
+    isStraightMode,
+    angleStep,
+    toggleStraightMode,
+    setAngleStep,
+    setPointCorner,
+    setGroupCorners,
   } = useSurveyStore();
 
   const [isMinimized, setIsMinimized] = useState(false);
@@ -47,6 +60,7 @@ export const SurveyorPanel = () => {
   const [editingPointId, setEditingPointId] = useState<string | null>(null);
   const [tempPointName, setTempPointName] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [showLineHint, setShowLineHint] = useState(false);
   const tabsRef = useRef<HTMLDivElement>(null);
   const prevGroupCount = useRef(groups.length);
 
@@ -356,6 +370,82 @@ export const SurveyorPanel = () => {
                 )}
               </div>
 
+              {/* Line tools: how new points join, angle snap, all corners, gesture hint */}
+              <div className="flex items-center gap-1 mb-4 text-[10px]">
+                <div className="flex shrink-0 rounded-lg border border-sand-200 bg-sand-50 p-0.5" role="group" aria-label="New lines">
+                  {([
+                    { straight: false, label: "Curve", icon: Spline, title: "New points continue the curve" },
+                    { straight: true, label: "Straight", icon: CornerDownRight, title: "New points join with a straight line and a sharp corner (desktop: hold Shift for straight + 90°)" },
+                  ] as const).map(({ straight, label, icon: Icon, title }) => (
+                    <button
+                      key={label}
+                      onClick={() => isStraightMode !== straight && toggleStraightMode()}
+                      aria-pressed={isStraightMode === straight}
+                      title={title}
+                      className={`cursor-pointer flex items-center gap-1 px-1.5 py-1.5 md:py-1 rounded-md transition-colors ${
+                        isStraightMode === straight ? "bg-gold-400 text-ink font-bold shadow-sm" : "text-sand-600 hover:text-ink"
+                      }`}
+                    >
+                      <Icon size={11} /> {label}
+                    </button>
+                  ))}
+                </div>
+
+                {isStraightMode && (
+                  <select
+                    value={angleStep}
+                    onChange={(e) => setAngleStep(Number(e.target.value) as AngleStep)}
+                    aria-label="Angle snap"
+                    title="Snap the direction of new lines"
+                    className="cursor-pointer shrink-0 px-1 py-1.5 md:py-1 rounded-lg border border-sand-200 bg-sand-50 text-sand-700 outline-none focus:border-gold-300"
+                  >
+                    {ANGLE_STEPS.map((step) => (
+                      <option key={step} value={step} className="bg-white">
+                        {step === 0 ? "Free" : `${step}°`}
+                      </option>
+                    ))}
+                  </select>
+                )}
+
+                <div className="ml-auto flex items-center gap-1 shrink-0">
+                  {activeGroup.points.length >= 3 && (
+                    <div className="flex rounded-lg border border-sand-200 bg-sand-50 p-0.5" role="group" aria-label="All corners">
+                      <button
+                        onClick={() => setGroupCorners(activeGroup.id, "smooth")}
+                        title="Curve the line through every point"
+                        className="cursor-pointer p-1.5 md:p-1 rounded-md text-sand-600 hover:text-ink hover:bg-white transition-colors"
+                      >
+                        <Spline size={12} />
+                      </button>
+                      <button
+                        onClick={() => setGroupCorners(activeGroup.id, "sharp")}
+                        title="Sharp corner at every point"
+                        className="cursor-pointer p-1.5 md:p-1 rounded-md text-sand-600 hover:text-ink hover:bg-white transition-colors"
+                      >
+                        <CornerDownRight size={12} />
+                      </button>
+                    </div>
+                  )}
+                  <button
+                    onClick={() => setShowLineHint((v) => !v)}
+                    aria-expanded={showLineHint}
+                    title={LINE_HINT}
+                    className={`cursor-pointer p-1.5 md:p-1 rounded-full transition-colors ${
+                      showLineHint ? "text-gold-700 bg-gold-50" : "text-sand-500 hover:text-ink"
+                    }`}
+                    aria-label="How to edit the line"
+                  >
+                    <Info size={13} />
+                  </button>
+                </div>
+              </div>
+
+              {showLineHint && (
+                <p className="-mt-2 mb-4 px-2.5 py-2 rounded-lg bg-gold-50 border border-gold-200 text-[10px] text-sand-700 leading-snug">
+                  {LINE_HINT}
+                </p>
+              )}
+
               {/* Section Header */}
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-1 h-3 bg-forest-700 rounded"></div>
@@ -427,6 +517,24 @@ export const SurveyorPanel = () => {
                           )}
 
                           <div className="flex gap-1 shrink-0 ml-1">
+                            {idx > 0 && idx < activeGroup.points.length - 1 && (
+                              <button
+                                onClick={() =>
+                                  setPointCorner(activeGroup.id, p.id, p.corner === "sharp" ? "smooth" : "sharp")
+                                }
+                                className={`cursor-pointer p-1.5 md:p-1 rounded transition-colors ${
+                                  p.corner === "sharp" ? "text-gold-700 bg-gold-50" : "text-sand-600 hover:bg-sand-100"
+                                }`}
+                                title={p.corner === "sharp" ? "Sharp corner (tap to curve)" : "Curve (tap for a sharp corner)"}
+                                aria-label={p.corner === "sharp" ? "Sharp corner" : "Curved"}
+                              >
+                                {p.corner === "sharp" ? (
+                                  <CornerDownRight size={12} className="md:w-2.5 md:h-2.5" />
+                                ) : (
+                                  <Spline size={12} className="md:w-2.5 md:h-2.5" />
+                                )}
+                              </button>
+                            )}
                             <button
                               onClick={() => copyCoords(p)}
                               className="cursor-pointer p-1.5 md:p-1 rounded text-sand-600 hover:bg-sand-100 active:scale-70 transition-all"

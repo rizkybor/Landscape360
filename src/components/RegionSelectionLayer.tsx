@@ -1,9 +1,12 @@
 import { useMemo } from 'react';
 import { Source, Layer, Marker, type MarkerDragEvent } from 'react-map-gl/mapbox';
 import { useMapStore } from '../store/useMapStore';
+import { useShallow } from 'zustand/react/shallow';
 
 export const RegionSelectionLayer = () => {
-  const { regionPoints, interactionMode, updateRegionPoint } = useMapStore();
+  const { regionPoints, interactionMode, updateRegionPoint } = useMapStore(
+    useShallow((s) => ({ regionPoints: s.regionPoints, interactionMode: s.interactionMode, updateRegionPoint: s.updateRegionPoint })),
+  );
 
   const geoJsonData = useMemo(() => {
     if (regionPoints.length === 0) return null;

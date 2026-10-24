@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Source, Layer, useMap } from 'react-map-gl/mapbox';
 import { useMapStore } from '../store/useMapStore';
 import type { FeatureCollection } from 'geojson';
@@ -45,6 +45,7 @@ export const GridDMSLayer = React.memo(() => {
   const gridOpacity = useMapStore(state => state.gridOpacity);
   const gridStep = useMapStore(state => state.gridStep);
   const [gridData, setGridData] = useState<FeatureCollection>({ type: 'FeatureCollection', features: [] });
+  const lastGridKey = useRef('');
 
   useEffect(() => {
     if (!map || !showGridDMS) {
@@ -65,6 +66,7 @@ export const GridDMSLayer = React.memo(() => {
 
       // Only show grid at reasonable zoom levels to prevent clutter
       if (zoom < 4) {
+          lastGridKey.current = '';
           setGridData({ type: 'FeatureCollection', features: [] });
           return;
       }
@@ -170,19 +172,23 @@ export const GridDMSLayer = React.memo(() => {
         });
       }
 
+      // Same view as last time: keep the data, so the map is not asked to redraw again
+      const key = `${zoom.toFixed(2)}|${west.toFixed(5)}|${south.toFixed(5)}|${east.toFixed(5)}|${north.toFixed(5)}|${gridStep}`;
+      if (key === lastGridKey.current) return;
+      lastGridKey.current = key;
       setGridData({ type: 'FeatureCollection', features });
     };
 
     // Initial update
     updateGrid();
 
-    // Listen for idle events to update grid when map stops moving
-    map.on('idle', updateGrid);
-    map.on('moveend', updateGrid); // Redundant but ensures update happens
+    // Update when the map stops moving. Not on 'idle': new grid data makes the map redraw,
+    // which fires 'idle' again and kept the map redrawing without end.
+    map.on('moveend', updateGrid);
 
     return () => {
-      map.off('idle', updateGrid);
       map.off('moveend', updateGrid);
+      lastGridKey.current = '';
     };
   }, [map, showGridDMS, gridStep]); // Added gridStep dependency
 

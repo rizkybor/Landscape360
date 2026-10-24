@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useMapStore } from '../store/useMapStore';
+import { useShallow } from 'zustand/react/shallow';
 import { useOfflineStore } from '../store/useOfflineStore';
 import type { OfflineRegion } from '../store/useOfflineStore';
 import { getTilesInBounds, getMapboxTileUrl, getTerrainTileUrl } from '../utils/tileUtils';
@@ -74,7 +75,9 @@ export const OfflineManager = ({ onClose, onBack }: { onClose: () => void, onBac
     setInteractionMode, 
     clearRegionPoints,
     triggerFlyTo
-  } = useMapStore();
+  } = useMapStore(
+    useShallow((s) => ({ setInteractionMode: s.setInteractionMode, clearRegionPoints: s.clearRegionPoints, triggerFlyTo: s.triggerFlyTo })),
+  );
   const { regions, removeRegion, setRegions } = useOfflineStore();
   const { user, subscriptionStatus: storeSubscriptionStatus } = useSurveyStore();
   

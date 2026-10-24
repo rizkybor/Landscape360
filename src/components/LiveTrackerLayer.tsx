@@ -71,7 +71,9 @@ const InterpolatedMarker = memo(({ packet, onClick }: { packet: TrackerPacket; o
     const animate = (time: number) => {
       if (!startTimeRef.current) startTimeRef.current = time;
       const elapsed = time - startTimeRef.current;
-      const duration = TRACKER_CONFIG.UPDATE_INTERVAL_MS; // Match update interval
+      // Glide to the new position in at most 1 s, then stop. Stretching it over the whole
+      // update interval kept every marker re-rendering every frame, nonstop.
+      const duration = Math.min(TRACKER_CONFIG.UPDATE_INTERVAL_MS, 1000);
       
       const progress = Math.min(elapsed / duration, 1);
       const ease = progress; // Linear or ease-out (t * (2 - t))

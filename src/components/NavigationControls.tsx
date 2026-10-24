@@ -4,6 +4,7 @@ import type { MapRef } from "react-map-gl/mapbox";
 import landscapeLogo from "../assets/LandscapeLogo.png";
 import { useSurveyStore } from "../store/useSurveyStore";
 import { useMapStore } from "../store/useMapStore";
+import { useShallow } from "zustand/react/shallow";
 import { distance, point } from "@turf/turf";
 
 interface NavigationControlsProps {
@@ -46,7 +47,9 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showCompassMenu, setShowCompassMenu] = useState(false);
   const { groups } = useSurveyStore();
-  const { setPitch, setBearing } = useMapStore();
+  const { setPitch, setBearing } = useMapStore(
+    useShallow((s) => ({ setPitch: s.setPitch, setBearing: s.setBearing })),
+  );
   
   // Local state for smooth slider interaction without re-rendering the whole map store on every pixel
   const [localPitch, setLocalPitch] = useState(pitch);
