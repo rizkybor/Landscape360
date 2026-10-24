@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabaseClient";
+import { LOGO_AVATAR_EMAILS } from "../config";
+import landscapeLogo from "../assets/LandscapeLogo.svg";
 import { useSurveyStore } from "../store/useSurveyStore";
 import { useMapStore } from "../store/useMapStore";
 import { useOfflineStore } from "../store/useOfflineStore";
@@ -9,7 +11,8 @@ import { RegionDrawingOverlay } from "./RegionDrawingOverlay";
 import { UserManagementPanel } from "./UserManagementPanel";
 import { AccountRequestsPanel } from "./AccountRequestsPanel";
 import { PLANS, type Plan } from "../lib/adminUsers";
-import { submitAccountRequest, listAccountRequests } from "../lib/accountRequests";
+import { submitAccountRequest } from "../lib/accountRequests";
+import { SEEN_AT_KEY, useAccountRequestAlerts } from "../services/useAccountRequestAlerts";
 import { recordLogin } from "../lib/loginHistory";
 import {
   STORAGE_CATEGORY_LABELS,
@@ -66,7 +69,6 @@ export const AuthControl = () => {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showUserManagement, setShowUserManagement] = useState(false);
   const [showAccountRequests, setShowAccountRequests] = useState(false);
-  const [pendingRequestCount, setPendingRequestCount] = useState(0);
 
   // Cloud storage used by this account, refreshed whenever the menu opens
   const [storageUsage, setStorageUsage] = useState<MyStorageUsage | null>(null);
@@ -77,13 +79,13 @@ export const AuthControl = () => {
       .catch(() => setStorageUsage(null)); // storage migration not run yet
   }, [user, showMenu]);
 
-  // Admin: pending request count for the badge in the user menu
-  useEffect(() => {
-    if (!isAdmin || !showMenu) return;
-    listAccountRequests("pending")
-      .then((result) => setPendingRequestCount(result.pendingCount))
-      .catch(() => setPendingRequestCount(0));
-  }, [isAdmin, showMenu]);
+  // Admin: notification for account requests that arrived since Account Requests was last opened
+  const requestsSeenAt =
+    (user?.user_metadata?.[SEEN_AT_KEY] as string | undefined) ?? null;
+  const { newCount: newRequestCount, markSeen: markRequestsSeen } = useAccountRequestAlerts(
+    !!user && isAdmin,
+    requestsSeenAt,
+  );
 
   useEffect(() => {
     // Check active session
@@ -188,13 +190,17 @@ export const AuthControl = () => {
         recordLogin();
       } else {
         // Registration: the request is stored for the admin to approve or reject
+        const phoneDigits = requestForm.phone.replace(/\D/g, "").length;
+        if (phoneDigits < 8 || phoneDigits > 15) {
+          throw new Error("Phone / WhatsApp number must have 8 to 15 digits");
+        }
         await submitAccountRequest({
           email: email.trim(),
           fullName: requestForm.fullName.trim(),
-          organization: requestForm.organization.trim() || undefined,
-          phone: requestForm.phone.trim() || undefined,
-          requestedPlan: requestForm.requestedPlan,
-          message: requestForm.message.trim() || undefined,
+          organization: requestForm.organization.trim(),
+          phone: requestForm.phone.trim(),
+          requestedPlan: "Free",
+          message: requestForm.message.trim(),
           website: requestForm.website,
         });
         setRequestForm({
@@ -306,6 +312,9 @@ export const AuthControl = () => {
                     <div className="space-y-1">
                       <label className="text-[10px] uppercase font-bold text-sand-500 tracking-wider ml-1">
                         Email Address
+                        {!isForgotPassword && !isLoginView && (
+                          <span className="text-brick-600"> *</span>
+                        )}
                       </label>
                       <div className="relative group">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-sand-500 group-focus-within:text-forest-700 transition-colors">
@@ -341,7 +350,7 @@ export const AuthControl = () => {
                       <>
                         <div className="space-y-1">
                           <label className="text-[10px] uppercase font-bold text-sand-500 tracking-wider ml-1">
-                            Full Name
+                            Full Name <span className="text-brick-600">*</span>
                           </label>
                           <input
                             type="text"
@@ -356,35 +365,39 @@ export const AuthControl = () => {
                         <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-1">
                             <label className="text-[10px] uppercase font-bold text-sand-500 tracking-wider ml-1">
-                              Organization
+                              Organization <span className="text-brick-600">*</span>
                             </label>
                             <input
                               type="text"
                               value={requestForm.organization}
                               onChange={(e) => setRequestForm({ ...requestForm, organization: e.target.value })}
                               className="w-full bg-sand-50 border border-sand-200 rounded-xl py-3 px-4 text-sm text-ink placeholder-sand-400 focus:border-forest-300 focus:ring-1 focus:ring-forest-300 focus:bg-white/90 transition-all outline-none"
+                              required
                               maxLength={120}
-                              placeholder="Optional"
+                              placeholder="Company, club or university"
                             />
                           </div>
                           <div className="space-y-1">
                             <label className="text-[10px] uppercase font-bold text-sand-500 tracking-wider ml-1">
-                              Phone / WhatsApp
+                              Phone / WhatsApp <span className="text-brick-600">*</span>
                             </label>
                             <input
                               type="tel"
                               value={requestForm.phone}
                               onChange={(e) => setRequestForm({ ...requestForm, phone: e.target.value })}
                               className="w-full bg-sand-50 border border-sand-200 rounded-xl py-3 px-4 text-sm text-ink placeholder-sand-400 focus:border-forest-300 focus:ring-1 focus:ring-forest-300 focus:bg-white/90 transition-all outline-none"
-                              maxLength={30}
-                              placeholder="Optional"
+                              required
+                              maxLength={20}
+                              pattern="\+?[0-9][0-9\s\-]{6,18}[0-9]"
+                              title="Phone number with 8 to 15 digits, e.g. +62 812 3456 7890"
+                              placeholder="+62 812..."
                             />
                           </div>
                         </div>
 
                         <div className="space-y-1">
                           <label className="text-[10px] uppercase font-bold text-sand-500 tracking-wider ml-1">
-                            Plan
+                            Plan <span className="text-brick-600">*</span>
                           </label>
                           <select
                             value={requestForm.requestedPlan}
@@ -392,22 +405,29 @@ export const AuthControl = () => {
                             className="cursor-pointer w-full bg-sand-50 border border-sand-200 rounded-xl py-3 px-4 text-sm text-ink focus:border-forest-300 focus:ring-1 focus:ring-forest-300 transition-all outline-none"
                           >
                             {PLANS.map((p) => (
-                              <option key={p} value={p} className="bg-white">{p}</option>
+                              <option key={p} value={p} disabled={p !== "Free"} className="bg-white">
+                                {p === "Free" ? p : `${p} (upgrade after sign-up)`}
+                              </option>
                             ))}
                           </select>
+                          <p className="text-[10px] text-sand-500 ml-1">
+                            New accounts start on Free. Pro and Enterprise are available as an
+                            upgrade once your account is active.
+                          </p>
                         </div>
 
                         <div className="space-y-1">
                           <label className="text-[10px] uppercase font-bold text-sand-500 tracking-wider ml-1">
-                            Message
+                            Message <span className="text-brick-600">*</span>
                           </label>
                           <textarea
                             value={requestForm.message}
                             onChange={(e) => setRequestForm({ ...requestForm, message: e.target.value })}
                             className="w-full bg-sand-50 border border-sand-200 rounded-xl py-3 px-4 text-sm text-ink placeholder-sand-400 focus:border-forest-300 focus:ring-1 focus:ring-forest-300 focus:bg-white/90 transition-all outline-none resize-none"
                             rows={3}
+                            required
                             maxLength={1000}
-                            placeholder="Optional: what will you use Landscape360 for?"
+                            placeholder="What will you use Landscape360 for?"
                           />
                         </div>
 
@@ -580,6 +600,7 @@ export const AuthControl = () => {
   // --- RENDER FOR LOGGED IN USER ---
   // Cast user to any to avoid strict type checking issues with user_metadata in this context
   const currentUser = user as any;
+  const usesLogoAvatar = LOGO_AVATAR_EMAILS.includes(String(currentUser.email ?? "").toLowerCase());
 
   // Calculate Limits
   const mapUsage = regions.filter((r) => r.userId === user?.id).length;
@@ -598,9 +619,25 @@ export const AuthControl = () => {
     <div className="relative w-full">
       <button
         onClick={() => setShowMenu(!showMenu)}
-        className="cursor-pointer w-full flex items-center justify-center gap-2 bg-forest-50 hover:bg-forest-100 text-forest-700 px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors border border-forest-200"
+        className="relative cursor-pointer w-full flex items-center justify-center gap-2 bg-forest-50 hover:bg-forest-100 text-forest-700 px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors border border-forest-200"
+        title={newRequestCount > 0 ? `${newRequestCount} new account request(s)` : undefined}
       >
-        {currentUser.user_metadata?.avatar_url ? (
+        {newRequestCount > 0 && (
+          <span
+            className="absolute -top-2 -right-2 flex h-5 min-w-5 px-1 items-center justify-center rounded-full bg-brick-600 text-white text-[10px] font-bold ring-2 ring-white shadow"
+            aria-label={`${newRequestCount} new account requests`}
+          >
+            <span className="absolute inset-0 rounded-full bg-brick-500 animate-ping opacity-60" />
+            <span className="relative">{newRequestCount > 99 ? "99+" : newRequestCount}</span>
+          </span>
+        )}
+        {usesLogoAvatar ? (
+          <img
+            src={landscapeLogo}
+            className="w-4 h-4 rounded-full bg-white object-contain p-px"
+            alt="Landscape 360"
+          />
+        ) : currentUser.user_metadata?.avatar_url ? (
           <img
             src={currentUser.user_metadata.avatar_url}
             className="w-4 h-4 rounded-full"
@@ -694,7 +731,13 @@ export const AuthControl = () => {
                   </form>
                 ) : (
                   <div className="flex items-center gap-4 mb-6 relative group">
-                    {currentUser.user_metadata?.avatar_url ? (
+                    {usesLogoAvatar ? (
+                      <img
+                        src={landscapeLogo}
+                        className="w-16 h-16 rounded-full bg-white ring-2 ring-gold-300 object-contain p-2 shadow-lg"
+                        alt="Landscape 360"
+                      />
+                    ) : currentUser.user_metadata?.avatar_url ? (
                       <img
                         src={currentUser.user_metadata.avatar_url}
                         className="w-16 h-16 rounded-full border-2 border-forest-600 object-cover"
@@ -963,9 +1006,9 @@ export const AuthControl = () => {
                     className="cursor-pointer w-full mb-3 flex items-center justify-center gap-2 p-3 rounded-xl bg-forest-50 hover:bg-forest-100 text-forest-700 border border-forest-200 transition-all font-medium text-sm"
                   >
                     <Inbox size={16} /> Account Requests
-                    {pendingRequestCount > 0 && (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gold-400 text-white">
-                        {pendingRequestCount}
+                    {newRequestCount > 0 && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brick-600 text-white">
+                        {newRequestCount > 99 ? "99+" : newRequestCount} new
                       </span>
                     )}
                   </button>
@@ -1012,7 +1055,7 @@ export const AuthControl = () => {
         createPortal(
           <AccountRequestsPanel
             onClose={() => setShowAccountRequests(false)}
-            onPendingCountChange={setPendingRequestCount}
+            onSeen={markRequestsSeen}
           />,
           document.body,
         )}

@@ -1788,9 +1788,6 @@ const GetStartedModal = ({
                       <span>
                         • <strong>Enterprise:</strong> 1,000 locations, share
                       </span>
-                      <span>
-                        • <strong>Admin:</strong> unlimited, sees all accounts
-                      </span>
                     </div>
                   </>
                 ),
@@ -1803,12 +1800,12 @@ const GetStartedModal = ({
               {
                 icon: <HardDrive size={18} />,
                 title: "Cloud Storage",
-                desc: "Tracks, marked locations, surveys and custom basemaps share your account's storage: Free 10 MB, Pro 100 MB, Enterprise 1 GB, Admin unlimited. Check your usage in the User Account menu; the admin can raise your limit.",
+                desc: "Tracks, marked locations, surveys and custom basemaps share your account's storage: Free 10 MB, Pro 100 MB, Enterprise 1 GB. Check your usage in the User Account menu; contact us if you need more space.",
               },
               {
                 icon: <UserPlus size={18} />,
                 title: "Request an Account",
-                desc: "No account yet? Open Sign In / Register, choose Request Account and fill in the form. The admin will email your login details after approval.",
+                desc: "No account yet? Open Sign In / Register, choose Request Account and fill in the form. We will email your login details after approval.",
               },
             ].map((item, i) => (
               <div key={i} className="flex gap-4 group">
@@ -1846,7 +1843,7 @@ const GetStartedModal = ({
         </button>
 
         <div className="p-4 bg-white/90 border-t border-sand-100 text-center text-[10px] text-sand-400 font-mono">
-          Landscape 360 v3.3.0
+          Landscape360 v3.3.0
         </div>
       </div>
     </div>

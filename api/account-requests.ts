@@ -2,8 +2,9 @@
  * Account requests (Vercel Function).
  *
  *   POST   /api/account-requests                  -> public: submit a request
- *            { email, fullName, organization?, phone?, requestedPlan?, message?, website? }
+ *            { email, fullName, organization, phone, message, requestedPlan?: 'Free', website? }
  *   GET    /api/account-requests?status=<status>  -> admin: list requests (pending|approved|rejected|all)
+ *   GET    /api/account-requests?summary&since=<timestamp> -> admin: { pendingCount, newCount } for the badge
  *   PATCH  /api/account-requests                  -> admin: review a pending request
  *            { id, action: 'approve', password, plan, role, displayName? }  creates the account
  *            { id, action: 'reject', note? }
@@ -23,6 +24,10 @@ const ROLES = ['pengguna360', 'monitor360'];
 const STATUSES = ['pending', 'approved', 'rejected'];
 const MIN_PASSWORD_LENGTH = 8;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Optional +, then 8-15 digits that may be separated by spaces or dashes
+const PHONE_PATTERN = /^\+?(?:[\s-]*\d){8,15}$/;
+// Visitors can only ask for Free; the admin can pick any plan when approving
+const REQUESTABLE_PLANS = ['Free'];
 
 // Flood guard for the public endpoint: new requests accepted per hour across all visitors
 const MAX_REQUESTS_PER_HOUR = 30;
@@ -101,14 +106,19 @@ async function handleSubmit(request: Request) {
   const email = optionalString(body.email, 'email', 254)?.toLowerCase();
   const fullName = optionalString(body.fullName, 'fullName', 120);
   const organization = optionalString(body.organization, 'organization', 120);
-  const phone = optionalString(body.phone, 'phone', 30);
+  const phone = optionalString(body.phone, 'phone', 20);
   const message = optionalString(body.message, 'message', 1000);
   const requestedPlan = optionalString(body.requestedPlan, 'requestedPlan', 20) ?? 'Free';
 
   if (!email || !EMAIL_PATTERN.test(email)) throw new HttpError(400, 'A valid email is required');
   if (!fullName) throw new HttpError(400, 'Full name is required');
-  if (!PLANS.includes(requestedPlan)) {
-    throw new HttpError(400, `requestedPlan must be one of ${PLANS.join(', ')}`);
+  if (!organization) throw new HttpError(400, 'Organization is required');
+  if (!phone || !PHONE_PATTERN.test(phone)) {
+    throw new HttpError(400, 'A valid phone / WhatsApp number (8 to 15 digits) is required');
+  }
+  if (!message) throw new HttpError(400, 'Message is required');
+  if (!REQUESTABLE_PLANS.includes(requestedPlan)) {
+    throw new HttpError(400, `New accounts can only request the ${REQUESTABLE_PLANS.join(', ')} plan`);
   }
 
   const supabase = getAdminClient();
@@ -147,6 +157,21 @@ async function handleSubmit(request: Request) {
 }
 
 // --- Admin ---
+
+// Counts for the admin's notification badge: pending requests, and pending requests created
+// after `since` (when the admin last opened Account Requests)
+async function handleSummary(request: Request, supabase: SupabaseClient) {
+  const since = new URL(request.url).searchParams.get('since');
+  if (since && Number.isNaN(Date.parse(since))) throw new HttpError(400, 'since must be a timestamp');
+
+  const pending = () =>
+    supabase.from('account_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending');
+  const [all, recent] = await Promise.all([pending(), since ? pending().gt('created_at', since) : pending()]);
+  const error = all.error ?? recent.error;
+  if (error) throw new HttpError(500, error.message);
+
+  return json({ pendingCount: all.count ?? 0, newCount: recent.count ?? 0 });
+}
 
 async function handleList(request: Request, supabase: SupabaseClient) {
   const status = new URL(request.url).searchParams.get('status') ?? 'pending';
@@ -318,6 +343,8 @@ const withAdmin = (handler: Handler) =>
   });
 
 export const POST = withErrors(handleSubmit);
-export const GET = withAdmin((request, supabase) => handleList(request, supabase));
+export const GET = withAdmin((request, supabase) =>
+  new URL(request.url).searchParams.has('summary') ? handleSummary(request, supabase) : handleList(request, supabase),
+);
 export const PATCH = withAdmin(handleReview);
 export const DELETE = withAdmin((request, supabase) => handleDelete(request, supabase));

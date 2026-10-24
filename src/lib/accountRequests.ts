@@ -24,10 +24,10 @@ export interface AccountRequest {
 export interface NewAccountRequestInput {
   email: string;
   fullName: string;
-  organization?: string;
-  phone?: string;
-  requestedPlan: Plan;
-  message?: string;
+  organization: string;
+  phone: string;
+  requestedPlan: 'Free'; // visitors can only request Free; the admin picks the plan on approval
+  message: string;
   website?: string; // honeypot, always empty for real visitors
 }
 
@@ -77,7 +77,22 @@ export const listAccountRequests = (status: RequestStatus | 'all' = 'pending') =
     `?status=${encodeURIComponent(status)}`,
   );
 
-export const approveAccountRequest = (input: ApproveRequestInput) =>
+// `since`: when the admin last opened Account Requests (newCount = pending requests after it)
+export const fetchAccountRequestSummary = (since: string | null) =>
+  request<{ pendingCount: number; newCount: number }>(
+    'GET',
+    undefined,
+    `?summary${since ? `&since=${encodeURIComponent(since)}` : ''}`,
+  );
+
+// Newest createdAt in a list, as returned by the server (keeps microseconds for `since`)
+export const latestCreatedAt = (requests: AccountRequest[]): string | null =>
+  requests.reduce<string | null>(
+    (latest, r) => (latest === null || Date.parse(r.createdAt) > Date.parse(latest) ? r.createdAt : latest),
+    null,
+  );
+
+export const approveAccountRequest =(input: ApproveRequestInput) =>
   request<{ ok: true; userId: string }>('PATCH', { action: 'approve', ...input });
 
 export const rejectAccountRequest = (id: string, note?: string) =>
