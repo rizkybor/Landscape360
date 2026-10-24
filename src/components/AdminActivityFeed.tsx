@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Activity, Loader2, LogIn, LogOut, RefreshCw, UserPlus, type LucideIcon } from "lucide-react";
 import {
+  ACTIVITY_PAGE_SIZE,
   fetchActivity,
   type ActivityAvailability,
   type ActivityEvent,
   type ActivityType,
 } from "../lib/adminUsers";
 import { describeUserAgent, timeAgo } from "../lib/loginHistory";
+import { ScrollShadowArea } from "./ScrollShadowArea";
 
 const REFRESH_MS = 60_000;
 
@@ -28,27 +30,74 @@ const describe = (e: ActivityEvent) => {
   return e.type === "login" ? "Signed in" : "Signed out";
 };
 
-// Latest sign-ins, sign-outs and account requests of all users (admin only)
+// Newest first, without duplicates (pages and refreshes can overlap)
+const mergeActivity = (a: ActivityEvent[], b: ActivityEvent[]) => {
+  const byId = new Map<string, ActivityEvent>();
+  [...a, ...b].forEach((e) => byId.set(e.id, e));
+  return [...byId.values()].sort((x, y) => Date.parse(y.at) - Date.parse(x.at));
+};
+
+// Sign-ins, sign-outs and account requests of all users (admin only). Shows the latest
+// page; older pages load as the list is scrolled down.
 export const AdminActivityFeed = () => {
   const [events, setEvents] = useState<ActivityEvent[] | null>(null);
+  const [hasMore, setHasMore] = useState(false);
   const [available, setAvailable] = useState<ActivityAvailability | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [filter, setFilter] = useState<ActivityType | "all">("all");
 
+  // The filter a response belongs to; answers for an older filter are dropped
+  const filterRef = useRef(filter);
+  const loadingMoreRef = useRef(false);
+  const eventsRef = useRef<ActivityEvent[] | null>(null);
+  useEffect(() => {
+    eventsRef.current = events;
+  }, [events]);
+
+  const type = filter === "all" ? undefined : filter;
+
+  // Latest page: replaces the list on first load, otherwise adds new entries on top and
+  // keeps the older pages already loaded
   const refresh = useCallback(async () => {
+    const requested = filter;
     setIsLoading(true);
     try {
-      const result = await fetchActivity();
-      setEvents(result.activity);
+      const result = await fetchActivity({ type: requested === "all" ? undefined : requested });
+      if (filterRef.current !== requested) return;
+      const current = eventsRef.current;
+      setEvents(current ? mergeActivity(result.activity, current) : result.activity);
+      if (!current) setHasMore(result.hasMore);
       setAvailable(result.available);
       setError(null);
     } catch (err) {
-      setError((err as Error).message);
+      if (filterRef.current === requested) setError((err as Error).message);
     } finally {
-      setIsLoading(false);
+      if (filterRef.current === requested) setIsLoading(false);
     }
-  }, []);
+  }, [filter]);
+
+  // Reads the events from state, not the ref: the scroll area calls this from its own
+  // effect, which runs before this component's effect updates the ref
+  const loadMore = useCallback(async () => {
+    const current = events;
+    if (!current?.length || !hasMore || loadingMoreRef.current) return;
+    const requested = filter;
+    loadingMoreRef.current = true;
+    setIsLoadingMore(true);
+    try {
+      const result = await fetchActivity({ before: current[current.length - 1].at, type });
+      if (filterRef.current !== requested) return;
+      setEvents((prev) => mergeActivity(prev ?? [], result.activity));
+      setHasMore(result.hasMore);
+    } catch (err) {
+      if (filterRef.current === requested) setError((err as Error).message);
+    } finally {
+      loadingMoreRef.current = false;
+      setIsLoadingMore(false);
+    }
+  }, [events, filter, hasMore, type]);
 
   useEffect(() => {
     refresh();
@@ -56,10 +105,16 @@ export const AdminActivityFeed = () => {
     return () => clearInterval(timer);
   }, [refresh]);
 
-  const visible = useMemo(
-    () => (events ?? []).filter((e) => filter === "all" || e.type === filter),
-    [events, filter],
-  );
+  const changeFilter = (next: ActivityType | "all") => {
+    if (next === filter) return;
+    filterRef.current = next;
+    eventsRef.current = null;
+    setEvents(null);
+    setHasMore(false);
+    setFilter(next);
+  };
+
+  const visible = events ?? [];
 
   const missing = available
     ? [
@@ -89,7 +144,7 @@ export const AdminActivityFeed = () => {
         {FILTERS.map((f) => (
           <button
             key={f.value}
-            onClick={() => setFilter(f.value)}
+            onClick={() => changeFilter(f.value)}
             aria-pressed={filter === f.value}
             className={`cursor-pointer px-2 py-0.5 rounded-full border text-[10px] transition-colors ${
               filter === f.value
@@ -115,7 +170,10 @@ export const AdminActivityFeed = () => {
       ) : visible.length === 0 ? (
         <div className="py-6 text-center text-[11px] text-sand-500">No activity yet</div>
       ) : (
-        <ol className="space-y-2 max-h-80 xl:max-h-[60vh] overflow-y-auto custom-scrollbar pr-1">
+        // Fixed height (about five entries) so the column stays short; older entries
+        // load as the list is scrolled down
+        <ScrollShadowArea className="max-h-72 overflow-y-auto custom-scrollbar pr-1" onReachEnd={loadMore}>
+        <ol className="space-y-2">
           {visible.map((e) => {
             const style = TYPE_STYLES[e.type];
             const Icon = style.icon;
@@ -140,6 +198,20 @@ export const AdminActivityFeed = () => {
             );
           })}
         </ol>
+        <div className="py-2 text-center text-[10px] text-sand-500">
+          {isLoadingMore ? (
+            <span className="inline-flex items-center gap-1.5">
+              <Loader2 size={11} className="animate-spin" /> Loading older activity...
+            </span>
+          ) : hasMore ? (
+            <button onClick={loadMore} className="cursor-pointer font-bold text-forest-700 hover:underline">
+              Load more
+            </button>
+          ) : (
+            visible.length > ACTIVITY_PAGE_SIZE && "No older activity"
+          )}
+        </div>
+        </ScrollShadowArea>
       )}
     </aside>
   );

@@ -114,8 +114,20 @@ export interface ActivityAvailability {
   requests: boolean;
 }
 
-export const fetchActivity = () =>
-  request<{ activity: ActivityEvent[]; available: ActivityAvailability }>('GET', undefined, '?activity=1');
+export const ACTIVITY_PAGE_SIZE = 10;
+
+// One page of activity, newest first. `before` = time of the oldest entry already shown,
+// to load the next (older) page.
+export const fetchActivity = ({ before, type }: { before?: string; type?: ActivityType } = {}) => {
+  const params = new URLSearchParams({ activity: '1', limit: String(ACTIVITY_PAGE_SIZE) });
+  if (before) params.set('before', before);
+  if (type) params.set('type', type);
+  return request<{ activity: ActivityEvent[]; hasMore: boolean; available: ActivityAvailability }>(
+    'GET',
+    undefined,
+    `?${params.toString()}`,
+  );
+};
 
 export const updatePlanStorageLimits =(planStorageLimits: Partial<PlanStorageLimits>) =>
   request<{ ok: true }>('PUT', { planStorageLimits });

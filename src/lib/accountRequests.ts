@@ -70,12 +70,19 @@ async function request<T>(method: string, body?: unknown, query = '', auth = tru
 export const submitAccountRequest = (input: NewAccountRequestInput) =>
   request<{ ok: true }>('POST', input, '', false);
 
-export const listAccountRequests = (status: RequestStatus | 'all' = 'pending') =>
-  request<{ requests: AccountRequest[]; pendingCount: number }>(
+export const ACCOUNT_REQUESTS_PAGE_SIZE = 20;
+
+// One page of requests, newest first. `before` = createdAt of the oldest request already
+// shown, to load the next (older) page.
+export const listAccountRequests = (status: RequestStatus | 'all' = 'pending', before?: string) => {
+  const params = new URLSearchParams({ status, limit: String(ACCOUNT_REQUESTS_PAGE_SIZE) });
+  if (before) params.set('before', before);
+  return request<{ requests: AccountRequest[]; hasMore: boolean; pendingCount: number }>(
     'GET',
     undefined,
-    `?status=${encodeURIComponent(status)}`,
+    `?${params.toString()}`,
   );
+};
 
 // `since`: when the admin last opened Account Requests (newCount = pending requests after it)
 export const fetchAccountRequestSummary = (since: string | null) =>

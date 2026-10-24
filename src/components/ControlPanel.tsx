@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, type ReactNode } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMapStore } from "../store/useMapStore";
 import { useShallow } from "zustand/react/shallow";
@@ -20,6 +20,7 @@ import {
   Route,
   ChevronDown,
   ChevronUp,
+  Minus,
   Search,
   BookOpen,
   Download,
@@ -41,6 +42,7 @@ import {
 } from "lucide-react";
 import landscapeLogo from "../assets/LandscapeLogo.svg";
 import { toDMS } from "../utils/surveyUtils";
+import { ScrollShadowArea } from "./ScrollShadowArea";
 import streetsView from "../assets/Street-View.png";
 import outdoorsView from "../assets/Outdoors-View.png";
 import satelliteView from "../assets/Satellite-View.png";
@@ -432,8 +434,10 @@ export const ControlPanel = () => {
                   setIsOpen(false);
                 }}
                 className="cursor-pointer hidden md:block p-1 hover:bg-sand-100 rounded text-sand-600"
+                title="Minimize panel"
+                aria-label="Minimize panel"
               >
-                <ChevronUp size={16} />
+                <Minus size={16} />
               </button>
             </div>
 
@@ -1548,63 +1552,6 @@ export const ControlPanel = () => {
         onClose={() => setShowGetStarted(false)}
       />
     </>
-  );
-};
-
-// Scroll container with a soft shadow at each edge that still has content to scroll to,
-// so the edge of the scroll area is visible. `horizontal` watches left/right instead of
-// top/bottom (e.g. the tools carousel on phones).
-const ScrollShadowArea = ({
-  className,
-  wrapperClassName = "",
-  horizontal = false,
-  children,
-}: {
-  className: string;
-  wrapperClassName?: string;
-  horizontal?: boolean;
-  children: ReactNode;
-}) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const [edges, setEdges] = useState({ start: false, end: false });
-
-  const update = useCallback(() => {
-    const el = ref.current;
-    if (!el) return;
-    const [pos, size, total] = horizontal
-      ? [el.scrollLeft, el.clientWidth, el.scrollWidth]
-      : [el.scrollTop, el.clientHeight, el.scrollHeight];
-    const start = pos > 2;
-    const end = pos + size < total - 2;
-    setEdges((prev) => (prev.start === start && prev.end === end ? prev : { start, end }));
-  }, [horizontal]);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    update();
-    if (typeof ResizeObserver === "undefined") return;
-    // Re-check when the area or its content changes size (opening, collapsing, new items)
-    const observer = new ResizeObserver(update);
-    observer.observe(el);
-    Array.from(el.children).forEach((child) => observer.observe(child));
-    return () => observer.disconnect();
-  }, [update, children]);
-
-  const shadow = `pointer-events-none absolute z-10 transition-opacity duration-200 ${horizontal ? "inset-y-0 w-4" : "inset-x-0 h-3"}`;
-  const [startEdge, endEdge] = horizontal
-    ? ["left-0 bg-gradient-to-r", "right-0 bg-gradient-to-l"]
-    : ["top-0 bg-gradient-to-b", "bottom-0 bg-gradient-to-t"];
-  // The wrapper can shrink inside the panel's flex column (min-h-0), like the scroll area
-  // itself did before it was wrapped; otherwise its content spills out of the panel
-  return (
-    <div className={`relative flex flex-col min-h-0 ${wrapperClassName}`}>
-      <div ref={ref} className={`min-h-0 ${className}`} onScroll={update}>
-        {children}
-      </div>
-      <div aria-hidden className={`${shadow} ${startEdge} from-ink/15 to-transparent ${edges.start ? "opacity-100" : "opacity-0"}`} />
-      <div aria-hidden className={`${shadow} ${endEdge} from-ink/15 to-transparent ${edges.end ? "opacity-100" : "opacity-0"}`} />
-    </div>
   );
 };
 

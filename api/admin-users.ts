@@ -6,7 +6,8 @@
  *
  *   GET    /api/admin-users           -> list users with plan, role & storage usage, plus plan storage limits
  *   GET    /api/admin-users?loginHistory=<uuid> -> latest sign-ins of one user (time & browser)
- *   GET    /api/admin-users?activity=1 -> latest sign-ins, sign-outs and account requests of all users
+ *   GET    /api/admin-users?activity=1[&before=<iso>][&type=login|logout|request][&limit=n]
+ *                                     -> a page of sign-ins, sign-outs and account requests, newest first
  *   POST   /api/admin-users           -> create user { email, password, displayName?, plan, role }
  *   PATCH  /api/admin-users           -> update user { id, plan?, role?, password?, displayName?, storageLimitMb? }
  *                                        (storageLimitMb: number = custom quota, null = back to the plan limit)
@@ -27,7 +28,8 @@ const MAX_STORAGE_LIMIT_MB = 1_000_000;
 const MISSING_OBJECT_CODES = ['PGRST202', 'PGRST205', '42883', '42P01'];
 // Postgres code for a column that does not exist yet (login_events.event before 20261024000008)
 const MISSING_COLUMN_CODE = '42703';
-const ACTIVITY_LIMIT = 60;
+const ACTIVITY_PAGE_SIZE = 20;
+const ACTIVITY_MAX_PAGE_SIZE = 100;
 
 class HttpError extends Error {
   status: number;
@@ -222,32 +224,63 @@ interface LoginEventRow {
   event?: 'login' | 'logout';
 }
 
-// Latest sign-ins, sign-outs and account requests of all users, newest first
-async function handleActivity(supabase: SupabaseClient) {
-  const loginEvents = (withEvent: boolean) =>
-    supabase
+const ACTIVITY_TYPES = ['login', 'logout', 'request'];
+
+// Sign-ins, sign-outs and account requests of all users, newest first, one page at a time.
+// `before` (ISO time of the last entry already shown) loads the next, older page; `type`
+// keeps one kind of entry. `hasMore` says whether an older page exists.
+async function handleActivity(supabase: SupabaseClient, params: URLSearchParams) {
+  const beforeParam = params.get('before');
+  const before = beforeParam && !Number.isNaN(Date.parse(beforeParam)) ? new Date(beforeParam).toISOString() : null;
+  if (beforeParam && !before) throw new HttpError(400, 'before must be an ISO date');
+  const limit = Math.min(Math.max(Number(params.get('limit')) || ACTIVITY_PAGE_SIZE, 1), ACTIVITY_MAX_PAGE_SIZE);
+  const type = params.get('type');
+  if (type && !ACTIVITY_TYPES.includes(type)) throw new HttpError(400, `type must be one of ${ACTIVITY_TYPES.join(', ')}`);
+
+  const wantEvents = type !== 'request';
+  const wantRequests = !type || type === 'request';
+  // One extra row per source tells whether an older page exists
+  const fetchSize = limit + 1;
+
+  const loginEvents = (withEvent: boolean) => {
+    let q = supabase
       .from('login_events')
-      .select(withEvent ? 'id, user_id, user_agent, created_at, event' : 'id, user_id, user_agent, created_at')
-      .order('created_at', { ascending: false })
-      .limit(ACTIVITY_LIMIT);
+      .select(withEvent ? 'id, user_id, user_agent, created_at, event' : 'id, user_id, user_agent, created_at');
+    if (withEvent && (type === 'login' || type === 'logout')) q = q.eq('event', type);
+    if (before) q = q.lt('created_at', before);
+    return q.order('created_at', { ascending: false }).limit(fetchSize);
+  };
+  const accountRequests = () => {
+    let q = supabase.from('account_requests').select('id, email, full_name, requested_plan, status, created_at');
+    if (before) q = q.lt('created_at', before);
+    return q.order('created_at', { ascending: false }).limit(fetchSize);
+  };
+  const none = Promise.resolve({ data: [], error: null });
 
   const [eventsResult, requestsResult] = await Promise.all([
-    loginEvents(true),
-    supabase
-      .from('account_requests')
-      .select('id, email, full_name, requested_plan, status, created_at')
-      .order('created_at', { ascending: false })
-      .limit(ACTIVITY_LIMIT),
+    wantEvents ? loginEvents(true) : none,
+    wantRequests ? accountRequests() : none,
   ]);
 
   let events = eventsResult;
-  if (events.error?.code === MISSING_COLUMN_CODE) events = await loginEvents(false);
+  const hasEventColumn = events.error?.code !== MISSING_COLUMN_CODE;
+  // Before the activity log migration every event is a sign-in, and there are no sign-outs
+  if (!hasEventColumn) events = type === 'logout' ? { data: [], error: null } : await loginEvents(false);
   const eventsMissing = MISSING_OBJECT_CODES.includes(events.error?.code ?? '');
   const requestsMissing = MISSING_OBJECT_CODES.includes(requestsResult.error?.code ?? '');
   if (events.error && !eventsMissing) throw new HttpError(500, events.error.message);
   if (requestsResult.error && !requestsMissing) throw new HttpError(500, requestsResult.error.message);
 
   const eventRows = (eventsMissing ? [] : (events.data ?? [])) as unknown as LoginEventRow[];
+  const requestRows = (requestsMissing ? [] : (requestsResult.data ?? [])) as {
+    id: string;
+    email: string;
+    full_name: string;
+    requested_plan: string;
+    status: string;
+    created_at: string;
+  }[];
+
   const userIds = [...new Set(eventRows.map((e) => e.user_id))];
   const { data: profiles, error: profilesError } = userIds.length
     ? await supabase.from('profiles').select('id, email').in('id', userIds)
@@ -255,7 +288,7 @@ async function handleActivity(supabase: SupabaseClient) {
   if (profilesError) throw new HttpError(500, profilesError.message);
   const emailOf = new Map((profiles ?? []).map((p) => [p.id, p.email as string | null]));
 
-  const activity = [
+  const merged = [
     ...eventRows.map((e) => ({
       id: `${e.event ?? 'login'}-${e.id}`,
       type: e.event ?? 'login',
@@ -264,7 +297,7 @@ async function handleActivity(supabase: SupabaseClient) {
       detail: e.user_agent,
       at: e.created_at,
     })),
-    ...(requestsMissing ? [] : (requestsResult.data ?? [])).map((r) => ({
+    ...requestRows.map((r) => ({
       id: `request-${r.id}`,
       type: 'request',
       email: r.email,
@@ -272,13 +305,12 @@ async function handleActivity(supabase: SupabaseClient) {
       detail: `${r.requested_plan} · ${r.status}`,
       at: r.created_at,
     })),
-  ]
-    .sort((a, b) => Date.parse(b.at) - Date.parse(a.at))
-    .slice(0, ACTIVITY_LIMIT);
+  ].sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
 
   return json({
-    activity,
-    available: { logins: !eventsMissing, logouts: !eventsMissing && events === eventsResult, requests: !requestsMissing },
+    activity: merged.slice(0, limit),
+    hasMore: merged.length > limit,
+    available: { logins: !eventsMissing, logouts: !eventsMissing && hasEventColumn, requests: !requestsMissing },
   });
 }
 
@@ -420,7 +452,7 @@ export const GET = withAdmin((request, supabase) => {
   const params = new URL(request.url).searchParams;
   const loginHistory = params.get('loginHistory');
   if (loginHistory) return handleLoginHistory(supabase, loginHistory);
-  return params.has('activity') ? handleActivity(supabase) : handleList(supabase);
+  return params.has('activity') ? handleActivity(supabase, params) : handleList(supabase);
 });
 export const POST = withAdmin((request, supabase) => handleCreate(request, supabase));
 export const PATCH = withAdmin(handleUpdate);

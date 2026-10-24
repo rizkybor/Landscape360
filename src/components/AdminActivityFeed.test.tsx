@@ -20,10 +20,13 @@ const activity: ActivityEvent[] = [
 
 describe('AdminActivityFeed', () => {
   beforeEach(() => {
-    vi.mocked(fetchActivity).mockResolvedValue({
-      activity,
+    vi.mocked(fetchActivity).mockReset();
+    // The server filters by type
+    vi.mocked(fetchActivity).mockImplementation(async ({ type } = {}) => ({
+      activity: activity.filter((e) => !type || e.type === type),
+      hasMore: false,
       available: { logins: true, logouts: true, requests: true },
-    });
+    }));
   });
 
   it('lists sign-ins, sign-outs and account requests newest first', async () => {
@@ -39,14 +42,30 @@ describe('AdminActivityFeed', () => {
     render(<AdminActivityFeed />);
     await screen.findByText('Signed out');
     fireEvent.click(screen.getByRole('button', { name: 'Request' }));
-    expect(screen.getByText('Budi requested an account')).toBeInTheDocument();
+    expect(await screen.findByText('Budi requested an account')).toBeInTheDocument();
+    expect(fetchActivity).toHaveBeenLastCalledWith({ type: 'request' });
     expect(screen.queryByText('Signed out')).not.toBeInTheDocument();
     expect(screen.queryByText('Signed in')).not.toBeInTheDocument();
+  });
+
+  it('loads the next, older page from the oldest entry shown', async () => {
+    const older: ActivityEvent = { id: 'login-0', type: 'login', email: 'old@x.com', name: null, detail: CHROME_MAC, at: minutesAgo(600) };
+    vi.mocked(fetchActivity).mockImplementation(async ({ before } = {}) =>
+      before
+        ? { activity: [older], hasMore: false, available: { logins: true, logouts: true, requests: true } }
+        : { activity, hasMore: true, available: { logins: true, logouts: true, requests: true } },
+    );
+    render(<AdminActivityFeed />);
+    // The list is short enough here that reaching its end loads the next page by itself
+    expect(await screen.findByText('old@x.com')).toBeInTheDocument();
+    expect(fetchActivity).toHaveBeenCalledWith({ before: activity[2].at, type: undefined });
+    expect(screen.queryByRole('button', { name: 'Load more' })).not.toBeInTheDocument();
   });
 
   it('says which migration is missing', async () => {
     vi.mocked(fetchActivity).mockResolvedValue({
       activity: [],
+      hasMore: false,
       available: { logins: true, logouts: false, requests: true },
     });
     render(<AdminActivityFeed />);

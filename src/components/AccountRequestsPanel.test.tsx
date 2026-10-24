@@ -39,9 +39,21 @@ const pendingRequest: AccountRequest = {
 describe('AccountRequestsPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(listAccountRequests).mockResolvedValue({ requests: [pendingRequest], pendingCount: 1 });
+    vi.mocked(listAccountRequests).mockResolvedValue({ requests: [pendingRequest], hasMore: false, pendingCount: 1 });
     vi.mocked(approveAccountRequest).mockResolvedValue({ ok: true, userId: 'user-1' });
     vi.mocked(rejectAccountRequest).mockResolvedValue({ ok: true });
+  });
+
+  it('loads older requests from the oldest one shown when the list reaches its end', async () => {
+    const older = { ...pendingRequest, id: 'older', email: 'older@x.com', createdAt: '2026-10-01T00:00:00Z' };
+    vi.mocked(listAccountRequests).mockImplementation(async (_status, before) =>
+      before
+        ? { requests: [older], hasMore: false, pendingCount: 2 }
+        : { requests: [pendingRequest], hasMore: true, pendingCount: 2 },
+    );
+    render(<AccountRequestsPanel onClose={vi.fn()} />);
+    expect(await screen.findByText('older@x.com')).toBeInTheDocument();
+    expect(listAccountRequests).toHaveBeenLastCalledWith('pending', pendingRequest.createdAt);
   });
 
   it('reports the newest pending request so the notification can be cleared', async () => {
@@ -51,6 +63,7 @@ describe('AccountRequestsPanel', () => {
         { ...pendingRequest, id: 'old', createdAt: '2026-10-23T08:00:00.000001+00:00' },
         { ...pendingRequest, id: 'new', createdAt: '2026-10-24T09:15:00.123456+00:00' },
       ],
+      hasMore: false,
       pendingCount: 2,
     });
     render(<AccountRequestsPanel onClose={vi.fn()} onSeen={onSeen} />);

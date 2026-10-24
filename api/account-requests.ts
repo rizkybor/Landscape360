@@ -173,21 +173,30 @@ async function handleSummary(request: Request, supabase: SupabaseClient) {
   return json({ pendingCount: all.count ?? 0, newCount: recent.count ?? 0 });
 }
 
+const LIST_PAGE_SIZE = 20;
+const LIST_MAX_PAGE_SIZE = 100;
+
+// One page of requests, newest first. `before` (createdAt of the last request already
+// shown) loads the next, older page; `hasMore` says whether one exists.
 async function handleList(request: Request, supabase: SupabaseClient) {
-  const status = new URL(request.url).searchParams.get('status') ?? 'pending';
+  const params = new URL(request.url).searchParams;
+  const status = params.get('status') ?? 'pending';
   if (status !== 'all' && !STATUSES.includes(status)) {
     throw new HttpError(400, `status must be one of ${[...STATUSES, 'all'].join(', ')}`);
   }
+  const beforeParam = params.get('before');
+  const before = beforeParam && !Number.isNaN(Date.parse(beforeParam)) ? new Date(beforeParam).toISOString() : null;
+  if (beforeParam && !before) throw new HttpError(400, 'before must be an ISO date');
+  const limit = Math.min(Math.max(Number(params.get('limit')) || LIST_PAGE_SIZE, 1), LIST_MAX_PAGE_SIZE);
 
-  let query = supabase
-    .from('account_requests')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(500);
+  let query = supabase.from('account_requests').select('*');
   if (status !== 'all') query = query.eq('status', status);
-
-  const { data, error } = await query;
+  if (before) query = query.lt('created_at', before);
+  // One extra row tells whether an older page exists
+  const { data: rows, error } = await query.order('created_at', { ascending: false }).limit(limit + 1);
   if (error) throw new HttpError(500, error.message);
+  const hasMore = (rows ?? []).length > limit;
+  const data = (rows ?? []).slice(0, limit);
 
   const { count: pendingCount, error: countError } = await supabase
     .from('account_requests')
@@ -195,7 +204,7 @@ async function handleList(request: Request, supabase: SupabaseClient) {
     .eq('status', 'pending');
   if (countError) throw new HttpError(500, countError.message);
 
-  const requests = (data ?? []).map((r) => ({
+  const requests = data.map((r) => ({
     id: r.id,
     email: r.email,
     fullName: r.full_name,
@@ -210,7 +219,7 @@ async function handleList(request: Request, supabase: SupabaseClient) {
     createdAt: r.created_at,
   }));
 
-  return json({ requests, pendingCount: pendingCount ?? 0 });
+  return json({ requests, hasMore, pendingCount: pendingCount ?? 0 });
 }
 
 async function getPendingRequest(supabase: SupabaseClient, id: string) {

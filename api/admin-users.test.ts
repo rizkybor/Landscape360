@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Fake Supabase for the admin activity feed
 let loginEventsHasEventColumn: boolean;
+let calls: { table: string; method: string; args: unknown[] }[];
 
 const LOGIN_EVENTS = [
   { id: 2, user_id: 'u1', user_agent: 'UA', created_at: '2026-10-24T10:05:00Z', event: 'logout' },
@@ -26,7 +27,12 @@ const result = (table: string, columns: string) => {
 const builder = (table: string) => {
   let columns = '';
   const chain: Record<string, unknown> = {};
-  for (const m of ['eq', 'in', 'order', 'limit']) chain[m] = () => chain;
+  for (const m of ['eq', 'in', 'order', 'limit', 'lt']) {
+    chain[m] = (...args: unknown[]) => {
+      calls.push({ table, method: m, args });
+      return chain;
+    };
+  }
   chain.select = (c: string) => {
     columns = c;
     return chain;
@@ -47,14 +53,15 @@ process.env.SUPABASE_URL = 'https://x.supabase.co';
 process.env.SUPABASE_SERVICE_ROLE_KEY = 'service';
 const { GET } = await import('./admin-users');
 
-const getActivity = async () => {
-  const res = await GET(new Request('https://x/api/admin-users?activity=1', { headers: { Authorization: 'Bearer t' } }));
+const getActivity = async (query = '') => {
+  const res = await GET(new Request(`https://x/api/admin-users?activity=1${query}`, { headers: { Authorization: 'Bearer t' } }));
   return { status: res.status, body: await res.json() };
 };
 
 describe('GET /api/admin-users?activity=1', () => {
   beforeEach(() => {
     loginEventsHasEventColumn = true;
+    calls = [];
   });
 
   it('merges sign-ins, sign-outs and account requests newest first', async () => {
@@ -67,6 +74,26 @@ describe('GET /api/admin-users?activity=1', () => {
       ['login', 'pro@x.com'],
     ]);
     expect(body.activity[1]).toMatchObject({ name: 'Budi', detail: 'Pro · pending' });
+  });
+
+  it('returns one page and says whether an older one exists', async () => {
+    const { body } = await getActivity('&limit=2');
+    expect(body.activity).toHaveLength(2);
+    expect(body.hasMore).toBe(true);
+    expect((await getActivity('&limit=5')).body.hasMore).toBe(false);
+  });
+
+  it('loads entries older than `before` and keeps one type', async () => {
+    const before = '2026-10-24T10:03:00Z';
+    await getActivity(`&before=${encodeURIComponent(before)}&type=logout`);
+    expect(calls).toContainEqual({ table: 'login_events', method: 'lt', args: ['created_at', new Date(before).toISOString()] });
+    expect(calls).toContainEqual({ table: 'login_events', method: 'eq', args: ['event', 'logout'] });
+    expect(calls.some((c) => c.table === 'account_requests')).toBe(false);
+  });
+
+  it('rejects a bad cursor or type', async () => {
+    expect((await getActivity('&before=yesterday')).status).toBe(400);
+    expect((await getActivity('&type=delete')).status).toBe(400);
   });
 
   it('treats every event as a sign-in before the activity log migration', async () => {
