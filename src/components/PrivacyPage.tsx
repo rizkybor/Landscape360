@@ -41,7 +41,7 @@ export const PrivacyPage = () => {
             <li><strong>Location and activity data you create:</strong> surveys and points, marked locations, recorded tracks, uploaded custom maps, and, when you turn on GPS Tracking, your live position.</li>
             <li><strong>Sharing:</strong> which accounts you share locations or tracks with.</li>
             <li><strong>Sign-in history:</strong> the time of each sign-in and the browser and device type, kept to protect accounts.</li>
-            <li><strong>Reviews:</strong> your rating and comment, shown publicly with your first name and last initial.</li>
+            <li><strong>Reviews:</strong> your rating and comment, shown publicly with your first name, last initial and, if you set one in your profile, your organization.</li>
             <li><strong>Usage information:</strong> cloud storage used per feature, and anonymous page view and performance statistics.</li>
             <li><strong>Technical data:</strong> IP address and browser information processed by our hosting and map providers to deliver the Service.</li>
           </ul>
@@ -68,7 +68,7 @@ export const PrivacyPage = () => {
         <LegalSection title="4. Who we share data with">
           <ul>
             <li><strong>People you choose:</strong> accounts you share locations or tracks with, and monitor accounts of your team when you broadcast your position.</li>
-            <li><strong>The public:</strong> your reviews (first name and last initial, rating and comment).</li>
+            <li><strong>The public:</strong> your reviews (first name and last initial, organization if set, rating and comment).</li>
             <li><strong>Service providers</strong> that process data for us: Supabase (database and sign-in), Vercel (hosting and anonymous analytics), Mapbox (map tiles and terrain), BMKG (weather requests), Google Maps (only when you open Directions) and our advertising partner, which processes data under its own privacy policy.</li>
             <li><strong>Authorities,</strong> when the law requires it.</li>
           </ul>

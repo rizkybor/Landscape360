@@ -88,7 +88,7 @@ export const TermsPage = () => (
         <ul>
           <li>Surveys, tracks, marked locations, uploaded maps and reviews you create remain yours. You allow us to store, process and display them only as needed to run the Service (for example, showing a location to the people you share it with).</li>
           <li>When you share content with another account, that person can see it until you stop sharing it.</li>
-          <li>Reviews are public and shown with your first name and last initial. Only account holders can write a review, one per account; you can edit or delete it at any time. Replies come from the Landscape 360 team.</li>
+          <li>Reviews are public and shown with your first name and last initial, and your organization if you set one in your profile. Only account holders can write a review, one per account; you can edit or delete it at any time. Replies come from the Landscape 360 team.</li>
           <li>We may hide or remove content, including reviews, that breaks these Terms.</li>
         </ul>
       </LegalSection>

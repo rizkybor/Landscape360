@@ -28,6 +28,7 @@ const review = (overrides: Partial<Review> = {}): Review => ({
   rating: 5,
   comment: 'Offline maps saved my trip!',
   authorName: 'Budi W.',
+  authorOrganization: null,
   isMine: false,
   isHidden: false,
   adminReply: null,
@@ -165,5 +166,22 @@ describe('ReviewsPage long lists', () => {
     expect(screen.getAllByText('Reviewer 19.')).toHaveLength(1);
     // The second page was short, so there is nothing more to load
     expect(screen.queryByRole('button', { name: /Load more reviews/ })).not.toBeInTheDocument();
+  });
+});
+
+describe('ReviewsPage reviewer organization', () => {
+  it("shows the reviewer's organization when they set one", async () => {
+    vi.clearAllMocks();
+    signedInAs(null);
+    vi.mocked(api.fetchReviewSummary).mockResolvedValue({ total: 2, average: 5, counts: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 2 } });
+    vi.mocked(api.fetchMyReview).mockResolvedValue(null);
+    vi.mocked(api.listReviews).mockResolvedValue([
+      review({ authorOrganization: 'Makopala UBL' }),
+      review({ id: 'r2', authorName: 'Siti A.', authorOrganization: null }),
+    ]);
+    renderPage();
+    expect(await screen.findByText('Makopala UBL')).toBeInTheDocument();
+    const siti = screen.getByText('Siti A.').closest('article')!;
+    expect(within(siti).queryByText('Makopala UBL')).not.toBeInTheDocument();
   });
 });

@@ -217,6 +217,25 @@ describe('AuthControl', () => {
     if (!usesLogo) expect(screen.getAllByText('S').length).toBeGreaterThan(0);
   });
 
+  it('offers Sign Out in the header (always visible on phones) as well as in the footer', async () => {
+    (useSurveyStore as any).mockReturnValue({
+      user: { id: 'u1', email: 'u1@x.com', user_metadata: { display_name: 'Budi Santoso' } },
+      setUser: vi.fn(),
+      loadSavedSurveys: vi.fn(),
+      savedSurveys: [],
+      subscriptionStatus: 'Free',
+      userRole: 'pengguna360',
+      isAdmin: false,
+    });
+    render(<AuthControl />);
+    fireEvent.click(await screen.findByText('Budi Santoso'));
+
+    const signOutButtons = screen.getAllByRole('button', { name: /Sign Out/ });
+    expect(signOutButtons).toHaveLength(2);
+    fireEvent.click(signOutButtons[0]);
+    expect(await screen.findByText(/Are you sure|sign out of/i)).toBeInTheDocument();
+  });
+
   // Note: Testing the Modal opening requires interaction which is covered in other E2E-like tests or simple click tests.
   // Here we assume the modal logic works and focus on content if we were to render the modal directly.
 });
