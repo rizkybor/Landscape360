@@ -17,7 +17,7 @@ export const LoadingOverlay = ({ onComplete }: { onComplete?: () => void }) => {
   if (!isVisible) return null;
 
   return (
-    <div className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black text-white pointer-events-auto transition-opacity duration-500 ${isClosing ? 'opacity-0' : 'opacity-100'}`}>
+    <div className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black text-white transition-opacity duration-500 ${isClosing ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'}`}>
       <div className="text-center relative overflow-hidden p-6 md:p-8">
         <h1 className="text-4xl md:text-7xl font-bold tracking-tight mb-3 md:mb-4 relative z-10 animate-fade-in-up">
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-white to-blue-400 bg-[length:200%_auto] animate-shine">
