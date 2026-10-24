@@ -12,6 +12,7 @@ export interface Review {
   rating: number;
   comment: string;
   authorName: string;
+  authorOrganization: string | null; // shown next to the name when the reviewer set one
   isMine: boolean;
   isHidden: boolean;
   adminReply: string | null;
@@ -52,6 +53,8 @@ export const listReviews = async (rating: number | null, offset = 0): Promise<Re
     rating: Number(r.rating),
     comment: r.comment as string,
     authorName: r.author_name as string,
+    // Absent until the review organization migration (20261024000011) has been run
+    authorOrganization: (r.author_organization as string | null | undefined) ?? null,
     isMine: r.is_mine === true,
     isHidden: r.is_hidden === true,
     adminReply: (r.admin_reply as string | null) ?? null,

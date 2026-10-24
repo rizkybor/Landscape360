@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { EyeOff, Eye, Loader2, MessageSquare, Pencil, Reply, Star, Trash2, X, Check } from "lucide-react";
+import { EyeOff, Eye, Loader2, MessageSquare, Pencil, Reply, Star, Trash2, X, Check, Building2 } from "lucide-react";
 import { SitePageLayout } from "./SitePageLayout";
 import { LoadMoreSentinel } from "./LoadMoreSentinel";
 import { AuthControl } from "./AuthControl";
@@ -181,7 +181,7 @@ const MyReviewForm = ({ existing, onChanged }: { existing: MyReview | null; onCh
       />
       <div className="flex items-center justify-between gap-2">
         <span className="text-[10px] text-sand-500">
-          {comment.trim().length}/{MAX_REVIEW_LENGTH} · shown with your first name and last initial
+          {comment.trim().length}/{MAX_REVIEW_LENGTH} · shown with your first name, last initial and organization (if set in your profile)
         </span>
         <div className="flex gap-2">
           {existing && (
@@ -244,6 +244,11 @@ const ReviewCard = ({ review, isAdmin, onChanged }: { review: Review; isAdmin: b
               {review.isMine && <span className="text-[9px] px-1.5 py-0.5 rounded bg-gold-100 text-gold-700">You</span>}
               {review.isHidden && <span className="text-[9px] px-1.5 py-0.5 rounded bg-brick-100 text-brick-600">Hidden</span>}
             </div>
+            {review.authorOrganization && (
+              <div className="text-[11px] text-sand-600 truncate flex items-center gap-1" title={review.authorOrganization}>
+                <Building2 size={11} className="shrink-0" /> {review.authorOrganization}
+              </div>
+            )}
             <div className="flex items-center gap-2">
               <Stars value={review.rating} size={12} />
               <span className="text-[11px] text-sand-500">

@@ -772,7 +772,9 @@ export const AuthControl = () => {
         createPortal(
           <div className="fixed inset-0 z-[100] flex items-center justify-center md:p-6 bg-ink/40 backdrop-blur-sm md:backdrop-blur-md animate-in fade-in duration-200">
             <div
-              className={`relative w-full h-full md:h-auto md:max-h-[90vh] md:max-w-3xl ${isAdmin ? "xl:max-w-6xl" : ""} bg-white border-0 md:border md:border-sand-200 rounded-none md:rounded-2xl overflow-hidden flex flex-col shadow-2xl`}
+              // 100dvh on phones: h-full can be taller than the visible area in mobile
+              // browsers, which pushed the footer (Sign Out) under the browser bar
+              className={`relative w-full h-full h-dvh md:h-auto md:max-h-[90vh] md:max-w-3xl ${isAdmin ? "xl:max-w-6xl" : ""} bg-white border-0 md:border md:border-sand-200 rounded-none md:rounded-2xl overflow-hidden flex flex-col shadow-2xl`}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
@@ -781,16 +783,26 @@ export const AuthControl = () => {
                   <div className="w-1 h-4 bg-forest-700 rounded-full"></div>
                   User Account
                 </h2>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowMenu(false);
-                  }}
-                  className="cursor-pointer text-sand-600 hover:text-ink transition-colors p-1.5 hover:bg-sand-100 rounded-lg"
-                  title="Close Menu"
-                >
-                  <X size={18} />
-                </button>
+                <div className="flex items-center gap-1">
+                  {/* Phones: Sign Out also up here, always in view */}
+                  <button
+                    onClick={() => setShowLogoutConfirm(true)}
+                    className="md:hidden cursor-pointer flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-brick-600 hover:bg-brick-50 text-xs font-bold transition-colors"
+                    title="Sign Out"
+                  >
+                    <LogOut size={15} /> Sign Out
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowMenu(false);
+                    }}
+                    className="cursor-pointer text-sand-600 hover:text-ink transition-colors p-1.5 hover:bg-sand-100 rounded-lg"
+                    title="Close Menu"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
               </div>
 
               <div
