@@ -48,7 +48,6 @@ import {
   Pencil,
   KeyRound,
   MapPin,
-  LifeBuoy,
   Siren,
   Building2,
   Phone,
@@ -108,7 +107,6 @@ export const AuthControl = () => {
     subscriptionStatus,
     userRole,
     isAdmin,
-    canUseSos,
   } = useSurveyStore();
 
   const { interactionMode } = useMapStore(
@@ -204,7 +202,7 @@ export const AuthControl = () => {
   const [editPhone, setEditPhone] = useState("");
   const [profileError, setProfileError] = useState<string | null>(null);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [showSosPractice, setShowSosPractice] = useState(false);
+  const [showSos, setShowSos] = useState(false);
   const [passwordNotice, setPasswordNotice] = useState<string | null>(null);
 
   const handleSaveProfile = async (e: React.FormEvent) => {
@@ -991,13 +989,14 @@ export const AuthControl = () => {
                         >
                           <KeyRound size={12} /> Change password
                         </button>
-                        {(canUseSos || isAdmin) && (
+                        {isAdmin && (
+                          // Admin: the S.O.S button lives here instead of on the map
                           <button
-                            onClick={() => setShowSosPractice(true)}
-                            className="cursor-pointer mt-1.5 md:ml-0 ml-3 inline-flex items-center gap-1.5 text-[11px] font-bold text-brick-600 hover:underline"
-                            title="Try the S.O.S screen without calling or sending anything"
+                            onClick={() => setShowSos(true)}
+                            className="cursor-pointer mt-2 md:ml-0 ml-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brick-600 hover:bg-brick-700 text-white text-[11px] font-black tracking-wider shadow-sm"
+                            title="Open S.O.S (starts after a 5 second countdown you can cancel)"
                           >
-                            <LifeBuoy size={12} /> Practice S.O.S
+                            <Siren size={12} /> S.O.S
                           </button>
                         )}
                         {passwordNotice && (
@@ -1238,12 +1237,11 @@ export const AuthControl = () => {
           document.body,
         )}
 
-      {showSosPractice && user && (
+      {showSos && user && isAdmin && (
         <SosScreen
-          practice
           userId={user.id}
           userName={accountDisplayName(user) || user.email || ""}
-          onClose={() => setShowSosPractice(false)}
+          onClose={() => setShowSos(false)}
         />
       )}
 

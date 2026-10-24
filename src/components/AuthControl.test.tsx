@@ -174,6 +174,8 @@ describe('AuthControl', () => {
     expect(await screen.findByLabelText('3 new account requests')).toHaveTextContent('3');
 
     fireEvent.click(screen.getByText('Admin User'));
+    // Admin: the S.O.S button is in User Account
+    expect(screen.getByRole('button', { name: 'S.O.S' })).toBeInTheDocument();
     const requestsButton = screen.getByRole('button', { name: /Account Requests/ });
     expect(requestsButton).toHaveTextContent('3 new');
 

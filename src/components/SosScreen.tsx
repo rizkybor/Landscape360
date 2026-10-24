@@ -31,7 +31,6 @@ const COUNTDOWN_S = 5;
 interface Props {
   userId: string;
   userName: string;
-  practice?: boolean; // drill: nothing is called or sent
   onClose: () => void;
 }
 
@@ -87,7 +86,7 @@ const useSiren = () => {
 
 // Fullscreen S.O.S: countdown, then location, calls, SMS, share, siren and light. Phase 1:
 // everything runs on the phone; nothing is sent to the server.
-export const SosScreen = ({ userId, userName, practice = false, onClose }: Props) => {
+export const SosScreen = ({ userId, userName, onClose }: Props) => {
   const [countdown, setCountdown] = useState(COUNTDOWN_S);
   const active = countdown <= 0;
   const [startedAt, setStartedAt] = useState<number | null>(null);
@@ -104,7 +103,7 @@ export const SosScreen = ({ userId, userName, practice = false, onClose }: Props
   const [lightOn, setLightOn] = useState(false);
   const siren = useSiren();
 
-  // --- Report to the admin (not in practice mode) ---
+  // --- Report to the admin ---
   const clientId = useRef(crypto.randomUUID());
   const [messageDraft, setMessageDraft] = useState("");
   const [sentMessage, setSentMessage] = useState("");
@@ -118,7 +117,7 @@ export const SosScreen = ({ userId, userName, practice = false, onClose }: Props
   const report = useCallback(
     async (status: SosReport["status"] = "active", message = latest.current.message) => {
       const { fix: f, battery: b, startedAt: started } = latest.current;
-      if (practice || started === null) return;
+      if (started === null) return;
       if (!navigator.onLine) setDelivery({ state: "waiting" });
       else setDelivery((d) => (d.state === "sent" ? d : { state: "sending" }));
       try {
@@ -140,7 +139,7 @@ export const SosScreen = ({ userId, userName, practice = false, onClose }: Props
         );
       }
     },
-    [practice],
+    [],
   );
 
   // Countdown before the S.O.S screen activates (a last chance to cancel)
@@ -248,7 +247,7 @@ export const SosScreen = ({ userId, userName, practice = false, onClose }: Props
   // Report when S.O.S starts, then every 30 s with the latest location, and again as soon
   // as the connection comes back
   useEffect(() => {
-    if (!active || practice || startedAt === null) return;
+    if (!active || startedAt === null) return;
     report();
     const timer = window.setInterval(() => report(), REPORT_EVERY_MS);
     const onOnline = () => {
@@ -260,23 +259,19 @@ export const SosScreen = ({ userId, userName, practice = false, onClose }: Props
       window.clearInterval(timer);
       window.removeEventListener("online", onOnline);
     };
-  }, [active, practice, startedAt, report]);
+  }, [active, startedAt, report]);
 
   const sendMessage = () => {
     const text = messageDraft.trim();
     if (!text) return;
     setSentMessage(text);
-    if (practice) {
-      flash("Practice: the message would be sent to the admin");
-      return;
-    }
     report("active", text);
   };
 
   const close = () => {
     siren.stop();
     // Tell the admin the user is safe (sent later if there is no signal right now)
-    if (active && !practice && startedAt !== null) report("resolved").catch(() => undefined);
+    if (active && startedAt !== null) report("resolved").catch(() => undefined);
     onClose();
   };
 
@@ -285,20 +280,9 @@ export const SosScreen = ({ userId, userName, practice = false, onClose }: Props
     window.setTimeout(() => setNote(null), 3500);
   };
 
-  // In practice mode the phone apps are not opened
-  const guard = (e: React.MouseEvent, what: string) => {
-    if (!practice) return;
-    e.preventDefault();
-    flash(`Practice: ${what} (nothing was called or sent)`);
-  };
-
   const message = buildSosMessage(userName, fix);
 
   const share = async () => {
-    if (practice) {
-      flash("Practice: the share sheet would open with your location");
-      return;
-    }
     try {
       if (navigator.share) await navigator.share({ title: "S.O.S", text: message });
       else {
@@ -342,7 +326,7 @@ export const SosScreen = ({ userId, userName, practice = false, onClose }: Props
         // Countdown
         <div className="flex-1 flex flex-col items-center justify-center gap-6 p-6 text-center">
           <div className="text-xs font-bold tracking-[0.3em] uppercase opacity-80">
-            {practice ? "Practice S.O.S" : "Starting S.O.S"}
+            Starting S.O.S
           </div>
           <div className="text-8xl font-black tabular-nums">{countdown}</div>
           <p className="text-sm opacity-90 max-w-xs">Opening the emergency screen. Cancel if this was a mistake.</p>
@@ -359,18 +343,12 @@ export const SosScreen = ({ userId, userName, practice = false, onClose }: Props
           <div className="shrink-0 flex items-center justify-between px-5 pt-[calc(1rem+env(safe-area-inset-top))] pb-3">
             <div className="flex items-center gap-2 font-black tracking-widest">
               <span className="w-3 h-3 rounded-full bg-white animate-pulse" />
-              {practice ? "PRACTICE S.O.S" : "S.O.S ACTIVE"}
+              S.O.S ACTIVE
             </div>
             <span className="font-mono tabular-nums text-sm opacity-90">{clock}</span>
           </div>
 
           <div className="flex-1 min-h-0 overflow-y-auto px-5 pb-4 space-y-4">
-            {practice && (
-              <div className="rounded-xl bg-white/15 px-3 py-2 text-xs font-bold">
-                Practice mode: try every button; nothing is called or sent.
-              </div>
-            )}
-
             {/* Location, large enough to read out over a radio */}
             <div className="rounded-2xl bg-black/20 p-4">
               {fix ? (
@@ -405,9 +383,7 @@ export const SosScreen = ({ userId, userName, practice = false, onClose }: Props
               <div className="flex items-center justify-between gap-2 text-sm font-bold">
                 <span>Admin</span>
                 <span className="flex items-center gap-1.5 text-xs font-bold" aria-live="polite">
-                  {practice ? (
-                    "Practice: nothing is sent"
-                  ) : delivery.state === "sent" ? (
+                  {delivery.state === "sent" ? (
                     <>
                       <Check size={14} /> Sent to the admin{" "}
                       {new Date(delivery.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
@@ -457,7 +433,6 @@ export const SosScreen = ({ userId, userName, practice = false, onClose }: Props
                 <a
                   key={n.number}
                   href={`tel:${n.number}`}
-                  onClick={(e) => guard(e, `call ${n.number}`)}
                   className={`${actionClass} bg-white text-brick-700`}
                 >
                   <Phone size={18} /> {n.label}
@@ -469,9 +444,7 @@ export const SosScreen = ({ userId, userName, practice = false, onClose }: Props
                   if (!contacts.length) {
                     e.preventDefault();
                     setShowContacts(true);
-                    return;
                   }
-                  guard(e, `SMS to ${contacts.length} contact${contacts.length === 1 ? "" : "s"}`);
                 }}
                 className={`${actionClass} bg-white/15 border border-white/30`}
               >
@@ -564,7 +537,7 @@ export const SosScreen = ({ userId, userName, practice = false, onClose }: Props
               onClick={close}
               className="cursor-pointer w-full py-4 rounded-2xl bg-white text-brick-700 text-lg font-black flex items-center justify-center gap-2"
             >
-              <X size={20} /> {practice ? "End practice" : "I'm safe"}
+              <X size={20} /> I'm safe
             </button>
           </div>
         </>
