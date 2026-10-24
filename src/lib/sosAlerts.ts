@@ -147,3 +147,15 @@ export const resolveSosAlert = async (id: string, note: string) => {
   const { error } = await supabase.rpc('admin_resolve_sos', { p_id: id, p_note: note.trim() || null });
   if (error) throw new Error(error.message);
 };
+
+/** Deletes a resolved alert and its trail (20261024000016) */
+export const deleteSosAlert = async (id: string) => {
+  const { error } = await supabase.rpc('admin_delete_sos', { p_id: id });
+  if (error) {
+    throw new Error(
+      /could not find the function|PGRST202/i.test(`${error.message} ${error.code ?? ''}`)
+        ? 'Deleting is not set up yet (run the 20261024000016 migration)'
+        : error.message,
+    );
+  }
+};

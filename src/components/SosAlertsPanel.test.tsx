@@ -5,9 +5,11 @@ import type { SosAlert } from '../lib/sosAlerts';
 
 const listSosAlerts = vi.fn();
 const resolveSosAlert = vi.fn();
+const deleteSosAlert = vi.fn();
 vi.mock('../lib/sosAlerts', () => ({
   listSosAlerts: (...a: unknown[]) => listSosAlerts(...a),
   resolveSosAlert: (...a: unknown[]) => resolveSosAlert(...a),
+  deleteSosAlert: (...a: unknown[]) => deleteSosAlert(...a),
 }));
 vi.mock('../lib/supabaseClient', () => ({ supabase: {} }));
 
@@ -22,6 +24,7 @@ describe('SosAlertsPanel', () => {
   beforeEach(() => {
     listSosAlerts.mockReset().mockResolvedValue([alert]);
     resolveSosAlert.mockReset().mockResolvedValue(undefined);
+    deleteSosAlert.mockReset().mockResolvedValue(undefined);
   });
 
   it('shows who, the message, location, battery and contact links', async () => {
@@ -43,5 +46,22 @@ describe('SosAlertsPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Resolve' }));
     await waitFor(() => expect(resolveSosAlert).toHaveBeenCalledWith('a1', 'Found safe'));
     expect(await screen.findByText('No active S.O.S')).toBeInTheDocument();
+  });
+
+  it('deletes a resolved alert from the history after confirming', async () => {
+    const done = { ...alert, id: 'a2', status: 'resolved' as const, resolvedAt: new Date().toISOString() };
+    listSosAlerts.mockResolvedValue([alert, done]);
+    render(<SosAlertsPanel onClose={vi.fn()} />);
+    await screen.findAllByText('Budi');
+    expect(screen.queryByText('Delete')).not.toBeInTheDocument(); // not on the Active tab
+    fireEvent.click(screen.getByRole('button', { name: 'All (history)' }));
+    await waitFor(() => expect(listSosAlerts).toHaveBeenLastCalledWith(false));
+    // Only the resolved alert can be deleted
+    const deletes = await screen.findAllByTitle('Delete from history');
+    expect(deletes).toHaveLength(1);
+    fireEvent.click(deletes[0]);
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    await waitFor(() => expect(deleteSosAlert).toHaveBeenCalledWith('a2'));
+    await waitFor(() => expect(screen.getAllByText('Budi')).toHaveLength(1));
   });
 });
