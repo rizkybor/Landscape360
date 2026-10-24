@@ -42,6 +42,37 @@ import {
 // Set to true to show the Upgrade button (opens the Upgrade Plan modal) again
 const SHOW_UPGRADE_BUTTON = false;
 
+// One row of the account menu's usage list: "label  value / limit" over a progress bar
+const UsageMeter = ({
+  label,
+  value,
+  limit,
+  percent,
+  barClass,
+  warn,
+  title,
+}: {
+  label: string;
+  value: string;
+  limit: string;
+  percent: number;
+  barClass: string;
+  warn: boolean;
+  title?: string;
+}) => (
+  <div className="bg-white rounded-xl p-3 border border-sand-100" title={title}>
+    <div className="flex items-baseline justify-between gap-2 mb-1.5">
+      <span className="text-[10px] text-sand-500 uppercase font-bold tracking-wide">{label}</span>
+      <span className={`text-xs font-bold ${warn ? "text-brick-600" : "text-ink"}`}>
+        {value} <span className="text-sand-500 font-normal">/ {limit}</span>
+      </span>
+    </div>
+    <div className="h-1.5 bg-sand-200 rounded-full overflow-hidden">
+      <div className={`h-full rounded-full ${barClass}`} style={{ width: `${percent}%` }} />
+    </div>
+  </div>
+);
+
 export const AuthControl = () => {
   const {
     user,
@@ -661,13 +692,13 @@ export const AuthControl = () => {
       {/* Full Screen Modal for User Menu - Rendered via Portal */}
       {showMenu &&
         createPortal(
-          <div className="fixed inset-0 z-[100] flex items-center justify-center md:p-4 bg-ink/40 backdrop-blur-sm md:backdrop-blur-md animate-in fade-in duration-200">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center md:p-6 bg-ink/40 backdrop-blur-sm md:backdrop-blur-md animate-in fade-in duration-200">
             <div
-              className="relative w-full h-full md:h-auto md:max-w-sm bg-white border-0 md:border md:border-sand-200 rounded-none md:rounded-2xl overflow-hidden flex flex-col"
+              className="relative w-full h-full md:h-auto md:max-h-[90vh] md:max-w-3xl bg-white border-0 md:border md:border-sand-200 rounded-none md:rounded-2xl overflow-hidden flex flex-col shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-sand-100 bg-sand-50">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-sand-100 bg-sand-50 shrink-0">
                 <h2 className="text-sm font-bold text-ink tracking-wide uppercase flex items-center gap-2">
                   <div className="w-1 h-4 bg-forest-700 rounded-full"></div>
                   User Account
@@ -677,301 +708,255 @@ export const AuthControl = () => {
                     e.stopPropagation();
                     setShowMenu(false);
                   }}
-                  className="cursor-pointer text-sand-600 hover:text-ink transition-colors p-1 hover:bg-sand-100 rounded-lg cursor-pointer"
+                  className="cursor-pointer text-sand-600 hover:text-ink transition-colors p-1.5 hover:bg-sand-100 rounded-lg"
                   title="Close Menu"
                 >
                   <X size={18} />
                 </button>
               </div>
 
-              <div className="p-6">
-                {isEditingProfile ? (
-                  <form
-                    onSubmit={handleSaveProfile}
-                    className="mb-6 space-y-3 bg-sand-50 p-4 rounded-xl border border-sand-200"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-sm font-bold text-ink">
-                        Edit Name
-                      </h3>
-                      <button
-                        type="button"
-                        onClick={() => setIsEditingProfile(false)}
-                        className="cursor-pointer text-sand-600 hover:text-ink"
-                      >
-                        <X size={14} />
-                      </button>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 space-y-2">
-                        <input
-                          type="text"
-                          value={editName}
-                          onChange={(e) => setEditName(e.target.value)}
-                          placeholder="Display Name"
-                          className="w-full bg-white/90 border border-sand-200 rounded px-2 py-1.5 text-xs text-ink focus:border-forest-600 outline-none"
-                        />
-                      </div>
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="cursor-pointer w-full bg-forest-800 hover:bg-forest-700 text-white py-1.5 rounded text-xs font-bold transition-colors flex items-center justify-center gap-2"
+              <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar md:grid md:grid-cols-[300px_1fr]">
+                {/* Left: profile & usage */}
+                <aside className="p-5 md:p-6 bg-sand-50/60 border-b md:border-b-0 md:border-r border-sand-100 space-y-6">
+                  {isEditingProfile ? (
+                    <form
+                      onSubmit={handleSaveProfile}
+                      className="space-y-3 bg-white p-4 rounded-xl border border-sand-200"
                     >
-                      {loading ? (
-                        <Loader2 size={12} className="animate-spin" />
-                      ) : (
-                        <>
-                          <Check size={12} /> Save Changes
-                        </>
-                      )}
-                    </button>
-                  </form>
-                ) : (
-                  <div className="flex items-center gap-4 mb-6 relative group">
-                    {usesLogoAvatar ? (
-                      <img
-                        src={landscapeLogo}
-                        className="w-16 h-16 rounded-full bg-white ring-2 ring-gold-300 object-contain p-2 shadow-lg"
-                        alt="Landscape 360"
-                      />
-                    ) : currentUser.user_metadata?.avatar_url ? (
-                      <img
-                        src={currentUser.user_metadata.avatar_url}
-                        className="w-16 h-16 rounded-full border-2 border-forest-600 object-cover"
-                        alt="Avatar"
-                      />
-                    ) : (
-                      <div className="w-16 h-16 rounded-full bg-forest-800 ring-2 ring-gold-300 flex items-center justify-center text-2xl font-bold text-white shadow-lg ">
-                        {currentUser.email?.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                    <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <h3 className="font-bold text-lg text-ink">
-                          {currentUser.user_metadata?.full_name ||
-                            currentUser.user_metadata?.name ||
-                            "User L360"}
-                        </h3>
+                        <h3 className="text-sm font-bold text-ink">Edit Name</h3>
                         <button
-                          onClick={() => {
-                            setEditName(
-                              currentUser.user_metadata?.full_name ||
-                                currentUser.user_metadata?.name ||
-                                "",
-                            );
-                            setIsEditingProfile(true);
-                          }}
-                          className="cursor-pointer p-1.5 text-sand-500 hover:text-ink bg-transparent hover:bg-sand-100 rounded-lg transition-colors"
-                          title="Edit Name"
+                          type="button"
+                          onClick={() => setIsEditingProfile(false)}
+                          className="cursor-pointer p-1 rounded text-sand-600 hover:text-ink hover:bg-sand-100"
+                          title="Cancel"
                         >
-                          <Pencil size={14} />
+                          <X size={14} />
                         </button>
                       </div>
-                      <p className="text-xs text-sand-600">
-                        {currentUser.email}
-                      </p>
-
-                      {/* Status & Limits */}
-                      <div className="mt-3 space-y-2">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className={`text-[10px] px-2 py-0.5 rounded-full border ${
+                      <input
+                        type="text"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        placeholder="Display Name"
+                        className="w-full bg-sand-50 border border-sand-200 rounded-lg px-3 py-2 text-sm text-ink focus:border-forest-600 outline-none"
+                      />
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="cursor-pointer w-full bg-forest-800 hover:bg-forest-700 text-white py-2 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-2"
+                      >
+                        {loading ? (
+                          <Loader2 size={12} className="animate-spin" />
+                        ) : (
+                          <>
+                            <Check size={12} /> Save Changes
+                          </>
+                        )}
+                      </button>
+                    </form>
+                  ) : (
+                    <div className="flex md:flex-col items-center md:text-center gap-4">
+                      {usesLogoAvatar ? (
+                        <img
+                          src={landscapeLogo}
+                          className="w-16 h-16 md:w-24 md:h-24 shrink-0 rounded-full bg-white ring-2 ring-gold-300 object-contain p-2 md:p-3 shadow-lg"
+                          alt="Landscape 360"
+                        />
+                      ) : currentUser.user_metadata?.avatar_url ? (
+                        <img
+                          src={currentUser.user_metadata.avatar_url}
+                          className="w-16 h-16 md:w-24 md:h-24 shrink-0 rounded-full border-2 border-forest-600 object-cover shadow-lg"
+                          alt="Avatar"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 md:w-24 md:h-24 shrink-0 rounded-full bg-forest-800 ring-2 ring-gold-300 flex items-center justify-center text-2xl md:text-4xl font-bold text-white shadow-lg">
+                          {currentUser.email?.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1 md:w-full">
+                        <div className="flex items-center md:justify-center gap-1">
+                          <h3 className="font-bold text-lg text-ink truncate">
+                            {currentUser.user_metadata?.full_name ||
+                              currentUser.user_metadata?.name ||
+                              "User L360"}
+                          </h3>
+                          <button
+                            onClick={() => {
+                              setEditName(
+                                currentUser.user_metadata?.full_name ||
+                                  currentUser.user_metadata?.name ||
+                                  "",
+                              );
+                              setIsEditingProfile(true);
+                            }}
+                            className="cursor-pointer shrink-0 p-1.5 text-sand-500 hover:text-ink hover:bg-sand-100 rounded-lg transition-colors"
+                            title="Edit Name"
+                          >
+                            <Pencil size={14} />
+                          </button>
+                        </div>
+                        <p className="text-xs text-sand-600 truncate">{currentUser.email}</p>
+                        <div className="flex flex-wrap md:justify-center items-center gap-1.5 mt-3">
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
                               isAdmin
                                 ? "bg-forest-900 text-gold-300 border-forest-900"
                                 : subscriptionStatus === "Enterprise"
-                                ? "bg-gold-50 text-gold-700 border-gold-200"
-                                : subscriptionStatus === "Pro"
-                                  ? "bg-forest-50 text-forest-700 border-forest-200"
-                                  : "bg-sand-100 text-sand-700 border-sand-300"
+                                  ? "bg-gold-50 text-gold-700 border-gold-200"
+                                  : subscriptionStatus === "Pro"
+                                    ? "bg-forest-50 text-forest-700 border-forest-200"
+                                    : "bg-sand-100 text-sand-700 border-sand-300"
                             }`}
                           >
                             {isAdmin ? "Admin · All Access" : `${subscriptionStatus} Plan`}
-                          </div>
+                          </span>
                           {!isAdmin && (
-                            <div className="text-[10px] px-2 py-0.5 rounded-full bg-forest-50 text-forest-700 border border-forest-200">
-                              Status:{" "}
-                              {userRole === "monitor360" ? "Monitor" : "Active"}
-                            </div>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-forest-50 text-forest-700 border border-forest-200">
+                              Status: {userRole === "monitor360" ? "Monitor" : "Active"}
+                            </span>
                           )}
                           {SHOW_UPGRADE_BUTTON && !isAdmin && (
                             <button
                               onClick={() => setShowUpgradeModal(true)}
-                              className="cursor-pointer text-[10px] text-forest-700 hover:text-forest-700 hover:underline"
+                              className="cursor-pointer text-[10px] text-forest-700 hover:underline"
                             >
                               Upgrade
                             </button>
                           )}
                         </div>
-
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="bg-sand-50 rounded-lg p-2 border border-sand-100">
-                            <div className="text-[9px] text-sand-500 uppercase font-bold mb-1">
-                              Offline Maps
-                            </div>
-                            <div className="flex items-end justify-between">
-                              <span
-                                className={`text-xs font-bold ${mapUsage >= currentLimits.maps ? "text-brick-600" : "text-ink"}`}
-                              >
-                                {mapUsage}{" "}
-                                <span className="text-sand-500 font-normal">
-                                  / {currentLimits.maps}
-                                </span>
-                              </span>
-                              <div className="w-12 h-1 bg-sand-200 rounded-full overflow-hidden">
-                                <div
-                                  className={`h-full rounded-full ${mapUsage >= currentLimits.maps ? "bg-brick-500" : "bg-forest-700"}`}
-                                  style={{
-                                    width: `${Math.min(100, (mapUsage / currentLimits.maps) * 100)}%`,
-                                  }}
-                                ></div>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="bg-sand-50 rounded-lg p-2 border border-sand-100">
-                            <div className="text-[9px] text-sand-500 uppercase font-bold mb-1">
-                              Surveys / Markers
-                            </div>
-                            <div className="flex items-end justify-between">
-                              <span
-                                className={`text-xs font-bold ${surveyUsage >= currentLimits.surveys ? "text-brick-600" : "text-ink"}`}
-                              >
-                                {surveyUsage}{" "}
-                                <span className="text-sand-500 font-normal">
-                                  / {currentLimits.surveys}
-                                </span>
-                              </span>
-                              <div className="w-12 h-1 bg-sand-200 rounded-full overflow-hidden">
-                                <div
-                                  className={`h-full rounded-full ${surveyUsage >= currentLimits.surveys ? "bg-brick-500" : "bg-gold-400"}`}
-                                  style={{
-                                    width: `${Math.min(100, (surveyUsage / currentLimits.surveys) * 100)}%`,
-                                  }}
-                                ></div>
-                              </div>
-                            </div>
-                          </div>
-                          {storageUsage && (() => {
-                            const percent = usagePercent(storageUsage.usedBytes, storageUsage.limitBytes);
-                            return (
-                              <div
-                                className="col-span-2 bg-sand-50 rounded-lg p-2 border border-sand-100"
-                                title={(Object.keys(STORAGE_CATEGORY_LABELS) as (keyof typeof STORAGE_CATEGORY_LABELS)[])
-                                  .map((k) => `${STORAGE_CATEGORY_LABELS[k]}: ${formatBytes(storageUsage.breakdown[k])}`)
-                                  .join("\n")}
-                              >
-                                <div className="text-[9px] text-sand-500 uppercase font-bold mb-1">
-                                  Cloud Storage
-                                </div>
-                                <div className="flex items-end justify-between gap-2">
-                                  <span className={`text-xs font-bold ${percent !== null && percent >= 90 ? "text-brick-600" : "text-ink"}`}>
-                                    {formatBytes(storageUsage.usedBytes)}{" "}
-                                    <span className="text-sand-500 font-normal">
-                                      / {storageUsage.limitBytes === null ? "Unlimited" : formatBytes(storageUsage.limitBytes)}
-                                    </span>
-                                  </span>
-                                  <div className="w-20 h-1 bg-sand-200 rounded-full overflow-hidden mb-1">
-                                    <div
-                                      className={`h-full rounded-full ${usageBarClass(percent)}`}
-                                      style={{ width: `${percent ?? 0}%` }}
-                                    ></div>
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })()}
-                        </div>
                       </div>
                     </div>
+                  )}
+
+                  {/* Usage */}
+                  <div className="space-y-3">
+                    <h4 className="text-[10px] font-bold text-sand-500 uppercase tracking-wider">
+                      Usage
+                    </h4>
+                    <UsageMeter
+                      label="Offline Maps"
+                      value={String(mapUsage)}
+                      limit={String(currentLimits.maps)}
+                      percent={Math.min(100, (mapUsage / currentLimits.maps) * 100)}
+                      barClass={mapUsage >= currentLimits.maps ? "bg-brick-500" : "bg-forest-700"}
+                      warn={mapUsage >= currentLimits.maps}
+                    />
+                    <UsageMeter
+                      label="Surveys / Markers"
+                      value={String(surveyUsage)}
+                      limit={String(currentLimits.surveys)}
+                      percent={Math.min(100, (surveyUsage / currentLimits.surveys) * 100)}
+                      barClass={surveyUsage >= currentLimits.surveys ? "bg-brick-500" : "bg-gold-400"}
+                      warn={surveyUsage >= currentLimits.surveys}
+                    />
+                    {storageUsage && (() => {
+                      const percent = usagePercent(storageUsage.usedBytes, storageUsage.limitBytes);
+                      return (
+                        <UsageMeter
+                          label="Cloud Storage"
+                          value={formatBytes(storageUsage.usedBytes)}
+                          limit={storageUsage.limitBytes === null ? "Unlimited" : formatBytes(storageUsage.limitBytes)}
+                          percent={percent ?? 0}
+                          barClass={usageBarClass(percent)}
+                          warn={percent !== null && percent >= 90}
+                          title={(Object.keys(STORAGE_CATEGORY_LABELS) as (keyof typeof STORAGE_CATEGORY_LABELS)[])
+                            .map((k) => `${STORAGE_CATEGORY_LABELS[k]}: ${formatBytes(storageUsage.breakdown[k])}`)
+                            .join("\n")}
+                        />
+                      );
+                    })()}
                   </div>
-                )}
+                </aside>
 
-                {/* Quick Actions Grid */}
-                <div className="grid grid-cols-2 gap-3 mb-6">
-                  <button
-                    onClick={() => {
-                      createNewSurvey(); // Reset state for fresh survey
-                      createGroup(); // Start Navigator Mode (new survey group)
-                      setShowMenu(false);
-                    }}
-                    className="cursor-pointer flex flex-col items-center gap-2 p-4 rounded-xl bg-sand-50 hover:bg-sand-100 border border-sand-100 hover:border-sand-300 transition-all group"
-                  >
-                    <div className="p-2 bg-forest-50 rounded-lg text-forest-700 group-hover:bg-forest-700 group-hover:text-white transition-colors">
-                      <Plus size={20} />
-                    </div>
-                    <span className="text-xs font-medium text-sand-700">
-                      New Survey
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowOfflineManager(true);
-                      setShowMenu(false);
-                    }}
-                    className="cursor-pointer flex flex-col items-center gap-2 p-4 rounded-xl bg-sand-50 hover:bg-sand-100 border border-sand-100 hover:border-sand-300 transition-all group"
-                  >
-                    <div className="p-2 bg-forest-50 rounded-lg text-forest-700 group-hover:bg-forest-700 group-hover:text-white transition-colors">
-                      <WifiOff size={20} />
-                    </div>
-                    <span className="text-xs font-medium text-sand-700">
-                      Offline Map
-                    </span>
-                  </button>
-                </div>
+                {/* Right: actions, surveys, administration */}
+                <section className="p-5 md:p-6 space-y-6 min-w-0">
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => {
+                        createNewSurvey(); // Reset state for fresh survey
+                        createGroup(); // Start Navigator Mode (new survey group)
+                        setShowMenu(false);
+                      }}
+                      className="cursor-pointer flex flex-col md:flex-row items-center md:items-start gap-2 md:gap-3 p-4 rounded-xl bg-sand-50 hover:bg-sand-100 border border-sand-100 hover:border-sand-300 transition-all group text-center md:text-left"
+                    >
+                      <div className="p-2 bg-forest-50 rounded-lg text-forest-700 group-hover:bg-forest-700 group-hover:text-white transition-colors shrink-0">
+                        <Plus size={20} />
+                      </div>
+                      <div>
+                        <div className="text-sm font-bold text-ink">New Survey</div>
+                        <div className="hidden md:block text-[11px] text-sand-500">
+                          Plot points with Navigator
+                        </div>
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowOfflineManager(true);
+                        setShowMenu(false);
+                      }}
+                      className="cursor-pointer flex flex-col md:flex-row items-center md:items-start gap-2 md:gap-3 p-4 rounded-xl bg-sand-50 hover:bg-sand-100 border border-sand-100 hover:border-sand-300 transition-all group text-center md:text-left"
+                    >
+                      <div className="p-2 bg-forest-50 rounded-lg text-forest-700 group-hover:bg-forest-700 group-hover:text-white transition-colors shrink-0">
+                        <WifiOff size={20} />
+                      </div>
+                      <div>
+                        <div className="text-sm font-bold text-ink">Offline Map</div>
+                        <div className="hidden md:block text-[11px] text-sand-500">
+                          Download areas for no signal
+                        </div>
+                      </div>
+                    </button>
+                  </div>
 
-                {/* Survey / Marker Lists */}
-                <div className="space-y-1 mb-3">
-                  <div className="p-3">
-                    <div className="text-xs font-bold text-sand-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                      <FolderOpen size={12} />
-                      Survey / Marker Lists
+                  {/* Survey / Marker Lists */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-[10px] font-bold text-sand-500 uppercase tracking-wider flex items-center gap-2">
+                        <FolderOpen size={12} />
+                        Survey / Marker Lists
+                      </h4>
+                      <span className="text-[10px] text-sand-400">{savedSurveys.length} saved</span>
                     </div>
-                    <div className="space-y-1 max-h-32 overflow-y-auto custom-scrollbar">
+                    <div className="rounded-xl border border-sand-100 divide-y divide-sand-100 max-h-56 overflow-y-auto custom-scrollbar">
                       {isSyncing && savedSurveys.length === 0 ? (
-                        <div className="flex items-center gap-2 py-2">
-                          <Loader2
-                            size={12}
-                            className="animate-spin text-forest-700"
-                          />
-                          <span className="text-[10px] text-sand-500">
-                            Loading surveys...
-                          </span>
+                        <div className="flex items-center gap-2 p-4">
+                          <Loader2 size={12} className="animate-spin text-forest-700" />
+                          <span className="text-[11px] text-sand-500">Loading surveys...</span>
                         </div>
                       ) : savedSurveys.length === 0 ? (
-                        <div className="text-[10px] text-sand-400 italic">
+                        <div className="p-4 text-[11px] text-sand-400 italic text-center">
                           No saved surveys found
                         </div>
                       ) : (
                         savedSurveys.map((survey) => (
                           <div
                             key={survey.id}
-                            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs group transition-colors ${currentSurveyId === survey.id ? "bg-forest-50 text-forest-700 border border-forest-200" : "hover:bg-sand-50 text-sand-600 hover:text-sand-800"}`}
+                            className={`flex items-center justify-between px-3 py-2.5 text-xs group transition-colors ${currentSurveyId === survey.id ? "bg-forest-50 text-forest-700" : "hover:bg-sand-50 text-sand-700"}`}
                           >
                             <button
                               onClick={() => {
                                 loadSurvey(survey.id);
                                 setShowMenu(false);
                               }}
-                              className="cursor-pointer flex-1 text-left truncate mr-2"
+                              className="cursor-pointer flex-1 min-w-0 text-left mr-2"
                             >
-                              <span className="block truncate">
-                                {survey.name}
-                              </span>
-                              <span className="text-[9px] opacity-50 block">
-                                {new Date(
-                                  survey.updated_at,
-                                ).toLocaleDateString()}
+                              <span className="block truncate font-medium">{survey.name}</span>
+                              <span className="text-[10px] text-sand-500 block">
+                                Updated {new Date(survey.updated_at).toLocaleDateString()}
                               </span>
                             </button>
-
+                            {currentSurveyId === survey.id && (
+                              <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-forest-700 text-white mr-1">
+                                Open
+                              </span>
+                            )}
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setDeleteConfirmId(survey.id);
                               }}
-                              className="cursor-pointer p-2 md:p-1.5 hover:bg-brick-50 text-sand-500 hover:text-brick-600 rounded transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100 flex-shrink-0"
+                              className="cursor-pointer p-2 md:p-1.5 hover:bg-brick-50 text-sand-500 hover:text-brick-600 rounded transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100 shrink-0"
                               title="Delete Survey"
                             >
                               <Trash2 size={14} className="md:w-3 md:h-3" />
@@ -981,43 +966,51 @@ export const AuthControl = () => {
                       )}
                     </div>
                   </div>
-                </div>
 
-                {/* Admin: User Management */}
-                {isAdmin && (
-                  <button
-                    onClick={() => {
-                      setShowMenu(false);
-                      setShowUserManagement(true);
-                    }}
-                    className="cursor-pointer w-full mb-3 flex items-center justify-center gap-2 p-3 rounded-xl bg-forest-50 hover:bg-forest-50 text-forest-700 hover:text-forest-700 border border-forest-200 transition-all font-medium text-sm"
-                  >
-                    <Users size={16} /> Manage Users & Plans
-                  </button>
-                )}
+                  {/* Administration */}
+                  {isAdmin && (
+                    <div>
+                      <h4 className="text-[10px] font-bold text-sand-500 uppercase tracking-wider mb-2">
+                        Administration
+                      </h4>
+                      <div className="grid sm:grid-cols-2 gap-3">
+                        <button
+                          onClick={() => {
+                            setShowMenu(false);
+                            setShowUserManagement(true);
+                          }}
+                          className="cursor-pointer flex items-center justify-center gap-2 p-3 rounded-xl bg-forest-50 hover:bg-forest-100 text-forest-700 border border-forest-200 transition-all font-medium text-sm"
+                        >
+                          <Users size={16} /> Manage Users & Plans
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowMenu(false);
+                            setShowAccountRequests(true);
+                          }}
+                          className="cursor-pointer flex items-center justify-center gap-2 p-3 rounded-xl bg-forest-50 hover:bg-forest-100 text-forest-700 border border-forest-200 transition-all font-medium text-sm"
+                        >
+                          <Inbox size={16} /> Account Requests
+                          {newRequestCount > 0 && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brick-600 text-white">
+                              {newRequestCount > 99 ? "99+" : newRequestCount} new
+                            </span>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </section>
+              </div>
 
-                {/* Admin: Account Requests */}
-                {isAdmin && (
-                  <button
-                    onClick={() => {
-                      setShowMenu(false);
-                      setShowAccountRequests(true);
-                    }}
-                    className="cursor-pointer w-full mb-3 flex items-center justify-center gap-2 p-3 rounded-xl bg-forest-50 hover:bg-forest-100 text-forest-700 border border-forest-200 transition-all font-medium text-sm"
-                  >
-                    <Inbox size={16} /> Account Requests
-                    {newRequestCount > 0 && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brick-600 text-white">
-                        {newRequestCount > 99 ? "99+" : newRequestCount} new
-                      </span>
-                    )}
-                  </button>
-                )}
-
-                {/* Logout Button */}
+              {/* Footer */}
+              <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-3 border-t border-sand-100 bg-sand-50">
+                <span className="hidden sm:block text-[11px] text-sand-500 truncate">
+                  Signed in as <strong className="text-sand-700">{currentUser.email}</strong>
+                </span>
                 <button
                   onClick={() => setShowLogoutConfirm(true)}
-                  className="cursor-pointer w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-brick-50 hover:bg-brick-50 text-brick-600 hover:text-brick-600 border border-brick-200 transition-all font-medium text-sm"
+                  className="cursor-pointer w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brick-50 hover:bg-brick-100 text-brick-600 border border-brick-200 transition-all font-medium text-sm"
                 >
                   <LogOut size={16} /> Sign Out
                 </button>
