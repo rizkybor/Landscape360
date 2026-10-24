@@ -37,6 +37,8 @@
 - **GPS Tracking (Strava UX)**: Record tracks seamlessly as **Activities** (Start/Stop) with real-time distance, points, and timer.
 - **Smart Offline Sync**: Tracks are buffered locally (IndexedDB) during signal loss or airplane mode, then synced seamlessly on reconnect.
 - **Activity Recall & Export**: Recall saved tracking sessions onto the map and download them as standard **GPX** files for cross-platform use.
+- **Track Recorder**: Record personal GPS tracks **online or offline** (IndexedDB first, synced to the cloud), with distance, moving time and elevation stats, sharing by email and GPX export. See [TrackRecorder.md](TrackRecorder.md).
+- **Marked Locations**: Save one or many places with full details (name, category, coordinates, elevation, area/address, contact, description, tags). Set the position by clicking the map (elevation from terrain), the map center or device GPS. Share one or several locations with other accounts by **email or display name**, and export them as **GPX** waypoints.
 - **Visual Feedback**: Dynamic marker shapes (Diamond vs Circle) and colors (Indigo vs Yellow) to distinguish edited points.
 - **Optimized Controls**:
   - **Desktop**: Smooth scroll zoom (1/600 rate), inertia-based panning, and orbit controls.
@@ -67,11 +69,25 @@ Landscape 360 offers flexible plans tailored to your needs, integrated with a Ro
 | **GPS Tracking** | ❌ Disabled | ✅ Broadcast & View Self | ✅ Broadcast & View Self |
 | **Realtime Monitoring** | ❌ Disabled | ❌ Disabled | ✅ **Monitor All Users** (Requires `monitor360` Role) |
 | **Activity Export** | ❌ Disabled | ✅ Download GPX (Self) | ✅ Download GPX (All Users) |
+| **Track Recorder** | 👁️ View own & shared | 👁️ View own & shared, rename | ✅ Record, share & GPX |
+| **Marked Locations** | 10 locations, receive shares | 100 locations, ✅ share | 1,000 locations, ✅ share |
+| **Cloud Storage** (default) | 10 MB | 100 MB | 1 GB |
 | **Support** | Community | Priority | 24/7 Dedicated |
 
 ### 🔐 User Roles
 - **`pengguna360`**: Standard user. Can track their own location and broadcast it (if Pro/Enterprise).
 - **`monitor360`**: Command center role. Can monitor all active users on the map in real-time and upload/manage **Custom Basemaps**. **Requires Enterprise Subscription.**
+- **Admin** (`profiles.is_admin`, one account): Full access to every feature regardless of plan, including unlimited Marked Locations and the **All Users** view of every account's locations. Manages accounts from the user menu: **Account Requests** (approve to create the account, or reject) and **Manage Users & Plans**, which also has **Send Email** (prepares the email from a template and opens it in Gmail, where the admin picks the sender and sends it) and **Login History** (last sign-in plus the latest sign-ins with device/browser, recorded from the moment the migration is applied).
+
+### 📝 Requesting an Account
+Visitors request an account from **Sign In / Register → Request Account**. Requests are stored in Supabase (`account_requests`) through `/api/account-requests`, which validates input, blocks bots with a honeypot field, keeps one open request per email and rate-limits submissions. The admin approves or rejects them in **Account Requests**.
+
+### 💾 Cloud Storage Quotas
+Each account has a cloud storage limit shared by its recorded tracks, marked locations, surveys and custom basemap files (stored, compressed sizes). Defaults are Free 10 MB, Pro 100 MB, Enterprise 1 GB; the admin is unlimited.
+- **Enforced in the database** by triggers (`20261024000004_storage_quotas.sql`): new or growing data is rejected once the limit is reached, while deleting or shrinking data always works. Nothing is deleted automatically.
+- **Managed by the admin** in **Manage Users & Plans**: usage per account (with a per-feature breakdown), sort by usage, a custom limit per account, and the **Storage** button to change each plan's default (`plan_storage_limits`).
+- **Users** see their own usage in the **User Account** menu.
+- Offline maps live on the device (IndexedDB) and keep their own per-plan limits.
 
 > **Note:** GPS Tracking & Monitoring features require an active internet connection. Offline buffering (Smart Reconnect) is available for temporary signal loss.
 
@@ -126,13 +142,20 @@ src/
     VITE_SUPABASE_ANON_KEY=your_supabase_key
     VITE_ENABLE_GPS_TRACKER=...
     ```
+    The admin API functions (`api/admin-users.ts`, `api/account-requests.ts`) also need `SUPABASE_SERVICE_ROLE_KEY` (a `sb_secret_...` key) in the Vercel environment variables. Never prefix it with `VITE_` and never commit it.
 
-4.  **Run Development Server**:
+4.  **Database**: Run the SQL files in `supabase/migrations/` in order in the Supabase SQL Editor. The newest features need:
+    - `20261024000002_create_account_requests.sql` (Request Account)
+    - `20261024000003_create_marked_locations.sql` (Marked Locations)
+    - `20261024000004_storage_quotas.sql` (Cloud storage quotas, Track Recorder rename for Pro)
+    - `20261024000005_login_history.sql` (Login history)
+
+5.  **Run Development Server**:
     ```bash
     npm run dev
     ```
 
-5.  **Build for Production**:
+6.  **Build for Production**:
     ```bash
     npm run build
     ```

@@ -4,18 +4,20 @@ Track Recorder merekam **jejak GPS pribadi** (seperti Strava / Gaia GPS): rute, 
 
 ## Hak Akses
 
-| Akun | Merekam & membagikan | Melihat track sendiri & yang dibagikan |
-|---|---|---|
-| Free | ❌ Tab Record terkunci ("Hubungi Admin") | ✅ |
-| Pro | ❌ Tab Record terkunci ("Hubungi Admin") | ✅ |
-| Enterprise (User maupun Monitor) | ✅ | ✅ |
-| Admin (`profiles.is_admin`) | ✅ | ✅ |
+| Akun | Merekam & membagikan | Ganti nama track cloud | Melihat track sendiri & yang dibagikan |
+|---|---|---|---|
+| Free | ❌ Tab Record terkunci ("Hubungi Admin") | ❌ (tombol Rename disembunyikan) | ✅ |
+| Pro | ❌ Tab Record terkunci ("Hubungi Admin") | ✅ | ✅ |
+| Enterprise (User maupun Monitor) | ✅ | ✅ | ✅ |
+| Admin (`profiles.is_admin`) | ✅ | ✅ | ✅ |
 
-Panel Track Recorder bisa dibuka semua akun yang login (untuk melihat track lama dan track yang dibagikan); **merekam dan membagikan** hanya Enterprise & admin.
+Panel Track Recorder bisa dibuka semua akun yang login (untuk melihat track lama dan track yang dibagikan); **merekam dan membagikan** hanya Enterprise & admin. Track yang hanya ada di perangkat (belum pernah ke cloud) selalu bisa diganti namanya.
 
 Dicek di dua lapis:
-1. **UI**: `canRecordTracks()` di `src/store/useTrackRecorderStore.ts`.
-2. **Database**: fungsi `can_use_track_recorder()` + RLS di `recorded_tracks` dan `recorded_track_shares`. Jadi walaupun UI diakali, server tetap menolak.
+1. **UI**: `canRecordTracks()` dan `canRenameCloudTracks()` di `src/store/useTrackRecorderStore.ts`.
+2. **Database**: fungsi `can_use_track_recorder()` + RLS di `recorded_tracks` dan `recorded_track_shares`. Ganti nama lewat RPC `rename_recorded_track()` (`20261024000004_storage_quotas.sql`) yang hanya mengubah kolom `name`, sehingga Pro bisa rename tanpa bisa mengubah titik GPS. Jadi walaupun UI diakali, server tetap menolak.
+
+Track juga dihitung dalam **kuota penyimpanan cloud** akun (lihat README, "Cloud Storage Quotas"). Jika kuota penuh, sinkronisasi ke cloud ditolak, tetapi rekaman tetap aman di perangkat dan bisa di-upload lagi setelah ada ruang.
 
 Jika plan turun (mis. Enterprise → Pro) saat sedang merekam, rekaman **di-pause, bukan dihapus**. Track lama tetap bisa dilihat & dihapus.
 

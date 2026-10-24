@@ -8,6 +8,7 @@ import { useCustomBasemapStore } from "../store/useCustomBasemapStore";
 import { AuthControl } from "./AuthControl";
 import { CONTACT_ADMIN_LABEL } from "../config";
 import { canRecordTracks, useTrackRecorderStore } from "../store/useTrackRecorderStore";
+import { useMarkedLocationStore } from "../store/useMarkedLocationStore";
 import mapboxgl from "mapbox-gl";
 import type { MapRef } from "react-map-gl/mapbox";
 import {
@@ -32,6 +33,9 @@ import {
   Play,
   Square,
   Footprints,
+  MapPinned,
+  UserPlus,
+  HardDrive,
 } from "lucide-react";
 import landscapeLogo from "../assets/LandscapeLogo.svg";
 import streetsView from "../assets/Street-View.png";
@@ -82,6 +86,14 @@ export const ControlPanel = () => {
   const canRecordTrack = canRecordTracks({ hasUser: !!user, subscriptionStatus, isAdmin });
   // Any signed-in account can open it to view own and shared tracks; recording needs canRecordTrack
   const canOpenTrackRecorder = !!user;
+  const isMarkedLocationsOpen = useMarkedLocationStore((s) => s.isPanelOpen);
+  const markedLocationCount = useMarkedLocationStore((s) => s.locations.length);
+  // Both panels use the same spot on screen; the Marked Locations panel closes itself when
+  // the Track Recorder opens
+  const toggleMarkedLocations = () => {
+    if (!isMarkedLocationsOpen) useTrackRecorderStore.getState().setPanelOpen(false);
+    useMarkedLocationStore.getState().togglePanel();
+  };
   const { isRoutePlannerEnabled, setRoutePlannerEnabled } = useRouteStore();
   const {
     isLiveTrackingEnabled,
@@ -681,6 +693,45 @@ export const ControlPanel = () => {
                             : canRecordTrack
                               ? "Online / Offline"
                               : "View & Shared"}
+                      </div>
+                    )}
+                  </div>
+                </button>
+
+                {/* Marked Locations (all signed-in accounts; limits & sharing per plan) */}
+                <button
+                  onClick={user ? toggleMarkedLocations : undefined}
+                  disabled={!user}
+                  className={`${isMobile ? "flex-none w-28 snap-center h-full" : "col-span-1 w-full"} flex items-center rounded-xl border transition-all duration-200 group ${
+                    !user
+                      ? "border-sand-100 bg-sand-50 opacity-60 cursor-not-allowed"
+                      : isMarkedLocationsOpen
+                        ? "cursor-pointer bg-gold-50 border-gold-200 "
+                        : "cursor-pointer bg-sand-50 border-sand-200 hover:bg-sand-100"
+                  } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
+                >
+                  <div
+                    className={`p-2 rounded-lg transition-colors ${
+                      !user
+                        ? "bg-sand-100 text-sand-500"
+                        : isMarkedLocationsOpen
+                          ? "bg-gold-500 text-white shadow-lg "
+                          : "bg-sand-100 text-sand-600 group-hover:text-ink"
+                    } ${isMobile ? "mb-1" : ""}`}
+                  >
+                    {user ? <MapPinned size={isMobile ? 18 : 16} /> : <Lock size={isMobile ? 18 : 16} />}
+                  </div>
+                  <div className="flex-1">
+                    <div
+                      className={`font-bold transition-colors ${
+                        !user ? "text-sand-600" : isMarkedLocationsOpen ? "text-ink" : "text-sand-700"
+                      } ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
+                    >
+                      {isMobile ? "Marked" : "Marked Locations"}
+                    </div>
+                    {!isMobile && (
+                      <div className={`text-[10px] ${!user ? "text-sand-400" : "text-sand-500"}`}>
+                        {!user ? "Login required" : `${markedLocationCount} saved`}
                       </div>
                     )}
                   </div>
@@ -1718,6 +1769,46 @@ const GetStartedModal = ({
                 icon: <Layers size={18} />,
                 title: "Custom Basemaps [Enterprise Account]",
                 desc: "Upload your own GeoTIFF/GeoPDF maps as overlays. Supports manual georeferencing and opacity control. (Enterprise & Monitor360 only)",
+              },
+              {
+                icon: <MapPinned size={18} />,
+                title: "Marked Locations [All Accounts]",
+                desc: (
+                  <>
+                    Save camps, water sources, summits and more with full details, pick
+                    them on the map, and export as GPX. Share one or several locations with
+                    other users by email or name.
+                    <div className="mt-2 grid grid-cols-1 gap-1 text-xs opacity-80">
+                      <span>
+                        • <strong>Free:</strong> 10 locations, receive shares
+                      </span>
+                      <span>
+                        • <strong>Pro:</strong> 100 locations, share
+                      </span>
+                      <span>
+                        • <strong>Enterprise:</strong> 1,000 locations, share
+                      </span>
+                      <span>
+                        • <strong>Admin:</strong> unlimited, sees all accounts
+                      </span>
+                    </div>
+                  </>
+                ),
+              },
+              {
+                icon: <Footprints size={18} />,
+                title: "Track Recorder [Enterprise Account]",
+                desc: "Record personal GPS tracks online or offline with distance, duration and elevation. Share tracks by email and export GPX. Every signed-in account can view its own and shared tracks; Pro accounts can also rename their cloud tracks.",
+              },
+              {
+                icon: <HardDrive size={18} />,
+                title: "Cloud Storage",
+                desc: "Tracks, marked locations, surveys and custom basemaps share your account's storage: Free 10 MB, Pro 100 MB, Enterprise 1 GB, Admin unlimited. Check your usage in the User Account menu; the admin can raise your limit.",
+              },
+              {
+                icon: <UserPlus size={18} />,
+                title: "Request an Account",
+                desc: "No account yet? Open Sign In / Register, choose Request Account and fill in the form. The admin will email your login details after approval.",
               },
             ].map((item, i) => (
               <div key={i} className="flex gap-4 group">

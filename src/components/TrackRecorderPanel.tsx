@@ -24,7 +24,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { useSurveyStore } from "../store/useSurveyStore";
-import { canRecordTracks, useTrackRecorderStore } from "../store/useTrackRecorderStore";
+import { canRecordTracks, canRenameCloudTracks, useTrackRecorderStore } from "../store/useTrackRecorderStore";
 import { TrackShareManager } from "./TrackShareManager";
 import { CONTACT_ADMIN_LABEL } from "../config";
 import {
@@ -98,6 +98,7 @@ const Stat = ({ label, value }: { label: string; value: string }) => (
 export const TrackRecorderPanel = () => {
   const { user, subscriptionStatus, isAdmin } = useSurveyStore();
   const canRecord = canRecordTracks({ hasUser: !!user, subscriptionStatus, isAdmin });
+  const canRenameCloud = canRenameCloudTracks({ hasUser: !!user, subscriptionStatus, isAdmin });
 
   const {
     isPanelOpen,
@@ -461,6 +462,9 @@ export const TrackRecorderPanel = () => {
                   isOnline &&
                   (t.syncStatus === "local" || t.syncStatus === "pending" || t.syncStatus === "error");
                 const badge = SYNC_BADGES[t.syncStatus];
+                // Same rule as renameTrack in the store: a track that reached the cloud is renamed there
+                const isInCloud = t.syncStatus === "remote" || !!t.syncedAt;
+                const canRename = !isInCloud || canRenameCloud;
                 return (
                   <div
                     key={t.id}
@@ -595,17 +599,19 @@ export const TrackRecorderPanel = () => {
                                 <CloudUpload size={14} />
                               </button>
                             )}
-                            <button
-                              onClick={() => {
-                                setRenamingId(t.id);
-                                setRenameValue(t.name);
-                              }}
-                              disabled={isBusy}
-                              className="cursor-pointer p-1.5 rounded-lg hover:bg-sand-100 text-sand-700 transition-colors disabled:opacity-50"
-                              title="Rename"
-                            >
-                              <Pencil size={14} />
-                            </button>
+                            {canRename && (
+                              <button
+                                onClick={() => {
+                                  setRenamingId(t.id);
+                                  setRenameValue(t.name);
+                                }}
+                                disabled={isBusy}
+                                className="cursor-pointer p-1.5 rounded-lg hover:bg-sand-100 text-sand-700 transition-colors disabled:opacity-50"
+                                title="Rename"
+                              >
+                                <Pencil size={14} />
+                              </button>
+                            )}
                             <button
                               onClick={() => setConfirmDeleteId(t.id)}
                               disabled={isBusy}

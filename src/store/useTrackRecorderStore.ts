@@ -27,6 +27,13 @@ export const canRecordTracks = (params: {
   isAdmin: boolean;
 }) => params.hasUser && (params.isAdmin || params.subscriptionStatus === 'Enterprise');
 
+// Renaming a cloud track: Pro, Enterprise and admin (tracks on this device only can always be renamed)
+export const canRenameCloudTracks = (params: {
+  hasUser: boolean;
+  subscriptionStatus: string;
+  isAdmin: boolean;
+}) => params.hasUser && (params.isAdmin || params.subscriptionStatus === 'Pro' || params.subscriptionStatus === 'Enterprise');
+
 export type GpsFix = Omit<TrackPoint, 'segment'>;
 
 interface TrackRecorderStore {
