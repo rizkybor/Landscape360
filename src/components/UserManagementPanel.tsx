@@ -485,8 +485,10 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
               </div>
           </div>
 
-          <div className="flex items-center gap-1.5 shrink-0">
-            {isBusy && <Loader2 size={14} className="animate-spin text-sand-600" />}
+          {/* Phones: plan and role on one line, the actions below, so nothing runs past the card */}
+          <div className="flex flex-wrap md:flex-nowrap items-center gap-1.5 md:shrink-0">
+            <div className="flex items-center gap-1.5 w-full md:w-auto">
+            {isBusy && <Loader2 size={14} className="shrink-0 animate-spin text-sand-600" />}
             {u.isAdmin ? (
               <span className="text-[10px] text-sand-600 px-2" title="Admins have access to every feature">
                 All access
@@ -497,7 +499,7 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
               value={u.plan}
               disabled={isSelf || isBusy}
               onChange={(e) => handleFieldChange(u, { plan: e.target.value as Plan })}
-              className={selectClass}
+              className={`${selectClass} flex-1 min-w-0 md:flex-none`}
               title={isSelf ? "You cannot change your own plan" : "Plan"}
             >
               {PLANS.map((p) => (
@@ -508,7 +510,7 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
               value={u.role}
               disabled={isSelf || isBusy}
               onChange={(e) => handleFieldChange(u, { role: e.target.value as Role })}
-              className={selectClass}
+              className={`${selectClass} flex-1 min-w-0 md:flex-none`}
               title={isSelf ? "You cannot change your own role" : "Role"}
             >
               {ROLES.map((r) => (
@@ -517,6 +519,8 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
             </select>
             </>
             )}
+            </div>
+            <div className="flex items-center justify-between md:justify-start gap-1 md:gap-1.5 w-full md:w-auto">
             <button
               onClick={() => {
                 setEmailUserId(emailUserId === u.id ? null : u.id);
@@ -635,6 +639,7 @@ export const UserManagementPanel = ({ currentUserId, onClose, onBack }: Props) =
                 <Trash2 size={14} />
               </button>
             )}
+            </div>
           </div>
         </div>
 
