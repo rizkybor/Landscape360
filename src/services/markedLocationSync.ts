@@ -6,6 +6,7 @@ import type {
   MarkedLocationShare,
   SharedMarkedLocation,
   ShareResult,
+  ShareSuggestion,
 } from '../types/markedLocation';
 
 // Marked locations (tables marked_locations / marked_location_shares + RPCs in
@@ -109,6 +110,14 @@ export const shareLocations = async (locationIds: string[], recipient: string): 
   const row = (data as (Omit<ShareRow, 'created_at'> & { shared_count: number })[] | null)?.[0];
   if (!row) throw new Error('Share failed');
   return { userId: row.shared_with, name: row.name, emailMasked: row.email_masked, sharedCount: row.shared_count };
+};
+
+export const fetchShareSuggestions = async (query: string): Promise<ShareSuggestion[]> => {
+  const { data, error } = await supabase.rpc('marked_location_share_suggestions', { p_query: query });
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as { user_id: string; name: string | null; email_masked: string | null; recent: boolean }[]).map(
+    (row) => ({ userId: row.user_id, name: row.name, emailMasked: row.email_masked, recent: row.recent }),
+  );
 };
 
 export const listShares = async (locationId: string): Promise<MarkedLocationShare[]> => {
