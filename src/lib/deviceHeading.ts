@@ -61,11 +61,45 @@ export const requestCompassPermission = async (): Promise<boolean> => {
  * Android sends readings without asking, iOS starts once requestCompassPermission() is
  * allowed. Returns a function that stops it.
  */
-export const watchDeviceHeading = (onHeading: (deg: number | null) => void) => {
+export const watchDeviceHeading = (onHeading: (deg: number) => void) => {
   if (typeof window === 'undefined') return () => undefined;
-  const absoluteEvent = 'ondeviceorientationabsolute' in window;
-  const eventName = absoluteEvent ? 'deviceorientationabsolute' : 'deviceorientation';
-  const handler = (e: Event) => onHeading(headingFromEvent(e as OrientationEventWithCompass));
-  window.addEventListener(eventName, handler);
-  return () => window.removeEventListener(eventName, handler);
+  // Chrome on Android sends the compass on deviceorientationabsolute; iOS (with
+  // webkitCompassHeading), Samsung Internet and Firefox send it on deviceorientation.
+  // Listen to both and take whichever has a compass reading; once the absolute event
+  // has delivered, the other one (relative on Chrome) is ignored.
+  let absoluteWorks = false;
+  const onAbsolute = (e: Event) => {
+    const deg = headingFromEvent(e as OrientationEventWithCompass);
+    if (deg === null) return;
+    absoluteWorks = true;
+    onHeading(deg);
+  };
+  const onOrientation = (e: Event) => {
+    if (absoluteWorks) return;
+    const deg = headingFromEvent(e as OrientationEventWithCompass);
+    if (deg !== null) onHeading(deg);
+  };
+  window.addEventListener('deviceorientationabsolute', onAbsolute);
+  window.addEventListener('deviceorientation', onOrientation);
+  return () => {
+    window.removeEventListener('deviceorientationabsolute', onAbsolute);
+    window.removeEventListener('deviceorientation', onOrientation);
+  };
+};
+
+/**
+ * iOS only shares the compass after a tap: ask on the first tap anywhere in the app (the
+ * "Find my location" button asks too). Returns a function that stops waiting.
+ */
+export const askCompassOnFirstTap = () => {
+  if (typeof document === 'undefined' || permission !== 'unknown') return () => undefined;
+  // "click" only: it does not fire after a map drag, so the prompt waits for a real tap.
+  // requestPermission runs synchronously inside the handler, as Safari requires.
+  const ask = () => {
+    stop();
+    requestCompassPermission();
+  };
+  const stop = () => document.removeEventListener('click', ask, true);
+  document.addEventListener('click', ask, true);
+  return stop;
 };

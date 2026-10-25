@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Marker } from 'react-map-gl/mapbox';
-import { watchDeviceHeading } from '../lib/deviceHeading';
+import { askCompassOnFirstTap, watchDeviceHeading } from '../lib/deviceHeading';
 
 // Below this change (degrees) the heading beam is not moved, so sensor noise does not shake it
 const MIN_TURN_DEG = 1.5;
@@ -30,7 +30,6 @@ export const UserLocationMarker = ({ initialLocation }: { initialLocation?: [num
   useEffect(() => {
     let frame = 0;
     let latest: number | null = null;
-    let missing = 0;
     const apply = () => {
       frame = 0;
       const el = headingRef.current;
@@ -45,19 +44,16 @@ export const UserLocationMarker = ({ initialLocation }: { initialLocation?: [num
       shownAngle.current = next;
       el.style.transform = `rotate(${next}deg)`;
     };
+    const stopAsking = askCompassOnFirstTap();
+    // Only real compass readings arrive here; once one did, the needle stays
     const stop = watchDeviceHeading((deg) => {
-      if (deg === null) {
-        // A few empty readings in a row: this device has no usable compass
-        if (++missing > 10) setHasCompass(false);
-        return;
-      }
-      missing = 0;
       latest = deg;
       setHasCompass(true);
       if (!frame) frame = requestAnimationFrame(apply);
     });
     return () => {
       stop();
+      stopAsking();
       if (frame) cancelAnimationFrame(frame);
     };
   }, []);
