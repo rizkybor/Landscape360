@@ -48,32 +48,7 @@ const loadMarkerImage = (category: MarkedLocationCategory, kind: VisibleLocation
   }
   return image;
 };
-// Rounded white "pill" behind the name above each marker; stretches to fit the text
-const LABEL_BG = 'marked-label-bg';
-const addLabelBackground = (map: MapboxMap) => {
-  if (map.hasImage(LABEL_BG)) return;
-  const size = 48; // 24 px at pixelRatio 2
-  const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
-  ctx.fillStyle = '#ffffff';
-  ctx.strokeStyle = '#e7e2d4';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.roundRect(1, 1, size - 2, size - 2, 16);
-  ctx.fill();
-  ctx.stroke();
-  map.addImage(LABEL_BG, ctx.getImageData(0, 0, size, size), {
-    pixelRatio: 2,
-    stretchX: [[18, 30]],
-    stretchY: [[18, 30]],
-    content: [12, 8, 36, 40],
-  });
-};
-
 const addMarkerImages = (map: MapboxMap) => {
-  addLabelBackground(map);
   for (const category of Object.keys(CATEGORY_META) as MarkedLocationCategory[]) {
     for (const kind of Object.keys(RING) as VisibleLocation['kind'][]) {
       const id = imageId(category, kind);
@@ -213,17 +188,17 @@ export const MarkedLocationLayer = () => {
           filter={['!=', ['get', 'id'], selectedId ?? '']}
           layout={{
             'text-field': ['get', 'name'],
-            'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
-            'text-size': 11,
+            'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+            'text-size': 12,
             'text-anchor': 'bottom',
-            'text-offset': [0, -1.9],
+            'text-offset': [0, -1.6],
             'text-max-width': 12,
-            'icon-image': LABEL_BG,
-            'icon-text-fit': 'both',
-            'icon-text-fit-padding': [3, 7, 3, 7],
           }}
           paint={{
             'text-color': '#1a2214',
+            // Thin white outline so the name stays readable on any map
+            'text-halo-color': '#ffffff',
+            'text-halo-width': 1.5,
           }}
         />
       </Source>
@@ -241,26 +216,35 @@ export const MarkedLocationLayer = () => {
           offset={18}
           onClose={() => select(null)}
           closeOnClick={false}
+          // Closed by tapping the marker again; the chevron sits where the × would be
+          closeButton={false}
           focusAfterOpen={false}
           className="marked-popup"
           maxWidth="280px"
         >
           <div className="p-1 text-ink space-y-2">
-            <div className="flex items-start gap-2 pr-6">
+            <div className="flex items-center gap-2">
               {(() => {
                 const Icon = CATEGORY_ICONS[selected.location.category] ?? MapPin;
                 return (
                   <span
-                    className="mt-0.5 w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-white shadow"
+                    className="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-white shadow"
                     style={{ backgroundColor: CATEGORY_META[selected.location.category]?.color }}
                   >
                     <Icon size={13} strokeWidth={2.5} />
                   </span>
                 );
               })()}
-              <div className="min-w-0">
-                <h3 className="mt-1 font-bold text-sm leading-tight break-words">{selected.location.name}</h3>
-              </div>
+              <h3 className="min-w-0 flex-1 font-bold text-sm leading-tight break-words">{selected.location.name}</h3>
+              <button
+                onClick={() => setShowDetails((v) => !v)}
+                className="cursor-pointer shrink-0 p-1 -mr-1 rounded-lg text-sand-600 hover:text-ink hover:bg-sand-100"
+                aria-expanded={showDetails}
+                aria-label={showDetails ? 'Hide details' : 'Show details'}
+                title={showDetails ? 'Hide details' : 'Show details'}
+              >
+                {showDetails ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </button>
             </div>
 
             {showDetails && (
@@ -298,14 +282,6 @@ export const MarkedLocationLayer = () => {
             </>
             )}
 
-            <button
-              onClick={() => setShowDetails((v) => !v)}
-              className="cursor-pointer w-full flex items-center justify-center gap-1 py-1 rounded-lg text-[10px] font-bold text-sand-600 hover:text-ink hover:bg-sand-50"
-              aria-expanded={showDetails}
-            >
-              {showDetails ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-              {showDetails ? 'Hide details' : 'Show details'}
-            </button>
 
             <div className="flex gap-1 pt-1 border-t border-sand-100">
               <a
