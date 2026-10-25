@@ -134,15 +134,6 @@ html, body, #root {
   border: 1px solid var(--color-sand-200);
   box-shadow: 0 10px 30px rgb(26 34 20 / 0.18);
 }
-.marked-popup .mapboxgl-popup-close-button {
-  top: 8px;
-  right: 8px;
-  width: 24px;
-  height: 24px;
-  border-radius: 9999px;
-  font-size: 16px;
-  line-height: 1;
-}
 
 /* Mapbox GL CSS */
 @import 'mapbox-gl/dist/mapbox-gl.css';
