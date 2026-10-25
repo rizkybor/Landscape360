@@ -87,7 +87,9 @@ export const DocsPage = ({ onBack }: Props) => {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar scroll-smooth">
+      {/* Paragraphs are justified; centred ones (or inside a centred block) stay centred.
+          Hyphenation avoids wide gaps on phones, but never inside links, emails or coordinates. */}
+      <div lang="en" className="flex-1 overflow-y-auto custom-scrollbar scroll-smooth [&_p:not(.text-center):not(.text-center_*)]:text-justify [&_p]:hyphens-auto [&_a]:hyphens-none [&_.font-mono]:hyphens-none">
         <div className="max-w-5xl mx-auto px-6 py-12 space-y-20">
           {/* Intro */}
           <section className="space-y-6 text-center pb-12 border-b border-sand-100 relative">
@@ -105,17 +107,17 @@ export const DocsPage = ({ onBack }: Props) => {
             </div>
 
             <div className="relative z-10 space-y-4">
-              <h2 className="text-4xl sm:text-6xl font-bold text-forest-900 tracking-tight">
+              <h2 className="text-3xl sm:text-5xl font-bold text-forest-900 tracking-tight">
                 Landscape 360
               </h2>
               {/* Same type and letter-spacing as the loading screen */}
-              <p className="text-lg sm:text-xl text-forest-700 font-light tracking-[0.25em] sm:tracking-[0.3em] uppercase">
+              <p className="text-xs sm:text-base text-forest-700 font-light tracking-[0.25em] sm:tracking-[0.3em] uppercase">
                 Explore without Limits
               </p>
             </div>
 
             <div className="relative z-10 max-w-2xl mx-auto space-y-4 text-sand-600 leading-relaxed text-sm sm:text-base">
-              <p>
+              <p className="text-justify [text-align-last:center]">
                 Your companion for the outdoors. Made for{" "}
                 <span className="text-forest-700">
                   hikers, climbers and outdoor communities
@@ -133,20 +135,21 @@ export const DocsPage = ({ onBack }: Props) => {
                 , so you can Explore without Limits with information you can
                 trust, for safer and smarter adventures.
               </p>
-              <div className="flex flex-wrap justify-center gap-2 mt-4">
-                <span className="px-3 py-1 rounded-full bg-sand-50 border border-sand-200 text-xs text-sand-700">
+              {/* Phones: an even 2-column grid (the last chip spans both); wider: one centred row */}
+              <div className="grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-center gap-2 mt-4">
+                <span className="px-3 py-1.5 sm:py-1 rounded-full bg-sand-50 border border-sand-200 text-[11px] sm:text-xs text-sand-700 text-center">
                   Advanced Land Navigation
                 </span>
-                <span className="px-3 py-1 rounded-full bg-sand-50 border border-sand-200 text-xs text-sand-700">
+                <span className="px-3 py-1.5 sm:py-1 rounded-full bg-sand-50 border border-sand-200 text-[11px] sm:text-xs text-sand-700 text-center">
                   Activity Recording & GPX
                 </span>
-                <span className="px-3 py-1 rounded-full bg-sand-50 border border-sand-200 text-xs text-sand-700">
+                <span className="px-3 py-1.5 sm:py-1 rounded-full bg-sand-50 border border-sand-200 text-[11px] sm:text-xs text-sand-700 text-center">
                   3D Contour Visualization
                 </span>
-                <span className="px-3 py-1 rounded-full bg-sand-50 border border-sand-200 text-xs text-sand-700">
+                <span className="px-3 py-1.5 sm:py-1 rounded-full bg-sand-50 border border-sand-200 text-[11px] sm:text-xs text-sand-700 text-center">
                   Reliable Offline Maps
                 </span>
-                <span className="px-3 py-1 rounded-full bg-sand-50 border border-sand-200 text-xs text-sand-700">
+                <span className="col-span-2 justify-self-center px-3 py-1.5 sm:py-1 rounded-full bg-sand-50 border border-sand-200 text-[11px] sm:text-xs text-sand-700 text-center">
                   Marked Locations & Sharing
                 </span>
               </div>
@@ -165,7 +168,7 @@ export const DocsPage = ({ onBack }: Props) => {
                 </span>
                 <p className="text-[10px] sm:text-xs text-sand-600 flex items-center gap-1.5 tracking-wider font-medium">
                   DEVELOPED BY
-                  <span className="text-ink group-hover:text-forest-700 transition-colors font-bold ml-1">
+                  <span className="text-ink group-hover:text-forest-700 underline decoration-sand-300 group-hover:decoration-forest-700 underline-offset-4 transition-colors font-bold ml-1">
                     RIZKY AJIE KURNIAWAN
                   </span>
                 </p>
@@ -193,7 +196,7 @@ export const DocsPage = ({ onBack }: Props) => {
                   </h4>
                   <p className="text-xs text-sand-600 leading-relaxed">
                     <strong>Left drag</strong> to pan, <strong>right drag</strong> to rotate and
-                    tilt, <strong>scroll</strong> to zoom (Camera Mode swaps the mouse buttons).
+                    tilt, <strong>scroll</strong> to zoom ("Drag to: Look around" swaps the mouse buttons).
                     On a phone: one finger pans, pinch zooms, twist rotates.
                   </p>
                 </div>
@@ -656,8 +659,8 @@ export const DocsPage = ({ onBack }: Props) => {
                         </li>
                       </ul>
                       <p className="text-[10px] text-sand-500 leading-relaxed">
-                        Prefer left drag to rotate? Switch to <strong>Camera Mode</strong> under
-                        Mouse Interaction Mode in the control panel; the two buttons swap.
+                        Prefer left drag to rotate? Choose <strong>Drag to: Look around</strong> in
+                        Terrain Controls; the two buttons swap.
                       </p>
                     </div>
                     <div className="p-5 space-y-4 bg-sand-50">

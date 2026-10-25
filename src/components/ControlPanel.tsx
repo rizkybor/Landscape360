@@ -1200,14 +1200,14 @@ export const ControlPanel = () => {
             <Activity size={12} className="text-gold-300 shrink-0" />
             TERRAIN CONTROLS
             {isTerrainControlsOpen && (
-              <small className="truncate opacity-70 font-normal normal-case tracking-normal text-[9px]">
+              <small className="truncate text-gold-400 font-normal normal-case tracking-normal text-[9px]">
                 · scroll
               </small>
             )}
           </h6>
 
           {/* Chevron Indicator for Minimize/Expand */}
-          <div className="text-gold-200 bg-white/10 rounded p-0.5">
+          <div className="text-gold-300 bg-gold-300/10 rounded p-0.5">
             {isTerrainControlsOpen ? (
               isMobile ? <ChevronDown size={16} /> : <ChevronUp size={16} />
             ) : (
@@ -1262,31 +1262,31 @@ export const ControlPanel = () => {
           {/* Mouse Mode Toggle - Desktop Only */}
           <div className="bg-forest-50 p-2 rounded text-[10px] text-forest-700 mb-2 space-y-2 hidden md:block">
             <p className="font-semibold border-b border-forest-200 pb-1 mb-1">
-              Mouse Interaction Mode
+              Drag to
             </p>
             <div className="flex bg-white/90 rounded p-1">
               <button
                 onClick={() => setMouseControlMode("map")}
                 className={`cursor-pointer flex-1 py-1 rounded transition-colors ${mouseControlMode === "map" ? "bg-forest-700 text-white" : "hover:bg-sand-100"}`}
               >
-                Map Mode (Move)
+                Move the map
               </button>
               <button
                 onClick={() => setMouseControlMode("camera")}
                 className={`cursor-pointer flex-1 py-1 rounded transition-colors ${mouseControlMode === "camera" ? "bg-forest-700 text-white" : "hover:bg-sand-100"}`}
               >
-                Camera Mode (Rotate)
+                Look around
               </button>
             </div>
           </div>
 
           {/* Grid Layout for sliders on Mobile to save space */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4">
-            {/* View Mode */}
-            <div>
-              <label className="text-xs text-sand-700 mb-1 block">
-                View Mode
-              </label>
+            {/* Map View: same card style as the "Drag to" card above */}
+            <div className="bg-forest-50 p-2 rounded text-[10px] text-forest-700 space-y-2">
+              <p className="font-semibold border-b border-forest-200 pb-1 mb-1">
+                Map View
+              </p>
               <div className="flex bg-white/90 rounded p-1">
                 <button
                   onClick={() => {
@@ -1294,7 +1294,7 @@ export const ControlPanel = () => {
                     setPitch(0);
                     setBearing(0);
                   }}
-                  className={`flex-1 py-1 text-xs rounded transition-colors cursor-pointer ${activeView === "2D" ? "bg-forest-800 text-white shadow-sm" : "text-sand-600 hover:text-ink"}`}
+                  className={`cursor-pointer flex-1 py-1 rounded transition-colors ${activeView === "2D" ? "bg-forest-700 text-white" : "hover:bg-sand-100"}`}
                 >
                   2D Topo
                 </button>
@@ -1303,7 +1303,7 @@ export const ControlPanel = () => {
                     setActiveView("3D");
                     setPitch(75);
                   }}
-                  className={`flex-1 py-1 text-xs rounded transition-colors cursor-pointer ${activeView === "3D" ? "bg-forest-800 text-white shadow-sm" : "text-sand-600 hover:text-ink"}`}
+                  className={`cursor-pointer flex-1 py-1 rounded transition-colors ${activeView === "3D" ? "bg-forest-700 text-white" : "hover:bg-sand-100"}`}
                 >
                   3D Terrain
                 </button>
@@ -1791,7 +1791,7 @@ const GetStartedModal = ({
               {
                 icon: <Monitor size={18} />,
                 title: "Interaction Modes",
-                desc: "Map Mode (default): left drag pans, right drag rotates and tilts. Camera Mode swaps the two. Scroll to zoom, Shift + scroll to tilt. On a phone: one finger pans, pinch zooms, twist rotates, two-finger drag tilts in 3D.",
+                desc: "Left drag moves the map, right drag rotates and tilts. To look around with the left button instead, choose \"Drag to: Look around\" in Terrain Controls. Scroll to zoom, Shift + scroll to tilt. On a phone: one finger pans, pinch zooms, twist rotates, two-finger drag tilts in 3D.",
               },
               {
                 icon: <Activity size={18} />,
