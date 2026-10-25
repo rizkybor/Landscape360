@@ -29,6 +29,8 @@ describe('ControlPanel', () => {
   let mockToggleLiveTracking: any;
 
   beforeEach(() => {
+    // The desktop sidebar remembers its section; start every test on Tools
+    localStorage.removeItem('l360-desktop-sidebar');
     mockSetMapStyle = vi.fn();
     mockSetActiveView = vi.fn();
     mockToggleLiveTracking = vi.fn();
@@ -91,8 +93,24 @@ describe('ControlPanel', () => {
     );
   };
 
+  // Desktop: map style and 2D/3D live in the "Map" section of the sidebar rail
+  const openMapSection = () => fireEvent.click(screen.getByRole('button', { name: 'Map' }));
+
+  it('desktop rail: Tools is open first, Map and Terrain switch the panel, the same icon hides it', () => {
+    renderComponent();
+    expect(screen.getByRole('heading', { name: 'Tools & Exploration' })).toBeInTheDocument();
+    openMapSection();
+    expect(screen.getByRole('heading', { name: 'Map' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Terrain' }));
+    expect(screen.getByRole('heading', { name: 'Terrain & Grid' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Terrain' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(screen.getByRole('button', { name: 'Terrain' }));
+    expect(screen.getByRole('button', { name: 'Terrain' })).toHaveAttribute('aria-pressed', 'false');
+  });
+
   it('should render map style options', () => {
     renderComponent();
+    openMapSection();
     expect(screen.getByText('Streets')).toBeInTheDocument();
     expect(screen.getByText('Outdoors')).toBeInTheDocument();
     expect(screen.getByText('Satellite')).toBeInTheDocument();
@@ -100,12 +118,14 @@ describe('ControlPanel', () => {
 
   it('should change map style on click', () => {
     renderComponent();
+    openMapSection();
     fireEvent.click(screen.getByText('Streets'));
     expect(mockSetMapStyle).toHaveBeenCalledWith(expect.stringContaining('streets'));
   });
 
   it('should toggle view mode 2D/3D', () => {
     renderComponent();
+    openMapSection();
     fireEvent.click(screen.getByText('2D Topo'));
     expect(mockSetActiveView).toHaveBeenCalledWith('2D');
   });

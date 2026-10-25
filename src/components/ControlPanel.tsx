@@ -40,6 +40,10 @@ import {
   UserPlus,
   Siren,
   HardDrive,
+  Compass,
+  Mountain,
+  CircleHelp,
+  PanelLeftClose,
 } from "lucide-react";
 import landscapeLogo from "../assets/LandscapeLogo.svg";
 import { toDMS } from "../utils/surveyUtils";
@@ -47,6 +51,54 @@ import { ScrollShadowArea } from "./ScrollShadowArea";
 import streetsView from "../assets/Street-View.png";
 import outdoorsView from "../assets/Outdoors-View.png";
 import satelliteView from "../assets/Satellite-View.png";
+
+type DeskSection = "tools" | "map" | "terrain";
+const DESK_PREF_KEY = "l360-desktop-sidebar";
+const readDeskPref = (): { section: DeskSection; open: boolean } => {
+  try {
+    const v = JSON.parse(localStorage.getItem(DESK_PREF_KEY) ?? "{}");
+    return {
+      section: ["tools", "map", "terrain"].includes(v.section) ? v.section : "tools",
+      open: v.open !== false,
+    };
+  } catch {
+    return { section: "tools", open: true };
+  }
+};
+
+// One button on the desktop icon rail: icon with a short label, a dot when something in
+// that section is switched on
+const RailButton = ({
+  icon: Icon,
+  label,
+  active = false,
+  dot = false,
+  onClick,
+}: {
+  icon: React.ComponentType<{ size?: number }>;
+  label: string;
+  active?: boolean;
+  dot?: boolean;
+  onClick: () => void;
+}) => (
+  <button
+    onClick={onClick}
+    title={label}
+    aria-label={label}
+    aria-pressed={active}
+    className={`cursor-pointer relative w-11 py-1.5 rounded-xl flex flex-col items-center gap-0.5 transition-colors ${
+      active ? "bg-forest-800 text-white shadow-md" : "text-sand-600 hover:bg-sand-100 hover:text-ink"
+    }`}
+  >
+    <Icon size={18} />
+    <span className="text-[9px] font-semibold leading-none">{label}</span>
+    {dot && (
+      <span
+        className={`absolute top-1 right-1.5 w-2 h-2 rounded-full border-2 ${active ? "bg-gold-300 border-forest-800" : "bg-forest-600 border-white"}`}
+      />
+    )}
+  </button>
+);
 
 export const ControlPanel = () => {
   const navigate = useNavigate();
@@ -163,6 +215,23 @@ export const ControlPanel = () => {
   const [isJoystickDragging, setIsJoystickDragging] = useState(false);
   const [isOpen, setIsOpen] = useState(true);
   const [isTerrainControlsOpen, setIsTerrainControlsOpen] = useState(false);
+  // Desktop: which section the panel shows and whether it is open (remembered per browser)
+  const [deskSection, setDeskSection] = useState<DeskSection>(() => readDeskPref().section);
+  const [deskOpen, setDeskOpen] = useState(() => readDeskPref().open);
+  useEffect(() => {
+    try {
+      localStorage.setItem(DESK_PREF_KEY, JSON.stringify({ section: deskSection, open: deskOpen }));
+    } catch {
+      // Storage blocked: the layout resets on the next visit
+    }
+  }, [deskSection, deskOpen]);
+  const openDeskSection = (section: DeskSection) => {
+    if (deskOpen && deskSection === section) setDeskOpen(false);
+    else {
+      setDeskSection(section);
+      setDeskOpen(true);
+    }
+  };
 
   const canRecordActivity =
     Boolean(user) &&
@@ -345,6 +414,1054 @@ export const ControlPanel = () => {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  // --- Sidebar content, shared by the mobile sheet and the desktop rail + panel ---
+
+  const toolButtons = (
+    <>
+
+    {/* Search Toggle */}
+    <button
+      onClick={() => setShowSearch(!showSearch)}
+      className={`${isMobile ? "flex-none w-28 snap-center h-full" : "w-full h-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
+        showSearch
+          ? "bg-forest-50 border-forest-200 "
+          : "bg-sand-50 border-sand-200 hover:bg-sand-100"
+      } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-col justify-center text-center p-2.5 gap-1.5"}`}
+    >
+      <div
+        className={`p-2 rounded-lg transition-colors ${
+          showSearch
+            ? "bg-forest-700 text-white shadow-lg "
+            : "bg-sand-100 text-sand-600 group-hover:text-ink"
+        } ${isMobile ? "mb-1" : ""}`}
+      >
+        <Search size={isMobile ? 18 : 16} />
+      </div>
+
+      <div className="flex-1">
+        <div
+          className={`font-bold transition-colors ${
+            showSearch ? "text-ink" : "text-sand-700"
+          } ${isMobile ? "text-[10px] leading-tight" : "text-xs leading-tight"}`}
+        >
+          Search
+        </div>
+
+        {!isMobile && (
+          <div
+            className={`text-[10px] ${
+              showSearch ? "text-forest-700" : "text-sand-500"
+            }`}
+          >
+            {showSearch ? "Active" : "Location"}
+          </div>
+        )}
+      </div>
+    </button>
+
+    {/* Navigator Mode */}
+    <button
+      onClick={togglePlotMode}
+      className={`${isMobile ? "flex-none w-28 snap-center h-full" : "w-full h-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
+        isPlotMode
+          ? "bg-gold-50 border-gold-200 "
+          : "bg-sand-50 border-sand-200 hover:bg-sand-100"
+      } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-col justify-center text-center p-2.5 gap-1.5"}`}
+    >
+      <div
+        className={`p-2 rounded-lg transition-colors ${
+          isPlotMode
+            ? "bg-gold-400 text-ink shadow-lg "
+            : "bg-sand-100 text-sand-600 group-hover:text-ink"
+        } ${isMobile ? "mb-1" : ""}`}
+      >
+        <Ruler size={isMobile ? 18 : 16} />
+      </div>
+      <div className="flex-1">
+        <div
+          className={`font-bold transition-colors ${isPlotMode ? "text-ink" : "text-sand-700"} ${isMobile ? "text-[10px] leading-tight" : "text-xs leading-tight"}`}
+        >
+          Navigator
+        </div>
+        {!isMobile && (
+          <div
+            className={`text-[10px] ${isPlotMode ? "text-gold-700" : "text-sand-500"}`}
+          >
+            {isPlotMode ? "Active" : "Tools"}
+          </div>
+        )}
+      </div>
+    </button>
+
+    {/* Route Planner */}
+    <button
+      onClick={() => {
+        if (!isRoutePlannerEnabled) {
+          if (isPlotMode) setPlotMode(false);
+          setInteractionMode("default");
+          setRoutePlannerEnabled(true);
+          return;
+        }
+        setRoutePlannerEnabled(false);
+      }}
+      className={`${isMobile ? "flex-none w-28 snap-center h-full" : "w-full h-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
+        isRoutePlannerEnabled
+          ? "bg-forest-50 border-forest-200 "
+          : "bg-sand-50 border-sand-200 hover:bg-sand-100"
+      } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-col justify-center text-center p-2.5 gap-1.5"}`}
+    >
+      <div
+        className={`p-2 rounded-lg transition-colors ${
+          isRoutePlannerEnabled
+            ? "bg-forest-700 text-white shadow-lg "
+            : "bg-sand-100 text-sand-600 group-hover:text-ink"
+        } ${isMobile ? "mb-1" : ""}`}
+      >
+        <Route size={isMobile ? 18 : 16} />
+      </div>
+      <div className="flex-1">
+        <div
+          className={`font-bold transition-colors ${
+            isRoutePlannerEnabled ? "text-ink" : "text-sand-700"
+          } ${isMobile ? "text-[10px] leading-tight" : "text-xs leading-tight"}`}
+        >
+          Route
+        </div>
+        {!isMobile && (
+          <div
+            className={`text-[10px] ${
+              isRoutePlannerEnabled ? "text-forest-700" : "text-sand-500"
+            }`}
+          >
+            {isRoutePlannerEnabled ? "Select 2 Points" : "Directions"}
+          </div>
+        )}
+      </div>
+    </button>
+
+    {/* Weather Toggle */}
+    <button
+      onClick={() => setShowWeather(!showWeather)}
+      className={`${isMobile ? "flex-none w-28 snap-center h-full" : "w-full h-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
+        showWeather
+          ? "bg-forest-50 border-forest-200 "
+          : "bg-sand-50 border-sand-200 hover:bg-sand-100"
+      } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-col justify-center text-center p-2.5 gap-1.5"}`}
+    >
+      <div
+        className={`p-2 rounded-lg transition-colors ${
+          showWeather
+            ? "bg-forest-800 text-white shadow-lg "
+            : "bg-sand-100 text-sand-600 group-hover:text-ink"
+        } ${isMobile ? "mb-1" : ""}`}
+      >
+        <CloudSun size={isMobile ? 18 : 16} />
+      </div>
+      <div className="flex-1">
+        <div
+          className={`font-bold transition-colors ${showWeather ? "text-ink" : "text-sand-700"} ${isMobile ? "text-[10px] leading-tight" : "text-xs leading-tight"}`}
+        >
+          Weather
+        </div>
+        {!isMobile && (
+          <div
+            className={`text-[10px] ${showWeather ? "text-forest-700" : "text-sand-500"}`}
+          >
+            {showWeather ? "Visible" : "Hidden"}
+          </div>
+        )}
+      </div>
+    </button>
+
+    {/* Show Locations Toggle */}
+    <button
+      onClick={() => setShowCustomLocations(!showCustomLocations)}
+      className={`${isMobile ? "flex-none w-28 snap-center h-full" : "w-full h-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
+        showCustomLocations
+          ? "bg-gold-50 border-gold-200 "
+          : "bg-sand-50 border-sand-200 hover:bg-sand-100"
+      } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-col justify-center text-center p-2.5 gap-1.5"}`}
+    >
+      <div
+        className={`p-2 rounded-lg transition-colors ${
+          showCustomLocations
+            ? "bg-gold-500 text-white shadow-lg "
+            : "bg-sand-100 text-sand-600 group-hover:text-ink"
+        } ${isMobile ? "mb-1" : ""}`}
+      >
+        <MapPin size={isMobile ? 18 : 16} />
+      </div>
+      <div className="flex-1">
+        <div
+          className={`font-bold transition-colors ${showCustomLocations ? "text-ink" : "text-sand-700"} ${isMobile ? "text-[10px] leading-tight" : "text-xs leading-tight"}`}
+        >
+          {isMobile ? "POIs" : "Point of Interest"}
+        </div>
+        {!isMobile && (
+          <div
+            className={`text-[10px] ${showCustomLocations ? "text-gold-700" : "text-sand-500"}`}
+          >
+            {showCustomLocations ? "Visible" : "Hidden"}
+          </div>
+        )}
+      </div>
+    </button>
+
+    {/* Track Recorder (record: Enterprise & Admin; view/shared: all signed-in) */}
+    <button
+      onClick={canOpenTrackRecorder ? toggleTrackRecorder : undefined}
+      disabled={!canOpenTrackRecorder}
+      className={`${isMobile ? "flex-none w-28 snap-center h-full" : "w-full h-full"} flex items-center rounded-xl border transition-all duration-200 group ${
+        !canOpenTrackRecorder
+          ? "border-sand-100 bg-sand-50 opacity-60 cursor-not-allowed"
+          : isTrackRecorderOpen || isTrackRecording
+            ? "cursor-pointer bg-ember-50 border-ember-200 "
+            : "cursor-pointer bg-sand-50 border-sand-200 hover:bg-sand-100"
+      } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-col justify-center text-center p-2.5 gap-1.5"}`}
+    >
+      <div
+        className={`p-2 rounded-lg transition-colors ${
+          !canOpenTrackRecorder
+            ? "bg-sand-100 text-sand-500"
+            : isTrackRecorderOpen || isTrackRecording
+              ? "bg-ember-500 text-white shadow-lg "
+              : "bg-sand-100 text-sand-600 group-hover:text-ink"
+        } ${isMobile ? "mb-1" : ""}`}
+      >
+        {canOpenTrackRecorder ? (
+          <Footprints size={isMobile ? 18 : 16} />
+        ) : (
+          <Lock size={isMobile ? 18 : 16} />
+        )}
+      </div>
+      <div className="flex-1">
+        <div
+          className={`font-bold transition-colors ${
+            !canOpenTrackRecorder
+              ? "text-sand-600"
+              : isTrackRecorderOpen || isTrackRecording
+                ? "text-ink"
+                : "text-sand-700"
+          } ${isMobile ? "text-[10px] leading-tight" : "text-xs leading-tight"}`}
+        >
+          {isMobile ? "Track" : "Track Recorder"}
+        </div>
+        {!isMobile && (
+          <div
+            className={`text-[10px] ${
+              !canOpenTrackRecorder
+                ? "text-sand-400"
+                : isTrackRecording
+                  ? "text-ember-700"
+                  : "text-sand-500"
+            }`}
+          >
+            {!canOpenTrackRecorder
+              ? "Login required"
+              : isTrackRecording
+                ? "Recording"
+                : canRecordTrack
+                  ? "Online / Offline"
+                  : "View & Shared"}
+          </div>
+        )}
+      </div>
+    </button>
+
+    {/* Marked Locations (all signed-in accounts; limits & sharing per plan) */}
+    <button
+      onClick={user ? toggleMarkedLocations : undefined}
+      disabled={!user}
+      className={`${isMobile ? "flex-none w-28 snap-center h-full" : "w-full h-full"} flex items-center rounded-xl border transition-all duration-200 group ${
+        !user
+          ? "border-sand-100 bg-sand-50 opacity-60 cursor-not-allowed"
+          : isMarkedLocationsOpen
+            ? "cursor-pointer bg-gold-50 border-gold-200 "
+            : "cursor-pointer bg-sand-50 border-sand-200 hover:bg-sand-100"
+      } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-col justify-center text-center p-2.5 gap-1.5"}`}
+    >
+      <div
+        className={`p-2 rounded-lg transition-colors ${
+          !user
+            ? "bg-sand-100 text-sand-500"
+            : isMarkedLocationsOpen
+              ? "bg-gold-500 text-white shadow-lg "
+              : "bg-sand-100 text-sand-600 group-hover:text-ink"
+        } ${isMobile ? "mb-1" : ""}`}
+      >
+        {user ? <MapPinned size={isMobile ? 18 : 16} /> : <Lock size={isMobile ? 18 : 16} />}
+      </div>
+      <div className="flex-1">
+        <div
+          className={`font-bold transition-colors ${
+            !user ? "text-sand-600" : isMarkedLocationsOpen ? "text-ink" : "text-sand-700"
+          } ${isMobile ? "text-[10px] leading-tight" : "text-xs leading-tight"}`}
+        >
+          {isMobile ? "Marked" : "Marked Locations"}
+        </div>
+        {!isMobile && (
+          <div className={`text-[10px] ${!user ? "text-sand-400" : "text-sand-500"}`}>
+            {!user ? "Login required" : `${markedLocationCount} saved`}
+          </div>
+        )}
+      </div>
+    </button>
+
+    {/* Custom Basemaps Toggle: every Enterprise account (Monitor or User role); the
+        admin counts as Enterprise. Same rule as can_upload_custom_basemaps() */}
+    {subscriptionStatus === "Enterprise" && (
+      <button
+        onClick={toggleManager}
+        className={`${isMobile ? "flex-none w-28 snap-center h-full" : "w-full h-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
+          isManagerOpen
+            ? "bg-forest-50 border-forest-200 "
+            : "bg-sand-50 border-sand-200 hover:bg-sand-100"
+        } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-col justify-center text-center p-2.5 gap-1.5"}`}
+      >
+        <div
+          className={`p-2 rounded-lg transition-colors ${
+            isManagerOpen
+              ? "bg-forest-800 text-white shadow-lg "
+              : "bg-sand-100 text-sand-600 group-hover:text-ink"
+          } ${isMobile ? "mb-1" : ""}`}
+        >
+          <Layers size={isMobile ? 18 : 16} />
+        </div>
+        <div className="flex-1">
+          <div
+            className={`font-bold transition-colors ${
+              isManagerOpen ? "text-ink" : "text-sand-700"
+            } ${isMobile ? "text-[10px] leading-tight" : "text-xs leading-tight"}`}
+          >
+            Basemaps
+          </div>
+          {!isMobile && (
+            <div
+              className={`text-[10px] ${
+                isManagerOpen ? "text-forest-700" : "text-sand-500"
+              }`}
+            >
+              {isManagerOpen ? "Managing" : "Custom Layers"}
+            </div>
+          )}
+        </div>
+      </button>
+    )}
+
+    {/* Live Tracking Toggle */}
+    {import.meta.env.VITE_ENABLE_GPS_TRACKER === "true" && user && (
+      <div
+        className={`${isMobile ? "flex-none w-28 snap-center" : "w-full h-full"}`}
+      >
+        {subscriptionStatus === "Free" ? (
+          <button
+            disabled
+            className={`w-full flex items-center ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-col justify-center text-center p-2.5 gap-1.5"} rounded-xl border border-sand-100 bg-sand-50 opacity-60 cursor-not-allowed group`}
+          >
+            <div
+              className={`p-2 rounded-lg bg-sand-100 text-sand-500 ${isMobile ? "mb-1" : ""}`}
+            >
+              <Lock size={isMobile ? 18 : 16} />
+            </div>
+            <div className="flex-1">
+              <div
+                className={`font-bold text-sand-600 ${isMobile ? "text-[10px] leading-tight" : "text-xs leading-tight"}`}
+              >
+                {isMobile ? "GPS" : "GPS Tracking"}
+              </div>
+              {!isMobile && (
+                <div className="text-[10px] text-sand-400">
+                  {CONTACT_ADMIN_LABEL}
+                </div>
+              )}
+            </div>
+          </button>
+        ) : (
+          <div
+            className={`rounded-xl border transition-all duration-300 h-full ${
+              isLiveTrackingEnabled
+                ? userRole === "monitor360" &&
+                  subscriptionStatus === "Enterprise"
+                  ? "bg-forest-50 border-forest-200 "
+                  : "bg-forest-50 border-forest-200 "
+                : "bg-sand-50 border-sand-200 hover:bg-sand-100 hover:border-sand-300"
+            }`}
+          >
+            <button
+              onClick={toggleLiveTracking}
+              disabled={userRole === "pengguna360" && isActivityRecording}
+              className={`w-full flex items-center cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-col justify-center text-center p-2.5 gap-1.5"}`}
+            >
+              <div
+                className={`p-2 rounded-lg transition-colors ${
+                  isLiveTrackingEnabled
+                    ? userRole === "monitor360"
+                      ? "bg-forest-700 text-white shadow-lg "
+                      : "bg-forest-700 text-white shadow-lg "
+                    : "bg-sand-100 text-sand-600 group-hover:text-ink"
+                } ${isMobile ? "mb-1" : ""}`}
+              >
+                {userRole === "monitor360" &&
+                subscriptionStatus === "Enterprise" ? (
+                  <Binoculars
+                    size={isMobile ? 18 : 16}
+                    className={
+                      isLiveTrackingEnabled ? "animate-pulse" : ""
+                    }
+                  />
+                ) : (
+                  <Navigation
+                    size={isMobile ? 18 : 16}
+                    className={
+                      isLiveTrackingEnabled ? "animate-spin" : ""
+                    }
+                  />
+                )}
+              </div>
+
+              <div className="flex-1">
+                <div
+                  className={`font-bold transition-colors ${isLiveTrackingEnabled ? "text-ink" : "text-sand-700"} ${isMobile ? "text-[10px] leading-tight" : "text-xs leading-tight"}`}
+                >
+                  {userRole === "monitor360" &&
+                  subscriptionStatus === "Enterprise"
+                    ? isMobile
+                      ? "Monitor"
+                      : "Team Monitor"
+                    : isMobile
+                      ? "GPS"
+                      : "GPS Tracking"}
+                </div>
+                {!isMobile && (
+                  <div
+                    className={`text-[10px] flex items-center gap-1.5 ${isLiveTrackingEnabled ? "text-forest-700" : "text-sand-500"}`}
+                  >
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full ${isLiveTrackingEnabled ? "bg-forest-500 animate-pulse" : "bg-sand-300"}`}
+                    />
+                    {isLiveTrackingEnabled ? "Active" : "Inactive"}
+                  </div>
+                )}
+              </div>
+            </button>
+          </div>
+        )}
+      </div>
+    )}
+    </>
+  );
+
+  const desktopTrackingExtras = (
+    <>
+    {/* Advanced Controls (Simulation/Broadcast) - Moved outside grid for better mobile layout */}
+    {isLiveTrackingEnabled && !isMobile && (
+      <div className="px-3 pb-3 pt-1 space-y-2 border-t border-sand-100 mt-1">
+        {/* Monitor Status */}
+        {userRole === "monitor360" &&
+          subscriptionStatus === "Enterprise" && (
+            <div
+              className={`text-[10px] py-1.5 px-2 rounded-lg flex items-center justify-between ${
+                connectionStatus === "connected"
+                  ? "bg-forest-50 text-forest-700"
+                  : "bg-brick-50 text-brick-600"
+              }`}
+            >
+              <span className="flex items-center gap-1.5">
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${connectionStatus === "connected" ? "bg-forest-500" : "bg-brick-500"}`}
+                />
+                {connectionStatus === "connected"
+                  ? "Online"
+                  : "Offline"}
+              </span>
+              <span>{Object.keys(trackers).length} Users</span>
+            </div>
+          )}
+
+        {/* Simulation Toggle */}
+        {userRole === "monitor360" && (
+          <div
+            className="flex items-center justify-between group cursor-pointer"
+            onClick={toggleSimulation}
+          >
+            <label className="text-[10px] text-sand-600 cursor-pointer group-hover:text-sand-700">
+              Simulate Data
+            </label>
+            <div
+              className={`w-7 h-3.5 rounded-full p-0.5 transition-colors ${isSimulationEnabled ? "bg-forest-700" : "bg-sand-200"}`}
+            >
+              <div
+                className={`w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-transform ${isSimulationEnabled ? "translate-x-3.5" : ""}`}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Broadcast Toggle */}
+        {userRole === "pengguna360" && (
+          <div
+            className="flex items-center justify-between group cursor-pointer"
+            onClick={toggleLocalBroadcast}
+          >
+            <label className="text-[10px] text-sand-600 cursor-pointer group-hover:text-sand-700 flex items-center gap-1.5">
+              Broadcast Location
+              {isLocalBroadcastEnabled && (
+                <Wifi
+                  size={10}
+                  className="text-forest-700 animate-pulse"
+                />
+              )}
+            </label>
+            <div
+              className={`w-7 h-3.5 rounded-full p-0.5 transition-colors ${isLocalBroadcastEnabled ? "bg-forest-700" : "bg-sand-200"}`}
+            >
+              <div
+                className={`w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-transform ${isLocalBroadcastEnabled ? "translate-x-3.5" : ""}`}
+              />
+            </div>
+          </div>
+        )}
+
+        {canRecordActivity && (
+          <div className="rounded-lg border border-sand-200 bg-sand-50 p-2">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-col">
+                <span className="text-[10px] text-sand-700 font-bold">
+                  Record Activity
+                </span>
+                <span
+                  className={`text-[10px] ${
+                    isActivityRecording
+                      ? "text-forest-700"
+                      : isActivityPendingSave
+                        ? "text-gold-700"
+                        : "text-sand-500"
+                  }`}
+                >
+                  {isActivityRecording
+                    ? "Recording"
+                    : isActivityPendingSave
+                      ? "Saving..."
+                      : "Ready"}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-1 rounded-md bg-white/90 text-[10px] text-sand-800 font-mono tabular-nums">
+                  {activityStartedAt
+                    ? formatDuration((activityNow - activityStartedAt) / 1000)
+                    : "0:00"}
+                </span>
+                <span className="px-2 py-1 rounded-md bg-white/90 text-[10px] text-sand-700 tabular-nums">
+                  {(activityDistanceM / 1000).toFixed(2)} km
+                </span>
+                <span className="px-2 py-1 rounded-md bg-white/90 text-[10px] text-sand-600 tabular-nums">
+                  {activityPointCount} pts
+                </span>
+              </div>
+            </div>
+            <div className="mt-2 flex justify-end">
+              {!isActivityRecording ? (
+                <button
+                  disabled={isActivityPendingSave}
+                  onClick={() => {
+                    if (!isLiveTrackingEnabled) setLiveTracking(true);
+                    startActivity();
+                  }}
+                  className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-forest-50 text-forest-700 border border-forest-200 hover:bg-forest-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  title="Start Activity"
+                >
+                  <Play size={12} />
+                  <span className="text-[10px] font-bold">Start</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => stopActivity()}
+                  className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brick-50 text-brick-600 border border-brick-200 hover:bg-brick-100 transition-colors"
+                  title="Stop Activity"
+                >
+                  <Square size={12} />
+                  <span className="text-[10px] font-bold">Stop</span>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    )}
+    </>
+  );
+
+  const mapStyleSection = (
+    <>
+    {/* Map Style Selector */}
+    <div>
+      <label className="text-xs text-sand-700 mb-2 block font-semibold border-b border-sand-200 pb-1">
+        Map Style
+      </label>
+      <div className="grid grid-cols-3 gap-2">
+        {mapStyles.map((style) => (
+          <button
+            key={style.name}
+            onClick={() => setMapStyle(style.style)}
+            className={`
+              cursor-pointer relative rounded-lg overflow-hidden h-16 flex flex-col justify-end p-1 transition-all duration-200 group
+              ${mapStyle === style.style ? "ring-2 ring-forest-600 scale-105 shadow-lg" : "opacity-80 hover:opacity-100 hover:scale-105"}
+            `}
+          >
+            <div
+              className={`absolute inset-0 bg-gradient-to-br ${style.gradient} z-10`}
+            ></div>
+
+            <img
+              src={style.image}
+              alt={style.name}
+              className="absolute inset-0 w-full h-full object-cover z-0 transition-transform duration-500 group-hover:scale-110"
+            />
+
+            <span
+              className={`relative z-20 text-[9px] font-bold ${style.textColor} text-center w-full leading-tight drop-shadow-md`}
+            >
+              {style.name}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+    </>
+  );
+
+  const dragToSection = (
+    <>
+    {/* Mouse Mode Toggle - Desktop Only */}
+    <div className="bg-forest-50 p-2 rounded text-[10px] text-forest-700 mb-2 space-y-2 hidden md:block">
+      <p className="font-semibold border-b border-forest-200 pb-1 mb-1">
+        Drag to
+      </p>
+      <div className="flex bg-white/90 rounded p-1">
+        <button
+          onClick={() => setMouseControlMode("map")}
+          className={`cursor-pointer flex-1 py-1 rounded transition-colors ${mouseControlMode === "map" ? "bg-forest-700 text-white" : "hover:bg-sand-100"}`}
+        >
+          Move the map
+        </button>
+        <button
+          onClick={() => setMouseControlMode("camera")}
+          className={`cursor-pointer flex-1 py-1 rounded transition-colors ${mouseControlMode === "camera" ? "bg-forest-700 text-white" : "hover:bg-sand-100"}`}
+        >
+          Look around
+        </button>
+      </div>
+    </div>
+    </>
+  );
+
+  const mapViewSection = (
+    <>
+    {/* Map View: same card style as the "Drag to" card above */}
+    <div className="bg-forest-50 p-2 rounded text-[10px] text-forest-700 space-y-2">
+      <p className="font-semibold border-b border-forest-200 pb-1 mb-1">
+        Map View
+      </p>
+      <div className="flex bg-white/90 rounded p-1">
+        <button
+          onClick={() => {
+            setActiveView("2D");
+            setPitch(0);
+            setBearing(0);
+          }}
+          className={`cursor-pointer flex-1 py-1 rounded transition-colors ${activeView === "2D" ? "bg-forest-700 text-white" : "hover:bg-sand-100"}`}
+        >
+          2D Topo
+        </button>
+        <button
+          onClick={() => {
+            setActiveView("3D");
+            setPitch(75);
+          }}
+          className={`cursor-pointer flex-1 py-1 rounded transition-colors ${activeView === "3D" ? "bg-forest-700 text-white" : "hover:bg-sand-100"}`}
+        >
+          3D Terrain
+        </button>
+      </div>
+    </div>
+    </>
+  );
+
+  const terrainSection = (
+    <>
+    <label className="text-xs text-sand-700 block font-semibold border-b border-sand-200 pb-1">
+      Contours Config
+    </label>
+    {/* Contour Toggle */}
+    <div
+      className={`flex items-center justify-between transition-opacity duration-300 ${activeView === "2D" ? "opacity-50 pointer-events-none grayscale" : ""}`}
+    >
+      <label className="text-xs text-sand-700">Show Contours</label>
+      <button
+        onClick={() => setShowContours(!showContours)}
+        disabled={activeView === "2D"}
+        className={`cursor-pointer w-10 h-5 rounded-full p-1 transition-colors ${showContours ? "bg-forest-800" : "bg-sand-100"}`}
+      >
+        <div
+          className={`w-3 h-3 bg-white rounded-full shadow transition-transform ${showContours ? "translate-x-5" : "translate-x-0"}`}
+        />
+      </button>
+    </div>
+
+    {/* Opacity */}
+    <div
+      className={`transition-opacity duration-300 ${activeView === "2D" || !showContours ? "opacity-50 pointer-events-none grayscale" : ""}`}
+    >
+      <label className="text-xs text-sand-700 mb-1 flex justify-between">
+        <span>Opacity Contours</span>
+        <span>{(opacity * 100).toFixed(0)}%</span>
+      </label>
+      <input
+        type="range"
+        min={0}
+        max={100}
+        step={1}
+        value={Math.round(opacity * 100)}
+        onChange={(e) => setOpacity(Number(e.target.value) / 100)}
+        disabled={activeView === "2D" || !showContours}
+        className="w-full h-1 bg-sand-300 rounded-lg appearance-none cursor-pointer accent-forest-600"
+      />
+    </div>
+
+    {/* Contour Interval */}
+    <div
+      className={`
+        transition-opacity duration-300
+        ${!showContours || activeView === "2D" ? "opacity-50 pointer-events-none grayscale" : "opacity-100"}
+      `}
+    >
+      <label className="text-xs text-sand-700 mb-1 flex justify-between">
+        <span>Contour Interval</span>
+        <span>{contourInterval}m</span>
+      </label>
+      <input
+        type="range"
+        min="10"
+        max="500"
+        step="2.5"
+        value={contourInterval}
+        onChange={(e) => setContourInterval(Number(e.target.value))}
+        disabled={activeView === "2D"}
+        className="w-full h-1 bg-sand-300 rounded-lg appearance-none cursor-pointer accent-forest-600"
+      />
+      <div className="flex justify-between mt-2 gap-1">
+        {[12.5, 25, 50, 125].map((val) => (
+          <button
+            key={val}
+            onClick={() => setContourInterval(val)}
+            disabled={activeView === "2D"}
+            className={`cursor-pointer flex-1 text-[10px] py-1 rounded border transition-colors ${
+              contourInterval === val
+                ? "bg-forest-800 border-forest-600 text-white font-bold"
+                : "bg-sand-50 border-sand-200 text-sand-600 hover:bg-sand-100"
+            }`}
+          >
+            {val}m
+          </button>
+        ))}
+      </div>
+    </div>
+
+    {/* Elevation Exaggeration */}
+    <div
+      className={`transition-opacity duration-300 ${activeView === "2D" || !showContours ? "opacity-50 pointer-events-none grayscale" : ""}`}
+    >
+      <label className="text-xs text-sand-700 mb-1 flex justify-between">
+        <span>Exaggeration (Height)</span>
+        <span>{elevationExaggeration.toFixed(1)}x</span>
+      </label>
+      <input
+        type="range"
+        min="0"
+        max="10"
+        step="0.1"
+        value={elevationExaggeration}
+        onChange={(e) =>
+          setElevationExaggeration(Number(e.target.value))
+        }
+        disabled={activeView === "2D" || !showContours}
+        className="w-full h-1 bg-sand-300 rounded-lg appearance-none cursor-pointer accent-forest-600"
+      />
+    </div>
+
+    <label className="text-xs text-sand-700 block font-semibold border-b border-sand-200 pb-1">
+      Grid Config
+    </label>
+    {/* Grid DMS Toggle */}
+    <div className="flex flex-col gap-2 transition-opacity duration-300">
+      <div className="flex items-center justify-between">
+        <label className="text-xs text-sand-700">Show Grid DMS</label>
+        <button
+          onClick={() => setShowGridDMS(!showGridDMS)}
+          className={`cursor-pointer w-10 h-5 rounded-full p-1 transition-colors ${showGridDMS ? "bg-forest-800" : "bg-sand-100"}`}
+        >
+          <div
+            className={`w-3 h-3 bg-white rounded-full shadow transition-transform ${showGridDMS ? "translate-x-5" : "translate-x-0"}`}
+          />
+        </button>
+      </div>
+
+      {/* Grid Opacity Slider (Only visible when Grid is ON) */}
+      {showGridDMS && (
+        <div className="animate-in fade-in slide-in-from-top-2 space-y-3">
+          {/* Opacity */}
+          <div>
+            <label className="text-[10px] text-sand-600 mb-1 flex justify-between">
+              <span>Grid Opacity</span>
+              <span>{(gridOpacity * 100).toFixed(0)}%</span>
+            </label>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              step={5}
+              value={Math.round(gridOpacity * 100)}
+              onChange={(e) =>
+                setGridOpacity(Number(e.target.value) / 100)
+              }
+              className="w-full h-1 bg-sand-300 rounded-lg appearance-none cursor-pointer accent-forest-600"
+            />
+          </div>
+
+          {/* Grid Interval Selection */}
+          <div>
+            <label className="text-[10px] text-sand-600 mb-1 block">
+              Grid Interval
+            </label>
+            <div className="grid grid-cols-2 gap-1">
+              <button
+                onClick={() => setGridStep("auto")}
+                className={`cursor-pointer px-2 py-1 text-[10px] rounded border transition-colors col-span-2 ${
+                  gridStep === "auto"
+                    ? "bg-forest-800 border-forest-600 text-white font-bold"
+                    : "bg-sand-50 border-sand-200 text-sand-600 hover:bg-sand-100"
+                }`}
+              >
+                Auto (Dynamic)
+              </button>
+
+              <button
+                onClick={() => setGridStep(15 / 3600)}
+                className={`cursor-pointer px-2 py-1 text-[10px] rounded border transition-colors ${
+                  gridStep === 15 / 3600
+                    ? "bg-forest-800 border-forest-600 text-white font-bold"
+                    : "bg-sand-50 border-sand-200 text-sand-600 hover:bg-sand-100"
+                }`}
+                title="~15 Detik (Skala 1:10.000)"
+              >
+                15" (~450m)
+              </button>
+
+              <button
+                onClick={() => setGridStep(30 / 3600)}
+                className={`cursor-pointer px-2 py-1 text-[10px] rounded border transition-colors ${
+                  gridStep === 30 / 3600
+                    ? "bg-forest-800 border-forest-600 text-white font-bold"
+                    : "bg-sand-50 border-sand-200 text-sand-600 hover:bg-sand-100"
+                }`}
+                title="~30 Detik (Skala 1:25.000)"
+              >
+                30" (~900m)
+              </button>
+
+              <button
+                onClick={() => setGridStep(1 / 60)}
+                className={`cursor-pointer px-2 py-1 text-[10px] rounded border transition-colors ${
+                  gridStep === 1 / 60
+                    ? "bg-forest-800 border-forest-600 text-white font-bold"
+                    : "bg-sand-50 border-sand-200 text-sand-600 hover:bg-sand-100"
+                }`}
+                title="~1 Menit (Skala 1:50.000)"
+              >
+                1' (~1.8km)
+              </button>
+
+              <button
+                onClick={() => setGridStep(5 / 60)}
+                className={`cursor-pointer px-2 py-1 text-[10px] rounded border transition-colors ${
+                  Math.abs(Number(gridStep) - 5 / 60) < 0.0000001
+                    ? "bg-forest-800 border-forest-600 text-white font-bold"
+                    : "bg-sand-50 border-sand-200 text-sand-600 hover:bg-sand-100"
+                }`}
+                title="~5 Menit (Skala 1:250.000)"
+              >
+                5' (~9km)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+    </>
+  );
+
+  const credits = (
+    <>
+    <div className="pt-6 mt-8 border-t border-sand-200 text-[10px] text-center text-sand-500 font-mono">
+      <div className="uppercase tracking-[0.2em] mb-1 text-[9px] text-sand-400">
+        In Collaboration With
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <div>
+          <a
+            href="https://instagram.com/jendelacakradigital"
+            target="_blank"
+            className="font-bold text-sand-600 hover:text-forest-700 transition-colors uppercase tracking-wider"
+          >
+            Jendela Cakra Digital
+          </a>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <a
+            href="https://instagram.com/makopala_ubl"
+            target="_blank"
+            className="font-bold text-sand-600 hover:text-forest-700 transition-colors uppercase tracking-wider"
+          >
+            Makopala Univ. Budi Luhur
+          </a>
+        </div>
+
+        <div className="opacity-50">@2026</div>
+      </div>
+
+      <SiteLinks compact omit={["/docs"]} className="mt-3 font-sans" />
+    </div>
+    </>
+  );
+
+  // Desktop rail: a dot on Tools while any tool is switched on
+  const anyToolActive =
+    showSearch ||
+    isPlotMode ||
+    isRoutePlannerEnabled ||
+    showWeather ||
+    showCustomLocations ||
+    isTrackRecorderOpen ||
+    isTrackRecording ||
+    isMarkedLocationsOpen ||
+    isManagerOpen ||
+    isLiveTrackingEnabled;
+  const deskSections: { id: DeskSection; label: string; title: string; icon: typeof Compass }[] = [
+    { id: "tools", label: "Tools", title: "Tools & Exploration", icon: Compass },
+    { id: "map", label: "Map", title: "Map", icon: Layers },
+    { id: "terrain", label: "Terrain", title: "Terrain & Grid", icon: Mountain },
+  ];
+
+  if (!isMobile) {
+    return (
+      <>
+        {/* Desktop: icon rail (always visible) + the panel of the chosen section */}
+        <nav
+          className="fixed z-50 top-4 left-4 w-14 rounded-2xl bg-white/95 backdrop-blur-xl border border-sand-300 shadow-2xl flex flex-col items-center gap-1 py-2"
+          aria-label="Sidebar"
+        >
+          <button
+            onClick={() => setDeskOpen((open) => !open)}
+            className="cursor-pointer p-1 rounded-xl hover:bg-sand-100 transition-colors"
+            title={deskOpen ? "Hide panel" : "Show panel"}
+            aria-label={deskOpen ? "Hide panel" : "Show panel"}
+          >
+            <img src={landscapeLogo} alt="Landscape 360" className="w-9 h-9 object-contain" />
+          </button>
+          <div className="w-8 h-px bg-sand-200 my-1" />
+          {deskSections.map((sec) => (
+            <RailButton
+              key={sec.id}
+              icon={sec.icon}
+              label={sec.label}
+              active={deskOpen && deskSection === sec.id}
+              dot={sec.id === "tools" && anyToolActive}
+              onClick={() => openDeskSection(sec.id)}
+            />
+          ))}
+          <div className="w-8 h-px bg-sand-200 my-1" />
+          <RailButton icon={CircleHelp} label="Guide" onClick={() => setShowGetStarted(true)} />
+          <RailButton icon={BookOpen} label="Docs" onClick={() => navigate("/docs")} />
+        </nav>
+
+        <aside
+          className={`fixed z-50 top-4 left-[5rem] w-72 max-h-[calc(100vh-2rem)] rounded-2xl bg-white/95 backdrop-blur-xl border border-sand-300 text-ink shadow-2xl flex flex-col transition-all duration-200 ${
+            deskOpen ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2 pointer-events-none"
+          }`}
+          aria-hidden={!deskOpen}
+        >
+          <header className="shrink-0 flex items-center justify-between gap-2 px-4 pt-3 pb-2 border-b border-sand-200">
+            <div className="min-w-0">
+              <div className="text-[9px] uppercase tracking-widest text-sand-500 font-bold">
+                Landscape 360 <span className="font-mono normal-case tracking-normal">v3.3.0</span>
+              </div>
+              <h2 className="text-sm font-bold text-ink truncate">
+                {deskSections.find((sec) => sec.id === deskSection)?.title}
+              </h2>
+            </div>
+            <button
+              onClick={() => setDeskOpen(false)}
+              className="cursor-pointer shrink-0 p-1.5 rounded-lg hover:bg-sand-100 text-sand-600 hover:text-ink"
+              title="Hide panel"
+              aria-label="Hide panel"
+            >
+              <PanelLeftClose size={16} />
+            </button>
+          </header>
+
+          {/* Account stays in view whichever section is open */}
+          <div className="shrink-0 px-3 pt-3 flex justify-center relative z-50">
+            <AuthControl />
+          </div>
+
+          <ScrollShadowArea
+            wrapperClassName="flex-1"
+            className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-4"
+          >
+            {deskSection === "tools" && (
+              <>
+                <div className="grid grid-cols-2 gap-2">{toolButtons}</div>
+                {desktopTrackingExtras}
+              </>
+            )}
+            {deskSection === "map" && (
+              <>
+                {mapStyleSection}
+                {mapViewSection}
+                {dragToSection}
+              </>
+            )}
+            {deskSection === "terrain" && (
+              <div className="space-y-4">
+                {activeView === "2D" && (
+                  <p className="text-[10px] text-sand-600 bg-sand-50 border border-sand-200 rounded-lg px-2.5 py-2">
+                    Contours work in 3D. Switch <strong>Map View</strong> to{" "}
+                    <button
+                      onClick={() => {
+                        setActiveView("3D");
+                        setPitch(75);
+                      }}
+                      className="cursor-pointer font-bold text-forest-700 underline underline-offset-2"
+                    >
+                      3D Terrain
+                    </button>{" "}
+                    to use them. The grid works in both.
+                  </p>
+                )}
+                {terrainSection}
+              </div>
+            )}
+            {credits}
+          </ScrollShadowArea>
+        </aside>
+
+        <GetStartedModal isOpen={showGetStarted} onClose={() => setShowGetStarted(false)} />
+      </>
+    );
+  }
+
   return (
     <>
       {!isOpen && (
@@ -482,573 +1599,10 @@ export const ControlPanel = () => {
                     : "grid grid-cols-1 max-h-55 overflow-y-auto pr-1"
                 }`}
               >
-                
-                {/* Search Toggle */}
-                <button
-                  onClick={() => setShowSearch(!showSearch)}
-                  className={`${isMobile ? "flex-none w-28 snap-center h-full" : "col-span-1 w-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
-                    showSearch
-                      ? "bg-forest-50 border-forest-200 "
-                      : "bg-sand-50 border-sand-200 hover:bg-sand-100"
-                  } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
-                >
-                  <div
-                    className={`p-2 rounded-lg transition-colors ${
-                      showSearch
-                        ? "bg-forest-700 text-white shadow-lg "
-                        : "bg-sand-100 text-sand-600 group-hover:text-ink"
-                    } ${isMobile ? "mb-1" : ""}`}
-                  >
-                    <Search size={isMobile ? 18 : 16} />
-                  </div>
-
-                  <div className="flex-1">
-                    <div
-                      className={`font-bold transition-colors ${
-                        showSearch ? "text-ink" : "text-sand-700"
-                      } ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
-                    >
-                      Search
-                    </div>
-
-                    {!isMobile && (
-                      <div
-                        className={`text-[10px] ${
-                          showSearch ? "text-forest-700" : "text-sand-500"
-                        }`}
-                      >
-                        {showSearch ? "Active" : "Location"}
-                      </div>
-                    )}
-                  </div>
-                </button>
-
-                {/* Navigator Mode */}
-                <button
-                  onClick={togglePlotMode}
-                  className={`${isMobile ? "flex-none w-28 snap-center h-full" : "col-span-1 w-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
-                    isPlotMode
-                      ? "bg-gold-50 border-gold-200 "
-                      : "bg-sand-50 border-sand-200 hover:bg-sand-100"
-                  } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
-                >
-                  <div
-                    className={`p-2 rounded-lg transition-colors ${
-                      isPlotMode
-                        ? "bg-gold-400 text-ink shadow-lg "
-                        : "bg-sand-100 text-sand-600 group-hover:text-ink"
-                    } ${isMobile ? "mb-1" : ""}`}
-                  >
-                    <Ruler size={isMobile ? 18 : 16} />
-                  </div>
-                  <div className="flex-1">
-                    <div
-                      className={`font-bold transition-colors ${isPlotMode ? "text-ink" : "text-sand-700"} ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
-                    >
-                      Navigator
-                    </div>
-                    {!isMobile && (
-                      <div
-                        className={`text-[10px] ${isPlotMode ? "text-gold-700" : "text-sand-500"}`}
-                      >
-                        {isPlotMode ? "Active" : "Tools"}
-                      </div>
-                    )}
-                  </div>
-                </button>
-
-                {/* Route Planner */}
-                <button
-                  onClick={() => {
-                    if (!isRoutePlannerEnabled) {
-                      if (isPlotMode) setPlotMode(false);
-                      setInteractionMode("default");
-                      setRoutePlannerEnabled(true);
-                      return;
-                    }
-                    setRoutePlannerEnabled(false);
-                  }}
-                  className={`${isMobile ? "flex-none w-28 snap-center h-full" : "col-span-1 w-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
-                    isRoutePlannerEnabled
-                      ? "bg-forest-50 border-forest-200 "
-                      : "bg-sand-50 border-sand-200 hover:bg-sand-100"
-                  } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
-                >
-                  <div
-                    className={`p-2 rounded-lg transition-colors ${
-                      isRoutePlannerEnabled
-                        ? "bg-forest-700 text-white shadow-lg "
-                        : "bg-sand-100 text-sand-600 group-hover:text-ink"
-                    } ${isMobile ? "mb-1" : ""}`}
-                  >
-                    <Route size={isMobile ? 18 : 16} />
-                  </div>
-                  <div className="flex-1">
-                    <div
-                      className={`font-bold transition-colors ${
-                        isRoutePlannerEnabled ? "text-ink" : "text-sand-700"
-                      } ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
-                    >
-                      Route
-                    </div>
-                    {!isMobile && (
-                      <div
-                        className={`text-[10px] ${
-                          isRoutePlannerEnabled ? "text-forest-700" : "text-sand-500"
-                        }`}
-                      >
-                        {isRoutePlannerEnabled ? "Select 2 Points" : "Directions"}
-                      </div>
-                    )}
-                  </div>
-                </button>
-
-                {/* Weather Toggle */}
-                <button
-                  onClick={() => setShowWeather(!showWeather)}
-                  className={`${isMobile ? "flex-none w-28 snap-center h-full" : "col-span-1 w-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
-                    showWeather
-                      ? "bg-forest-50 border-forest-200 "
-                      : "bg-sand-50 border-sand-200 hover:bg-sand-100"
-                  } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
-                >
-                  <div
-                    className={`p-2 rounded-lg transition-colors ${
-                      showWeather
-                        ? "bg-forest-800 text-white shadow-lg "
-                        : "bg-sand-100 text-sand-600 group-hover:text-ink"
-                    } ${isMobile ? "mb-1" : ""}`}
-                  >
-                    <CloudSun size={isMobile ? 18 : 16} />
-                  </div>
-                  <div className="flex-1">
-                    <div
-                      className={`font-bold transition-colors ${showWeather ? "text-ink" : "text-sand-700"} ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
-                    >
-                      Weather
-                    </div>
-                    {!isMobile && (
-                      <div
-                        className={`text-[10px] ${showWeather ? "text-forest-700" : "text-sand-500"}`}
-                      >
-                        {showWeather ? "Visible" : "Hidden"}
-                      </div>
-                    )}
-                  </div>
-                </button>
-
-                {/* Show Locations Toggle */}
-                <button
-                  onClick={() => setShowCustomLocations(!showCustomLocations)}
-                  className={`${isMobile ? "flex-none w-28 snap-center h-full" : "col-span-1 w-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
-                    showCustomLocations
-                      ? "bg-gold-50 border-gold-200 "
-                      : "bg-sand-50 border-sand-200 hover:bg-sand-100"
-                  } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
-                >
-                  <div
-                    className={`p-2 rounded-lg transition-colors ${
-                      showCustomLocations
-                        ? "bg-gold-500 text-white shadow-lg "
-                        : "bg-sand-100 text-sand-600 group-hover:text-ink"
-                    } ${isMobile ? "mb-1" : ""}`}
-                  >
-                    <MapPin size={isMobile ? 18 : 16} />
-                  </div>
-                  <div className="flex-1">
-                    <div
-                      className={`font-bold transition-colors ${showCustomLocations ? "text-ink" : "text-sand-700"} ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
-                    >
-                      {isMobile ? "POIs" : "Point of Interest"}
-                    </div>
-                    {!isMobile && (
-                      <div
-                        className={`text-[10px] ${showCustomLocations ? "text-gold-700" : "text-sand-500"}`}
-                      >
-                        {showCustomLocations ? "Visible" : "Hidden"}
-                      </div>
-                    )}
-                  </div>
-                </button>
-
-                {/* Track Recorder (record: Enterprise & Admin; view/shared: all signed-in) */}
-                <button
-                  onClick={canOpenTrackRecorder ? toggleTrackRecorder : undefined}
-                  disabled={!canOpenTrackRecorder}
-                  className={`${isMobile ? "flex-none w-28 snap-center h-full" : "col-span-1 w-full"} flex items-center rounded-xl border transition-all duration-200 group ${
-                    !canOpenTrackRecorder
-                      ? "border-sand-100 bg-sand-50 opacity-60 cursor-not-allowed"
-                      : isTrackRecorderOpen || isTrackRecording
-                        ? "cursor-pointer bg-ember-50 border-ember-200 "
-                        : "cursor-pointer bg-sand-50 border-sand-200 hover:bg-sand-100"
-                  } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
-                >
-                  <div
-                    className={`p-2 rounded-lg transition-colors ${
-                      !canOpenTrackRecorder
-                        ? "bg-sand-100 text-sand-500"
-                        : isTrackRecorderOpen || isTrackRecording
-                          ? "bg-ember-500 text-white shadow-lg "
-                          : "bg-sand-100 text-sand-600 group-hover:text-ink"
-                    } ${isMobile ? "mb-1" : ""}`}
-                  >
-                    {canOpenTrackRecorder ? (
-                      <Footprints size={isMobile ? 18 : 16} />
-                    ) : (
-                      <Lock size={isMobile ? 18 : 16} />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <div
-                      className={`font-bold transition-colors ${
-                        !canOpenTrackRecorder
-                          ? "text-sand-600"
-                          : isTrackRecorderOpen || isTrackRecording
-                            ? "text-ink"
-                            : "text-sand-700"
-                      } ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
-                    >
-                      {isMobile ? "Track" : "Track Recorder"}
-                    </div>
-                    {!isMobile && (
-                      <div
-                        className={`text-[10px] ${
-                          !canOpenTrackRecorder
-                            ? "text-sand-400"
-                            : isTrackRecording
-                              ? "text-ember-700"
-                              : "text-sand-500"
-                        }`}
-                      >
-                        {!canOpenTrackRecorder
-                          ? "Login required"
-                          : isTrackRecording
-                            ? "Recording"
-                            : canRecordTrack
-                              ? "Online / Offline"
-                              : "View & Shared"}
-                      </div>
-                    )}
-                  </div>
-                </button>
-
-                {/* Marked Locations (all signed-in accounts; limits & sharing per plan) */}
-                <button
-                  onClick={user ? toggleMarkedLocations : undefined}
-                  disabled={!user}
-                  className={`${isMobile ? "flex-none w-28 snap-center h-full" : "col-span-1 w-full"} flex items-center rounded-xl border transition-all duration-200 group ${
-                    !user
-                      ? "border-sand-100 bg-sand-50 opacity-60 cursor-not-allowed"
-                      : isMarkedLocationsOpen
-                        ? "cursor-pointer bg-gold-50 border-gold-200 "
-                        : "cursor-pointer bg-sand-50 border-sand-200 hover:bg-sand-100"
-                  } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
-                >
-                  <div
-                    className={`p-2 rounded-lg transition-colors ${
-                      !user
-                        ? "bg-sand-100 text-sand-500"
-                        : isMarkedLocationsOpen
-                          ? "bg-gold-500 text-white shadow-lg "
-                          : "bg-sand-100 text-sand-600 group-hover:text-ink"
-                    } ${isMobile ? "mb-1" : ""}`}
-                  >
-                    {user ? <MapPinned size={isMobile ? 18 : 16} /> : <Lock size={isMobile ? 18 : 16} />}
-                  </div>
-                  <div className="flex-1">
-                    <div
-                      className={`font-bold transition-colors ${
-                        !user ? "text-sand-600" : isMarkedLocationsOpen ? "text-ink" : "text-sand-700"
-                      } ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
-                    >
-                      {isMobile ? "Marked" : "Marked Locations"}
-                    </div>
-                    {!isMobile && (
-                      <div className={`text-[10px] ${!user ? "text-sand-400" : "text-sand-500"}`}>
-                        {!user ? "Login required" : `${markedLocationCount} saved`}
-                      </div>
-                    )}
-                  </div>
-                </button>
-
-                {/* Custom Basemaps Toggle: every Enterprise account (Monitor or User role); the
-                    admin counts as Enterprise. Same rule as can_upload_custom_basemaps() */}
-                {subscriptionStatus === "Enterprise" && (
-                  <button
-                    onClick={toggleManager}
-                    className={`${isMobile ? "flex-none w-28 snap-center h-full" : "col-span-1 w-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
-                      isManagerOpen
-                        ? "bg-forest-50 border-forest-200 "
-                        : "bg-sand-50 border-sand-200 hover:bg-sand-100"
-                    } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
-                  >
-                    <div
-                      className={`p-2 rounded-lg transition-colors ${
-                        isManagerOpen
-                          ? "bg-forest-800 text-white shadow-lg "
-                          : "bg-sand-100 text-sand-600 group-hover:text-ink"
-                      } ${isMobile ? "mb-1" : ""}`}
-                    >
-                      <Layers size={isMobile ? 18 : 16} />
-                    </div>
-                    <div className="flex-1">
-                      <div
-                        className={`font-bold transition-colors ${
-                          isManagerOpen ? "text-ink" : "text-sand-700"
-                        } ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
-                      >
-                        Basemaps
-                      </div>
-                      {!isMobile && (
-                        <div
-                          className={`text-[10px] ${
-                            isManagerOpen ? "text-forest-700" : "text-sand-500"
-                          }`}
-                        >
-                          {isManagerOpen ? "Managing" : "Custom Layers"}
-                        </div>
-                      )}
-                    </div>
-                  </button>
-                )}
-
-                {/* Live Tracking Toggle */}
-                {import.meta.env.VITE_ENABLE_GPS_TRACKER === "true" && user && (
-                  <div
-                    className={`${isMobile ? "flex-none w-28 snap-center" : "w-full col-span-1"}`}
-                  >
-                    {subscriptionStatus === "Free" ? (
-                      <button
-                        disabled
-                        className={`w-full flex items-center ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"} rounded-xl border border-sand-100 bg-sand-50 opacity-60 cursor-not-allowed group`}
-                      >
-                        <div
-                          className={`p-2 rounded-lg bg-sand-100 text-sand-500 ${isMobile ? "mb-1" : ""}`}
-                        >
-                          <Lock size={isMobile ? 18 : 16} />
-                        </div>
-                        <div className="flex-1">
-                          <div
-                            className={`font-bold text-sand-600 ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
-                          >
-                            {isMobile ? "GPS" : "GPS Tracking"}
-                          </div>
-                          {!isMobile && (
-                            <div className="text-[10px] text-sand-400">
-                              {CONTACT_ADMIN_LABEL}
-                            </div>
-                          )}
-                        </div>
-                      </button>
-                    ) : (
-                      <div
-                        className={`rounded-xl border transition-all duration-300 h-full ${
-                          isLiveTrackingEnabled
-                            ? userRole === "monitor360" &&
-                              subscriptionStatus === "Enterprise"
-                              ? "bg-forest-50 border-forest-200 "
-                              : "bg-forest-50 border-forest-200 "
-                            : "bg-sand-50 border-sand-200 hover:bg-sand-100 hover:border-sand-300"
-                        }`}
-                      >
-                        <button
-                          onClick={toggleLiveTracking}
-                          disabled={userRole === "pengguna360" && isActivityRecording}
-                          className={`w-full flex items-center cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-row gap-3 p-2.5"}`}
-                        >
-                          <div
-                            className={`p-2 rounded-lg transition-colors ${
-                              isLiveTrackingEnabled
-                                ? userRole === "monitor360"
-                                  ? "bg-forest-700 text-white shadow-lg "
-                                  : "bg-forest-700 text-white shadow-lg "
-                                : "bg-sand-100 text-sand-600 group-hover:text-ink"
-                            } ${isMobile ? "mb-1" : ""}`}
-                          >
-                            {userRole === "monitor360" &&
-                            subscriptionStatus === "Enterprise" ? (
-                              <Binoculars
-                                size={isMobile ? 18 : 16}
-                                className={
-                                  isLiveTrackingEnabled ? "animate-pulse" : ""
-                                }
-                              />
-                            ) : (
-                              <Navigation
-                                size={isMobile ? 18 : 16}
-                                className={
-                                  isLiveTrackingEnabled ? "animate-spin" : ""
-                                }
-                              />
-                            )}
-                          </div>
-
-                          <div className="flex-1">
-                            <div
-                              className={`font-bold transition-colors ${isLiveTrackingEnabled ? "text-ink" : "text-sand-700"} ${isMobile ? "text-[10px] leading-tight" : "text-xs"}`}
-                            >
-                              {userRole === "monitor360" &&
-                              subscriptionStatus === "Enterprise"
-                                ? isMobile
-                                  ? "Monitor"
-                                  : "Team Monitor"
-                                : isMobile
-                                  ? "GPS"
-                                  : "GPS Tracking"}
-                            </div>
-                            {!isMobile && (
-                              <div
-                                className={`text-[10px] flex items-center gap-1.5 ${isLiveTrackingEnabled ? "text-forest-700" : "text-sand-500"}`}
-                              >
-                                <span
-                                  className={`w-1.5 h-1.5 rounded-full ${isLiveTrackingEnabled ? "bg-forest-500 animate-pulse" : "bg-sand-300"}`}
-                                />
-                                {isLiveTrackingEnabled ? "Active" : "Inactive"}
-                              </div>
-                            )}
-                          </div>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
+{toolButtons}
               </ScrollShadowArea>
 
-              {/* Advanced Controls (Simulation/Broadcast) - Moved outside grid for better mobile layout */}
-              {isLiveTrackingEnabled && !isMobile && (
-                <div className="px-3 pb-3 pt-1 space-y-2 border-t border-sand-100 mt-1">
-                  {/* Monitor Status */}
-                  {userRole === "monitor360" &&
-                    subscriptionStatus === "Enterprise" && (
-                      <div
-                        className={`text-[10px] py-1.5 px-2 rounded-lg flex items-center justify-between ${
-                          connectionStatus === "connected"
-                            ? "bg-forest-50 text-forest-700"
-                            : "bg-brick-50 text-brick-600"
-                        }`}
-                      >
-                        <span className="flex items-center gap-1.5">
-                          <span
-                            className={`w-1.5 h-1.5 rounded-full ${connectionStatus === "connected" ? "bg-forest-500" : "bg-brick-500"}`}
-                          />
-                          {connectionStatus === "connected"
-                            ? "Online"
-                            : "Offline"}
-                        </span>
-                        <span>{Object.keys(trackers).length} Users</span>
-                      </div>
-                    )}
-
-                  {/* Simulation Toggle */}
-                  {userRole === "monitor360" && (
-                    <div
-                      className="flex items-center justify-between group cursor-pointer"
-                      onClick={toggleSimulation}
-                    >
-                      <label className="text-[10px] text-sand-600 cursor-pointer group-hover:text-sand-700">
-                        Simulate Data
-                      </label>
-                      <div
-                        className={`w-7 h-3.5 rounded-full p-0.5 transition-colors ${isSimulationEnabled ? "bg-forest-700" : "bg-sand-200"}`}
-                      >
-                        <div
-                          className={`w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-transform ${isSimulationEnabled ? "translate-x-3.5" : ""}`}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Broadcast Toggle */}
-                  {userRole === "pengguna360" && (
-                    <div
-                      className="flex items-center justify-between group cursor-pointer"
-                      onClick={toggleLocalBroadcast}
-                    >
-                      <label className="text-[10px] text-sand-600 cursor-pointer group-hover:text-sand-700 flex items-center gap-1.5">
-                        Broadcast Location
-                        {isLocalBroadcastEnabled && (
-                          <Wifi
-                            size={10}
-                            className="text-forest-700 animate-pulse"
-                          />
-                        )}
-                      </label>
-                      <div
-                        className={`w-7 h-3.5 rounded-full p-0.5 transition-colors ${isLocalBroadcastEnabled ? "bg-forest-700" : "bg-sand-200"}`}
-                      >
-                        <div
-                          className={`w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-transform ${isLocalBroadcastEnabled ? "translate-x-3.5" : ""}`}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {canRecordActivity && (
-                    <div className="rounded-lg border border-sand-200 bg-sand-50 p-2">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex flex-col">
-                          <span className="text-[10px] text-sand-700 font-bold">
-                            Record Activity
-                          </span>
-                          <span
-                            className={`text-[10px] ${
-                              isActivityRecording
-                                ? "text-forest-700"
-                                : isActivityPendingSave
-                                  ? "text-gold-700"
-                                  : "text-sand-500"
-                            }`}
-                          >
-                            {isActivityRecording
-                              ? "Recording"
-                              : isActivityPendingSave
-                                ? "Saving..."
-                                : "Ready"}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="px-2 py-1 rounded-md bg-white/90 text-[10px] text-sand-800 font-mono tabular-nums">
-                            {activityStartedAt
-                              ? formatDuration((activityNow - activityStartedAt) / 1000)
-                              : "0:00"}
-                          </span>
-                          <span className="px-2 py-1 rounded-md bg-white/90 text-[10px] text-sand-700 tabular-nums">
-                            {(activityDistanceM / 1000).toFixed(2)} km
-                          </span>
-                          <span className="px-2 py-1 rounded-md bg-white/90 text-[10px] text-sand-600 tabular-nums">
-                            {activityPointCount} pts
-                          </span>
-                        </div>
-                      </div>
-                      <div className="mt-2 flex justify-end">
-                        {!isActivityRecording ? (
-                          <button
-                            disabled={isActivityPendingSave}
-                            onClick={() => {
-                              if (!isLiveTrackingEnabled) setLiveTracking(true);
-                              startActivity();
-                            }}
-                            className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-forest-50 text-forest-700 border border-forest-200 hover:bg-forest-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                            title="Start Activity"
-                          >
-                            <Play size={12} />
-                            <span className="text-[10px] font-bold">Start</span>
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => stopActivity()}
-                            className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brick-50 text-brick-600 border border-brick-200 hover:bg-brick-100 transition-colors"
-                            title="Stop Activity"
-                          >
-                            <Square size={12} />
-                            <span className="text-[10px] font-bold">Stop</span>
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
+              {desktopTrackingExtras}
 
               {/* Mobile-optimized Advanced Controls Container */}
               {isLiveTrackingEnabled && isMobile && (
@@ -1224,333 +1778,18 @@ export const ControlPanel = () => {
               : "max-h-[60vh] md:max-h-[50vh] opacity-100 p-4 space-y-4"
           }`}
         >
-          {/* Map Style Selector */}
-          <div>
-            <label className="text-xs text-sand-700 mb-2 block font-semibold border-b border-sand-200 pb-1">
-              Map Style
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              {mapStyles.map((style) => (
-                <button
-                  key={style.name}
-                  onClick={() => setMapStyle(style.style)}
-                  className={`
-                    cursor-pointer relative rounded-lg overflow-hidden h-16 flex flex-col justify-end p-1 transition-all duration-200 group
-                    ${mapStyle === style.style ? "ring-2 ring-forest-600 scale-105 shadow-lg" : "opacity-80 hover:opacity-100 hover:scale-105"}
-                  `}
-                >
-                  <div
-                    className={`absolute inset-0 bg-gradient-to-br ${style.gradient} z-10`}
-                  ></div>
+          {mapStyleSection}
 
-                  <img
-                    src={style.image}
-                    alt={style.name}
-                    className="absolute inset-0 w-full h-full object-cover z-0 transition-transform duration-500 group-hover:scale-110"
-                  />
-
-                  <span
-                    className={`relative z-20 text-[9px] font-bold ${style.textColor} text-center w-full leading-tight drop-shadow-md`}
-                  >
-                    {style.name}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Mouse Mode Toggle - Desktop Only */}
-          <div className="bg-forest-50 p-2 rounded text-[10px] text-forest-700 mb-2 space-y-2 hidden md:block">
-            <p className="font-semibold border-b border-forest-200 pb-1 mb-1">
-              Drag to
-            </p>
-            <div className="flex bg-white/90 rounded p-1">
-              <button
-                onClick={() => setMouseControlMode("map")}
-                className={`cursor-pointer flex-1 py-1 rounded transition-colors ${mouseControlMode === "map" ? "bg-forest-700 text-white" : "hover:bg-sand-100"}`}
-              >
-                Move the map
-              </button>
-              <button
-                onClick={() => setMouseControlMode("camera")}
-                className={`cursor-pointer flex-1 py-1 rounded transition-colors ${mouseControlMode === "camera" ? "bg-forest-700 text-white" : "hover:bg-sand-100"}`}
-              >
-                Look around
-              </button>
-            </div>
-          </div>
+          {dragToSection}
 
           {/* Grid Layout for sliders on Mobile to save space */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4">
-            {/* Map View: same card style as the "Drag to" card above */}
-            <div className="bg-forest-50 p-2 rounded text-[10px] text-forest-700 space-y-2">
-              <p className="font-semibold border-b border-forest-200 pb-1 mb-1">
-                Map View
-              </p>
-              <div className="flex bg-white/90 rounded p-1">
-                <button
-                  onClick={() => {
-                    setActiveView("2D");
-                    setPitch(0);
-                    setBearing(0);
-                  }}
-                  className={`cursor-pointer flex-1 py-1 rounded transition-colors ${activeView === "2D" ? "bg-forest-700 text-white" : "hover:bg-sand-100"}`}
-                >
-                  2D Topo
-                </button>
-                <button
-                  onClick={() => {
-                    setActiveView("3D");
-                    setPitch(75);
-                  }}
-                  className={`cursor-pointer flex-1 py-1 rounded transition-colors ${activeView === "3D" ? "bg-forest-700 text-white" : "hover:bg-sand-100"}`}
-                >
-                  3D Terrain
-                </button>
-              </div>
-            </div>
+            {mapViewSection}
 
-            <label className="text-xs text-sand-700 block font-semibold border-b border-sand-200 pb-1">
-              Contours Config
-            </label>
-            {/* Contour Toggle */}
-            <div
-              className={`flex items-center justify-between transition-opacity duration-300 ${activeView === "2D" ? "opacity-50 pointer-events-none grayscale" : ""}`}
-            >
-              <label className="text-xs text-sand-700">Show Contours</label>
-              <button
-                onClick={() => setShowContours(!showContours)}
-                disabled={activeView === "2D"}
-                className={`cursor-pointer w-10 h-5 rounded-full p-1 transition-colors ${showContours ? "bg-forest-800" : "bg-sand-100"}`}
-              >
-                <div
-                  className={`w-3 h-3 bg-white rounded-full shadow transition-transform ${showContours ? "translate-x-5" : "translate-x-0"}`}
-                />
-              </button>
-            </div>
-
-            {/* Opacity */}
-            <div
-              className={`transition-opacity duration-300 ${activeView === "2D" || !showContours ? "opacity-50 pointer-events-none grayscale" : ""}`}
-            >
-              <label className="text-xs text-sand-700 mb-1 flex justify-between">
-                <span>Opacity Contours</span>
-                <span>{(opacity * 100).toFixed(0)}%</span>
-              </label>
-              <input
-                type="range"
-                min={0}
-                max={100}
-                step={1}
-                value={Math.round(opacity * 100)}
-                onChange={(e) => setOpacity(Number(e.target.value) / 100)}
-                disabled={activeView === "2D" || !showContours}
-                className="w-full h-1 bg-sand-300 rounded-lg appearance-none cursor-pointer accent-forest-600"
-              />
-            </div>
-
-            {/* Contour Interval */}
-            <div
-              className={`
-                transition-opacity duration-300
-                ${!showContours || activeView === "2D" ? "opacity-50 pointer-events-none grayscale" : "opacity-100"}
-              `}
-            >
-              <label className="text-xs text-sand-700 mb-1 flex justify-between">
-                <span>Contour Interval</span>
-                <span>{contourInterval}m</span>
-              </label>
-              <input
-                type="range"
-                min="10"
-                max="500"
-                step="2.5"
-                value={contourInterval}
-                onChange={(e) => setContourInterval(Number(e.target.value))}
-                disabled={activeView === "2D"}
-                className="w-full h-1 bg-sand-300 rounded-lg appearance-none cursor-pointer accent-forest-600"
-              />
-              <div className="flex justify-between mt-2 gap-1">
-                {[12.5, 25, 50, 125].map((val) => (
-                  <button
-                    key={val}
-                    onClick={() => setContourInterval(val)}
-                    disabled={activeView === "2D"}
-                    className={`cursor-pointer flex-1 text-[10px] py-1 rounded border transition-colors ${
-                      contourInterval === val
-                        ? "bg-forest-800 border-forest-600 text-white font-bold"
-                        : "bg-sand-50 border-sand-200 text-sand-600 hover:bg-sand-100"
-                    }`}
-                  >
-                    {val}m
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Elevation Exaggeration */}
-            <div
-              className={`transition-opacity duration-300 ${activeView === "2D" || !showContours ? "opacity-50 pointer-events-none grayscale" : ""}`}
-            >
-              <label className="text-xs text-sand-700 mb-1 flex justify-between">
-                <span>Exaggeration (Height)</span>
-                <span>{elevationExaggeration.toFixed(1)}x</span>
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="10"
-                step="0.1"
-                value={elevationExaggeration}
-                onChange={(e) =>
-                  setElevationExaggeration(Number(e.target.value))
-                }
-                disabled={activeView === "2D" || !showContours}
-                className="w-full h-1 bg-sand-300 rounded-lg appearance-none cursor-pointer accent-forest-600"
-              />
-            </div>
-
-            <label className="text-xs text-sand-700 block font-semibold border-b border-sand-200 pb-1">
-              Grid Config
-            </label>
-            {/* Grid DMS Toggle */}
-            <div className="flex flex-col gap-2 transition-opacity duration-300">
-              <div className="flex items-center justify-between">
-                <label className="text-xs text-sand-700">Show Grid DMS</label>
-                <button
-                  onClick={() => setShowGridDMS(!showGridDMS)}
-                  className={`cursor-pointer w-10 h-5 rounded-full p-1 transition-colors ${showGridDMS ? "bg-forest-800" : "bg-sand-100"}`}
-                >
-                  <div
-                    className={`w-3 h-3 bg-white rounded-full shadow transition-transform ${showGridDMS ? "translate-x-5" : "translate-x-0"}`}
-                  />
-                </button>
-              </div>
-
-              {/* Grid Opacity Slider (Only visible when Grid is ON) */}
-              {showGridDMS && (
-                <div className="animate-in fade-in slide-in-from-top-2 space-y-3">
-                  {/* Opacity */}
-                  <div>
-                    <label className="text-[10px] text-sand-600 mb-1 flex justify-between">
-                      <span>Grid Opacity</span>
-                      <span>{(gridOpacity * 100).toFixed(0)}%</span>
-                    </label>
-                    <input
-                      type="range"
-                      min={0}
-                      max={100}
-                      step={5}
-                      value={Math.round(gridOpacity * 100)}
-                      onChange={(e) =>
-                        setGridOpacity(Number(e.target.value) / 100)
-                      }
-                      className="w-full h-1 bg-sand-300 rounded-lg appearance-none cursor-pointer accent-forest-600"
-                    />
-                  </div>
-
-                  {/* Grid Interval Selection */}
-                  <div>
-                    <label className="text-[10px] text-sand-600 mb-1 block">
-                      Grid Interval
-                    </label>
-                    <div className="grid grid-cols-2 gap-1">
-                      <button
-                        onClick={() => setGridStep("auto")}
-                        className={`cursor-pointer px-2 py-1 text-[10px] rounded border transition-colors col-span-2 ${
-                          gridStep === "auto"
-                            ? "bg-forest-800 border-forest-600 text-white font-bold"
-                            : "bg-sand-50 border-sand-200 text-sand-600 hover:bg-sand-100"
-                        }`}
-                      >
-                        Auto (Dynamic)
-                      </button>
-
-                      <button
-                        onClick={() => setGridStep(15 / 3600)}
-                        className={`cursor-pointer px-2 py-1 text-[10px] rounded border transition-colors ${
-                          gridStep === 15 / 3600
-                            ? "bg-forest-800 border-forest-600 text-white font-bold"
-                            : "bg-sand-50 border-sand-200 text-sand-600 hover:bg-sand-100"
-                        }`}
-                        title="~15 Detik (Skala 1:10.000)"
-                      >
-                        15" (~450m)
-                      </button>
-
-                      <button
-                        onClick={() => setGridStep(30 / 3600)}
-                        className={`cursor-pointer px-2 py-1 text-[10px] rounded border transition-colors ${
-                          gridStep === 30 / 3600
-                            ? "bg-forest-800 border-forest-600 text-white font-bold"
-                            : "bg-sand-50 border-sand-200 text-sand-600 hover:bg-sand-100"
-                        }`}
-                        title="~30 Detik (Skala 1:25.000)"
-                      >
-                        30" (~900m)
-                      </button>
-
-                      <button
-                        onClick={() => setGridStep(1 / 60)}
-                        className={`cursor-pointer px-2 py-1 text-[10px] rounded border transition-colors ${
-                          gridStep === 1 / 60
-                            ? "bg-forest-800 border-forest-600 text-white font-bold"
-                            : "bg-sand-50 border-sand-200 text-sand-600 hover:bg-sand-100"
-                        }`}
-                        title="~1 Menit (Skala 1:50.000)"
-                      >
-                        1' (~1.8km)
-                      </button>
-
-                      <button
-                        onClick={() => setGridStep(5 / 60)}
-                        className={`cursor-pointer px-2 py-1 text-[10px] rounded border transition-colors ${
-                          Math.abs(Number(gridStep) - 5 / 60) < 0.0000001
-                            ? "bg-forest-800 border-forest-600 text-white font-bold"
-                            : "bg-sand-50 border-sand-200 text-sand-600 hover:bg-sand-100"
-                        }`}
-                        title="~5 Menit (Skala 1:250.000)"
-                      >
-                        5' (~9km)
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+            {terrainSection}
           </div>
 
-          <div className="pt-6 mt-8 border-t border-sand-200 text-[10px] text-center text-sand-500 font-mono">
-            <div className="uppercase tracking-[0.2em] mb-1 text-[9px] text-sand-400">
-              In Collaboration With
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <div>
-                <a
-                  href="https://instagram.com/jendelacakradigital"
-                  target="_blank"
-                  className="font-bold text-sand-600 hover:text-forest-700 transition-colors uppercase tracking-wider"
-                >
-                  Jendela Cakra Digital
-                </a>
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <a
-                  href="https://instagram.com/makopala_ubl"
-                  target="_blank"
-                  className="font-bold text-sand-600 hover:text-forest-700 transition-colors uppercase tracking-wider"
-                >
-                  Makopala Univ. Budi Luhur
-                </a>
-              </div>
-
-              <div className="opacity-50">@2026</div>
-            </div>
-
-            <SiteLinks compact omit={["/docs"]} className="mt-3 font-sans" />
-          </div>
+          {credits}
         </ScrollShadowArea>
       </div>
 
