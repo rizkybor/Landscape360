@@ -155,9 +155,10 @@ export const RoutePlannerLayer = ({
         </Source>
       )}
 
-      {/* Phones: a bottom panel like Navigator, so the zoom and compass buttons stay free;
-          desktop: next to the sidebar */}
-      <div className="absolute z-30 left-2 right-2 bottom-[calc(0.5rem+env(safe-area-inset-bottom))] max-h-[55vh] overflow-y-auto md:overflow-hidden md:max-h-none md:right-auto md:bottom-auto md:left-[25.5rem] md:top-4 md:w-[360px] rounded-2xl border border-sand-200 bg-white/95 backdrop-blur-md text-ink shadow-xl shadow-sand-900/10">
+      {/* Phones: a bottom panel like Navigator, so the zoom and compass buttons stay free.
+          Fixed to the visible screen (not the map, which is 100vh and runs under the browser's
+          bottom bar on phones) and sized in dvh for the same reason. Desktop: next to the sidebar */}
+      <div className="fixed md:absolute z-30 left-2 right-2 bottom-[calc(0.5rem+env(safe-area-inset-bottom))] max-h-[55vh] max-h-[55dvh] overflow-y-auto md:overflow-hidden md:max-h-none md:right-auto md:bottom-auto md:left-[25.5rem] md:top-4 md:w-[360px] rounded-2xl border border-sand-200 bg-white/95 backdrop-blur-md text-ink shadow-xl shadow-sand-900/10">
         {/* Header */}
         <div className="px-4 pt-3.5 pb-3 flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-forest-800 text-gold-300 flex items-center justify-center shrink-0">

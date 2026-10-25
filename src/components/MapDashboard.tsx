@@ -20,7 +20,9 @@ export const MapDashboard = ({
   const rightMapRef = useRef<MapRef | null>(null);
 
   return (
-    <div className="w-full h-screen bg-white relative overflow-hidden">
+    // 100dvh: on phones 100vh is taller than the visible area, so anything at the bottom of
+    // the map (Route Planner, map credits) would sit under the browser's bottom bar
+    <div className="w-full h-screen h-dvh bg-white relative overflow-hidden">
       <SEO />
       {isSplitScreen ? (
         <div className="flex flex-col md:flex-row w-full h-full">
