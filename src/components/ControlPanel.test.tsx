@@ -117,6 +117,10 @@ describe('ControlPanel', () => {
       expect(tabs.map((t) => t.textContent?.trim().replace(/\s+/g, ' '))).toEqual(['Tools', 'Map', 'Terrain']);
       expect(tabs[0]).toHaveAttribute('aria-selected', 'true');
       expect(screen.getByText('Navigator')).toBeInTheDocument();
+      // Search is the icon in the sheet header, not a tile
+      expect(screen.getByRole('button', { name: 'Search location' })).toBeInTheDocument();
+      expect(screen.queryByText('Search')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Hide panel' })).not.toBeInTheDocument();
       fireEvent.click(tabs[1]);
       expect(screen.getByText('Streets')).toBeInTheDocument();
       expect(screen.queryByText('Navigator')).not.toBeInTheDocument();
