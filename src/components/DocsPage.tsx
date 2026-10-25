@@ -1998,8 +1998,8 @@ export const DocsPage = ({ onBack }: Props) => {
                 </a>
 
                 <div className="mt-10 flex flex-col items-center gap-6">
-                  <p className="text-[9px] uppercase tracking-[0.3em] text-sand-400 font-bold">
-                    In Collaboration With
+                  <p className="text-[10px] tracking-wide text-sand-400 font-bold">
+                    Powered by
                   </p>
 
                   <div className="flex flex-wrap justify-center gap-4">

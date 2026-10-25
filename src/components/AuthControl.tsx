@@ -662,8 +662,8 @@ export const AuthControl = () => {
                       Outside the centred block, so they sit at the bottom of the screen. */}
                   {isLoginView && !isForgotPassword && (
                     <div className="md:hidden pt-6 text-center text-[8px] text-sand-500 font-mono">
-                      <div className="uppercase tracking-[0.2em] mb-0.5 text-sand-400">
-                        In Collaboration With
+                      <div className="tracking-wide mb-0.5 text-sand-400">
+                        Powered by
                       </div>
                       <div className="text-[9px] font-bold text-sand-600 uppercase tracking-wider leading-relaxed">
                         <a
