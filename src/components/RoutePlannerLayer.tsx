@@ -155,7 +155,7 @@ export const RoutePlannerLayer = ({
         </Source>
       )}
 
-      <div className="absolute left-4 top-24 md:left-[18rem] md:top-4 z-30 w-[min(360px,calc(100vw-2rem))] rounded-2xl border border-sand-200 bg-white/95 backdrop-blur-md text-ink shadow-xl shadow-sand-900/10 overflow-hidden">
+      <div className="absolute left-4 top-24 md:left-[24rem] md:top-4 z-30 w-[min(360px,calc(100vw-2rem))] rounded-2xl border border-sand-200 bg-white/95 backdrop-blur-md text-ink shadow-xl shadow-sand-900/10 overflow-hidden">
         {/* Header */}
         <div className="px-4 pt-3.5 pb-3 flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-forest-800 text-gold-300 flex items-center justify-center shrink-0">
