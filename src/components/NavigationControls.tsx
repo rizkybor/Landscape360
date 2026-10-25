@@ -9,6 +9,7 @@ import { getAzimuthData, toDMS } from "../utils/surveyUtils";
 import { getElevationAtPoint } from "../utils/elevationUtils";
 import { getVisibleLocations, useMarkedLocationStore } from "../store/useMarkedLocationStore";
 import { CATEGORY_META } from "../utils/markedLocations";
+import { requestCompassPermission } from "../lib/deviceHeading";
 
 import { SosButton } from "./SosButton";
 interface NavigationControlsProps {
@@ -926,7 +927,11 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
 
       {/* Find My Location Button */}
       <button
-        onClick={onGeolocate}
+        onClick={() => {
+          // iPhone / iPad only share the compass after a tap; this is that tap
+          requestCompassPermission();
+          onGeolocate();
+        }}
         className="bg-white/90 backdrop-blur-sm p-2.5 rounded-xl shadow-lg border border-white/20 hover:bg-white hover:text-forest-800 transition-all active:scale-95 group cursor-pointer"
         title="Find My Location"
       >
