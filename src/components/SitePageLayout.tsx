@@ -67,7 +67,8 @@ export const SitePageLayout = ({ title, subtitle, icon: Icon, seoDescription, st
             >
               <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
             </button>
-            <img src={landscapeLogo} alt="Landscape 360" className="w-8 h-8 object-contain shrink-0" />
+            {/* Phones: no logo, so the title and subtitle have room next to the account button */}
+            <img src={landscapeLogo} alt="Landscape 360" className="hidden sm:block w-8 h-8 object-contain shrink-0" />
             <div className="min-w-0">
               <h1 className="text-base sm:text-lg font-bold leading-none flex items-center gap-2 truncate">
                 <Icon className="w-4 h-4 text-forest-700 shrink-0" /> {title}
@@ -82,7 +83,14 @@ export const SitePageLayout = ({ title, subtitle, icon: Icon, seoDescription, st
       {/* Column layout: the content fills the free height, so the footer sits at the bottom
           of the screen on short pages and after the content on long ones */}
       <main className="flex-1 overflow-y-auto custom-scrollbar flex flex-col">
-        <div className="flex-1 w-full max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12">{children}</div>
+        {/* Paragraphs are justified; centred ones (or inside a centred block) stay centred.
+            Hyphenation avoids wide gaps on phones, but never inside links or emails. */}
+        <div
+          lang="en"
+          className="flex-1 w-full max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-12 [&_p:not(.text-center):not(.text-center_*)]:text-justify [&_p]:hyphens-auto [&_li]:text-justify [&_li]:hyphens-auto [&_a]:hyphens-none"
+        >
+          {children}
+        </div>
 
         <footer className="shrink-0 border-t border-sand-100 py-8 px-4 text-center space-y-3">
           <SiteLinks />

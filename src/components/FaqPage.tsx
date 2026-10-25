@@ -198,7 +198,7 @@ export const FaqPage = () => {
                         className={`shrink-0 text-sand-500 transition-transform ${isOpen ? "rotate-180" : ""}`}
                       />
                     </button>
-                    {isOpen && <div className="px-5 pb-4 text-sm text-sand-700 leading-relaxed">{f.a}</div>}
+                    {isOpen && <div className="px-5 pb-4 text-sm text-sand-700 leading-relaxed text-justify hyphens-auto">{f.a}</div>}
                   </div>
                 );
               })}

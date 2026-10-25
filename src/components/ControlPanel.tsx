@@ -253,10 +253,10 @@ export const ControlPanel = () => {
     return () => clearInterval(id);
   }, [isActivityRecording]);
 
-  // Mobile: Navigator, Track Recorder and Marked Locations open their own bottom sheet, so
-  // lower this one out of the way while one is open and bring it back afterwards (only if
+  // Mobile: Navigator, Route, Track Recorder and Marked Locations open their own panel, so
+  // lower this sheet out of the way while one is open and bring it back afterwards (only if
   // it was open before)
-  const toolSheetOpen = isPlotMode || isTrackRecorderOpen || isMarkedLocationsOpen;
+  const toolSheetOpen = isPlotMode || isRoutePlannerEnabled || isTrackRecorderOpen || isMarkedLocationsOpen;
   const reopenAfterToolSheet = useRef(false);
   useEffect(() => {
     if (!isMobile) return;

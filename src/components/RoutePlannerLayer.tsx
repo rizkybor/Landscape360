@@ -155,7 +155,9 @@ export const RoutePlannerLayer = ({
         </Source>
       )}
 
-      <div className="absolute left-4 top-24 md:left-[25.5rem] md:top-4 z-30 w-[min(360px,calc(100vw-2rem))] rounded-2xl border border-sand-200 bg-white/95 backdrop-blur-md text-ink shadow-xl shadow-sand-900/10 overflow-hidden">
+      {/* Phones: a bottom panel like Navigator, so the zoom and compass buttons stay free;
+          desktop: next to the sidebar */}
+      <div className="absolute z-30 left-2 right-2 bottom-[calc(0.5rem+env(safe-area-inset-bottom))] max-h-[55vh] overflow-y-auto md:overflow-hidden md:max-h-none md:right-auto md:bottom-auto md:left-[25.5rem] md:top-4 md:w-[360px] rounded-2xl border border-sand-200 bg-white/95 backdrop-blur-md text-ink shadow-xl shadow-sand-900/10">
         {/* Header */}
         <div className="px-4 pt-3.5 pb-3 flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-forest-800 text-gold-300 flex items-center justify-center shrink-0">
