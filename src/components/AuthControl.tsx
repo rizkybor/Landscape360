@@ -1134,27 +1134,35 @@ export const AuthControl = () => {
                       <h4 className="text-[10px] font-bold text-sand-500 uppercase tracking-wider mb-2">
                         Administration
                       </h4>
-                      <div className="grid sm:grid-cols-2 gap-3">
+                      {/* Phones: 2 x 2 icon buttons (name on long-press / screen readers); wider screens: icon + name */}
+                      <div className="grid grid-cols-2 gap-2 sm:gap-3">
                         <button
                           onClick={() => {
                             setShowMenu(false);
                             setShowUserManagement(true);
                           }}
-                          className="cursor-pointer flex items-center justify-center gap-2 p-3 rounded-xl bg-forest-50 hover:bg-forest-100 text-forest-700 border border-forest-200 transition-all font-medium text-sm"
+                          className="cursor-pointer relative flex items-center justify-center gap-2 py-3.5 sm:p-3 rounded-xl bg-forest-50 hover:bg-forest-100 text-forest-700 border border-forest-200 transition-all font-medium text-sm"
+                          title="Manage Users & Plans"
+                          aria-label="Manage Users & Plans"
                         >
-                          <Users size={16} /> Manage Users & Plans
+                          <Users size={18} className="sm:w-4 sm:h-4" />
+                          <span className="hidden sm:inline">Manage Users & Plans</span>
                         </button>
                         <button
                           onClick={() => {
                             setShowMenu(false);
                             setShowAccountRequests(true);
                           }}
-                          className="cursor-pointer flex items-center justify-center gap-2 p-3 rounded-xl bg-forest-50 hover:bg-forest-100 text-forest-700 border border-forest-200 transition-all font-medium text-sm"
+                          className="cursor-pointer relative flex items-center justify-center gap-2 py-3.5 sm:p-3 rounded-xl bg-forest-50 hover:bg-forest-100 text-forest-700 border border-forest-200 transition-all font-medium text-sm"
+                          title="Account Requests"
+                          aria-label={newRequestCount > 0 ? `Account Requests, ${newRequestCount} new` : "Account Requests"}
                         >
-                          <Inbox size={16} /> Account Requests
+                          <Inbox size={18} className="sm:w-4 sm:h-4" />
+                          <span className="hidden sm:inline">Account Requests</span>
                           {newRequestCount > 0 && (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brick-600 text-white">
-                              {newRequestCount > 99 ? "99+" : newRequestCount} new
+                            <span className="absolute -top-1.5 -right-1.5 sm:static text-[10px] font-bold px-2 py-0.5 rounded-full bg-brick-600 text-white">
+                              {newRequestCount > 99 ? "99+" : newRequestCount}
+                              <span className="hidden sm:inline"> new</span>
                             </span>
                           )}
                         </button>
@@ -1163,21 +1171,28 @@ export const AuthControl = () => {
                             setShowMenu(false);
                             setShowPoiManager(true);
                           }}
-                          className="cursor-pointer sm:col-span-2 flex items-center justify-center gap-2 p-3 rounded-xl bg-forest-50 hover:bg-forest-100 text-forest-700 border border-forest-200 transition-all font-medium text-sm"
+                          className="cursor-pointer relative sm:col-span-2 flex items-center justify-center gap-2 py-3.5 sm:p-3 rounded-xl bg-forest-50 hover:bg-forest-100 text-forest-700 border border-forest-200 transition-all font-medium text-sm"
+                          title="Points of Interest"
+                          aria-label="Points of Interest"
                         >
-                          <MapPin size={16} /> Points of Interest
+                          <MapPin size={18} className="sm:w-4 sm:h-4" />
+                          <span className="hidden sm:inline">Points of Interest</span>
                         </button>
                         <button
                           onClick={() => {
                             setShowMenu(false);
                             openSosAlerts();
                           }}
-                          className="cursor-pointer sm:col-span-2 flex items-center justify-center gap-2 p-3 rounded-xl bg-brick-50 hover:bg-brick-100 text-brick-700 border border-brick-200 transition-all font-medium text-sm"
+                          className="cursor-pointer relative sm:col-span-2 flex items-center justify-center gap-2 py-3.5 sm:p-3 rounded-xl bg-brick-50 hover:bg-brick-100 text-brick-700 border border-brick-200 transition-all font-medium text-sm"
+                          title="S.O.S Alerts"
+                          aria-label={activeSosCount > 0 ? `S.O.S Alerts, ${activeSosCount} active` : "S.O.S Alerts"}
                         >
-                          <Siren size={16} /> S.O.S Alerts
+                          <Siren size={18} className="sm:w-4 sm:h-4" />
+                          <span className="hidden sm:inline">S.O.S Alerts</span>
                           {activeSosCount > 0 && (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brick-600 text-white animate-pulse">
-                              {activeSosCount} active
+                            <span className="absolute -top-1.5 -right-1.5 sm:static text-[10px] font-bold px-2 py-0.5 rounded-full bg-brick-600 text-white animate-pulse">
+                              {activeSosCount}
+                              <span className="hidden sm:inline"> active</span>
                             </span>
                           )}
                         </button>

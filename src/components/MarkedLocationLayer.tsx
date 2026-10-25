@@ -4,7 +4,7 @@ import { flushSync } from 'react-dom';
 import { Source, Layer, Marker, Popup, useMap } from 'react-map-gl/mapbox';
 import type { FeatureCollection, Point } from 'geojson';
 import type { Map as MapboxMap, MapMouseEvent } from 'mapbox-gl';
-import { ChevronDown, ChevronUp, Copy, MapPin, Navigation, PanelRightOpen } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, Copy, MapPin, Navigation, PanelRightOpen } from 'lucide-react';
 import { getVisibleLocations, useMarkedLocationStore, type VisibleLocation } from '../store/useMarkedLocationStore';
 import { CATEGORY_META, directionsUrl, formatLatLng } from '../utils/markedLocations';
 import { CATEGORY_ICONS } from '../utils/markedLocationIcons';
@@ -48,7 +48,32 @@ const loadMarkerImage = (category: MarkedLocationCategory, kind: VisibleLocation
   }
   return image;
 };
+// Rounded white "pill" behind the name above each marker; stretches to fit the text
+const LABEL_BG = 'marked-label-bg';
+const addLabelBackground = (map: MapboxMap) => {
+  if (map.hasImage(LABEL_BG)) return;
+  const size = 48; // 24 px at pixelRatio 2
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  ctx.fillStyle = '#ffffff';
+  ctx.strokeStyle = '#e7e2d4';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.roundRect(1, 1, size - 2, size - 2, 16);
+  ctx.fill();
+  ctx.stroke();
+  map.addImage(LABEL_BG, ctx.getImageData(0, 0, size, size), {
+    pixelRatio: 2,
+    stretchX: [[18, 30]],
+    stretchY: [[18, 30]],
+    content: [12, 8, 36, 40],
+  });
+};
+
 const addMarkerImages = (map: MapboxMap) => {
+  addLabelBackground(map);
   for (const category of Object.keys(CATEGORY_META) as MarkedLocationCategory[]) {
     for (const kind of Object.keys(RING) as VisibleLocation['kind'][]) {
       const id = imageId(category, kind);
@@ -110,13 +135,14 @@ export const MarkedLocationLayer = () => {
     };
   }, [mapRef]);
 
-  // Click a marker to open its details; pointer cursor on hover
+  // Click a marker to open its details, click it again to close them; pointer cursor on hover
   useEffect(() => {
     const map = mapRef?.getMap();
     if (!map || isPicking) return;
     const onClick = (e: MapMouseEvent) => {
       const id = e.features?.[0]?.properties?.id;
-      if (id) select(String(id));
+      if (!id) return;
+      select(useMarkedLocationStore.getState().selectedId === String(id) ? null : String(id));
     };
     const onEnter = () => (map.getCanvas().style.cursor = 'pointer');
     const onLeave = () => (map.getCanvas().style.cursor = '');
@@ -183,18 +209,21 @@ export const MarkedLocationLayer = () => {
           id="marked-locations-labels"
           type="symbol"
           minzoom={11}
+          // The open location shows its name in the popup instead
+          filter={['!=', ['get', 'id'], selectedId ?? '']}
           layout={{
             'text-field': ['get', 'name'],
             'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
             'text-size': 11,
-            'text-offset': [0, 1.4],
-            'text-anchor': 'top',
+            'text-anchor': 'bottom',
+            'text-offset': [0, -1.9],
             'text-max-width': 12,
+            'icon-image': LABEL_BG,
+            'icon-text-fit': 'both',
+            'icon-text-fit-padding': [3, 7, 3, 7],
           }}
           paint={{
             'text-color': '#1a2214',
-            'text-halo-color': '#ffffff',
-            'text-halo-width': 1.5,
           }}
         />
       </Source>
@@ -213,10 +242,11 @@ export const MarkedLocationLayer = () => {
           onClose={() => select(null)}
           closeOnClick={false}
           focusAfterOpen={false}
+          className="marked-popup"
           maxWidth="280px"
         >
           <div className="p-1 text-ink space-y-2">
-            <div className="flex items-start gap-2 pr-4">
+            <div className="flex items-start gap-2 pr-6">
               {(() => {
                 const Icon = CATEGORY_ICONS[selected.location.category] ?? MapPin;
                 return (
@@ -229,10 +259,7 @@ export const MarkedLocationLayer = () => {
                 );
               })()}
               <div className="min-w-0">
-                <h3 className="font-bold text-sm leading-tight break-words">{selected.location.name}</h3>
-                <p className="text-[10px] text-sand-600 uppercase tracking-wide">
-                  {CATEGORY_META[selected.location.category]?.label}
-                </p>
+                <h3 className="mt-1 font-bold text-sm leading-tight break-words">{selected.location.name}</h3>
               </div>
             </div>
 
@@ -285,22 +312,27 @@ export const MarkedLocationLayer = () => {
                 href={directionsUrl(selected.location.lat, selected.location.lng)}
                 target="_blank"
                 rel="noreferrer"
-                className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg bg-forest-800 hover:bg-forest-700 text-white text-[10px] font-bold"
+                className="flex-1 flex items-center justify-center py-2 rounded-lg bg-forest-800 hover:bg-forest-700 text-white"
+                title="Directions"
+                aria-label="Directions"
               >
-                <Navigation size={11} /> Directions
+                <Navigation size={14} />
               </a>
               <button
                 onClick={() => copyCoordinates(selected.location.lat, selected.location.lng)}
-                className="cursor-pointer flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg bg-sand-100 hover:bg-sand-200 text-ink text-[10px] font-bold"
+                className="cursor-pointer flex-1 flex items-center justify-center py-2 rounded-lg bg-sand-100 hover:bg-sand-200 text-ink"
+                title={copied ? 'Copied' : 'Copy coordinates'}
+                aria-label={copied ? 'Copied' : 'Copy coordinates'}
               >
-                <Copy size={11} /> {copied ? 'Copied' : 'Copy'}
+                {copied ? <Check size={14} className="text-forest-700" /> : <Copy size={14} />}
               </button>
               <button
                 onClick={() => setPanelOpen(true)}
-                className="cursor-pointer flex items-center justify-center px-2 py-1.5 rounded-lg bg-sand-100 hover:bg-sand-200 text-ink"
+                className="cursor-pointer flex-1 flex items-center justify-center py-2 rounded-lg bg-sand-100 hover:bg-sand-200 text-ink"
                 title="Open in Marked Locations"
+                aria-label="Open in Marked Locations"
               >
-                <PanelRightOpen size={12} />
+                <PanelRightOpen size={14} />
               </button>
             </div>
           </div>

@@ -167,6 +167,9 @@ describe('MarkedLocationPanel', () => {
     fireEvent.change(screen.getByLabelText('Latitude'), { target: { value: '-6.78' } });
     fireEvent.change(screen.getByLabelText('Longitude'), { target: { value: '106.98' } });
     fireEvent.change(screen.getByLabelText('Elevation'), { target: { value: '2100' } });
+    // Optional fields start hidden
+    expect(screen.queryByPlaceholderText(/Comma separated/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Optional details/ }));
     fireEvent.change(screen.getByPlaceholderText(/Comma separated/), { target: { value: 'water, water, spring' } });
     fireEvent.click(screen.getByText('Save Location'));
 

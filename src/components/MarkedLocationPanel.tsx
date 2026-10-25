@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Check,
+  ChevronDown,
+  ChevronUp,
   Crosshair,
   Download,
   Loader2,
@@ -131,6 +133,12 @@ export const MarkedLocationPanel = () => {
   const [formMode, setFormMode] = useState<{ editingId: string | null } | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [formError, setFormError] = useState<string | null>(null);
+  const [showOptional, setShowOptional] = useState(false);
+  const optionalRef = useRef<HTMLDivElement>(null);
+  // Bring the opened fields into view inside the scrolling panel
+  useEffect(() => {
+    if (showOptional) optionalRef.current?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
+  }, [showOptional]);
   const [isSaving, setIsSaving] = useState(false);
   const [checkedIds, setCheckedIds] = useState<string[]>([]);
   const [sharingIds, setSharingIds] = useState<string[] | null>(null);
@@ -251,6 +259,7 @@ export const MarkedLocationPanel = () => {
   const openCreate = () => {
     setForm({ ...emptyForm });
     setFormError(null);
+    setShowOptional(false);
     setPickedPoint(null);
     setFormMode({ editingId: null });
   };
@@ -258,6 +267,7 @@ export const MarkedLocationPanel = () => {
   const openEdit = (l: MarkedLocation) => {
     setForm(toForm(l));
     setFormError(null);
+    setShowOptional(false);
     setPickedPoint(null);
     setFormMode({ editingId: l.id });
   };
@@ -524,50 +534,82 @@ export const MarkedLocationPanel = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
+            {/* Optional fields, hidden until asked for */}
+            {(() => {
+              const filled = [form.address, form.contact, form.description, form.tags].filter((v) => v.trim()).length;
+              return (
+                <button
+                  type="button"
+                  onClick={() => setShowOptional((v) => !v)}
+                  aria-expanded={showOptional}
+                  className="cursor-pointer w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-sand-50 hover:bg-sand-100 border border-sand-200 text-[11px] font-bold text-sand-700 transition-colors"
+                >
+                  <span className="min-w-0 truncate">
+                    Optional details
+                    {filled > 0 ? (
+                      <span className="font-normal text-forest-700"> · {filled} filled</span>
+                    ) : (
+                      // Phones: the short label only, so it stays on one line
+                      <span className="hidden sm:inline font-normal text-sand-500"> · address, contact, description, tags</span>
+                    )}
+                  </span>
+                  {showOptional ? <ChevronUp size={14} className="shrink-0" /> : <ChevronDown size={14} className="shrink-0" />}
+                </button>
+              );
+            })()}
+
+            {showOptional && (
+              <div
+                className="space-y-2.5"
+                ref={optionalRef}
+              >
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <label className={labelClass}>Area / Address</label>
+                  <input
+                    value={form.address}
+                    onChange={(e) => setForm({ ...form, address: e.target.value })}
+                    maxLength={200}
+                    placeholder="Village, district"
+                    className={inputClass}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className={labelClass}>Contact</label>
+                  <input
+                    value={form.contact}
+                    onChange={(e) => setForm({ ...form, contact: e.target.value })}
+                    maxLength={120}
+                    placeholder="Ranger, phone"
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+
               <div className="space-y-1">
-                <label className={labelClass}>Area / Address</label>
+                <label className={labelClass}>Description</label>
+                <textarea
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  maxLength={2000}
+                  rows={3}
+                  placeholder="Access, conditions, water availability, notes..."
+                  className={`${inputClass} resize-none`}
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className={labelClass}>Tags</label>
                 <input
-                  value={form.address}
-                  onChange={(e) => setForm({ ...form, address: e.target.value })}
-                  maxLength={200}
-                  placeholder="Village, district"
+                  value={form.tags}
+                  onChange={(e) => setForm({ ...form, tags: e.target.value })}
+                  placeholder="Comma separated, e.g. basecamp, water, 2024"
                   className={inputClass}
                 />
               </div>
-              <div className="space-y-1">
-                <label className={labelClass}>Contact</label>
-                <input
-                  value={form.contact}
-                  onChange={(e) => setForm({ ...form, contact: e.target.value })}
-                  maxLength={120}
-                  placeholder="Ranger, phone"
-                  className={inputClass}
-                />
+
               </div>
-            </div>
-
-            <div className="space-y-1">
-              <label className={labelClass}>Description</label>
-              <textarea
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-                maxLength={2000}
-                rows={3}
-                placeholder="Access, conditions, water availability, notes..."
-                className={`${inputClass} resize-none`}
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className={labelClass}>Tags</label>
-              <input
-                value={form.tags}
-                onChange={(e) => setForm({ ...form, tags: e.target.value })}
-                placeholder="Comma separated, e.g. basecamp, water, 2024"
-                className={inputClass}
-              />
-            </div>
+            )}
 
             {formError && <div className="text-[11px] text-brick-600">{formError}</div>}
 
