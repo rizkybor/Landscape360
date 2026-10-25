@@ -21,6 +21,10 @@ export default defineConfig({
         // being downloaded by every visitor on install: basemap import (GeoTIFF, PDF,
         // reprojection), PDF export and screenshots
         globIgnores: [
+          // Only the Latin subset of the brand font is used; the others stay on demand
+          '**/assets/inter-cyrillic*',
+          '**/assets/inter-greek*',
+          '**/assets/inter-vietnamese*',
           '**/pdf.worker*',
           '**/assets/pdf-*',
           '**/assets/main-dist-*',
