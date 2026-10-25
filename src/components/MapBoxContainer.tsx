@@ -668,7 +668,8 @@ const MapBoxContainerComponent = ({
     }
   }, []);
 
-  // Custom Mouse Interaction Handler (Left=Rotate, Right=Pan)
+  // Custom mouse drag handler. "Drag to: Move the map" (default): left pans, right rotates;
+  // "Drag to: Look around": the other way round
   useEffect(() => {
     // Disable custom mouse handler on mobile to prevent conflict with touch gestures
     if (window.innerWidth < 768) return;

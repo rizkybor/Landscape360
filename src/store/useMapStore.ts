@@ -64,7 +64,7 @@ export const useMapStore = create<MapState>()(
       activeView: '2D', // Always open in 2D Topo (not persisted)
       elevationExaggeration: 1.5, // Slightly exaggerate terrain for better effect
       opacity: 0.8,
-      mouseControlMode: 'map', // Default to Map Mode (Left=Pan)
+      mouseControlMode: 'map', // Default: "Drag to: Move the map" (left drag pans)
       interactionMode: 'default',
       regionPoints: [],
       showContours: true,
