@@ -1,9 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
 import { Marker } from 'react-map-gl/mapbox';
-import { askCompassOnFirstTap, watchDeviceHeading } from '../lib/deviceHeading';
+import { X } from 'lucide-react';
+import { askCompassOnFirstTap, createCompassQualityTracker, watchDeviceHeading } from '../lib/deviceHeading';
 
 // Below this change (degrees) the heading beam is not moved, so sensor noise does not shake it
 const MIN_TURN_DEG = 1.5;
+// Set once the user closes the calibration hint: it then never shows again on this device
+const HINT_DISMISSED_KEY = 'l360-compass-hint-dismissed';
+const readDismissed = () => {
+  try {
+    return localStorage.getItem(HINT_DISMISSED_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
 
 export const UserLocationMarker = ({ initialLocation }: { initialLocation?: [number, number] | null }) => {
   const [coords, setCoords] = useState<{longitude: number, latitude: number, heading: number | null} | null>(
@@ -26,6 +36,18 @@ export const UserLocationMarker = ({ initialLocation }: { initialLocation?: [num
   const headingRef = useRef<HTMLDivElement>(null);
   const shownAngle = useRef<number | null>(null); // unwrapped, so 359° -> 1° turns 2°, not 358°
   const [hasCompass, setHasCompass] = useState(false);
+  // Small one-time hint under the dot while the compass looks off; gone once it settles
+  const [showCalibrateHint, setShowCalibrateHint] = useState(false);
+  const hintUsed = useRef(readDismissed());
+  const dismissHint = () => {
+    setShowCalibrateHint(false);
+    hintUsed.current = true;
+    try {
+      localStorage.setItem(HINT_DISMISSED_KEY, '1');
+    } catch {
+      // Storage blocked: hidden for this session only
+    }
+  };
 
   useEffect(() => {
     let frame = 0;
@@ -45,9 +67,20 @@ export const UserLocationMarker = ({ initialLocation }: { initialLocation?: [num
       el.style.transform = `rotate(${next}deg)`;
     };
     const stopAsking = askCompassOnFirstTap();
-    // Only real compass readings arrive here; once one did, the needle stays
-    const stop = watchDeviceHeading((deg) => {
-      latest = deg;
+    const quality = createCompassQualityTracker();
+    let hintTimer = 0;
+    const stop = watchDeviceHeading((reading) => {
+      const q = quality.push(reading);
+      if (q === 'poor' && !hintUsed.current) {
+        hintUsed.current = true;
+        setShowCalibrateHint(true);
+        hintTimer = window.setTimeout(() => setShowCalibrateHint(false), 12000);
+      } else if (q === 'ok' && hintUsed.current) {
+        setShowCalibrateHint(false);
+      }
+      if (reading.heading === null) return;
+      // Only real compass readings get here; once one did, the needle stays
+      latest = reading.heading;
       setHasCompass(true);
       if (!frame) frame = requestAnimationFrame(apply);
     });
@@ -55,6 +88,7 @@ export const UserLocationMarker = ({ initialLocation }: { initialLocation?: [num
       stop();
       stopAsking();
       if (frame) cancelAnimationFrame(frame);
+      window.clearTimeout(hintTimer);
     };
   }, []);
 
@@ -125,8 +159,25 @@ export const UserLocationMarker = ({ initialLocation }: { initialLocation?: [num
   const showHeading = hasCompass || gpsHeading !== null;
 
   return (
-    // rotationAlignment "map": the marker turns with the map, so a heading measured from
-    // north still points the right way when the map is rotated
+    <>
+    {showCalibrateHint && (
+      // Its own marker, so the text stays upright when the map is rotated
+      <Marker longitude={coords.longitude} latitude={coords.latitude} anchor="top" offset={[0, 26]}>
+        <div className="flex items-center gap-1 whitespace-nowrap pl-2 pr-1 py-0.5 rounded-full bg-white/90 border border-sand-200 shadow text-[9px] font-medium text-sand-700">
+          Compass off: move the phone in a figure 8
+          <button
+            onClick={dismissHint}
+            className="cursor-pointer p-0.5 rounded-full hover:bg-sand-100 text-sand-500 hover:text-ink"
+            title="Don't show again"
+            aria-label="Don't show this hint again"
+          >
+            <X size={10} />
+          </button>
+        </div>
+      </Marker>
+    )}
+    {/* rotationAlignment "map": the marker turns with the map, so a heading measured from
+        north still points the right way when the map is rotated */}
     <Marker longitude={coords.longitude} latitude={coords.latitude} anchor="center" rotationAlignment="map">
         <div className="relative flex items-center justify-center w-12 h-12 pointer-events-none">
             {/* Heading: a beam where the phone points, with a sharp needle at the dot */}
@@ -162,5 +213,6 @@ export const UserLocationMarker = ({ initialLocation }: { initialLocation?: [num
             <div className="relative w-4 h-4 bg-ember-500 border-[3px] border-white rounded-full shadow-md shadow-ember-900/40 z-10" />
         </div>
     </Marker>
+    </>
   );
 };
