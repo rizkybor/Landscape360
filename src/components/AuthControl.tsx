@@ -661,31 +661,31 @@ export const AuthControl = () => {
                   {/* Credits: Sign In on phones only (the sidebar shows them on desktop).
                       Outside the centred block, so they sit at the bottom of the screen. */}
                   {isLoginView && !isForgotPassword && (
-                    <div className="md:hidden pt-6 text-center text-[8px] text-sand-500 font-mono">
-                      <div className="tracking-wide mb-0.5 text-sand-400">
-                        Powered by
-                      </div>
-                      <div className="text-[9px] font-bold text-sand-600 uppercase tracking-wider leading-relaxed">
-                        <a
-                          href="https://instagram.com/jendelacakradigital"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="hover:text-forest-700 transition-colors"
-                        >
-                          Jendela Cakra Digital
-                        </a>{" "}
-                        &amp;{" "}
-                        <a
-                          href="https://instagram.com/makopala_ubl"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="hover:text-forest-700 transition-colors"
-                        >
-                          Makopala Univ. Budi Luhur
-                        </a>
-                      </div>
-                      <div className="opacity-50">@2026</div>
-                    </div>
+                    // One small line, same as the bottom of the sidebar
+                    <p className="md:hidden pt-6 flex flex-wrap items-center justify-center gap-x-1 gap-y-0.5 text-[8px] text-sand-500 text-center leading-tight">
+                      <span className="text-sand-400">Powered by</span>
+                      <a
+                        href="https://instagram.com/jendelacakradigital"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-bold text-sand-600 hover:text-forest-700 whitespace-nowrap"
+                      >
+                        Jendela Cakra Digital
+                      </a>
+                      <span aria-hidden>·</span>
+                      <a
+                        href="https://instagram.com/makopala_ubl"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-bold text-sand-600 hover:text-forest-700 whitespace-nowrap"
+                      >
+                        Makopala Univ. Budi Luhur
+                      </a>
+                      <span className="whitespace-nowrap">
+                        <span aria-hidden>· </span>
+                        <span className="opacity-60">@2026</span>
+                      </span>
+                    </p>
                   )}
                 </div>
 
