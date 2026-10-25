@@ -11,14 +11,14 @@ interface SEOProps {
 }
 
 export const SEO: React.FC<SEOProps> = ({
-  title = 'Landscape 360 | Navigate, Track, Explore',
+  title = 'Landscape 360 | Explore without Limits',
   description = 'Your ultimate companion for outdoor adventures. Advanced 3D land navigation, real-time GPS tracking, and reliable offline maps for hikers, climbers, and explorers.',
   keywords = 'land navigation, real-time tracking, offline maps, 3d terrain, hiking maps, mountaineering, orienteering, outdoor exploration, gps tracker, topographic map, contour lines, slope analysis, route planner, wilderness navigation, peta gunung indonesia, pendaki gunung, makopala, landscape 360, custom basemaps, offline gps, broadcast location, team monitoring, sar tool, search and rescue',
   image = 'https://landscape360.jcdigital.co.id/og-image.jpg',
   url = 'https://landscape360.jcdigital.co.id/',
   type = 'website',
 }) => {
-  const siteTitle = title === 'Landscape 360 | Navigate, Track, Explore' ? title : `${title} | Landscape 360`;
+  const siteTitle = title === 'Landscape 360 | Explore without Limits' ? title : `${title} | Landscape 360`;
 
   const structuredData = [
     {
