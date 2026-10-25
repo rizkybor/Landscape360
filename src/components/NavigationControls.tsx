@@ -5,7 +5,10 @@ import landscapeLogo from "../assets/LandscapeLogo.png";
 import { useSurveyStore } from "../store/useSurveyStore";
 import { useMapStore } from "../store/useMapStore";
 import { useShallow } from "zustand/react/shallow";
-import { distance, point } from "@turf/turf";
+import { getAzimuthData, toDMS } from "../utils/surveyUtils";
+import { getElevationAtPoint } from "../utils/elevationUtils";
+import { getVisibleLocations, useMarkedLocationStore } from "../store/useMarkedLocationStore";
+import { CATEGORY_META } from "../utils/markedLocations";
 
 import { SosButton } from "./SosButton";
 interface NavigationControlsProps {
@@ -24,19 +27,6 @@ const escapeHtml = (value: string) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 
-const toDMS = (deg: number, isLat: boolean): string => {
-    const absolute = Math.abs(deg);
-    const degrees = Math.floor(absolute);
-    const minutesNotTruncated = (absolute - degrees) * 60;
-    const minutes = Math.floor(minutesNotTruncated);
-    const seconds = ((minutesNotTruncated - minutes) * 60).toFixed(1);
-    
-    const dir = isLat 
-        ? (deg >= 0 ? "N" : "S") 
-        : (deg >= 0 ? "E" : "W");
-        
-    return `${degrees}° ${minutes}' ${seconds}" ${dir}`;
-};
 
 export const NavigationControls: React.FC<NavigationControlsProps> = ({
   mapRef,
@@ -139,18 +129,40 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         const map = mapRef.current.getMap();
         const canvas = map.getCanvas();
         
-        // Force a render to ensure everything is sharp
-        await new Promise<void>((resolve) => {
-             map.once('render', () => resolve());
+        // Read the map pixels inside the render callback: phones run without
+        // preserveDrawingBuffer, so after the frame is shown the canvas reads back empty
+        const mapDataUrl = await new Promise<string>((resolve) => {
+             map.once('render', () => resolve(canvas.toDataURL('image/jpeg', 0.9)));
              map.triggerRepaint();
         });
+
+        // Facts for the report, read before the page is built
+        const center = map.getCenter();
+        const centerElevation = await getElevationAtPoint(map, center.lng, center.lat).catch(() => null);
+        const mapEl = map.getContainer();
+        const viewW = mapEl.clientWidth;
+        const viewH = mapEl.clientHeight;
+        const exportedAt = new Date();
 
         // Wait for fonts to load
         await document.fonts.ready;
 
-        // Gather Survey Data
-        const allPoints = groups.flatMap(g => g.points);
+        // Gather Survey Data: distances are measured like on the map (WGS84 geodesic) and
+        // start again at 0 for every survey line
+        let profileOffset = 0;
+        const processedPoints = groups.flatMap((g) => {
+            let total = 0;
+            const rows = g.points.map((p, i) => {
+                const dist = i > 0 ? getAzimuthData(g.points[i - 1], p).horizontalDistance : 0;
+                total += dist;
+                return { ...p, dist, totalDist: total, profileDist: profileOffset + total, first: i === 0, groupName: g.name, color: g.color };
+            });
+            profileOffset += total;
+            return rows;
+        });
+        const allPoints = processedPoints;
         const hasData = allPoints.length > 0;
+        const showGroupColumn = groups.filter((g) => g.points.length > 0).length > 1;
 
         // Determine if we need to resize the container to fit the table
         // const baseWidth = canvas.width;
@@ -173,7 +185,9 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         const PAGE_HEIGHT = Math.floor(exportWidth * 1.414);
         const MARGIN = 40 * scale;
         
-        const captureScale = 2; // High quality export
+        // 1.25x keeps text sharp when zoomed in while keeping files small (2x made
+        // 3200 x 4500 px pages, tens of MB as PNG)
+        const captureScale = 1.25;
 
         // Helper to capture a specific DOM element as a page
         const capturePage = async (pageContent: HTMLElement) => {
@@ -231,7 +245,8 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                     </div>
                 </div>
                 <div style="text-align: right;">
-                    <div style="color: #1a2214; font-family: 'Inter', monospace; font-size: ${12 * scale}px; font-weight: bold;">${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                    <div style="color: #1a2214; font-family: 'Inter', monospace; font-size: ${12 * scale}px; font-weight: bold;">${exportedAt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                    <div style="color: #7f7965; font-family: 'Inter', monospace; font-size: ${10 * scale}px; margin-top: ${4 * scale}px;">${exportedAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</div>
                 </div>
             </div>
             <div style="height: 1px; background: #e7e2d4; margin: 0 ${MARGIN}px;"></div>
@@ -279,7 +294,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         mapContainer.style.width = '100%';
         
         const mapImage = new Image();
-        mapImage.src = canvas.toDataURL('image/png', 0.9); 
+        mapImage.src = mapDataUrl;
         mapImage.crossOrigin = "anonymous";
         
         await new Promise((resolve) => {
@@ -288,7 +303,31 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
             setTimeout(resolve, 1000);
         });
         
-        mapContainer.appendChild(mapImage);
+        // Map size on the page. A phone screen is much taller than wide: at full width the
+        // map would fill the page and push the info box off it, so it is cropped to at most
+        // 55% of the page height (centered). Markers live in mapInner so they stay aligned.
+        const mapDisplayWidth = PAGE_WIDTH - (MARGIN * 2);
+        const mapDisplayHeight = mapDisplayWidth * (viewH / viewW);
+        const mapBoxHeight = Math.min(mapDisplayHeight, PAGE_HEIGHT * 0.55);
+        const cropTopPx = ((mapDisplayHeight - mapBoxHeight) / 2) * (viewH / mapDisplayHeight); // in map screen px
+        const visibleTop = cropTopPx;
+        const visibleBottom = viewH - cropTopPx;
+        const inView = (lng: number, lat: number) => {
+            const pos = map.project([lng, lat]);
+            return pos.x >= 0 && pos.x <= viewW && pos.y >= visibleTop && pos.y <= visibleBottom;
+        };
+        const markedInView = getVisibleLocations(useMarkedLocationStore.getState())
+            .map((v) => v.location)
+            .filter((l) => inView(l.lng, l.lat));
+
+        const mapInner = document.createElement('div');
+        mapInner.style.position = 'absolute';
+        mapInner.style.left = '0';
+        mapInner.style.width = '100%';
+        mapInner.style.height = `${mapDisplayHeight}px`;
+        mapInner.style.top = `${-(mapDisplayHeight - mapBoxHeight) / 2}px`;
+        mapInner.appendChild(mapImage);
+        mapContainer.appendChild(mapInner);
 
         // --- Add Survey Points Overlay (Prisma Markers) ---
         if (hasData) {
@@ -296,9 +335,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
             const containerWidth = mapContainerEl.clientWidth;
             const containerHeight = mapContainerEl.clientHeight;
             
-            allPoints.forEach((p) => {
-                if (!p.name) return;
-
+            allPoints.forEach((p, pointIndex) => {
                 const pos = map.project([p.lng, p.lat]);
                 
                 if (pos.x >= -100 && pos.x <= containerWidth + 100 && 
@@ -322,7 +359,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                     markerEl.style.position = 'absolute';
                     markerEl.style.width = `${markerSize}px`;
                     markerEl.style.height = `${markerSize}px`;
-                    markerEl.style.backgroundColor = '#e46c24';
+                    markerEl.style.backgroundColor = p.color || '#e46c24';
                     markerEl.style.border = `${2 * scale}px solid white`;
                     markerEl.style.left = `-${markerSize/2}px`;
                     markerEl.style.top = `-${markerSize/2}px`;
@@ -345,7 +382,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                     
                     labelEl.style.borderRadius = `${24 * scale}px`;
                     // labelEl.style.padding = `${6 * scale}px ${16 * scale}px`;
-                    labelEl.style.padding = `${5 * scale}px ${20 * scale}px ${20 * scale}px`;
+                    labelEl.style.padding = `${6 * scale}px ${14 * scale}px`;
                     labelEl.style.display = 'flex';
                     labelEl.style.alignItems = 'center';
                     labelEl.style.justifyContent = 'center'; 
@@ -355,7 +392,8 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                     labelEl.style.fontFamily = "'Inter', sans-serif";
 
                     const nameSpan = document.createElement('span');
-                    nameSpan.textContent = p.name;
+                    // Same number as in the table below, plus the name when it has one
+                    nameSpan.textContent = p.name ? `${pointIndex + 1}. ${p.name}` : `${pointIndex + 1}`;
                     nameSpan.style.color = '#1a2214';
                     nameSpan.style.fontWeight = '700';
                     nameSpan.style.fontSize = `${14 * scale}px`;
@@ -374,7 +412,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                     labelEl.appendChild(elevSpan);
 
                     markerWrapper.appendChild(labelEl);
-                    mapContainer.appendChild(markerWrapper);
+                    mapInner.appendChild(markerWrapper);
                 }
             });
         }
@@ -398,19 +436,17 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
             <!-- Bottom Footer -->
             <div style="display: flex; justify-content: space-between; align-items: end;">
                 <div style="background: rgba(255,255,255,0.92); padding: ${16 * scale}px; border-radius: ${16 * scale}px; backdrop-filter: blur(10px); border: 1px solid #e7e2d4; display: grid; grid-template-columns: auto auto; gap: ${8 * scale}px ${24 * scale}px; color: #1a2214; font-family: 'Inter', monospace; font-size: ${12 * scale}px;">
-                    <div style="color: #7f7965;">Center Point</div>
-                    <div style="font-weight: bold;">${toDMS(map.getCenter().lat, true)}, ${toDMS(map.getCenter().lng, false)}</div>
+                    <div style="color: #7f7965;">Map Center</div>
+                    <div style="font-weight: bold;">${toDMS(center.lat, true)}, ${toDMS(center.lng, false)}<br/><span style="font-weight: normal; color: #7f7965;">${center.lat.toFixed(6)}, ${center.lng.toFixed(6)}</span></div>
                     
-                    <div style="color: #7f7965;">Avg Elevation</div>
-                    <div style="font-weight: bold; color: #8a5e14;">${(() => {
-                        const raw = map.queryTerrainElevation ? map.queryTerrainElevation(map.getCenter()) : 0;
-                        const terrain = map.getTerrain();
-                        const exaggeration = (terrain && typeof terrain.exaggeration === 'number') ? terrain.exaggeration : 1;
-                        return ((raw || 0) / exaggeration).toFixed(1);
-                    })()} mdpl</div>
+                    <div style="color: #7f7965;">Center Elevation</div>
+                    <div style="font-weight: bold; color: #8a5e14;">${centerElevation ? `${centerElevation.toFixed(0)} mdpl` : '—'}</div>
                     
-                    <div style="color: #7f7965;">Heading/Pitch</div>
-                    <div style="font-weight: bold;">${map.getBearing().toFixed(1)}° / ${map.getPitch().toFixed(1)}°</div>
+                    <div style="color: #7f7965;">Heading / Tilt</div>
+                    <div style="font-weight: bold;">${(((map.getBearing() % 360) + 360) % 360).toFixed(1)}° / ${map.getPitch().toFixed(1)}°</div>
+
+                    <div style="color: #7f7965;">Zoom</div>
+                    <div style="font-weight: bold;">${map.getZoom().toFixed(1)}</div>
                 </div>
 
                 <div style="text-align: right; opacity: 0.8;">
@@ -421,40 +457,21 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         `;
         mapContainer.appendChild(overlay);
 
-        // Calculate Map Height based on Aspect Ratio
-        const mapAspectRatio = canvas.height / canvas.width;
-        const mapDisplayWidth = PAGE_WIDTH - (MARGIN * 2);
-        const mapDisplayHeight = mapDisplayWidth * mapAspectRatio;
-
-        mapContainer.style.height = `${mapDisplayHeight}px`; 
+        mapContainer.style.height = `${mapBoxHeight}px`;
         mapContainer.style.overflow = 'hidden';
         mapContainer.style.borderRadius = `${16 * scale}px`;
         mapContainer.style.border = `1px solid #e7e2d4`;
         
         mapImage.style.width = '100%';
         mapImage.style.height = '100%';
-        mapImage.style.objectFit = 'contain'; 
+        mapImage.style.display = 'block';
         
         mapSection.appendChild(mapContainer);
         pageContainer.appendChild(mapSection);
 
         // 3. Table Header & Content
-        let currentY = headerHeight + (20 * scale) + mapDisplayHeight + (40 * scale); // Header + Map Section + Padding
+        let currentY = headerHeight + (20 * scale) + mapBoxHeight + (40 * scale); // Header + Map Section + Padding
         
-        // Data Processing
-        let cumulativeDist = 0;
-        const processedPoints = hasData ? allPoints.map((p, idx) => {
-            let dist = 0;
-            if (idx > 0) {
-                const prev = allPoints[idx - 1];
-                const from = point([prev.lng, prev.lat]);
-                const to = point([p.lng, p.lat]);
-                dist = distance(from, to, { units: 'meters' });
-                cumulativeDist += dist;
-            }
-            return { ...p, dist, totalDist: cumulativeDist };
-        }) : [];
-
         // Create Table Wrapper
         const createTableWrapper = () => {
             const w = document.createElement('div');
@@ -468,6 +485,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                     <thead>
                         <tr style="background-color: #f3f0e7; color: #5e5a4a; text-transform: uppercase; font-size: ${10 * scale}px; letter-spacing: 0.05em; border-bottom: 2px solid #d3ccb8;">
                             <th style="padding: ${10 * scale}px;">#</th>
+                            ${showGroupColumn ? `<th style="padding: ${10 * scale}px;">Line</th>` : ''}
                             <th style="padding: ${10 * scale}px;">Point Name</th>
                             <th style="padding: ${10 * scale}px;">Coordinates</th>
                             <th style="padding: ${10 * scale}px;">Elevation</th>
@@ -492,7 +510,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
             const tr = document.createElement('tr');
             tr.style.borderBottom = '1px solid #e7e2d4';
             tr.innerHTML = `
-                <td colspan="6" style="padding: ${60 * scale}px; text-align: center; color: #7f7965;">
+                <td colspan="${showGroupColumn ? 7 : 6}" style="padding: ${60 * scale}px; text-align: center; color: #7f7965;">
                     <div style="display: flex; flex-direction: column; align-items: center; gap: ${16 * scale}px; opacity: 0.8;">
                         <svg xmlns="http://www.w3.org/2000/svg" width="${48 * scale}" height="${48 * scale}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: #a9a28b;">
                             <circle cx="12" cy="12" r="10"/>
@@ -538,12 +556,13 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                 
                 tr.innerHTML = `
                     <td style="padding: ${10 * scale}px; color: #b07b17; font-weight: bold;">${i + 1}</td>
+                    ${showGroupColumn ? `<td style="padding: ${10 * scale}px; color: #45423a; white-space: nowrap;"><span style="display: inline-block; width: ${8 * scale}px; height: ${8 * scale}px; border-radius: 50%; background: ${p.color}; margin-right: ${6 * scale}px;"></span>${escapeHtml(p.groupName)}</td>` : ''}
                     <td style="padding: ${10 * scale}px; font-weight: 500; color: #1a2214;">${displayName}</td>
                     <td style="padding: ${10 * scale}px; font-family: monospace; color: #45423a; white-space: nowrap;">
                         ${toDMS(p.lat, true)}, ${toDMS(p.lng, false)}
                     </td>
                     <td style="padding: ${10 * scale}px; font-family: monospace; color: #8a5e14;">${p.elevation.toFixed(1)} m</td>
-                    <td style="padding: ${10 * scale}px; font-family: monospace; color: #45423a;">${i === 0 ? '-' : p.dist.toFixed(1)} m</td>
+                    <td style="padding: ${10 * scale}px; font-family: monospace; color: #45423a;">${p.first ? '-' : `${p.dist.toFixed(1)} m`}</td>
                     <td style="padding: ${10 * scale}px; font-family: monospace; color: #7f7965;">${p.totalDist.toFixed(1)} m</td>
                 `;
                 tbody.appendChild(tr);
@@ -553,7 +572,9 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
 
         // 4. Chart Section (Check if fits on last page, else new page)
         const chartHeight = 350 * scale;
-        if (currentY + chartHeight > PAGE_HEIGHT - footerHeight - (20 * scale)) {
+        // The whole block: title, stats cards, plot and paddings (not just the plot)
+        const chartBlockHeight = chartHeight + 330 * scale;
+        if (hasData && currentY + chartBlockHeight > PAGE_HEIGHT - footerHeight - (20 * scale)) {
             pageCanvases.push(await capturePage(pageContainer));
             currentPageNum++;
             
@@ -574,11 +595,13 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
             const elevations = processedPoints.map(p => p.elevation);
             const maxElev = Math.max(...elevations);
             const minElev = Math.min(...elevations);
-            const totalDist = cumulativeDist;
+            // Sum of every survey line (lines are not joined to each other)
+            const totalDist = profileOffset;
             
             // Calculate Elevation Gain
             let gain = 0;
             for(let i=1; i<processedPoints.length; i++) {
+                if (processedPoints[i].first) continue; // a new line starts: no climb between lines
                 const diff = processedPoints[i].elevation - processedPoints[i-1].elevation;
                 if(diff > 0) gain += diff;
             }
@@ -589,15 +612,27 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
             const yRange = yMax - yMin || 1;
             
             const pointsCoords = processedPoints.map((p, i) => ({
-                x: chartPadding.left + (p.totalDist / (totalDist || 1)) * graphWidth,
+                x: chartPadding.left + (p.profileDist / (totalDist || 1)) * graphWidth,
                 y: chartPadding.top + graphHeight - ((p.elevation - yMin) / yRange) * graphHeight,
                 val: p.elevation,
-                dist: p.totalDist,
+                dist: p.profileDist,
                 label: `${i + 1}`
             }));
 
-            const linePath = pointsCoords.map((p, i) => `${i===0?'M':'L'} ${p.x},${p.y}`).join(' ');
-            const areaPath = `${linePath} L ${pointsCoords[pointsCoords.length-1].x},${chartPadding.top + graphHeight} L ${pointsCoords[0].x},${chartPadding.top + graphHeight} Z`;
+            // One segment per survey line: lines are separate, so they are not joined
+            const baseY = chartPadding.top + graphHeight;
+            const segments: (typeof pointsCoords)[] = [];
+            pointsCoords.forEach((c, i) => {
+                if (processedPoints[i].first || segments.length === 0) segments.push([]);
+                segments[segments.length - 1].push(c);
+            });
+            const linePath = segments
+                .map((seg) => seg.map((c, i) => `${i === 0 ? 'M' : 'L'} ${c.x},${c.y}`).join(' '))
+                .join(' ');
+            const areaPath = segments
+                .filter((seg) => seg.length > 1)
+                .map((seg) => `${seg.map((c, i) => `${i === 0 ? 'M' : 'L'} ${c.x},${c.y}`).join(' ')} L ${seg[seg.length - 1].x},${baseY} L ${seg[0].x},${baseY} Z`)
+                .join(' ');
             const gradientId = `elevGradient-${Date.now()}`;
 
              const chartContainer = document.createElement('div');
@@ -617,7 +652,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                     </div>
                     <div style="background: #faf8f3; border: 1px solid #e7e2d4; padding: ${20 * scale}px; border-radius: ${12 * scale}px;">
                         <div style="color: #7f7965; font-size: ${12 * scale}px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: ${8 * scale}px; font-weight: 600;">Total Distance</div>
-                        <div style="color: #1a2214; font-size: ${24 * scale}px; font-weight: 800; font-family: monospace;">${totalDist.toFixed(1)} <span style="font-size: ${14 * scale}px; color: #a9a28b; font-weight: 600;">m</span></div>
+                        <div style="color: #1a2214; font-size: ${24 * scale}px; font-weight: 800; font-family: monospace;">${totalDist >= 1000 ? (totalDist / 1000).toFixed(2) : totalDist.toFixed(1)} <span style="font-size: ${14 * scale}px; color: #a9a28b; font-weight: 600;">${totalDist >= 1000 ? 'km' : 'm'}</span></div>
                     </div>
                      <div style="background: #faf8f3; border: 1px solid #e7e2d4; padding: ${20 * scale}px; border-radius: ${12 * scale}px;">
                         <div style="color: #7f7965; font-size: ${12 * scale}px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: ${8 * scale}px; font-weight: 600;">Elev. Gain</div>
@@ -693,6 +728,69 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
              `;
              
              pageContainer.appendChild(chartContainer);
+             currentY += chartBlockHeight;
+        }
+
+        // 5. Marked Locations visible on the exported map
+        if (markedInView.length > 0) {
+            const markedTitle = (cont: boolean) => `
+                <div style="display: flex; align-items: center; gap: ${12 * scale}px; margin: ${32 * scale}px 0 ${16 * scale}px;">
+                    <div style="width: ${4 * scale}px; height: ${24 * scale}px; background-color: #d49b22; border-radius: 4px;"></div>
+                    <h2 style="font-size: ${18 * scale}px; font-weight: bold; margin: 0; color: #1a2214;">Marked Locations in View${cont ? ' (continued)' : ''}</h2>
+                </div>
+                <table style="width: 100%; border-collapse: collapse; font-size: ${12 * scale}px; text-align: left;">
+                    <thead>
+                        <tr style="background-color: #f3f0e7; color: #5e5a4a; text-transform: uppercase; font-size: ${10 * scale}px; letter-spacing: 0.05em; border-bottom: 2px solid #d3ccb8;">
+                            <th style="padding: ${10 * scale}px;">#</th>
+                            <th style="padding: ${10 * scale}px;">Name</th>
+                            <th style="padding: ${10 * scale}px;">Category</th>
+                            <th style="padding: ${10 * scale}px;">Coordinates</th>
+                            <th style="padding: ${10 * scale}px;">Elevation</th>
+                        </tr>
+                    </thead>
+                    <tbody class="marked-body"></tbody>
+                </table>`;
+            const startMarkedTable = (cont: boolean) => {
+                const w = document.createElement('div');
+                w.style.padding = `0 ${MARGIN}px`;
+                w.innerHTML = markedTitle(cont);
+                pageContainer.appendChild(w);
+                currentY += (72 + 50) * scale;
+                return w.querySelector('.marked-body')!;
+            };
+            const roomLeft = () => PAGE_HEIGHT - footerHeight - (20 * scale) - currentY;
+
+            if (roomLeft() < (72 + 50) * scale + rowHeight) {
+                pageCanvases.push(await capturePage(pageContainer));
+                currentPageNum++;
+                pageContainer.innerHTML = renderHeader(false);
+                addFooter(currentPageNum);
+                currentY = headerHeight + (20 * scale);
+            }
+            let markedBody = startMarkedTable(false);
+            for (let i = 0; i < markedInView.length; i++) {
+                if (roomLeft() < rowHeight) {
+                    pageCanvases.push(await capturePage(pageContainer));
+                    currentPageNum++;
+                    pageContainer.innerHTML = renderHeader(false);
+                    addFooter(currentPageNum);
+                    currentY = headerHeight + (20 * scale);
+                    markedBody = startMarkedTable(true);
+                }
+                const l = markedInView[i];
+                const meta = CATEGORY_META[l.category];
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid #e7e2d4';
+                tr.innerHTML = `
+                    <td style="padding: ${10 * scale}px; color: #b07b17; font-weight: bold;">${i + 1}</td>
+                    <td style="padding: ${10 * scale}px; font-weight: 500; color: #1a2214;">${escapeHtml(l.name)}</td>
+                    <td style="padding: ${10 * scale}px; color: #45423a; white-space: nowrap;"><span style="display: inline-block; width: ${8 * scale}px; height: ${8 * scale}px; border-radius: 50%; background: ${meta?.color ?? '#d49b22'}; margin-right: ${6 * scale}px;"></span>${escapeHtml(meta?.label ?? l.category)}</td>
+                    <td style="padding: ${10 * scale}px; font-family: monospace; color: #45423a; white-space: nowrap;">${toDMS(l.lat, true)}, ${toDMS(l.lng, false)}</td>
+                    <td style="padding: ${10 * scale}px; font-family: monospace; color: #8a5e14;">${l.elevationM != null ? `${Math.round(l.elevationM)} m` : '—'}</td>
+                `;
+                markedBody.appendChild(tr);
+                currentY += rowHeight;
+            }
         }
 
         // Capture Final Page
@@ -703,13 +801,13 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
 
         // --- EXPORT BASED ON FORMAT ---
         if (format === 'pdf') {
-            const pdf = new jsPDFLib('p', 'pt', 'a4');
+            const pdf = new jsPDFLib({ orientation: 'p', unit: 'pt', format: 'a4', compress: true });
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = pdf.internal.pageSize.getHeight();
 
             pageCanvases.forEach((canvas, index) => {
                 if (index > 0) pdf.addPage();
-                pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pdfWidth, pdfHeight);
+                pdf.addImage(canvas.toDataURL('image/jpeg', 0.82), 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
             });
             
             if (isMobile) {
@@ -757,7 +855,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                 const canvas = pageCanvases[0];
                 canvas.toBlob((blob) => {
                     if (blob) downloadBlob(blob, `Landscape360_Survey_${Date.now()}.${format}`);
-                }, format === 'png' ? 'image/png' : 'image/jpeg', 0.9);
+                }, format === 'png' ? 'image/png' : 'image/jpeg', 0.85);
             } else {
                 // 2. Multi Page -> ZIP Download
                 const zip = new JSZipLib();
@@ -765,7 +863,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                 
                 // Add all pages to zip
                 pageCanvases.forEach((canvas, index) => {
-                    const dataUrl = canvas.toDataURL(format === 'png' ? 'image/png' : 'image/jpeg', 0.9);
+                    const dataUrl = canvas.toDataURL(format === 'png' ? 'image/png' : 'image/jpeg', 0.85);
                     const base64Data = dataUrl.split(',')[1];
                     folder?.file(`Page_${index + 1}.${format}`, base64Data, { base64: true });
                 });

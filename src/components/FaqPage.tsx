@@ -91,7 +91,7 @@ const GROUPS: { title: string; items: Faq[] }[] = [
       ),
       faq(
         "How do I share a marked location?",
-        "On Pro and Enterprise, open Marked Locations, press Share on a location (or select several) and enter the other person's email or exact display name. They will find it under the Shared tab.",
+        "On Pro and Enterprise, open Marked Locations, press Share on a location (or select several) then tap someone under Recent, or type part of their name or email and tap them in the list (typing their full email also works). They will find it under the Shared tab.",
       ),
     ],
   },

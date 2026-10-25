@@ -157,11 +157,11 @@ export const formatDistance = (meters: number): string => {
  * Converts decimal degrees to DMS (Degrees, Minutes, Seconds) format
  */
 export const toDMS = (deg: number, isLat: boolean): string => {
-  const absolute = Math.abs(deg);
-  const degrees = Math.floor(absolute);
-  const minutesNotTruncated = (absolute - degrees) * 60;
-  const minutes = Math.floor(minutesNotTruncated);
-  const seconds = ((minutesNotTruncated - minutes) * 60).toFixed(2);
+  // Round once in hundredths of a second, so 59.999" becomes the next minute, not 60.00"
+  const totalHundredths = Math.round(Math.abs(deg) * 360000);
+  const degrees = Math.floor(totalHundredths / 360000);
+  const minutes = Math.floor((totalHundredths % 360000) / 6000);
+  const seconds = ((totalHundredths % 6000) / 100).toFixed(2);
 
   const hemisphere = isLat 
     ? (deg >= 0 ? 'N' : 'S') 
