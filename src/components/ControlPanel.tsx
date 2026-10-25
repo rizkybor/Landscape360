@@ -18,7 +18,6 @@ import {
   Monitor,
   Ruler,
   Route,
-  ChevronDown,
   Search,
   BookOpen,
   Download,
@@ -253,10 +252,15 @@ export const ControlPanel = () => {
     return () => clearInterval(id);
   }, [isActivityRecording]);
 
-  // Mobile: Navigator, Route, Track Recorder and Marked Locations open their own panel, so
-  // lower this sheet out of the way while one is open and bring it back afterwards (only if
-  // it was open before)
-  const toolSheetOpen = isPlotMode || isRoutePlannerEnabled || isTrackRecorderOpen || isMarkedLocationsOpen;
+  // Mobile: Navigator, Route, Track Recorder, Marked Locations and Basemaps open their own
+  // panel, so lower this sheet out of the way while one is open and bring it back afterwards
+  // (only if it was open before)
+  const toolSheetOpen =
+    isPlotMode ||
+    isRoutePlannerEnabled ||
+    isTrackRecorderOpen ||
+    isMarkedLocationsOpen ||
+    isManagerOpen;
   const reopenAfterToolSheet = useRef(false);
   useEffect(() => {
     if (!isMobile) return;
@@ -270,6 +274,12 @@ export const ControlPanel = () => {
       setIsOpen(true);
     }
   }, [toolSheetOpen, isMobile]);
+
+  // Mobile: Weather and POIs are map layers that stay on (and are remembered, POIs are on by
+  // default), so the sheet is lowered only when the user switches one on, to show the map
+  const lowerSheetOnPhone = () => {
+    if (isMobile) setIsOpen(false);
+  };
 
   // Swipe Down to Close Logic (Mobile). A touch only becomes a drag once the finger moves,
   // so tapping a button in the header (e.g. Sign In) does not re-render this whole panel.
@@ -419,45 +429,47 @@ export const ControlPanel = () => {
   const toolButtons = (
     <>
 
-    {/* Search Toggle */}
-    <button
-      onClick={() => setShowSearch(!showSearch)}
-      className={`w-full h-full flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
-        showSearch
-          ? "bg-forest-50 border-forest-200 "
-          : "bg-sand-50 border-sand-200 hover:bg-sand-100"
-      } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-col justify-center text-center p-2.5 gap-1.5"}`}
-    >
-      <div
-        className={`p-2 rounded-lg transition-colors ${
+    {/* Search Toggle (desktop; on phones it is the search icon in the sheet header) */}
+    {!isMobile && (
+      <button
+        onClick={() => setShowSearch(!showSearch)}
+        className={`w-full h-full flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
           showSearch
-            ? "bg-forest-700 text-white shadow-lg "
-            : "bg-sand-100 text-sand-600 group-hover:text-ink"
-        } ${isMobile ? "mb-1" : ""}`}
+            ? "bg-forest-50 border-forest-200 "
+            : "bg-sand-50 border-sand-200 hover:bg-sand-100"
+        } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-col justify-center text-center p-2.5 gap-1.5"}`}
       >
-        <Search size={isMobile ? 18 : 16} />
-      </div>
-
-      <div className="flex-1">
         <div
-          className={`font-bold transition-colors ${
-            showSearch ? "text-ink" : "text-sand-700"
-          } ${isMobile ? "text-[10px] leading-tight" : "text-xs leading-tight"}`}
+          className={`p-2 rounded-lg transition-colors ${
+            showSearch
+              ? "bg-forest-700 text-white shadow-lg "
+              : "bg-sand-100 text-sand-600 group-hover:text-ink"
+          } ${isMobile ? "mb-1" : ""}`}
         >
-          Search
+          <Search size={isMobile ? 18 : 16} />
         </div>
 
-        {!isMobile && (
+        <div className="flex-1">
           <div
-            className={`text-[10px] ${
-              showSearch ? "text-forest-700" : "text-sand-500"
-            }`}
+            className={`font-bold transition-colors ${
+              showSearch ? "text-ink" : "text-sand-700"
+            } ${isMobile ? "text-[10px] leading-tight" : "text-xs leading-tight"}`}
           >
-            {showSearch ? "Active" : "Location"}
+            Search
           </div>
-        )}
-      </div>
-    </button>
+
+          {!isMobile && (
+            <div
+              className={`text-[10px] ${
+                showSearch ? "text-forest-700" : "text-sand-500"
+              }`}
+            >
+              {showSearch ? "Active" : "Location"}
+            </div>
+          )}
+        </div>
+      </button>
+    )}
 
     {/* Navigator Mode */}
     <button
@@ -541,7 +553,10 @@ export const ControlPanel = () => {
 
     {/* Weather Toggle */}
     <button
-      onClick={() => setShowWeather(!showWeather)}
+      onClick={() => {
+        if (!showWeather) lowerSheetOnPhone();
+        setShowWeather(!showWeather);
+      }}
       className={`w-full h-full flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
         showWeather
           ? "bg-forest-50 border-forest-200 "
@@ -575,7 +590,10 @@ export const ControlPanel = () => {
 
     {/* Show Locations Toggle */}
     <button
-      onClick={() => setShowCustomLocations(!showCustomLocations)}
+      onClick={() => {
+        if (!showCustomLocations) lowerSheetOnPhone();
+        setShowCustomLocations(!showCustomLocations);
+      }}
       className={`w-full h-full flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
         showCustomLocations
           ? "bg-gold-50 border-gold-200 "
@@ -1682,13 +1700,17 @@ export const ControlPanel = () => {
             >
               <BookOpen size={18} />
             </button>
+            {/* Search lives here on phones (the sheet closes by swiping it down) */}
             <button
-              onClick={() => setIsOpen(false)}
-              className="cursor-pointer p-2 rounded-lg text-sand-600 hover:bg-sand-100 hover:text-ink"
-              title="Hide panel"
-              aria-label="Hide panel"
+              onClick={() => setShowSearch(!showSearch)}
+              aria-pressed={showSearch}
+              className={`cursor-pointer p-2 rounded-lg transition-colors ${
+                showSearch ? "bg-forest-700 text-white" : "text-sand-600 hover:bg-sand-100 hover:text-ink"
+              }`}
+              title="Search location"
+              aria-label="Search location"
             >
-              <ChevronDown size={18} />
+              <Search size={18} />
             </button>
           </div>
 

@@ -101,7 +101,8 @@ export const BasemapManager = ({ onClose, onZoomToLayer }: { onClose: () => void
   };
 
   return (
-    <div className="fixed z-40 inset-y-0 right-0 w-full md:w-80 bg-white text-ink shadow-2xl transform transition-transform duration-300 ease-in-out md:border-l border-sand-200 flex flex-col h-[80vh] md:h-full bottom-0 md:top-0 rounded-t-2xl md:rounded-none">
+    // Phones: a bottom sheet (80% of the visible screen); desktop: full-height panel on the right
+    <div className="fixed z-40 bottom-0 md:inset-y-0 right-0 w-full md:w-80 bg-white text-ink shadow-2xl transform transition-transform duration-300 ease-in-out border-t md:border-t-0 md:border-l border-sand-200 flex flex-col h-[80vh] h-[80dvh] md:h-full rounded-t-2xl md:rounded-none">
       {/* Header */}
       <div className="p-4 border-b border-sand-200 flex items-center justify-between bg-white">
         <div className="flex items-center gap-2">
