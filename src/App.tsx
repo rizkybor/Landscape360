@@ -1,7 +1,6 @@
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { DocsPage } from './components/DocsPage';
 import { LoadingOverlay } from './components/LoadingOverlay';
-import { SEO } from './components/SEO';
 import { useState, useEffect, Suspense, lazy, useCallback } from 'react';
 import { SpeedInsights } from "@vercel/speed-insights/react"
 import { Analytics } from "@vercel/analytics/react"
@@ -42,7 +41,6 @@ function App() {
 
   return (
     <>
-      <SEO />
       <SpeedInsights />
       <Analytics />
 

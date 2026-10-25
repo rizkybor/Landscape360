@@ -411,6 +411,28 @@ export const ReviewsPage = () => {
       icon={Star}
       path="/reviews"
       seoDescription="Read reviews of Landscape 360 from hikers, climbers and outdoor teams, and share your own experience."
+      structuredData={
+        summary && summary.total > 0
+          ? [
+              {
+                "@context": "https://schema.org",
+                "@type": "SoftwareApplication",
+                "@id": "https://landscape360.jcdigital.co.id/#app",
+                name: "Landscape 360",
+                applicationCategory: "TravelApplication",
+                operatingSystem: "Web, Android, iOS",
+                offers: { "@type": "Offer", price: "0", priceCurrency: "IDR" },
+                aggregateRating: {
+                  "@type": "AggregateRating",
+                  ratingValue: summary.average.toFixed(1),
+                  ratingCount: summary.total,
+                  bestRating: 5,
+                  worstRating: 1,
+                },
+              },
+            ]
+          : undefined
+      }
       headerAction={<AuthControl />}
     >
       <div className="grid md:grid-cols-[260px_1fr] gap-8">

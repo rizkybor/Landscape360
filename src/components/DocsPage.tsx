@@ -49,7 +49,8 @@ export const DocsPage = ({ onBack }: Props) => {
     <div className="h-screen bg-white text-ink font-sans overflow-hidden flex flex-col">
       <SEO
         title="Documentation & Guide"
-        description="Learn how to use Landscape 360, 3D map navigation, contour analysis, and other advanced features."
+        description="How to use Landscape 360: 3D terrain maps and contour lines, Navigator survey tools, offline maps, GPS tracking, marked locations, custom basemaps, S.O.S and the Free, Pro and Enterprise plans."
+        url="https://landscape360.jcdigital.co.id/docs"
       />
       {/* Header */}
       <div className="shrink-0 sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-sand-200">
@@ -106,28 +107,28 @@ export const DocsPage = ({ onBack }: Props) => {
                 Landscape 360
               </h2>
               <p className="text-lg sm:text-xl text-forest-700 font-light tracking-[0.2em] uppercase">
-                Explore without Limits, Guided by Precision
+                Explore without Limits
               </p>
             </div>
 
             <div className="relative z-10 max-w-2xl mx-auto space-y-4 text-sand-600 leading-relaxed text-sm sm:text-base">
               <p>
-                Master the terrain with the ultimate engine for outdoor
-                exploration. Engineered for{" "}
+                Your companion for the outdoors. Made for{" "}
                 <span className="text-forest-700">
-                  Mountaineers and Wilderness Experts
+                  hikers, climbers and outdoor communities
                 </span>{" "}
-                who demand absolute precision in navigation, real-time tracking,
-                and comprehensive terrain intelligence. <br />
+                who want to know where they are, where they are heading and what
+                the terrain ahead looks like: 3D maps with contours, GPS tracking,
+                offline maps, saved locations and a dedicated S.O.S. feature for emergencies.{" "}
                 <br />
-                Built upon a meticulously curated POI dataset.{" "}
+                <br />
+                Built on a curated set of points of interest,{" "}
                 <span className="text-forest-700">
-                  Compiled from real hiking experiences, field observations,
-                  community knowledge, and verified official sources.
-                </span>{" "}
-                This platform empowers you to Explore without Limits, Guided by
-                Precision, delivering trusted, data-driven insights for safer
-                and smarter adventures.
+                  compiled from real hiking experiences, field observations,
+                  community knowledge and verified official sources
+                </span>
+                , so you can Explore without Limits with information you can
+                trust, for safer and smarter adventures.
               </p>
               <div className="flex flex-wrap justify-center gap-2 mt-4">
                 <span className="px-3 py-1 rounded-full bg-sand-50 border border-sand-200 text-xs text-sand-700">

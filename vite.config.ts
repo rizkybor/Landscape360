@@ -61,7 +61,7 @@ export default defineConfig({
       manifest: {
         name: 'Landscape 360',
         short_name: 'Landscape360',
-        description: '3D Landscape Survey & Mapping Tool',
+        description: 'Your ultimate companion for outdoor adventures.',
         theme_color: '#000000',
         background_color: '#000000',
         icons: [

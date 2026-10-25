@@ -41,18 +41,20 @@ interface Props {
   subtitle?: string;
   icon: LucideIcon;
   seoDescription: string;
+  /** Extra JSON-LD for this page (see SEO) */
+  structuredData?: Record<string, unknown>[];
   path: string;
   headerAction?: ReactNode;
   children: ReactNode;
 }
 
 // Shared shell for the Reviews, FAQ, Terms and Privacy pages
-export const SitePageLayout = ({ title, subtitle, icon: Icon, seoDescription, path, headerAction, children }: Props) => {
+export const SitePageLayout = ({ title, subtitle, icon: Icon, seoDescription, structuredData, path, headerAction, children }: Props) => {
   const navigate = useNavigate();
   return (
     // 100dvh: on phones 100vh is taller than the visible area (browser bars), hiding the footer
     <div className="h-screen h-dvh bg-white text-ink font-sans overflow-hidden flex flex-col">
-      <SEO title={title} description={seoDescription} url={`https://landscape360.jcdigital.co.id${path}`} />
+      <SEO title={title} description={seoDescription} url={`https://landscape360.jcdigital.co.id${path}`} structuredData={structuredData} />
 
       <header className="shrink-0 sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-sand-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
