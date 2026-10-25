@@ -436,28 +436,28 @@ export const ReviewsPage = () => {
       headerAction={<AuthControl />}
     >
       <div className="grid md:grid-cols-[260px_1fr] gap-8">
-        {/* Summary */}
-        <aside className="space-y-4">
-          <div className="p-5 rounded-2xl border border-sand-200 bg-sand-50 text-center">
-            <div className="text-5xl font-bold text-ink">{summary ? summary.average.toFixed(1) : "–"}</div>
-            <div className="mt-2 flex justify-center">
-              <Stars value={summary?.average ?? 0} size={18} />
+        {/* Summary. Phones: one compact card, score on the left and the star bars on the right */}
+        <aside className="flex md:block items-center gap-3 p-3 md:p-0 rounded-2xl border md:border-0 border-sand-200 bg-sand-50 md:bg-transparent md:space-y-4">
+          <div className="shrink-0 w-24 md:w-auto md:p-5 md:rounded-2xl md:border md:border-sand-200 md:bg-sand-50 text-center">
+            <div className="text-4xl md:text-5xl font-bold text-ink">{summary ? summary.average.toFixed(1) : "–"}</div>
+            <div className="mt-1 md:mt-2 flex justify-center">
+              <Stars value={summary?.average ?? 0} size={14} />
             </div>
-            <div className="text-xs text-sand-500 mt-2">
+            <div className="text-[11px] md:text-xs text-sand-500 mt-1 md:mt-2">
               {summary ? `${summary.total} review${summary.total === 1 ? "" : "s"}` : "Loading..."}
             </div>
           </div>
           {summary && (
-            <div className="space-y-1.5">
+            <div className="flex-1 min-w-0 space-y-0.5 md:space-y-1.5">
               {([5, 4, 3, 2, 1] as const).map((n) => (
                 <button
                   key={n}
                   onClick={() => setFilter(filter === n ? null : n)}
-                  className={`cursor-pointer w-full flex items-center gap-2 px-2 py-1 rounded-lg text-xs transition-colors ${filter === n ? "bg-gold-50 ring-1 ring-gold-300" : "hover:bg-sand-50"}`}
+                  className={`cursor-pointer w-full flex items-center gap-2 px-1.5 md:px-2 py-0.5 md:py-1 rounded-lg text-[11px] md:text-xs transition-colors ${filter === n ? "bg-gold-50 ring-1 ring-gold-300" : "hover:bg-sand-50"}`}
                   aria-pressed={filter === n}
                   title={filter === n ? "Show all reviews" : `Show ${n}-star reviews`}
                 >
-                  <span className="w-8 text-right font-bold text-sand-700">{n}★</span>
+                  <span className="w-6 md:w-8 text-right font-bold text-sand-700">{n}★</span>
                   <span className="flex-1 h-2 bg-sand-200 rounded-full overflow-hidden">
                     <span
                       className="block h-full bg-gold-400 rounded-full"
