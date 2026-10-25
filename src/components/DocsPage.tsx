@@ -49,7 +49,8 @@ export const DocsPage = ({ onBack }: Props) => {
     <div className="h-screen bg-white text-ink font-sans overflow-hidden flex flex-col">
       <SEO
         title="Documentation & Guide"
-        description="Learn how to use Landscape 360, 3D map navigation, contour analysis, and other advanced features."
+        description="How to use Landscape 360: 3D terrain maps and contour lines, Navigator survey tools, offline maps, GPS tracking, marked locations, custom basemaps, S.O.S and the Free, Pro and Enterprise plans."
+        url="https://landscape360.jcdigital.co.id/docs"
       />
       {/* Header */}
       <div className="shrink-0 sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-sand-200">

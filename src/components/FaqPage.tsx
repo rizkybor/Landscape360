@@ -123,6 +123,21 @@ const GROUPS: { title: string; items: Faq[] }[] = [
   },
 ];
 
+// Google's FAQ rich result, built from the same questions shown on the page
+const FAQ_SCHEMA = [
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: GROUPS.flatMap((g) =>
+      g.items.map((f) => ({
+        "@type": "Question",
+        name: f.q,
+        acceptedAnswer: { "@type": "Answer", text: f.text },
+      })),
+    ),
+  },
+];
+
 export const FaqPage = () => {
   const [query, setQuery] = useState("");
   const [openKey, setOpenKey] = useState<string | null>("Getting started-0");
@@ -143,6 +158,7 @@ export const FaqPage = () => {
       icon={HelpCircle}
       path="/faq"
       seoDescription="Answers to common questions about Landscape 360: accounts, plans, offline maps, GPS tracking, sharing and privacy."
+      structuredData={FAQ_SCHEMA}
     >
       <div className="relative mb-8">
         <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-sand-500" />
