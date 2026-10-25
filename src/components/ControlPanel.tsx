@@ -19,8 +19,6 @@ import {
   Ruler,
   Route,
   ChevronDown,
-  ChevronUp,
-  Minus,
   Search,
   BookOpen,
   Download,
@@ -214,21 +212,21 @@ export const ControlPanel = () => {
   const [activityNow, setActivityNow] = useState(() => Date.now());
   const [isJoystickDragging, setIsJoystickDragging] = useState(false);
   const [isOpen, setIsOpen] = useState(true);
-  const [isTerrainControlsOpen, setIsTerrainControlsOpen] = useState(false);
-  // Desktop: which section the panel shows and whether it is open (remembered per browser)
-  const [deskSection, setDeskSection] = useState<DeskSection>(() => readDeskPref().section);
+  // Which section the sidebar shows (desktop panel and phone tabs), and whether the desktop
+  // panel is open; remembered per browser
+  const [panelSection, setPanelSection] = useState<DeskSection>(() => readDeskPref().section);
   const [deskOpen, setDeskOpen] = useState(() => readDeskPref().open);
   useEffect(() => {
     try {
-      localStorage.setItem(DESK_PREF_KEY, JSON.stringify({ section: deskSection, open: deskOpen }));
+      localStorage.setItem(DESK_PREF_KEY, JSON.stringify({ section: panelSection, open: deskOpen }));
     } catch {
       // Storage blocked: the layout resets on the next visit
     }
-  }, [deskSection, deskOpen]);
+  }, [panelSection, deskOpen]);
   const openDeskSection = (section: DeskSection) => {
-    if (deskOpen && deskSection === section) setDeskOpen(false);
+    if (deskOpen && panelSection === section) setDeskOpen(false);
     else {
-      setDeskSection(section);
+      setPanelSection(section);
       setDeskOpen(true);
     }
   };
@@ -255,21 +253,23 @@ export const ControlPanel = () => {
     return () => clearInterval(id);
   }, [isActivityRecording]);
 
-  // Mobile: Navigator Mode opens its own bottom sheet, so lower this one out of the way
-  // and bring it back when Navigator Mode ends (only if it was open before)
-  const reopenAfterNavigator = useRef(false);
+  // Mobile: Navigator, Track Recorder and Marked Locations open their own bottom sheet, so
+  // lower this one out of the way while one is open and bring it back afterwards (only if
+  // it was open before)
+  const toolSheetOpen = isPlotMode || isTrackRecorderOpen || isMarkedLocationsOpen;
+  const reopenAfterToolSheet = useRef(false);
   useEffect(() => {
     if (!isMobile) return;
-    if (isPlotMode) {
+    if (toolSheetOpen) {
       setIsOpen((open) => {
-        reopenAfterNavigator.current = open;
+        if (open) reopenAfterToolSheet.current = true;
         return false;
       });
-    } else if (reopenAfterNavigator.current) {
-      reopenAfterNavigator.current = false;
+    } else if (reopenAfterToolSheet.current) {
+      reopenAfterToolSheet.current = false;
       setIsOpen(true);
     }
-  }, [isPlotMode, isMobile]);
+  }, [toolSheetOpen, isMobile]);
 
   // Swipe Down to Close Logic (Mobile). A touch only becomes a drag once the finger moves,
   // so tapping a button in the header (e.g. Sign In) does not re-render this whole panel.
@@ -422,7 +422,7 @@ export const ControlPanel = () => {
     {/* Search Toggle */}
     <button
       onClick={() => setShowSearch(!showSearch)}
-      className={`${isMobile ? "flex-none w-28 snap-center h-full" : "w-full h-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
+      className={`w-full h-full flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
         showSearch
           ? "bg-forest-50 border-forest-200 "
           : "bg-sand-50 border-sand-200 hover:bg-sand-100"
@@ -462,7 +462,7 @@ export const ControlPanel = () => {
     {/* Navigator Mode */}
     <button
       onClick={togglePlotMode}
-      className={`${isMobile ? "flex-none w-28 snap-center h-full" : "w-full h-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
+      className={`w-full h-full flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
         isPlotMode
           ? "bg-gold-50 border-gold-200 "
           : "bg-sand-50 border-sand-200 hover:bg-sand-100"
@@ -504,7 +504,7 @@ export const ControlPanel = () => {
         }
         setRoutePlannerEnabled(false);
       }}
-      className={`${isMobile ? "flex-none w-28 snap-center h-full" : "w-full h-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
+      className={`w-full h-full flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
         isRoutePlannerEnabled
           ? "bg-forest-50 border-forest-200 "
           : "bg-sand-50 border-sand-200 hover:bg-sand-100"
@@ -542,7 +542,7 @@ export const ControlPanel = () => {
     {/* Weather Toggle */}
     <button
       onClick={() => setShowWeather(!showWeather)}
-      className={`${isMobile ? "flex-none w-28 snap-center h-full" : "w-full h-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
+      className={`w-full h-full flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
         showWeather
           ? "bg-forest-50 border-forest-200 "
           : "bg-sand-50 border-sand-200 hover:bg-sand-100"
@@ -576,7 +576,7 @@ export const ControlPanel = () => {
     {/* Show Locations Toggle */}
     <button
       onClick={() => setShowCustomLocations(!showCustomLocations)}
-      className={`${isMobile ? "flex-none w-28 snap-center h-full" : "w-full h-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
+      className={`w-full h-full flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
         showCustomLocations
           ? "bg-gold-50 border-gold-200 "
           : "bg-sand-50 border-sand-200 hover:bg-sand-100"
@@ -611,7 +611,7 @@ export const ControlPanel = () => {
     <button
       onClick={canOpenTrackRecorder ? toggleTrackRecorder : undefined}
       disabled={!canOpenTrackRecorder}
-      className={`${isMobile ? "flex-none w-28 snap-center h-full" : "w-full h-full"} flex items-center rounded-xl border transition-all duration-200 group ${
+      className={`w-full h-full flex items-center rounded-xl border transition-all duration-200 group ${
         !canOpenTrackRecorder
           ? "border-sand-100 bg-sand-50 opacity-60 cursor-not-allowed"
           : isTrackRecorderOpen || isTrackRecording
@@ -672,7 +672,7 @@ export const ControlPanel = () => {
     <button
       onClick={user ? toggleMarkedLocations : undefined}
       disabled={!user}
-      className={`${isMobile ? "flex-none w-28 snap-center h-full" : "w-full h-full"} flex items-center rounded-xl border transition-all duration-200 group ${
+      className={`w-full h-full flex items-center rounded-xl border transition-all duration-200 group ${
         !user
           ? "border-sand-100 bg-sand-50 opacity-60 cursor-not-allowed"
           : isMarkedLocationsOpen
@@ -712,7 +712,7 @@ export const ControlPanel = () => {
     {subscriptionStatus === "Enterprise" && (
       <button
         onClick={toggleManager}
-        className={`${isMobile ? "flex-none w-28 snap-center h-full" : "w-full h-full"} flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
+        className={`w-full h-full flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
           isManagerOpen
             ? "bg-forest-50 border-forest-200 "
             : "bg-sand-50 border-sand-200 hover:bg-sand-100"
@@ -751,7 +751,7 @@ export const ControlPanel = () => {
     {/* Live Tracking Toggle */}
     {import.meta.env.VITE_ENABLE_GPS_TRACKER === "true" && user && (
       <div
-        className={`${isMobile ? "flex-none w-28 snap-center" : "w-full h-full"}`}
+        className={"w-full h-full"}
       >
         {subscriptionStatus === "Free" ? (
           <button
@@ -1300,43 +1300,198 @@ export const ControlPanel = () => {
     </>
   );
 
-  const credits = (
-    <>
-    <div className="pt-6 mt-8 border-t border-sand-200 text-[10px] text-center text-sand-500 font-mono">
-      <div className="uppercase tracking-[0.2em] mb-1 text-[9px] text-sand-400">
-        In Collaboration With
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <div>
-          <a
-            href="https://instagram.com/jendelacakradigital"
-            target="_blank"
-            className="font-bold text-sand-600 hover:text-forest-700 transition-colors uppercase tracking-wider"
-          >
-            Jendela Cakra Digital
-          </a>
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <a
-            href="https://instagram.com/makopala_ubl"
-            target="_blank"
-            className="font-bold text-sand-600 hover:text-forest-700 transition-colors uppercase tracking-wider"
-          >
-            Makopala Univ. Budi Luhur
-          </a>
-        </div>
-
-        <div className="opacity-50">@2026</div>
-      </div>
-
-      <SiteLinks compact omit={["/docs"]} className="mt-3 font-sans" />
+  // Bottom of the sidebar (desktop panel and phone sheet): the site links, then the
+  // "Powered by" credits on one small line
+  const sidebarFooter = (
+    <div className="pt-4 mt-4 border-t border-sand-200 space-y-4">
+      <SiteLinks compact omit={["/docs"]} className="font-sans" />
+      <p className="flex flex-wrap items-center justify-center gap-x-1 gap-y-0.5 text-[8px] text-sand-500 text-center leading-tight">
+        <span className="text-sand-400">Powered by</span>
+        <a
+          href="https://instagram.com/jendelacakradigital"
+          target="_blank"
+          className="font-bold text-sand-600 hover:text-forest-700 whitespace-nowrap"
+        >
+          Jendela Cakra Digital
+        </a>
+        <span aria-hidden>·</span>
+        <a
+          href="https://instagram.com/makopala_ubl"
+          target="_blank"
+          className="font-bold text-sand-600 hover:text-forest-700 whitespace-nowrap"
+        >
+          Makopala Univ. Budi Luhur
+        </a>
+        {/* Separator and year stay together if the line has to wrap on a narrow phone */}
+        <span className="whitespace-nowrap">
+          <span aria-hidden>· </span>
+          <span className="opacity-60">@2026</span>
+        </span>
+      </p>
     </div>
+  );
+
+  const mobileTrackingExtras = (
+    <>
+    {isLiveTrackingEnabled && isMobile && (
+      <div className="mt-2 px-3 py-2 rounded-lg border border-sand-100 bg-sand-50 space-y-2">
+        {/* Monitor Status */}
+        {userRole === "monitor360" &&
+          subscriptionStatus === "Enterprise" && (
+            <div
+              className={`text-[10px] py-1.5 px-2 rounded-lg flex items-center justify-between ${
+                connectionStatus === "connected"
+                  ? "bg-forest-50 text-forest-700"
+                  : "bg-brick-50 text-brick-600"
+              }`}
+            >
+              <span className="flex items-center gap-1.5">
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${connectionStatus === "connected" ? "bg-forest-500" : "bg-brick-500"}`}
+                />
+                {connectionStatus === "connected"
+                  ? "Online"
+                  : "Offline"}
+              </span>
+              <span>{Object.keys(trackers).length} Users</span>
+            </div>
+          )}
+
+        {/* Simulation Toggle */}
+        {userRole === "monitor360" && (
+          <div
+            className="flex items-center justify-between group cursor-pointer"
+            onClick={toggleSimulation}
+          >
+            <label className="text-[10px] text-sand-600 cursor-pointer group-hover:text-sand-700">
+              Simulate Data
+            </label>
+            <div
+              className={`w-7 h-3.5 rounded-full p-0.5 transition-colors ${isSimulationEnabled ? "bg-forest-700" : "bg-sand-200"}`}
+            >
+              <div
+                className={`w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-transform ${isSimulationEnabled ? "translate-x-3.5" : ""}`}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Broadcast Toggle */}
+        {userRole === "pengguna360" && (
+          <div
+            className="flex items-center justify-between group cursor-pointer"
+            onClick={toggleLocalBroadcast}
+          >
+            <label className="text-[10px] text-sand-600 cursor-pointer group-hover:text-sand-700 flex items-center gap-1.5">
+              Broadcast Location
+              {isLocalBroadcastEnabled && (
+                <Wifi
+                  size={10}
+                  className="text-forest-700 animate-pulse"
+                />
+              )}
+            </label>
+            <div
+              className={`w-7 h-3.5 rounded-full p-0.5 transition-colors ${isLocalBroadcastEnabled ? "bg-forest-700" : "bg-sand-200"}`}
+            >
+              <div
+                className={`w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-transform ${isLocalBroadcastEnabled ? "translate-x-3.5" : ""}`}
+              />
+            </div>
+          </div>
+        )}
+
+        {canRecordActivity && (
+          <div className="rounded-lg border border-sand-200 bg-sand-50 p-2">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-col">
+                <span className="text-[10px] text-sand-700 font-bold">
+                  Record Activity
+                </span>
+                <span
+                  className={`text-[10px] ${
+                    isActivityRecording
+                      ? "text-forest-700"
+                      : isActivityPendingSave
+                        ? "text-gold-700"
+                        : "text-sand-500"
+                  }`}
+                >
+                  {isActivityRecording
+                    ? "Recording"
+                    : isActivityPendingSave
+                      ? "Saving..."
+                      : "Ready"}
+                </span>
+              </div>
+              <span className="px-2 py-1 rounded-md bg-white/90 text-[10px] text-sand-800 font-mono tabular-nums">
+                {activityStartedAt
+                  ? formatDuration((activityNow - activityStartedAt) / 1000)
+                  : "0:00"}
+              </span>
+            </div>
+            <div className="mt-2 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-1 rounded-md bg-white/90 text-[10px] text-sand-700 tabular-nums">
+                  {(activityDistanceM / 1000).toFixed(2)} km
+                </span>
+                <span className="px-2 py-1 rounded-md bg-white/90 text-[10px] text-sand-600 tabular-nums">
+                  {activityPointCount} pts
+                </span>
+              </div>
+              {!isActivityRecording ? (
+                <button
+                  disabled={isActivityPendingSave}
+                  onClick={() => {
+                    if (!isLiveTrackingEnabled) setLiveTracking(true);
+                    startActivity();
+                  }}
+                  className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-forest-50 text-forest-700 border border-forest-200 hover:bg-forest-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  title="Start Activity"
+                >
+                  <Play size={12} />
+                  <span className="text-[10px] font-bold">Start</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => stopActivity()}
+                  className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brick-50 text-brick-600 border border-brick-200 hover:bg-brick-100 transition-colors"
+                  title="Stop Activity"
+                >
+                  <Square size={12} />
+                  <span className="text-[10px] font-bold">Stop</span>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    )}
     </>
   );
 
-  // Desktop rail: a dot on Tools while any tool is switched on
+  // Contours need 3D; say so (with a shortcut) instead of only greying them out
+  const terrainHint = (
+    <>
+    {activeView === "2D" && (
+      <p className="text-[10px] text-sand-600 bg-sand-50 border border-sand-200 rounded-lg px-2.5 py-2">
+        Contours work in 3D. Switch <strong>Map View</strong> to{" "}
+        <button
+          onClick={() => {
+            setActiveView("3D");
+            setPitch(75);
+          }}
+          className="cursor-pointer font-bold text-forest-700 underline underline-offset-2"
+        >
+          3D Terrain
+        </button>{" "}
+        to use them. The grid works in both.
+      </p>
+    )}
+    </>
+  );
+
+  // A dot on Tools (rail icon / phone tab) while any tool is switched on
   const anyToolActive =
     showSearch ||
     isPlotMode ||
@@ -1348,7 +1503,7 @@ export const ControlPanel = () => {
     isMarkedLocationsOpen ||
     isManagerOpen ||
     isLiveTrackingEnabled;
-  const deskSections: { id: DeskSection; label: string; title: string; icon: typeof Compass }[] = [
+  const panelSections: { id: DeskSection; label: string; title: string; icon: typeof Compass }[] = [
     { id: "tools", label: "Tools", title: "Tools & Exploration", icon: Compass },
     { id: "map", label: "Map", title: "Map", icon: Layers },
     { id: "terrain", label: "Terrain", title: "Terrain & Grid", icon: Mountain },
@@ -1371,12 +1526,12 @@ export const ControlPanel = () => {
             <img src={landscapeLogo} alt="Landscape 360" className="w-9 h-9 object-contain" />
           </button>
           <div className="w-8 h-px bg-sand-200 my-1" />
-          {deskSections.map((sec) => (
+          {panelSections.map((sec) => (
             <RailButton
               key={sec.id}
               icon={sec.icon}
               label={sec.label}
-              active={deskOpen && deskSection === sec.id}
+              active={deskOpen && panelSection === sec.id}
               dot={sec.id === "tools" && anyToolActive}
               onClick={() => openDeskSection(sec.id)}
             />
@@ -1387,7 +1542,7 @@ export const ControlPanel = () => {
         </nav>
 
         <aside
-          className={`fixed z-50 top-4 left-[5rem] w-72 max-h-[calc(100vh-2rem)] rounded-2xl bg-white/95 backdrop-blur-xl border border-sand-300 text-ink shadow-2xl flex flex-col transition-all duration-200 ${
+          className={`fixed z-50 top-4 left-[5rem] w-[19.5rem] max-h-[calc(100vh-2rem)] rounded-2xl bg-white/95 backdrop-blur-xl border border-sand-300 text-ink shadow-2xl flex flex-col transition-all duration-200 ${
             deskOpen ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2 pointer-events-none"
           }`}
           aria-hidden={!deskOpen}
@@ -1398,7 +1553,7 @@ export const ControlPanel = () => {
                 Landscape 360 <span className="font-mono normal-case tracking-normal">v3.3.0</span>
               </div>
               <h2 className="text-sm font-bold text-ink truncate">
-                {deskSections.find((sec) => sec.id === deskSection)?.title}
+                {panelSections.find((sec) => sec.id === panelSection)?.title}
               </h2>
             </div>
             <button
@@ -1420,40 +1575,26 @@ export const ControlPanel = () => {
             wrapperClassName="flex-1"
             className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-4"
           >
-            {deskSection === "tools" && (
+            {panelSection === "tools" && (
               <>
                 <div className="grid grid-cols-2 gap-2">{toolButtons}</div>
                 {desktopTrackingExtras}
               </>
             )}
-            {deskSection === "map" && (
+            {panelSection === "map" && (
               <>
                 {mapStyleSection}
                 {mapViewSection}
                 {dragToSection}
               </>
             )}
-            {deskSection === "terrain" && (
+            {panelSection === "terrain" && (
               <div className="space-y-4">
-                {activeView === "2D" && (
-                  <p className="text-[10px] text-sand-600 bg-sand-50 border border-sand-200 rounded-lg px-2.5 py-2">
-                    Contours work in 3D. Switch <strong>Map View</strong> to{" "}
-                    <button
-                      onClick={() => {
-                        setActiveView("3D");
-                        setPitch(75);
-                      }}
-                      className="cursor-pointer font-bold text-forest-700 underline underline-offset-2"
-                    >
-                      3D Terrain
-                    </button>{" "}
-                    to use them. The grid works in both.
-                  </p>
-                )}
+                {terrainHint}
                 {terrainSection}
               </div>
             )}
-            {credits}
+            {sidebarFooter}
           </ScrollShadowArea>
         </aside>
 
@@ -1462,6 +1603,7 @@ export const ControlPanel = () => {
     );
   }
 
+  // Phones: a bottom sheet with one compact header row, tabs and a single scroll area
   return (
     <>
       {!isOpen && (
@@ -1496,7 +1638,7 @@ export const ControlPanel = () => {
       <div
         style={{
           transform:
-            isMobile && isOpen && isDragging
+            isOpen && isDragging
               ? `translateY(${touchOffset}px)`
               : isOpen
                 ? "translateY(0)"
@@ -1505,291 +1647,104 @@ export const ControlPanel = () => {
             ? "none"
             : "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
         }}
-        className={`
-        fixed z-50 
-        bottom-0 left-0 right-0 max-h-[90vh] rounded-t-2xl
-        md:top-4 md:left-4 md:bottom-auto md:right-auto md:w-64 md:rounded-xl
-        bg-white/95 md:bg-white/95 backdrop-blur-md md:backdrop-blur-xl border-t md:border border-sand-300 text-ink shadow-2xl flex flex-col
-        ${!isOpen ? "md:opacity-0 md:pointer-events-none" : ""}
-      `}
+        className="fixed z-50 bottom-0 left-0 right-0 max-h-[75vh] rounded-t-2xl bg-white border-t border-sand-300 text-ink shadow-2xl flex flex-col"
       >
+        {/* Handle, header and tabs: drag down here to close the sheet */}
         <div
-          className="md:hidden w-full flex items-center justify-center pt-3 pb-1 shrink-0 z-30 cursor-grab active:cursor-grabbing touch-none"
+          className="shrink-0 touch-none"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          <div className="w-12 h-1.5 bg-sand-200 rounded-full shadow-sm"></div>
-        </div>
-
-        <div
-          className="relative shrink-0 z-20 touch-none"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          <div className="absolute inset-0 rounded-t-2xl md:rounded-t-xl overflow-hidden pointer-events-none border-b border-sand-300 bg-sand-50 backdrop-blur-sm md:backdrop-blur-md">
-            <div className="absolute top-0 right-0 w-20 h-20 bg-forest-50 blur-2xl rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          <div className="w-full flex justify-center pt-2.5 pb-1 cursor-grab active:cursor-grabbing">
+            <div className="w-10 h-1.5 bg-sand-200 rounded-full" />
           </div>
 
-          <div className="relative p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <img
-                  src={landscapeLogo}
-                  alt="360"
-                  className="w-12 h-12 object-contain"
-                />
-
-                <div>
-                  <h2 className="font-bold text-sm tracking-tight leading-none">
-                    Landscape 360
-                  </h2>
-                  <span className="text-[10px] text-forest-700 font-mono tracking-wider">
-                    v3.3.0
-                  </span>
-                </div>
-              </div>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsOpen(false);
-                }}
-                className="cursor-pointer hidden md:block p-1 hover:bg-sand-100 rounded text-sand-600"
-                title="Minimize panel"
-                aria-label="Minimize panel"
-              >
-                <Minus size={16} />
-              </button>
+          <div className="flex items-center gap-2 px-4 pb-2">
+            <img src={landscapeLogo} alt="" className="w-8 h-8 object-contain shrink-0" />
+            <div className="min-w-0 flex-1">
+              <h2 className="font-bold text-sm tracking-tight leading-none truncate">Landscape 360</h2>
+              <span className="text-[9px] text-forest-700 font-mono">v3.3.0</span>
             </div>
+            <button
+              onClick={() => setShowGetStarted(true)}
+              className="cursor-pointer p-2 rounded-lg text-sand-600 hover:bg-sand-100 hover:text-ink"
+              title="Quick Guide"
+              aria-label="Quick Guide"
+            >
+              <CircleHelp size={18} />
+            </button>
+            <button
+              onClick={() => navigate("/docs")}
+              className="cursor-pointer p-2 rounded-lg text-sand-600 hover:bg-sand-100 hover:text-ink"
+              title="Docs"
+              aria-label="Docs"
+            >
+              <BookOpen size={18} />
+            </button>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="cursor-pointer p-2 rounded-lg text-sand-600 hover:bg-sand-100 hover:text-ink"
+              title="Hide panel"
+              aria-label="Hide panel"
+            >
+              <ChevronDown size={18} />
+            </button>
+          </div>
 
-            <div className="flex gap-2 mb-2">
-              <button
-                onClick={() => setShowGetStarted(true)}
-                className="cursor-pointer flex-1 py-1.5 bg-gold-50 border border-gold-200 rounded text-[10px] font-medium text-gold-700 hover:bg-gold-50 transition-colors flex items-center justify-center gap-1"
-              >
-                Quick Guide
-              </button>
-              <button
-                onClick={() => navigate("/docs")}
-                className="cursor-pointer flex-1 py-1.5 bg-sand-50 border border-sand-200 rounded text-[10px] font-medium text-sand-700 hover:bg-sand-100 transition-colors flex items-center justify-center gap-1"
-              >
-                <BookOpen size={10} /> Docs
-              </button>
-            </div>
-            <div className="flex justify-center relative z-50">
-              <AuthControl />
-            </div>
+          <div className="px-4 pb-2 flex justify-center relative z-50">
+            <AuthControl />
+          </div>
 
-            <div className="mt-3 border-sand-200 p-1">
-              <label className="text-[10px] uppercase tracking-widest text-sand-500 font-bold mb-2 block">
-                Tools & Exploration
-              </label>
-
-              {/* Tools Carousel for Mobile, Grid for Desktop */}
-              <ScrollShadowArea
-                horizontal={isMobile}
-                // On phones the carousel runs edge to edge; the wrapper takes the negative
-                // margin so the side shadows sit on the visible edges
-                wrapperClassName={isMobile ? "-mx-4" : ""}
-                className={`gap-3 ${
-                  isMobile
-                    ? "flex overflow-x-auto pb-4 px-4 snap-x snap-mandatory scrollbar-hide"
-                    : "grid grid-cols-1 max-h-55 overflow-y-auto pr-1"
-                }`}
-              >
-{toolButtons}
-              </ScrollShadowArea>
-
-              {desktopTrackingExtras}
-
-              {/* Mobile-optimized Advanced Controls Container */}
-              {isLiveTrackingEnabled && isMobile && (
-                <div className="mt-2 px-3 py-2 rounded-lg border border-sand-100 bg-sand-50 space-y-2">
-                  {/* Monitor Status */}
-                  {userRole === "monitor360" &&
-                    subscriptionStatus === "Enterprise" && (
-                      <div
-                        className={`text-[10px] py-1.5 px-2 rounded-lg flex items-center justify-between ${
-                          connectionStatus === "connected"
-                            ? "bg-forest-50 text-forest-700"
-                            : "bg-brick-50 text-brick-600"
-                        }`}
-                      >
-                        <span className="flex items-center gap-1.5">
-                          <span
-                            className={`w-1.5 h-1.5 rounded-full ${connectionStatus === "connected" ? "bg-forest-500" : "bg-brick-500"}`}
-                          />
-                          {connectionStatus === "connected"
-                            ? "Online"
-                            : "Offline"}
-                        </span>
-                        <span>{Object.keys(trackers).length} Users</span>
-                      </div>
+          <div className="px-4 pb-2" role="tablist" aria-label="Sidebar sections">
+            <div className="flex bg-sand-100 rounded-xl p-1">
+              {panelSections.map((sec) => {
+                const selected = panelSection === sec.id;
+                return (
+                  <button
+                    key={sec.id}
+                    role="tab"
+                    aria-selected={selected}
+                    onClick={() => setPanelSection(sec.id)}
+                    className={`cursor-pointer relative flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-colors ${
+                      selected ? "bg-white text-forest-800 shadow-sm" : "text-sand-600"
+                    }`}
+                  >
+                    <sec.icon size={14} />
+                    {sec.label}
+                    {sec.id === "tools" && anyToolActive && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-forest-600" aria-label="A tool is on" />
                     )}
-
-                  {/* Simulation Toggle */}
-                  {userRole === "monitor360" && (
-                    <div
-                      className="flex items-center justify-between group cursor-pointer"
-                      onClick={toggleSimulation}
-                    >
-                      <label className="text-[10px] text-sand-600 cursor-pointer group-hover:text-sand-700">
-                        Simulate Data
-                      </label>
-                      <div
-                        className={`w-7 h-3.5 rounded-full p-0.5 transition-colors ${isSimulationEnabled ? "bg-forest-700" : "bg-sand-200"}`}
-                      >
-                        <div
-                          className={`w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-transform ${isSimulationEnabled ? "translate-x-3.5" : ""}`}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Broadcast Toggle */}
-                  {userRole === "pengguna360" && (
-                    <div
-                      className="flex items-center justify-between group cursor-pointer"
-                      onClick={toggleLocalBroadcast}
-                    >
-                      <label className="text-[10px] text-sand-600 cursor-pointer group-hover:text-sand-700 flex items-center gap-1.5">
-                        Broadcast Location
-                        {isLocalBroadcastEnabled && (
-                          <Wifi
-                            size={10}
-                            className="text-forest-700 animate-pulse"
-                          />
-                        )}
-                      </label>
-                      <div
-                        className={`w-7 h-3.5 rounded-full p-0.5 transition-colors ${isLocalBroadcastEnabled ? "bg-forest-700" : "bg-sand-200"}`}
-                      >
-                        <div
-                          className={`w-2.5 h-2.5 bg-white rounded-full shadow-sm transition-transform ${isLocalBroadcastEnabled ? "translate-x-3.5" : ""}`}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {canRecordActivity && (
-                    <div className="rounded-lg border border-sand-200 bg-sand-50 p-2">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex flex-col">
-                          <span className="text-[10px] text-sand-700 font-bold">
-                            Record Activity
-                          </span>
-                          <span
-                            className={`text-[10px] ${
-                              isActivityRecording
-                                ? "text-forest-700"
-                                : isActivityPendingSave
-                                  ? "text-gold-700"
-                                  : "text-sand-500"
-                            }`}
-                          >
-                            {isActivityRecording
-                              ? "Recording"
-                              : isActivityPendingSave
-                                ? "Saving..."
-                                : "Ready"}
-                          </span>
-                        </div>
-                        <span className="px-2 py-1 rounded-md bg-white/90 text-[10px] text-sand-800 font-mono tabular-nums">
-                          {activityStartedAt
-                            ? formatDuration((activityNow - activityStartedAt) / 1000)
-                            : "0:00"}
-                        </span>
-                      </div>
-                      <div className="mt-2 flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <span className="px-2 py-1 rounded-md bg-white/90 text-[10px] text-sand-700 tabular-nums">
-                            {(activityDistanceM / 1000).toFixed(2)} km
-                          </span>
-                          <span className="px-2 py-1 rounded-md bg-white/90 text-[10px] text-sand-600 tabular-nums">
-                            {activityPointCount} pts
-                          </span>
-                        </div>
-                        {!isActivityRecording ? (
-                          <button
-                            disabled={isActivityPendingSave}
-                            onClick={() => {
-                              if (!isLiveTrackingEnabled) setLiveTracking(true);
-                              startActivity();
-                            }}
-                            className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-forest-50 text-forest-700 border border-forest-200 hover:bg-forest-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                            title="Start Activity"
-                          >
-                            <Play size={12} />
-                            <span className="text-[10px] font-bold">Start</span>
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => stopActivity()}
-                            className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brick-50 text-brick-600 border border-brick-200 hover:bg-brick-100 transition-colors"
-                            title="Stop Activity"
-                          >
-                            <Square size={12} />
-                            <span className="text-[10px] font-bold">Stop</span>
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
 
-        <div
-          className="p-3 flex justify-between items-center gap-2 border-b border-forest-950 transition-all duration-300 touch-none cursor-pointer bg-forest-900 hover:bg-forest-800"
-          onClick={() => {
-            // Toggle terrain controls visibility (Mobile & Desktop)
-            setIsTerrainControlsOpen(!isTerrainControlsOpen);
-          }}
-        >
-          <h6 className="min-w-0 font-bold flex items-center gap-1.5 text-xs text-gold-300 tracking-wider whitespace-nowrap">
-            <Activity size={12} className="text-gold-300 shrink-0" />
-            TERRAIN CONTROLS
-            {isTerrainControlsOpen && (
-              <small className="truncate text-gold-400 font-normal normal-case tracking-normal text-[9px]">
-                · scroll
-              </small>
-            )}
-          </h6>
-
-          {/* Chevron Indicator for Minimize/Expand */}
-          <div className="text-gold-300 bg-gold-300/10 rounded p-0.5">
-            {isTerrainControlsOpen ? (
-              isMobile ? <ChevronDown size={16} /> : <ChevronUp size={16} />
-            ) : (
-              isMobile ? <ChevronUp size={16} /> : <ChevronDown size={16} />
-            )}
-          </div>
-        </div>
-
-        {/* Scrollable Content Container with Collapsible State */}
         <ScrollShadowArea
-          className={`overflow-y-auto custom-scrollbar transition-all duration-300 ease-in-out ${
-            !isTerrainControlsOpen
-              ? "max-h-0 opacity-0 overflow-hidden"
-              : "max-h-[60vh] md:max-h-[50vh] opacity-100 p-4 space-y-4"
-          }`}
+          wrapperClassName="flex-1 border-t border-sand-100"
+          className="flex-1 overflow-y-auto custom-scrollbar bg-white px-4 py-3 space-y-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
         >
-          {mapStyleSection}
-
-          {dragToSection}
-
-          {/* Grid Layout for sliders on Mobile to save space */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4">
-            {mapViewSection}
-
-            {terrainSection}
-          </div>
-
-          {credits}
+          {panelSection === "tools" && (
+            <>
+              <div className="grid grid-cols-4 gap-2">{toolButtons}</div>
+              {mobileTrackingExtras}
+            </>
+          )}
+          {panelSection === "map" && (
+            <>
+              {mapStyleSection}
+              {mapViewSection}
+            </>
+          )}
+          {panelSection === "terrain" && (
+            <div className="space-y-4">
+              {terrainHint}
+              {terrainSection}
+            </div>
+          )}
+          {sidebarFooter}
         </ScrollShadowArea>
       </div>
 

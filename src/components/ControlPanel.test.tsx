@@ -108,6 +108,23 @@ describe('ControlPanel', () => {
     expect(screen.getByRole('button', { name: 'Terrain' })).toHaveAttribute('aria-pressed', 'false');
   });
 
+  it('phone: one sheet with Tools / Map / Terrain tabs; Map shows map styles', () => {
+    const width = window.innerWidth;
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 390 });
+    try {
+      renderComponent();
+      const tabs = screen.getAllByRole('tab');
+      expect(tabs.map((t) => t.textContent?.trim().replace(/\s+/g, ' '))).toEqual(['Tools', 'Map', 'Terrain']);
+      expect(tabs[0]).toHaveAttribute('aria-selected', 'true');
+      expect(screen.getByText('Navigator')).toBeInTheDocument();
+      fireEvent.click(tabs[1]);
+      expect(screen.getByText('Streets')).toBeInTheDocument();
+      expect(screen.queryByText('Navigator')).not.toBeInTheDocument();
+    } finally {
+      Object.defineProperty(window, 'innerWidth', { configurable: true, value: width });
+    }
+  });
+
   it('should render map style options', () => {
     renderComponent();
     openMapSection();
