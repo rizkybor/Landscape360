@@ -1,13 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  Binoculars,
   Check,
   Crosshair,
-  DoorOpen,
   Download,
-  Droplets,
-  Flag,
-  House,
   Loader2,
   LocateFixed,
   Lock,
@@ -15,23 +10,19 @@ import {
   MapPin,
   MapPinned,
   MapPinPlus,
-  Mountain,
   Pencil,
   RefreshCw,
   Search,
   Share2,
-  SquareParking,
-  Tent,
   Trash2,
-  TriangleAlert,
   X,
-  type LucideIcon,
 } from "lucide-react";
 import { useSurveyStore } from "../store/useSurveyStore";
 import { useMapStore } from "../store/useMapStore";
 import { useTrackRecorderStore } from "../store/useTrackRecorderStore";
 import { useMarkedLocationStore } from "../store/useMarkedLocationStore";
 import { MarkedLocationShareManager } from "./MarkedLocationShareManager";
+import { CATEGORY_ICONS } from "../utils/markedLocationIcons";
 import { CONTACT_ADMIN_LABEL } from "../config";
 import {
   CATEGORY_META,
@@ -46,18 +37,6 @@ import {
   type MarkedLocationCategory,
 } from "../types/markedLocation";
 
-const CATEGORY_ICONS: Record<MarkedLocationCategory, LucideIcon> = {
-  poi: MapPin,
-  camp: Tent,
-  summit: Mountain,
-  water: Droplets,
-  shelter: House,
-  viewpoint: Binoculars,
-  trailhead: Flag,
-  hazard: TriangleAlert,
-  cave: DoorOpen,
-  parking: SquareParking,
-};
 
 type Tab = "mine" | "shared" | "all";
 

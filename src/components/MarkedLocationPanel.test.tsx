@@ -17,6 +17,7 @@ vi.mock('../services/markedLocationSync', () => ({
   shareLocations: vi.fn(),
   listShares: vi.fn(),
   removeShare: vi.fn(),
+  fetchShareSuggestions: vi.fn(() => Promise.resolve([])),
 }));
 
 const location = (id: string, overrides: Partial<MarkedLocation> = {}): MarkedLocation => ({
@@ -91,11 +92,32 @@ describe('MarkedLocationPanel', () => {
     expect(await screen.findByText('1 / 100')).toBeInTheDocument();
 
     fireEvent.click(screen.getByTitle('Share this location'));
-    fireEvent.change(screen.getByPlaceholderText('Recipient email or name'), { target: { value: 'Siti Aminah' } });
+    fireEvent.change(screen.getByPlaceholderText('Name or email'), { target: { value: 'Siti Aminah' } });
     fireEvent.click(screen.getByRole('button', { name: 'Share' }));
 
     await waitFor(() => expect(cloud.shareLocations).toHaveBeenCalledWith(['a'], 'Siti Aminah'));
     expect(await screen.findByText(/Shared location with Siti Aminah \(s\*\*\*@x.com\)/)).toBeInTheDocument();
+  });
+
+  it('Pro: suggests recent recipients and people matching what is typed, one tap shares', async () => {
+    mockUser('Pro');
+    vi.mocked(cloud.listShares).mockResolvedValue([]);
+    vi.mocked(cloud.fetchShareSuggestions).mockImplementation(async (query: string) =>
+      query
+        ? [{ userId: 'siti-id', name: 'Siti Aminah', emailMasked: 's***@x.com', recent: false }]
+        : [{ userId: 'budi-id', name: 'Budi', emailMasked: 'b***@x.com', recent: true }],
+    );
+    vi.mocked(cloud.shareLocations).mockResolvedValue({ userId: 'siti-id', name: 'Siti Aminah', emailMasked: 's***@x.com', sharedCount: 1 });
+    await renderOpen();
+    fireEvent.click(await screen.findByTitle('Share this location'));
+
+    expect(await screen.findByText('Recent')).toBeInTheDocument();
+    expect(screen.getByText('Budi')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByPlaceholderText('Name or email'), { target: { value: 'sit' } });
+    fireEvent.click(await screen.findByText('Siti Aminah', {}, { timeout: 2000 }));
+    await waitFor(() => expect(cloud.shareLocations).toHaveBeenCalledWith(['a'], 'siti-id'));
+    expect(cloud.fetchShareSuggestions).toHaveBeenCalledWith('sit');
   });
 
   it('Pro: shares several selected locations at once', async () => {
@@ -108,8 +130,8 @@ describe('MarkedLocationPanel', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Share' }));
     expect(screen.getByText('Share 2 locations')).toBeInTheDocument();
-    fireEvent.change(screen.getByPlaceholderText('Recipient email or name'), { target: { value: 'budi@x.com' } });
-    fireEvent.submit(screen.getByPlaceholderText('Recipient email or name').closest('form')!);
+    fireEvent.change(screen.getByPlaceholderText('Name or email'), { target: { value: 'budi@x.com' } });
+    fireEvent.submit(screen.getByPlaceholderText('Name or email').closest('form')!);
 
     await waitFor(() => expect(cloud.shareLocations).toHaveBeenCalledWith(['a', 'b'], 'budi@x.com'));
   });

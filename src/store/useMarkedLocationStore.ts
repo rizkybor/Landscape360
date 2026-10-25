@@ -7,6 +7,7 @@ import type {
   MarkedLocationShare,
   SharedMarkedLocation,
   ShareResult,
+  ShareSuggestion,
 } from '../types/markedLocation';
 
 export interface PickedPoint {
@@ -51,6 +52,7 @@ interface MarkedLocationStore {
 
   shareLocations: (ids: string[], recipient: string) => Promise<ShareResult>;
   listShares: (id: string) => Promise<MarkedLocationShare[]>;
+  shareSuggestions: (query: string) => Promise<ShareSuggestion[]>;
   revokeShare: (id: string, recipientId: string) => Promise<void>;
   leaveShared: (id: string) => Promise<void>;
 }
@@ -143,6 +145,7 @@ export const useMarkedLocationStore = create<MarkedLocationStore>((set, get) => 
 
     shareLocations: (ids, recipient) => cloud.shareLocations(ids, recipient),
     listShares: (id) => cloud.listShares(id),
+    shareSuggestions: (query) => cloud.fetchShareSuggestions(query),
     revokeShare: (id, recipientId) => cloud.removeShare(id, recipientId),
 
     leaveShared: async (id) => {

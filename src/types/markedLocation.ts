@@ -57,6 +57,14 @@ export interface MarkedLocationShare {
   sharedAt: number;
 }
 
+// Someone to share with: a recent recipient, or an account matching what was typed
+export interface ShareSuggestion {
+  userId: string;
+  name: string | null;
+  emailMasked: string | null;
+  recent: boolean;
+}
+
 export interface ShareResult {
   userId: string;
   name: string | null;
