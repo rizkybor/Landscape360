@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import * as turf from '@turf/turf';
-import { snapToAngle, geodesicInverse, getAzimuthData, buildSurveyLine, segmentMidpoints, handleFromDrag, handleEnds } from './surveyUtils';
+import { snapToAngle, geodesicInverse, getAzimuthData, buildSurveyLine, segmentMidpoints, handleFromDrag, handleEnds, toDMS } from './surveyUtils';
 
 const bearing = (a: [number, number], b: [number, number]) => turf.bearing(turf.point(a), turf.point(b));
 const turnBetween = (prev: [number, number], last: [number, number], next: [number, number]) => {
@@ -138,5 +138,17 @@ describe('buildSurveyLine', () => {
 
   it('leaves two points as a straight line', () => {
     expect(buildSurveyLine(square.slice(0, 2))).toHaveLength(2);
+  });
+});
+
+describe('toDMS', () => {
+  it('formats degrees, minutes and seconds with the hemisphere', () => {
+    expect(toDMS(-6.23642, true)).toBe(`6°14'11.11" S`);
+    expect(toDMS(106.743808, false)).toBe(`106°44'37.71" E`);
+  });
+
+  it('carries 59.999" into the next minute instead of printing 60.00"', () => {
+    expect(toDMS(6 + 13 / 60 + 59.999 / 3600, true)).toBe(`6°14'0.00" N`);
+    expect(toDMS(-(7 + 59 / 60 + 59.9999 / 3600), true)).toBe(`8°0'0.00" S`);
   });
 });

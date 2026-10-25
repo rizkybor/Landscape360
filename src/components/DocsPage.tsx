@@ -17,6 +17,7 @@ import {
   UserPlus,
   ShieldCheck,
   HardDrive,
+  Tent,
 } from "lucide-react";
 import streetsView from "../assets/Street-View.png";
 import outdoorsView from "../assets/Outdoors-View.png";
@@ -24,6 +25,7 @@ import satelliteView from "../assets/Satellite-View.png";
 import landscapeLogo from "../assets/LandscapeLogo.svg";
 import { SEO } from "./SEO";
 import { SiteLinks } from "./SitePageLayout";
+import { CATEGORY_META } from "../utils/markedLocations";
 
 interface Props {
   onBack?: () => void;
@@ -74,10 +76,6 @@ export const DocsPage = ({ onBack }: Props) => {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-forest-50 border border-forest-200 text-forest-700 text-[10px] font-bold uppercase tracking-wider">
-              <Zap size={10} />
-              <span>Performance Optimized</span>
-            </div>
             <span className="text-xs font-mono text-forest-700 border border-forest-200 px-2 py-1 rounded bg-forest-50">
               v3.3.0
             </span>
@@ -190,9 +188,9 @@ export const DocsPage = ({ onBack }: Props) => {
                     Navigation
                   </h4>
                   <p className="text-xs text-sand-600 leading-relaxed">
-                    <strong>Left-Click Drag</strong> to Rotate (3D) or Pan (2D).{" "}
-                    <strong>Scroll</strong> to Zoom. Use on-screen buttons for
-                    precision control.
+                    <strong>Left drag</strong> to pan, <strong>right drag</strong> to rotate and
+                    tilt, <strong>scroll</strong> to zoom (Camera Mode swaps the mouse buttons).
+                    On a phone: one finger pans, pinch zooms, twist rotates.
                   </p>
                 </div>
               </div>
@@ -222,8 +220,10 @@ export const DocsPage = ({ onBack }: Props) => {
                     Export & Share
                   </h4>
                   <p className="text-xs text-sand-600 leading-relaxed">
-                    Capture high-res snapshots (PNG/JPG), generate PDF reports, 
-                    or download recorded Tracking Activities as <strong>GPX files</strong>.
+                    Export the map as a report in <strong>PNG</strong>, <strong>JPG</strong> or{" "}
+                    <strong>PDF</strong>: your survey lines and points, marked locations, point
+                    table and elevation profile included. Download tracks and locations as{" "}
+                    <strong>GPX files</strong>.
                   </p>
                 </div>
               </div>
@@ -269,8 +269,8 @@ export const DocsPage = ({ onBack }: Props) => {
                     Custom Basemaps
                   </h4>
                   <p className="text-xs text-sand-600 leading-relaxed">
-                    Upload and overlay your own <strong>GeoTIFF/GeoPDF</strong> maps.
-                    Manually adjust alignment with the visual georeference tool.
+                    Upload and overlay your own <strong>GeoTIFF</strong> or <strong>PDF</strong>{" "}
+                    maps (Enterprise). A PDF is placed by typing its edges or with Pick on Map.
                   </p>
                 </div>
               </div>
@@ -303,7 +303,8 @@ export const DocsPage = ({ onBack }: Props) => {
                   <p className="text-xs text-sand-600 leading-relaxed">
                     Open <strong>Marked Locations</strong> in Tools &amp; Exploration to save
                     camps, water sources, summits and more with full details. Share them with
-                    other users by <strong>email or name</strong> and export as{" "}
+                    other users by picking them from a list (recent people, or type part of a
+                    name or email) and export as{" "}
                     <strong>GPX</strong>.
                   </p>
                 </div>
@@ -410,7 +411,7 @@ export const DocsPage = ({ onBack }: Props) => {
                   features: [
                     "3 offline maps (up to 10 MB each)",
                     "4 saved surveys",
-                    "100 marked locations, share by email or name",
+                    "100 marked locations, share with other accounts",
                     "GPS Tracking: broadcast your location and record activities (GPX)",
                     "Rename your cloud tracks",
                     "100 MB cloud storage",
@@ -424,9 +425,10 @@ export const DocsPage = ({ onBack }: Props) => {
                   features: [
                     "10 offline maps (up to 25 MB each)",
                     "10 saved surveys",
-                    "1,000 marked locations, share by email or name",
+                    "1,000 marked locations, share with other accounts",
                     "Track Recorder: record online or offline, share and export GPX",
                     "GPS Tracking: broadcast your location",
+                    "Rename your cloud tracks",
                     "Team Monitor: follow every active member live (Monitor accounts)",
                     "Custom Basemaps: GeoTIFF / GeoPDF overlays",
                     "1 GB cloud storage",
@@ -456,6 +458,18 @@ export const DocsPage = ({ onBack }: Props) => {
                   )}
                 </div>
               ))}
+            </div>
+
+            <div className="flex items-start gap-3 bg-brick-50 border border-brick-200 rounded-xl p-4 mb-6">
+              <div className="shrink-0 w-8 h-8 rounded-full bg-brick-600 text-white text-[9px] font-black flex items-center justify-center">
+                SOS
+              </div>
+              <p className="text-xs text-brick-700 leading-relaxed">
+                <strong>S.O.S button</strong> is not tied to a plan: the admin turns it on for each
+                account that needs it (any plan). It opens an emergency screen with your GPS
+                position, calls 112 / Basarnas 115, sends an SMS with your location to your emergency
+                contacts, and reports your message, location and battery to the admin.
+              </p>
             </div>
 
             <div className="bg-white border border-sand-200 rounded-xl p-4 sm:p-5 overflow-x-auto">
@@ -599,7 +613,8 @@ export const DocsPage = ({ onBack }: Props) => {
                 </div>
 
                 <div className="bg-white border border-sand-200 rounded-xl p-1 overflow-hidden">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-sand-200">
+                  {/* Phones: Desktop above Mobile; wider screens: side by side */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-sand-200">
                     <div className="p-5 space-y-4">
                       <div className="flex items-center gap-2 text-sm font-bold text-ink">
                         <Map size={14} className="text-forest-700" /> Desktop
@@ -608,13 +623,13 @@ export const DocsPage = ({ onBack }: Props) => {
                         <li className="flex justify-between">
                           <span>Left Drag</span>
                           <span className="text-sand-800 font-medium">
-                            Rotate / Orbit
+                            Pan Map
                           </span>
                         </li>
                         <li className="flex justify-between">
                           <span>Right Drag</span>
                           <span className="text-sand-800 font-medium">
-                            Pan Map
+                            Rotate / Tilt
                           </span>
                         </li>
                         <li className="flex justify-between">
@@ -629,7 +644,17 @@ export const DocsPage = ({ onBack }: Props) => {
                             Tilt (Pitch)
                           </span>
                         </li>
+                        <li className="flex justify-between">
+                          <span>Double Click</span>
+                          <span className="text-sand-800 font-medium">
+                            Zoom In
+                          </span>
+                        </li>
                       </ul>
+                      <p className="text-[10px] text-sand-500 leading-relaxed">
+                        Prefer left drag to rotate? Switch to <strong>Camera Mode</strong> under
+                        Mouse Interaction Mode in the control panel; the two buttons swap.
+                      </p>
                     </div>
                     <div className="p-5 space-y-4 bg-sand-50">
                       <div className="flex items-center gap-2 text-sm font-bold text-ink">
@@ -1639,9 +1664,9 @@ export const DocsPage = ({ onBack }: Props) => {
                   </h4>
                   <p className="text-xs text-sand-600 leading-relaxed">
                     Upload high-resolution <strong>GeoTIFF</strong> or{" "}
-                    <strong>GeoPDF</strong> files to overlay on the 3D terrain.
-                    Ideal for project-specific site plans, historical maps, or
-                    drone orthomosaics.
+                    <strong>PDF</strong> maps to overlay on the 2D and 3D terrain, with
+                    adjustable opacity. Ideal for trail maps, site plans, historical
+                    maps or drone orthomosaics. Available on every Enterprise account.
                   </p>
 
                   <div className="space-y-3 pt-2">
@@ -1651,12 +1676,12 @@ export const DocsPage = ({ onBack }: Props) => {
                       </div>
                       <div>
                         <strong className="text-ink text-xs block">
-                          Visual Georeferencing
+                          Place PDFs on the Map
                         </strong>
                         <p className="text-[10px] text-sand-600">
-                          Interactive tool to manually position, scale, and
-                          rotate non-georeferenced PDFs or images directly on
-                          the map canvas.
+                          A PDF has no map position, so you set it: type the
+                          north, south, east and west edges, or press Pick on
+                          Map to move and resize a frame directly on the map.
                         </p>
                       </div>
                     </div>
@@ -1666,11 +1691,11 @@ export const DocsPage = ({ onBack }: Props) => {
                       </div>
                       <div>
                         <strong className="text-ink text-xs block">
-                          Auto-Reprojection
+                          GeoTIFF Placed Automatically
                         </strong>
                         <p className="text-[10px] text-sand-600">
-                          Automatic detection and reprojection of GeoTIFFs to
-                          WGS84 coordinate system for seamless integration.
+                          A GeoTIFF is placed from its own coordinates, and a
+                          projected one (e.g. UTM) is converted to WGS84 for you.
                         </p>
                       </div>
                     </div>
@@ -1681,22 +1706,26 @@ export const DocsPage = ({ onBack }: Props) => {
                   <div className="space-y-2 mb-4">
                     <div className="flex justify-between items-center text-xs text-forest-700">
                       <span>Supported Formats</span>
-                      <span className="font-bold">GeoTIFF, GeoPDF</span>
+                      <span className="font-bold">GeoTIFF (.tif), PDF</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs text-forest-700">
+                      <span>Max File Size</span>
+                      <span className="font-bold">150 MB (original)</span>
                     </div>
                     <div className="flex justify-between items-center text-xs text-forest-700">
                       <span>Max Resolution</span>
-                      <span className="font-bold">2500px (Optimized)</span>
+                      <span className="font-bold">2500 px (auto-resized)</span>
                     </div>
                     <div className="flex justify-between items-center text-xs text-forest-700">
                       <span>Storage</span>
-                      <span className="font-bold">5 MB Limit (Cloud)</span>
+                      <span className="font-bold">5 MB total (cloud)</span>
                     </div>
                   </div>
 
                   <div className="mt-auto p-3 rounded bg-forest-50 border border-forest-200">
-                    <p className="text-[10px] text-forest-700 italic text-center">
-                      "Essential for cross-referencing official survey data with
-                      real-world terrain features."
+                    <p className="text-[10px] text-forest-700 text-center leading-relaxed">
+                      Large maps are shrunk to fit before upload. Uploaded maps also
+                      count toward your account's cloud storage.
                     </p>
                   </div>
                 </div>
@@ -1732,11 +1761,11 @@ export const DocsPage = ({ onBack }: Props) => {
                   {[
                     {
                       title: "Add a location",
-                      desc: "Open Marked Locations in Tools & Exploration and press Add. Set the position with Pick on map (elevation is filled in from the terrain), Map center, My GPS, or type the latitude and longitude.",
+                      desc: "Open Marked Locations in Tools & Exploration and press Add. Give it a name and a category, then set the position with Pick on map (elevation is filled in from the terrain), Map center, My GPS, or type the latitude and longitude. Area / address, contact, description and tags are under Optional details.",
                     },
                     {
                       title: "Find it again",
-                      desc: "Search by name, tag or area. Click a location in the list to fly to it, or click its marker on the map to see every detail, get Directions, or copy the coordinates.",
+                      desc: "Search by name, tag or area, and click a location in the list to fly to it. On the map each location shows its category icon with its name above it. Tap the marker to open a small card with Directions, Copy coordinates and Open in the list; the arrow on the card shows every detail. Tap the marker again to close it.",
                     },
                     {
                       title: "Export",
@@ -1785,9 +1814,10 @@ export const DocsPage = ({ onBack }: Props) => {
                   <h4 className="text-base sm:text-lg font-bold text-ink">Share with Other Users</h4>
                   <p className="text-xs text-sand-600 leading-relaxed">
                     Share one location, or tick several and share them all at once, with
-                    another Landscape 360 account. Type their <strong>email</strong> or
-                    their exact <strong>display name</strong>; if several accounts use the
-                    same name, share by email instead.
+                    another Landscape 360 account. Press Share and tap a person under{" "}
+                    <strong>Recent</strong> (people you shared with before), or type part of
+                    their <strong>name</strong> or <strong>email</strong> and tap them in the
+                    list. Typing their full email also works.
                   </p>
                   <ul className="space-y-2 text-[11px] text-sand-700">
                     <li className="flex gap-2">
@@ -1808,13 +1838,23 @@ export const DocsPage = ({ onBack }: Props) => {
                       are always shown masked (e.g. <span className="font-mono">s***@gmail.com</span>).</span>
                     </li>
                   </ul>
-                  <div className="flex flex-wrap gap-3 pt-2 text-[10px] text-sand-600">
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-3 h-3 rounded-full bg-forest-700 ring-2 ring-white shadow" /> Ring: white = yours
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-3 h-3 rounded-full bg-forest-700 ring-2 ring-gold-300 shadow" /> gold = shared with you
-                    </span>
+                  {/* Same look as the map markers: category icon in a coloured circle, ring by owner */}
+                  <div className="flex flex-wrap gap-x-4 gap-y-2 pt-2 text-[10px] text-sand-600">
+                    {[
+                      { ring: "#ffffff", label: "White ring = yours" },
+                      { ring: "#e9b640", label: "Gold = shared with you" },
+                      { ring: "#9ca3af", label: "Grey = other accounts (admin)" },
+                    ].map((m) => (
+                      <span key={m.label} className="flex items-center gap-1.5">
+                        <span
+                          className="w-5 h-5 rounded-full flex items-center justify-center text-white shadow"
+                          style={{ backgroundColor: CATEGORY_META.camp.color, boxShadow: `0 0 0 2px ${m.ring}, 0 1px 2px rgb(0 0 0 / 0.25)` }}
+                        >
+                          <Tent size={11} strokeWidth={2.5} />
+                        </span>
+                        {m.label}
+                      </span>
+                    ))}
                   </div>
                 </div>
 
@@ -1839,10 +1879,15 @@ export const DocsPage = ({ onBack }: Props) => {
                         <td className="py-2 font-mono">100</td>
                         <td className="py-2 text-forest-700 font-bold">✓</td>
                       </tr>
-                      <tr>
+                      <tr className="border-b border-sand-100">
                         <td className="py-2 font-bold">Enterprise</td>
                         <td className="py-2 font-mono">1,000</td>
                         <td className="py-2 text-forest-700 font-bold">✓</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 font-bold">Admin</td>
+                        <td className="py-2 font-mono">Unlimited</td>
+                        <td className="py-2 text-forest-700 font-bold">✓ <span className="font-normal text-sand-600">+ sees every account's</span></td>
                       </tr>
                     </tbody>
                   </table>

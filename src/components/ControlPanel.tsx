@@ -38,6 +38,7 @@ import {
   Footprints,
   MapPinned,
   UserPlus,
+  Siren,
   HardDrive,
 } from "lucide-react";
 import landscapeLogo from "../assets/LandscapeLogo.svg";
@@ -1784,12 +1785,13 @@ const GetStartedModal = ({
         </div>
 
         <div className="p-6 flex flex-col h-[calc(80vh-88px-60px)]">
-          <div className="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar">
+          {/* Soft shadow at the top / bottom edge while there is more to scroll */}
+          <ScrollShadowArea wrapperClassName="flex-1" className="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar">
             {[
               {
                 icon: <Monitor size={18} />,
                 title: "Interaction Modes",
-                desc: "Switch between Map Mode (Left-Click to Pan) and Camera Mode (Left-Click to Rotate). Use the new on-screen Zoom buttons for precise navigation.",
+                desc: "Map Mode (default): left drag pans, right drag rotates and tilts. Camera Mode swaps the two. Scroll to zoom, Shift + scroll to tilt. On a phone: one finger pans, pinch zooms, twist rotates, two-finger drag tilts in 3D.",
               },
               {
                 icon: <Activity size={18} />,
@@ -1801,18 +1803,19 @@ const GetStartedModal = ({
                 title: "Export & Capture",
                 desc: (
                   <>
-                    Capture high-resolution snapshots for reports.
+                    Export the current map as an A4 report: your survey lines and points,
+                    marked locations in view, the point table with distances, and the
+                    elevation profile. Long reports get more pages (PNG/JPG as a ZIP).
                     <div className="mt-2 grid grid-cols-1 gap-1 text-xs opacity-80">
                       <span>
-                        • <strong>PNG:</strong> High-quality for digital
-                        presentations.
+                        • <strong>PNG:</strong> sharpest, largest file.
                       </span>
                       <span>
-                        • <strong>JPG:</strong> Compressed for easy sharing.
+                        • <strong>JPG:</strong> small file, best for sharing on chat.
                       </span>
                       <span>
-                        • <strong>PDF:</strong> Document-ready (UI overlays
-                        excluded).
+                        • <strong>PDF:</strong> small, ready to print or attach
+                        (UI buttons are not included).
                       </span>
                     </div>
                   </>
@@ -1826,22 +1829,22 @@ const GetStartedModal = ({
               {
                 icon: <Ruler size={18} />,
                 title: "Survey Tools",
-                desc: "Enter Navigator Mode to plot points and measure Azimuth/Back-Azimuth.",
+                desc: "Enter Navigator Mode to plot points with straight lines, curves or sharp corners, and read distance, azimuth / back azimuth and slope for every segment.",
               },
               {
                 icon: <Wifi size={18} />,
-                title: "Offline Maps [Pro Account]",
-                desc: "Download map areas for use without internet connection. Perfect for remote field surveys.",
+                title: "Offline Maps [All Accounts]",
+                desc: "Download map areas to use without signal on the trail: Free 1 map (1 MB), Pro 3 maps (10 MB each), Enterprise 10 maps (25 MB each).",
               },
               {
                 icon: <Navigation size={18} />,
-                title: "GPS Tracking & Monitoring [Enterprise Account]",
-                desc: "Click the GPS button to broadcast your location or monitor teams (Enterprise). Features Smart Reconnect for signal loss.",
+                title: "GPS Tracking & Monitoring [Pro & Enterprise]",
+                desc: "Click the GPS button to broadcast your location; Pro accounts can also record activities as GPX. Enterprise Monitor accounts follow every active member live. Reconnects by itself after signal loss.",
               },
               {
                 icon: <Layers size={18} />,
                 title: "Custom Basemaps [Enterprise Account]",
-                desc: "Upload your own GeoTIFF/GeoPDF maps as overlays. Supports manual georeferencing and opacity control. (Enterprise & Monitor360 only)",
+                desc: "Upload your own GeoTIFF or PDF maps as overlays with adjustable opacity. A GeoTIFF is placed from its own coordinates; a PDF is placed by typing its edges or with Pick on Map. Every Enterprise account (5 MB of maps).",
               },
               {
                 icon: <MapPinned size={18} />,
@@ -1850,7 +1853,8 @@ const GetStartedModal = ({
                   <>
                     Save camps, water sources, summits and more with full details, pick
                     them on the map, and export as GPX. Share one or several locations with
-                    other users by email or name.
+                    other users: pick someone you shared with before, or type part of their
+                    name or email and tap them.
                     <div className="mt-2 grid grid-cols-1 gap-1 text-xs opacity-80">
                       <span>
                         • <strong>Free:</strong> 10 locations, receive shares
@@ -1868,12 +1872,17 @@ const GetStartedModal = ({
               {
                 icon: <Footprints size={18} />,
                 title: "Track Recorder [Enterprise Account]",
-                desc: "Record personal GPS tracks online or offline with distance, duration and elevation. Share tracks by email and export GPX. Every signed-in account can view its own and shared tracks; Pro accounts can also rename their cloud tracks.",
+                desc: "Record personal GPS tracks online or offline with distance, duration and elevation. Share tracks by email and export GPX. Every signed-in account can view its own and shared tracks; Pro and Enterprise accounts can rename their cloud tracks.",
               },
               {
                 icon: <HardDrive size={18} />,
                 title: "Cloud Storage",
                 desc: "Tracks, marked locations, surveys and custom basemaps share your account's storage: Free 10 MB, Pro 100 MB, Enterprise 1 GB. Check your usage in the User Account menu; contact us if you need more space.",
+              },
+              {
+                icon: <Siren size={18} />,
+                title: "S.O.S [Allowed by the Admin]",
+                desc: "Accounts the admin allows get a red S.O.S button on the map (hold 3 seconds). It shows your GPS position, calls 112 / Basarnas 115, sends an SMS with your location to your emergency contacts, and reports your message, location and battery to the admin.",
               },
               {
                 icon: <UserPlus size={18} />,
@@ -1895,7 +1904,7 @@ const GetStartedModal = ({
                 </div>
               </div>
             ))}
-          </div>
+          </ScrollShadowArea>
 
           <div className="pt-4">
             <button
