@@ -18,6 +18,9 @@ vi.mock('../services/markedLocationSync', () => ({
   listShares: vi.fn(),
   removeShare: vi.fn(),
   fetchShareSuggestions: vi.fn(() => Promise.resolve([])),
+  getLocationLink: vi.fn(() => Promise.resolve(null)),
+  createLocationLink: vi.fn(() => Promise.resolve('0123456789abcdef0123456789abcdef')),
+  revokeLocationLink: vi.fn(() => Promise.resolve()),
 }));
 
 const location = (id: string, overrides: Partial<MarkedLocation> = {}): MarkedLocation => ({
@@ -118,6 +121,26 @@ describe('MarkedLocationPanel', () => {
     fireEvent.click(await screen.findByText('Siti Aminah', {}, { timeout: 2000 }));
     await waitFor(() => expect(cloud.shareLocations).toHaveBeenCalledWith(['a'], 'siti-id'));
     expect(cloud.fetchShareSuggestions).toHaveBeenCalledWith('sit');
+  });
+
+  it('Pro: shares one location as a link for WhatsApp, and can turn the link off', async () => {
+    mockUser('Pro');
+    vi.mocked(cloud.listShares).mockResolvedValue([]);
+    await renderOpen();
+    fireEvent.click(await screen.findByTitle('Share this location'));
+    fireEvent.click(await screen.findByRole('button', { name: /Create link/ }));
+    await waitFor(() => expect(cloud.createLocationLink).toHaveBeenCalledWith('a'));
+    expect(await screen.findByLabelText('Share link')).toHaveValue(
+      'https://landscape360.jcdigital.co.id/?place=0123456789abcdef0123456789abcdef',
+    );
+    const wa = screen.getByRole('link', { name: /Send to WhatsApp/ }).getAttribute('href')!;
+    expect(decodeURIComponent(wa)).toContain('Location a (Camp / Basecamp)');
+    expect(decodeURIComponent(wa)).toContain('?place=0123456789abcdef0123456789abcdef');
+
+    fireEvent.click(screen.getByRole('button', { name: /Turn off/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Turn off\?/ }));
+    await waitFor(() => expect(cloud.revokeLocationLink).toHaveBeenCalledWith('a'));
+    expect(await screen.findByRole('button', { name: /Create link/ })).toBeInTheDocument();
   });
 
   it('Pro: shares several selected locations at once', async () => {

@@ -12,6 +12,7 @@ import { CATEGORY_META } from "../utils/markedLocations";
 import { requestCompassPermission } from "../lib/deviceHeading";
 
 import { SosButton } from "./SosButton";
+import { ShareLocationButton } from "./ShareLocationButton";
 interface NavigationControlsProps {
   mapRef: React.RefObject<MapRef | null>;
   onGeolocate: () => void;
@@ -940,6 +941,9 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
           className="text-sand-700 group-hover:text-forest-800 transition-colors"
         />
       </button>
+
+      {/* Share where you are now (WhatsApp, other apps, copy) */}
+      <ShareLocationButton mapRef={mapRef} />
 
       {/* Navigation Stack */}
       <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 flex flex-col">

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Check, Clock, Loader2, Share2, UserMinus, UserPlus, X } from "lucide-react";
 import { useMarkedLocationStore } from "../store/useMarkedLocationStore";
 import type { MarkedLocationShare, ShareSuggestion } from "../types/markedLocation";
+import { MarkedLocationLinkShare } from "./MarkedLocationLinkShare";
 
 interface Props {
   locationIds: string[];
@@ -19,6 +20,7 @@ const recipientLabel = (r: { name: string | null; emailMasked: string | null }) 
 export const MarkedLocationShareManager = ({ locationIds, onClose, onShared }: Props) => {
   const { shareLocations, listShares, revokeShare, shareSuggestions } = useMarkedLocationStore();
   const singleId = locationIds.length === 1 ? locationIds[0] : null;
+  const singleLocation = useMarkedLocationStore((s) => (singleId ? s.locations.find((l) => l.id === singleId) : undefined));
 
   const [shares, setShares] = useState<MarkedLocationShare[]>([]);
   const [isLoading, setIsLoading] = useState(!!singleId);
@@ -250,6 +252,8 @@ export const MarkedLocationShareManager = ({ locationIds, onClose, onShared }: P
           ))}
         </div>
       )}
+
+      {singleLocation && <MarkedLocationLinkShare location={singleLocation} />}
     </div>
   );
 };

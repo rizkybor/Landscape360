@@ -405,7 +405,7 @@ export const DocsPage = ({ onBack }: Props) => {
                   features: [
                     "1 offline map (up to 1 MB)",
                     "2 saved surveys",
-                    "10 marked locations",
+                    "10 marked locations, 5 marked areas",
                     "View your tracks and tracks shared with you",
                     "10 MB cloud storage",
                   ],
@@ -418,7 +418,7 @@ export const DocsPage = ({ onBack }: Props) => {
                   features: [
                     "3 offline maps (up to 10 MB each)",
                     "4 saved surveys",
-                    "100 marked locations, share with other accounts",
+                    "100 marked locations, 10 marked areas, share with other accounts or as a link",
                     "GPS Tracking: broadcast your location and record activities (GPX)",
                     "Rename your cloud tracks",
                     "100 MB cloud storage",
@@ -432,7 +432,7 @@ export const DocsPage = ({ onBack }: Props) => {
                   features: [
                     "10 offline maps (up to 25 MB each)",
                     "10 saved surveys",
-                    "1,000 marked locations, share with other accounts",
+                    "1,000 marked locations, 20 marked areas, share with other accounts or as a link",
                     "Track Recorder: record online or offline, share and export GPX",
                     "GPS Tracking: broadcast your location",
                     "Rename your cloud tracks",
@@ -2034,9 +2034,7 @@ export const DocsPage = ({ onBack }: Props) => {
 
               <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-8 border-t border-sand-100 opacity-40 text-[10px] tracking-widest uppercase font-medium text-sand-500">
                 <div className="flex items-center gap-4">
-                  <span>Precision Mapping</span>
-                  <span className="w-1 h-1 rounded-full bg-sand-200"></span>
-                  <span>Real-time Analysis</span>
+                  <span>Explore without Limits</span>
                 </div>
 
                 <p className="order-first md:order-last">
