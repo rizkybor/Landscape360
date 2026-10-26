@@ -2,6 +2,7 @@ import { supabase } from '../lib/supabaseClient';
 import type {
   AdminMarkedLocation,
   MarkedLocation,
+  MarkedLocationCategory,
   MarkedLocationInput,
   MarkedLocationShare,
   SharedMarkedLocation,
@@ -160,4 +161,68 @@ export const fetchAllLocations = async (): Promise<AdminMarkedLocation[]> => {
   return ((data ?? []) as (MarkedLocationRow & { owner_name: string | null; owner_email: string | null })[]).map(
     (row) => ({ ...fromRow(row), ownerName: row.owner_name, ownerEmail: row.owner_email }),
   );
+};
+
+// --- Share as a link (20261026000018): anyone with the link can open the location
+
+const linkError = (error: { message: string; code?: string }) =>
+  new Error(
+    /could not find the function|PGRST202/i.test(`${error.message} ${error.code ?? ''}`)
+      ? 'Share links are not set up yet (run the 20261026000018 migration)'
+      : error.message,
+  );
+
+/** The location's link token (the current one, or a new one) */
+export const createLocationLink = async (locationId: string): Promise<string> => {
+  const { data, error } = await supabase.rpc('create_marked_location_link', { p_location_id: locationId });
+  if (error) throw linkError(error);
+  return data as string;
+};
+
+/** The location's active link token, or null */
+export const getLocationLink = async (locationId: string): Promise<string | null> => {
+  const { data, error } = await supabase.rpc('get_marked_location_link', { p_location_id: locationId });
+  if (error) throw linkError(error);
+  return (data as string | null) ?? null;
+};
+
+/** Turn the link off: people who have it can no longer open it */
+export const revokeLocationLink = async (locationId: string) => {
+  const { error } = await supabase.rpc('revoke_marked_location_link', { p_location_id: locationId });
+  if (error) throw linkError(error);
+};
+
+export interface LinkedLocation {
+  name: string;
+  category: MarkedLocationCategory;
+  lng: number;
+  lat: number;
+  elevationM: number | null;
+  description: string | null;
+  address: string | null;
+  contact: string | null;
+  tags: string[];
+  updatedAt: number;
+  ownerName: string | null;
+}
+
+/** Open a link (no sign-in needed). Null when the link does not exist or was turned off. */
+export const openLocationLink = async (token: string): Promise<LinkedLocation | null> => {
+  const { data, error } = await supabase.rpc('open_marked_location_link', { p_token: token });
+  if (error) throw linkError(error);
+  const row = ((data ?? []) as Record<string, unknown>[])[0];
+  if (!row) return null;
+  return {
+    name: row.name as string,
+    category: row.category as MarkedLocationCategory,
+    lng: Number(row.lng),
+    lat: Number(row.lat),
+    elevationM: row.elevation_m === null || row.elevation_m === undefined ? null : Number(row.elevation_m),
+    description: (row.description as string | null) ?? null,
+    address: (row.address as string | null) ?? null,
+    contact: (row.contact as string | null) ?? null,
+    tags: (row.tags as string[] | null) ?? [],
+    updatedAt: Date.parse(row.updated_at as string),
+    ownerName: (row.owner_name as string | null) ?? null,
+  };
 };

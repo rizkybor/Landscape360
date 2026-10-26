@@ -5,6 +5,7 @@ import { useState, useEffect, Suspense, lazy, useCallback } from 'react';
 import { SpeedInsights } from "@vercel/speed-insights/react"
 import { Analytics } from "@vercel/analytics/react"
 import { Loader2 } from 'lucide-react';
+import { parseAreaToken, parsePlaceToken, parseSharedPoint } from './lib/shareLocation';
 
 // Lazy load heavy map component
 const MapDashboard = lazy(() => import('./components/MapDashboard').then(module => ({ default: module.MapDashboard })));
@@ -19,15 +20,21 @@ function App() {
   // Use session storage to prevent splash screen from showing again on refresh/navigation if desired
   // But for now, let's keep it simple. If "reloading twice" happens, it might be due to strict mode or mounting issues.
   const [isLoading, setIsLoading] = useState(true);
-  const [initialLocation, setInitialLocation] = useState<[number, number] | null>(null);
+  // A shared location link (/?at=lat,lng) opens the map at that point
+  const [initialLocation, setInitialLocation] = useState<[number, number] | null>(() => {
+    const shared = parseSharedPoint(window.location.search);
+    return shared ? [shared.lng, shared.lat] : null;
+  });
 
   useEffect(() => {
     // We defer geolocation to user interaction (handleStart) to follow best practices
   }, []);
 
   const handleStart = useCallback(() => {
-    // Request geolocation when user explicitly starts the app
-    if (!initialLocation && navigator.geolocation) {
+    // Request geolocation when user explicitly starts the app (not when opening a shared
+    // location link: the map flies there, and a late GPS fix would pull it away)
+    const opensSharedLink = parsePlaceToken(window.location.search) || parseAreaToken(window.location.search);
+    if (!initialLocation && !opensSharedLink && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           setInitialLocation([position.coords.longitude, position.coords.latitude]);

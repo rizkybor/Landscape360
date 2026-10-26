@@ -120,6 +120,9 @@ describe('ControlPanel', () => {
       // Search is the icon in the sheet header, not a tile
       expect(screen.getByRole('button', { name: 'Search location' })).toBeInTheDocument();
       expect(screen.queryByText('Search')).not.toBeInTheDocument();
+      // Weather too: an icon in the header, not a tile
+      expect(screen.getByRole('button', { name: 'Weather' })).toBeInTheDocument();
+      expect(screen.queryByText('Weather')).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Hide panel' })).not.toBeInTheDocument();
       fireEvent.click(tabs[1]);
       expect(screen.getByText('Streets')).toBeInTheDocument();

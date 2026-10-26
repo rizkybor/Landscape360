@@ -28,6 +28,18 @@ import { SearchPanel } from "./SearchPanel";
 import { NavigationControls } from "./NavigationControls";
 import { UserLocationMarker } from "./UserLocationMarker";
 import { SosAdminLayer } from "./SosAdminLayer";
+import { SharedLocationMarker } from "./SharedLocationMarker";
+import { SharedPlaceLayer } from "./SharedPlaceLayer";
+import { SharedAreaLayer } from "./SharedAreaLayer";
+import { MarkedAreaLayer } from "./MarkedAreaLayer";
+import { MarkedAreaPanel } from "./MarkedAreaPanel";
+import { parseAreaToken, parsePlaceToken, parseSharedPoint } from "../lib/shareLocation";
+
+// Opened from a share link: the map starts at the shared point, not at the user
+const sharedAtStart =
+  parseSharedPoint(window.location.search) !== null ||
+  parsePlaceToken(window.location.search) !== null ||
+  parseAreaToken(window.location.search) !== null;
 import { WeatherWidget } from "./WeatherWidget";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { usePoiStore } from "../store/usePoiStore";
@@ -904,6 +916,11 @@ const MapBoxContainerComponent = ({
         <TrackRecorderLayer />
 
         {user && <MarkedLocationLayer />}
+        {user && (
+          <ErrorBoundary fallback={null}>
+            <MarkedAreaLayer />
+          </ErrorBoundary>
+        )}
 
         {mode === "3D" && (
           <ErrorBoundary fallback={null}>
@@ -926,7 +943,24 @@ const MapBoxContainerComponent = ({
 
         {/* User Location Indicator */}
         <ErrorBoundary fallback={null}>
-          <UserLocationMarker initialLocation={initialLocation} />
+          {/* With a shared link the map starts at the shared point, which is not where the
+              user is: then the dot waits for a real GPS fix */}
+          <UserLocationMarker initialLocation={sharedAtStart ? null : initialLocation} />
+        </ErrorBoundary>
+
+        {/* A location someone shared with a /?at=lat,lng link */}
+        <ErrorBoundary fallback={null}>
+          <SharedLocationMarker />
+        </ErrorBoundary>
+
+        {/* A marked area opened from its share link (/?area=<token>), no sign-in needed */}
+        <ErrorBoundary fallback={null}>
+          <SharedAreaLayer />
+        </ErrorBoundary>
+
+        {/* A marked location opened from its share link (/?place=<token>), no sign-in needed */}
+        <ErrorBoundary fallback={null}>
+          <SharedPlaceLayer />
         </ErrorBoundary>
 
         {/* Admin: active S.O.S alerts (banner + markers) */}
@@ -1178,6 +1212,7 @@ const MapBoxContainerComponent = ({
       {showControls && <SurveyorPanel />}
       {showControls && <TrackRecorderPanel />}
       {showControls && <MarkedLocationPanel />}
+      {showControls && <MarkedAreaPanel />}
       {showControls && <SearchPanel />}
       {showControls && <WeatherWidget />}
       {/* Custom Basemap Manager */}

@@ -11,6 +11,7 @@ import { SiteLinks } from "./SitePageLayout";
 import { CONTACT_ADMIN_LABEL } from "../config";
 import { canRecordTracks, useTrackRecorderStore } from "../store/useTrackRecorderStore";
 import { useMarkedLocationStore } from "../store/useMarkedLocationStore";
+import { useMarkedAreaStore } from "../store/useMarkedAreaStore";
 import mapboxgl from "mapbox-gl";
 import type { MapRef } from "react-map-gl/mapbox";
 import {
@@ -41,6 +42,8 @@ import {
   Mountain,
   CircleHelp,
   PanelLeftClose,
+  Hexagon,
+  Share2,
 } from "lucide-react";
 import landscapeLogo from "../assets/LandscapeLogo.svg";
 import { toDMS } from "../utils/surveyUtils";
@@ -148,8 +151,22 @@ export const ControlPanel = () => {
   // Both panels use the same spot on screen; the Marked Locations panel closes itself when
   // the Track Recorder opens
   const toggleMarkedLocations = () => {
-    if (!isMarkedLocationsOpen) useTrackRecorderStore.getState().setPanelOpen(false);
+    if (!isMarkedLocationsOpen) {
+      useTrackRecorderStore.getState().setPanelOpen(false);
+      useMarkedAreaStore.getState().setPanelOpen(false);
+    }
     useMarkedLocationStore.getState().togglePanel();
+  };
+  // Marked Areas: same spot on screen as Marked Locations and the Track Recorder
+  const isMarkedAreasOpen = useMarkedAreaStore((s) => s.isPanelOpen);
+  const isDrawingArea = useMarkedAreaStore((s) => s.isDrawing);
+  const markedAreaCount = useMarkedAreaStore((s) => s.areas.length);
+  const toggleMarkedAreas = () => {
+    if (!isMarkedAreasOpen) {
+      useTrackRecorderStore.getState().setPanelOpen(false);
+      useMarkedLocationStore.getState().setPanelOpen(false);
+    }
+    useMarkedAreaStore.getState().togglePanel();
   };
   const { isRoutePlannerEnabled, setRoutePlannerEnabled } = useRouteStore();
   const {
@@ -260,6 +277,8 @@ export const ControlPanel = () => {
     isRoutePlannerEnabled ||
     isTrackRecorderOpen ||
     isMarkedLocationsOpen ||
+    isMarkedAreasOpen ||
+    isDrawingArea ||
     isManagerOpen;
   const reopenAfterToolSheet = useRef(false);
   useEffect(() => {
@@ -551,42 +570,44 @@ export const ControlPanel = () => {
       </div>
     </button>
 
-    {/* Weather Toggle */}
-    <button
-      onClick={() => {
-        if (!showWeather) lowerSheetOnPhone();
-        setShowWeather(!showWeather);
-      }}
-      className={`w-full h-full flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
-        showWeather
-          ? "bg-forest-50 border-forest-200 "
-          : "bg-sand-50 border-sand-200 hover:bg-sand-100"
-      } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-col justify-center text-center p-2.5 gap-1.5"}`}
-    >
-      <div
-        className={`p-2 rounded-lg transition-colors ${
+    {/* Weather Toggle (desktop; on phones it is the weather icon in the sheet header) */}
+    {!isMobile && (
+      <button
+        onClick={() => {
+          if (!showWeather) lowerSheetOnPhone();
+          setShowWeather(!showWeather);
+        }}
+        className={`w-full h-full flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
           showWeather
-            ? "bg-forest-800 text-white shadow-lg "
-            : "bg-sand-100 text-sand-600 group-hover:text-ink"
-        } ${isMobile ? "mb-1" : ""}`}
+            ? "bg-forest-50 border-forest-200 "
+            : "bg-sand-50 border-sand-200 hover:bg-sand-100"
+        } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-col justify-center text-center p-2.5 gap-1.5"}`}
       >
-        <CloudSun size={isMobile ? 18 : 16} />
-      </div>
-      <div className="flex-1">
         <div
-          className={`font-bold transition-colors ${showWeather ? "text-ink" : "text-sand-700"} ${isMobile ? "text-[10px] leading-tight" : "text-xs leading-tight"}`}
+          className={`p-2 rounded-lg transition-colors ${
+            showWeather
+              ? "bg-forest-800 text-white shadow-lg "
+              : "bg-sand-100 text-sand-600 group-hover:text-ink"
+          } ${isMobile ? "mb-1" : ""}`}
         >
-          Weather
+          <CloudSun size={isMobile ? 18 : 16} />
         </div>
-        {!isMobile && (
+        <div className="flex-1">
           <div
-            className={`text-[10px] ${showWeather ? "text-forest-700" : "text-sand-500"}`}
+            className={`font-bold transition-colors ${showWeather ? "text-ink" : "text-sand-700"} ${isMobile ? "text-[10px] leading-tight" : "text-xs leading-tight"}`}
           >
-            {showWeather ? "Visible" : "Hidden"}
+            Weather
           </div>
-        )}
-      </div>
-    </button>
+          {!isMobile && (
+            <div
+              className={`text-[10px] ${showWeather ? "text-forest-700" : "text-sand-500"}`}
+            >
+              {showWeather ? "Visible" : "Hidden"}
+            </div>
+          )}
+        </div>
+      </button>
+    )}
 
     {/* Show Locations Toggle */}
     <button
@@ -720,6 +741,45 @@ export const ControlPanel = () => {
         {!isMobile && (
           <div className={`text-[10px] ${!user ? "text-sand-400" : "text-sand-500"}`}>
             {!user ? "Login required" : `${markedLocationCount} saved`}
+          </div>
+        )}
+      </div>
+    </button>
+
+    {/* Marked Areas (all signed-in accounts; limits & sharing per plan) */}
+    <button
+      onClick={user ? toggleMarkedAreas : undefined}
+      disabled={!user}
+      className={`w-full h-full flex items-center rounded-xl border transition-all duration-200 group ${
+        !user
+          ? "border-sand-100 bg-sand-50 opacity-60 cursor-not-allowed"
+          : isMarkedAreasOpen
+            ? "cursor-pointer bg-gold-50 border-gold-200 "
+            : "cursor-pointer bg-sand-50 border-sand-200 hover:bg-sand-100"
+      } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-col justify-center text-center p-2.5 gap-1.5"}`}
+    >
+      <div
+        className={`p-2 rounded-lg transition-colors ${
+          !user
+            ? "bg-sand-100 text-sand-500"
+            : isMarkedAreasOpen
+              ? "bg-gold-500 text-white shadow-lg "
+              : "bg-sand-100 text-sand-600 group-hover:text-ink"
+        } ${isMobile ? "mb-1" : ""}`}
+      >
+        {user ? <Hexagon size={isMobile ? 18 : 16} /> : <Lock size={isMobile ? 18 : 16} />}
+      </div>
+      <div className="flex-1">
+        <div
+          className={`font-bold transition-colors ${
+            !user ? "text-sand-600" : isMarkedAreasOpen ? "text-ink" : "text-sand-700"
+          } ${isMobile ? "text-[10px] leading-tight" : "text-xs leading-tight"}`}
+        >
+          {isMobile ? "Areas" : "Marked Areas"}
+        </div>
+        {!isMobile && (
+          <div className={`text-[10px] ${!user ? "text-sand-400" : "text-sand-500"}`}>
+            {!user ? "Login required" : `${markedAreaCount} saved`}
           </div>
         )}
       </div>
@@ -1519,6 +1579,7 @@ export const ControlPanel = () => {
     isTrackRecorderOpen ||
     isTrackRecording ||
     isMarkedLocationsOpen ||
+    isMarkedAreasOpen ||
     isManagerOpen ||
     isLiveTrackingEnabled;
   const panelSections: { id: DeskSection; label: string; title: string; icon: typeof Compass }[] = [
@@ -1700,7 +1761,22 @@ export const ControlPanel = () => {
             >
               <BookOpen size={18} />
             </button>
-            {/* Search lives here on phones (the sheet closes by swiping it down) */}
+            {/* Weather and Search live here on phones (the sheet closes by swiping it down) */}
+            <button
+              onClick={() => {
+                if (!showWeather) lowerSheetOnPhone();
+                setShowWeather(!showWeather);
+              }}
+              aria-pressed={showWeather}
+              className={`cursor-pointer p-2 rounded-lg transition-colors ${
+                showWeather ? "bg-forest-700 text-white" : "text-sand-600 hover:bg-sand-100 hover:text-ink"
+              }`}
+              title="Weather"
+              aria-label="Weather"
+            >
+              <CloudSun size={18} />
+            </button>
+
             <button
               onClick={() => setShowSearch(!showSearch)}
               aria-pressed={showSearch}
@@ -2070,7 +2146,8 @@ const GetStartedModal = ({
                     Save camps, water sources, summits and more with full details, pick
                     them on the map, and export as GPX. Share one or several locations with
                     other users: pick someone you shared with before, or type part of their
-                    name or email and tap them.
+                    name or email and tap them. Or create a link for WhatsApp that anyone can
+                    open without signing in.
                     <div className="mt-2 grid grid-cols-1 gap-1 text-xs opacity-80">
                       <span>
                         • <strong>Free:</strong> 10 locations, receive shares
@@ -2084,6 +2161,16 @@ const GetStartedModal = ({
                     </div>
                   </>
                 ),
+              },
+              {
+                icon: <Hexagon size={18} />,
+                title: "Marked Areas [All Accounts]",
+                desc: "Draw an area on the map by tapping its corners (a camp ground, a route zone, a search sector) and see its size and perimeter. Focus on an area to darken the rest of the map, and share it as a WhatsApp link that opens in focus view without signing in. Free 5 areas, Pro 10, Enterprise 20; links on Pro and Enterprise.",
+              },
+              {
+                icon: <Share2 size={18} />,
+                title: "Share Location",
+                desc: "Tap the share button on the right of the map to send where you are now to WhatsApp or another app, with coordinates, elevation and a link that opens the spot on the map.",
               },
               {
                 icon: <Footprints size={18} />,
