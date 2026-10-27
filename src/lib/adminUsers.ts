@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+import { authFetch } from './authFetch';
 
 // Keep in sync with api/admin-users.ts
 export const PLANS = ['Free', 'Pro', 'Enterprise'] as const;
@@ -61,15 +61,9 @@ export interface UserUpdateInput {
 const ENDPOINT = '/api/admin-users';
 
 async function request<T>(method: string, body?: unknown, query = ''): Promise<T> {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) throw new Error('Not signed in');
-
-  const res = await fetch(`${ENDPOINT}${query}`, {
+  const res = await authFetch(`${ENDPOINT}${query}`, {
     method,
-    headers: {
-      Authorization: `Bearer ${session.access_token}`,
-      ...(body !== undefined && { 'Content-Type': 'application/json' }),
-    },
+    headers: body !== undefined ? { 'Content-Type': 'application/json' } : {},
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
 

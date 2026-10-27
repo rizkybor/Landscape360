@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+import { authFetch } from './authFetch';
 import type { Plan, Role } from './adminUsers';
 
 // Keep in sync with api/account-requests.ts
@@ -44,18 +44,10 @@ const ENDPOINT = '/api/account-requests';
 
 async function request<T>(method: string, body?: unknown, query = '', auth = true): Promise<T> {
   const headers: Record<string, string> = {};
-  if (auth) {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error('Not signed in');
-    headers.Authorization = `Bearer ${session.access_token}`;
-  }
   if (body !== undefined) headers['Content-Type'] = 'application/json';
-
-  const res = await fetch(`${ENDPOINT}${query}`, {
-    method,
-    headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
+  const init = { method, headers, body: body !== undefined ? JSON.stringify(body) : undefined };
+  // Signed-in calls refresh an ended session once (see authFetch); the public form does not
+  const res = auth ? await authFetch(`${ENDPOINT}${query}`, init) : await fetch(`${ENDPOINT}${query}`, init);
 
   const payload = await res.json().catch(() => null);
   if (!res.ok) {
