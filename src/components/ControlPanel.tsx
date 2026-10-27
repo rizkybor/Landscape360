@@ -7,6 +7,7 @@ import { useTrackerStore } from "../store/useTrackerStore"; // Import Tracker St
 import { useRouteStore } from "../store/useRouteStore";
 import { useCustomBasemapStore } from "../store/useCustomBasemapStore";
 import { AuthControl } from "./AuthControl";
+import { AppShareButton } from "./AppShareButton";
 import { SiteLinks } from "./SitePageLayout";
 import { CONTACT_ADMIN_LABEL } from "../config";
 import { canRecordTracks, useTrackRecorderStore } from "../store/useTrackRecorderStore";
@@ -1382,7 +1383,8 @@ export const ControlPanel = () => {
   // "Powered by" credits on one small line
   const sidebarFooter = (
     <div className="pt-4 mt-4 border-t border-sand-200 space-y-4">
-      <SiteLinks compact omit={["/docs"]} className="font-sans" />
+      {/* Phones list Docs here (their sheet header has no Docs icon); the desktop rail has one */}
+      <SiteLinks compact omit={isMobile ? [] : ["/docs"]} className="font-sans" />
       <p className="flex flex-wrap items-center justify-center gap-x-1 gap-y-0.5 text-[8px] text-sand-500 text-center leading-tight">
         <span className="text-sand-400">Powered by</span>
         <a
@@ -1593,7 +1595,8 @@ export const ControlPanel = () => {
       <>
         {/* Desktop: icon rail (always visible) + the panel of the chosen section */}
         <nav
-          className="fixed z-50 top-4 left-4 w-14 rounded-2xl bg-white/95 backdrop-blur-xl border border-sand-300 shadow-2xl flex flex-col items-center gap-1 py-2"
+          // One layer above the panel, so menus opened from the rail (Share) are not hidden behind it
+          className="fixed z-[51] top-4 left-4 w-14 rounded-2xl bg-white/95 backdrop-blur-xl border border-sand-300 shadow-2xl flex flex-col items-center gap-1 py-2"
           aria-label="Sidebar"
         >
           <button
@@ -1618,6 +1621,11 @@ export const ControlPanel = () => {
           <div className="w-8 h-px bg-sand-200 my-1" />
           <RailButton icon={CircleHelp} label="Guide" onClick={() => setShowGetStarted(true)} />
           <RailButton icon={BookOpen} label="Docs" onClick={() => navigate("/docs")} />
+          <AppShareButton
+            placement="right"
+            label="Share"
+            className="cursor-pointer w-11 py-1.5 rounded-xl flex flex-col items-center gap-0.5 text-sand-600 hover:bg-sand-100 hover:text-ink transition-colors"
+          />
         </nav>
 
         <aside
@@ -1739,28 +1747,21 @@ export const ControlPanel = () => {
             <div className="w-10 h-1.5 bg-sand-200 rounded-full" />
           </div>
 
-          <div className="flex items-center gap-2 px-4 pb-2">
+          <div className="flex items-center gap-1 px-4 pb-2">
             <img src={landscapeLogo} alt="" className="w-8 h-8 object-contain shrink-0" />
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-1 ml-1">
               <h2 className="font-bold text-sm tracking-tight leading-none truncate">Landscape 360</h2>
               <span className="text-[9px] text-forest-700 font-mono">v3.3.0</span>
             </div>
             <button
               onClick={() => setShowGetStarted(true)}
-              className="cursor-pointer p-2 rounded-lg text-sand-600 hover:bg-sand-100 hover:text-ink"
+              className="cursor-pointer p-1.5 rounded-lg text-sand-600 hover:bg-sand-100 hover:text-ink"
               title="Quick Guide"
               aria-label="Quick Guide"
             >
               <CircleHelp size={18} />
             </button>
-            <button
-              onClick={() => navigate("/docs")}
-              className="cursor-pointer p-2 rounded-lg text-sand-600 hover:bg-sand-100 hover:text-ink"
-              title="Docs"
-              aria-label="Docs"
-            >
-              <BookOpen size={18} />
-            </button>
+            <AppShareButton className="cursor-pointer p-1.5 rounded-lg text-sand-600 hover:bg-sand-100 hover:text-ink" />
             {/* Weather and Search live here on phones (the sheet closes by swiping it down) */}
             <button
               onClick={() => {
@@ -1768,7 +1769,7 @@ export const ControlPanel = () => {
                 setShowWeather(!showWeather);
               }}
               aria-pressed={showWeather}
-              className={`cursor-pointer p-2 rounded-lg transition-colors ${
+              className={`cursor-pointer p-1.5 rounded-lg transition-colors ${
                 showWeather ? "bg-forest-700 text-white" : "text-sand-600 hover:bg-sand-100 hover:text-ink"
               }`}
               title="Weather"
@@ -1780,7 +1781,7 @@ export const ControlPanel = () => {
             <button
               onClick={() => setShowSearch(!showSearch)}
               aria-pressed={showSearch}
-              className={`cursor-pointer p-2 rounded-lg transition-colors ${
+              className={`cursor-pointer p-1.5 rounded-lg transition-colors ${
                 showSearch ? "bg-forest-700 text-white" : "text-sand-600 hover:bg-sand-100 hover:text-ink"
               }`}
               title="Search location"
