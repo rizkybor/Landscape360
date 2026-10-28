@@ -108,11 +108,14 @@ const GROUPS: { title: string; items: Faq[] }[] = [
       ),
       faq(
         "How do I delete my account and data?",
-        "Email contact@jcdigital.co.id from the address of your account and ask us to delete it. We remove your account and the data stored with it, as described in our Privacy Policy.",
+        "In the Landscape 360 Mobile App, open User Account and tap Delete account. On the web, sign in and open landscape360.jcdigital.co.id/delete-account. Your account and the data stored with it are deleted at once, as described in our Privacy Policy. Can't sign in? Email contact@jcdigital.co.id from the address of your account.",
         <>
-          Email <strong>contact@jcdigital.co.id</strong> from the address of your account and ask
-          us to delete it. We remove your account and the data stored with it, as described in our{" "}
+          In the Landscape 360 Mobile App, open <strong>User Account</strong> and tap{" "}
+          <strong>Delete account</strong>. On the web, sign in and open the{" "}
+          <Link to="/delete-account" className="text-forest-700 font-semibold hover:underline">Delete account</Link> page.
+          Your account and the data stored with it are deleted at once, as described in our{" "}
           <Link to="/privacy" className="text-forest-700 font-semibold hover:underline">Privacy Policy</Link>.
+          Can't sign in? Email <strong>contact@jcdigital.co.id</strong> from the address of your account.
         </>,
       ),
       faq(

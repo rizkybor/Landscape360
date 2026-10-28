@@ -137,7 +137,7 @@ export const TermsPage = () => (
 
       <LegalSection id="termination" title="10. Suspension and termination">
         <ul>
-          <li>You can stop using the Service at any time and ask us to delete your account by emailing contact@jcdigital.co.id.</li>
+          <li>You can stop using the Service at any time and delete your account yourself (User Account &gt; Delete account in the app, or the Delete account page at landscape360.jcdigital.co.id/delete-account), or ask us to by emailing contact@jcdigital.co.id.</li>
           <li>We may suspend or close an account that breaks these Terms or puts the Service or other users at risk. Where reasonable, we will tell you first.</li>
         </ul>
       </LegalSection>
