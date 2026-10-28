@@ -12,6 +12,7 @@ vi.mock('../lib/supabaseClient', () => ({
   supabase: {
     channel: vi.fn(),
     removeChannel: vi.fn(),
+    realtime: { setAuth: vi.fn(() => Promise.resolve()) },
   },
 }));
 
@@ -57,6 +58,7 @@ describe('Online/Offline Tracker Mode', () => {
         return mockChannel;
       }),
       send: vi.fn().mockResolvedValue('ok'),
+      httpSend: vi.fn().mockResolvedValue({ success: true }),
       track: vi.fn().mockResolvedValue('ok'),
       state: 'joined'
     };

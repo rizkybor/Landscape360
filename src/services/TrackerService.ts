@@ -141,7 +141,10 @@ export const useTrackerService = () => {
   const hydrateActivity = useTrackerStore(s => s.hydrateActivity);
   const clearActivity = useTrackerStore(s => s.clearActivity);
 
-  const { user, userRole, subscriptionStatus } = useSurveyStore();
+  const { user, userRole, subscriptionStatus, isAdmin } = useSurveyStore();
+  // Who may watch the team: the same rule as is_monitor() on the server (admin, or an
+  // Enterprise monitor360 account). Only they join the private live tracking channel.
+  const canMonitor = isAdmin || (userRole === 'monitor360' && subscriptionStatus === 'Enterprise');
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const watchIdRef = useRef<number | null>(null);
@@ -607,52 +610,37 @@ export const useTrackerService = () => {
        SUPABASE REALTIME
     ============================== */
 
-    if (!channelRef.current) {
+    // Members share their position from the Landscape 360 Mobile App; on the web only monitors
+    // join the channel. No early return: Record Activity below still needs the GPS.
+    if (!channelRef.current && canMonitor) {
       setConnectionStatus('connecting');
 
-      // Create new channel (or rejoin)
-      // Note: We might want to use a unique channel per user-group in production, but 'tracking-room' is fine for demo.
+      // Private channel: the server checks is_monitor() before anyone can listen
+      // (20261029000020_private_live_tracking.sql)
+      void supabase.realtime.setAuth();
       const channel = supabase.channel('tracking-room', {
-        config: { 
+        config: {
+          private: true,
           broadcast: { self: false },
           presence: { key: user?.id || 'anon' }
         }
       });
 
-      // Monitor Mode: Listen for updates
-      // Allow monitor to listen if they are 'monitor360' AND 'Enterprise'
-      if (userRole === 'monitor360' && subscriptionStatus === 'Enterprise') {
-        channel.on(
-          'broadcast',
-          { event: 'location-update' },
-          (payload) => {
-            if (payload.payload) {
-              const packet = payload.payload as TrackerPacket;
-              const myTrackerId =
-                user?.email?.split('@')[0].toUpperCase() ||
-                user?.id.slice(0, 8).toUpperCase();
-
-              // Prevent self-update echo
-              if (packet.user_id !== myTrackerId) {
-                addOrUpdateTracker(packet);
-              }
-            }
-          }
-        );
-      }
-
-      // Heartbeat Response (Broadcasters respond to this)
+      // Monitor: listen for position updates
       channel.on(
         'broadcast',
-        { event: 'heartbeat-request' },
-        () => {
-          if (isLocalBroadcastEnabled && user && latestPacketRef.current) {
-            console.log("Received Heartbeat Request - Sending Location Immediately");
-            channel.send({
-              type: 'broadcast',
-              event: 'location-update',
-              payload: latestPacketRef.current
-            });
+        { event: 'location-update' },
+        (payload) => {
+          if (payload.payload) {
+            const packet = payload.payload as TrackerPacket;
+            const myTrackerId =
+              user?.email?.split('@')[0].toUpperCase() ||
+              user?.id.slice(0, 8).toUpperCase();
+
+            // Prevent self-update echo
+            if (packet.user_id !== myTrackerId) {
+              addOrUpdateTracker(packet);
+            }
           }
         }
       );
@@ -668,15 +656,12 @@ export const useTrackerService = () => {
             online_at: new Date().toISOString()
           });
 
-          // If I am a Monitor, ask everyone to report immediately
-          if (userRole === 'monitor360' && subscriptionStatus === 'Enterprise') {
-              console.log("Monitor Joined - Requesting Heartbeat...");
-              channel.send({
-                  type: 'broadcast',
-                  event: 'heartbeat-request',
-                  payload: {}
-              });
-          }
+          // Ask everyone sharing (in the app) to report now. The app listens on its own
+          // private channel; httpSend posts without joining it.
+          supabase
+            .channel('tracking-heartbeat', { config: { private: true } })
+            .httpSend('heartbeat-request', {})
+            .catch(() => {});
 
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
           setConnectionStatus('error');
@@ -920,6 +905,7 @@ export const useTrackerService = () => {
     userRole,
     setConnectionStatus,
     subscriptionStatus,
+    canMonitor,
     logLocationToDb,
     releaseWakeLock,
     requestWakeLock,
