@@ -249,6 +249,23 @@ describe('AuthControl', () => {
     expect(await screen.findByText(/Are you sure|sign out of/i)).toBeInTheDocument();
   });
 
+  it('Offline Map points to the mobile app', async () => {
+    (useSurveyStore as any).mockReturnValue({
+      user: { id: 'u1', email: 'u1@x.com', user_metadata: { display_name: 'Budi Santoso' } },
+      setUser: vi.fn(),
+      loadSavedSurveys: vi.fn(),
+      savedSurveys: [],
+      subscriptionStatus: 'Free',
+      userRole: 'pengguna360',
+      isAdmin: false,
+    });
+    render(<AuthControl />);
+    fireEvent.click(await screen.findByText('Budi Santoso'));
+
+    fireEvent.click(screen.getByText('Offline Map'));
+    expect(await screen.findByText('Offline maps')).toBeInTheDocument();
+  });
+
   it('lets a signed-in user change their own password from User Account', async () => {
     (useSurveyStore as any).mockReturnValue({
       user: { id: 'u1', email: 'u1@x.com', user_metadata: { display_name: 'Budi Santoso' } },

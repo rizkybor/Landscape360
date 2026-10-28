@@ -123,24 +123,13 @@ describe('MarkedLocationPanel', () => {
     expect(cloud.fetchShareSuggestions).toHaveBeenCalledWith('sit');
   });
 
-  it('Pro: shares one location as a link for WhatsApp, and can turn the link off', async () => {
+  it('Pro: share links for a location are made in the mobile app', async () => {
     mockUser('Pro');
     vi.mocked(cloud.listShares).mockResolvedValue([]);
     await renderOpen();
     fireEvent.click(await screen.findByTitle('Share this location'));
-    fireEvent.click(await screen.findByRole('button', { name: /Create link/ }));
-    await waitFor(() => expect(cloud.createLocationLink).toHaveBeenCalledWith('a'));
-    expect(await screen.findByLabelText('Share link')).toHaveValue(
-      'https://landscape360.jcdigital.co.id/?place=0123456789abcdef0123456789abcdef',
-    );
-    const wa = screen.getByRole('link', { name: /Send to WhatsApp/ }).getAttribute('href')!;
-    expect(decodeURIComponent(wa)).toContain('Location a (Camp / Basecamp)');
-    expect(decodeURIComponent(wa)).toContain('?place=0123456789abcdef0123456789abcdef');
-
-    fireEvent.click(screen.getByRole('button', { name: /Turn off/ }));
-    fireEvent.click(screen.getByRole('button', { name: /Turn off\?/ }));
-    await waitFor(() => expect(cloud.revokeLocationLink).toHaveBeenCalledWith('a'));
-    expect(await screen.findByRole('button', { name: /Create link/ })).toBeInTheDocument();
+    expect(await screen.findByText(/Create a WhatsApp link for this location in the Landscape 360 Mobile App/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Create link/ })).not.toBeInTheDocument();
   });
 
   it('Pro: shares several selected locations at once', async () => {

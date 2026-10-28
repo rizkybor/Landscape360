@@ -28,6 +28,7 @@ import landscapeLogo from "../assets/LandscapeLogo.svg";
 import { SEO } from "./SEO";
 import { SiteLinks } from "./SitePageLayout";
 import { CATEGORY_META } from "../utils/markedLocations";
+import { StoreBadges } from "./NativeAppNotice";
 
 interface Props {
   onBack?: () => void;
@@ -176,6 +177,75 @@ export const DocsPage = ({ onBack }: Props) => {
             </div>
           </section>
 
+          {/* Mobile app: what runs in the native app and what stays on the web */}
+          <section id="mobile-app" className="scroll-mt-24">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-ink mb-4 sm:mb-6">
+              <div className="p-2 bg-forest-50 rounded-lg border border-forest-200">
+                <Smartphone className="w-5 h-5 text-forest-700" />
+              </div>
+              <h3 className="text-lg sm:text-2xl font-bold leading-tight">Landscape 360 Mobile App</h3>
+              <span className="px-2 py-1 rounded bg-forest-50 text-[10px] text-forest-700 font-bold uppercase border border-forest-200 whitespace-nowrap">
+                Coming soon
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm text-sand-600 leading-relaxed mb-4">
+              A native app for <strong>Android</strong> and <strong>iPhone</strong> is coming to{" "}
+              <strong>Google Play</strong> and the <strong>App Store</strong> (release date to be
+              announced). It uses the same account, surveys, tracks and locations as this website.
+              Features that need the phone itself, with the screen off, run in the app; on the web
+              they still appear, with a note that they are in the app.
+            </p>
+            <StoreBadges className="sm:justify-start mb-5" />
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="bg-white border border-forest-200 rounded-xl p-4 sm:p-5">
+                <h4 className="text-sm font-bold text-ink mb-3 flex items-center gap-2">
+                  <Smartphone size={15} className="text-forest-700" /> In the Landscape 360 Mobile App
+                </h4>
+                <ul className="space-y-2 text-xs text-sand-700">
+                  {[
+                    ["Track recording", "keeps recording with the screen off"],
+                    ["GPS Tracking (broadcast)", "your team sees you even when the phone is locked"],
+                    ["S.O.S", "reports with the screen off, push alert to the admin, flashlight, vibration, battery level"],
+                    ["Offline maps", "large areas with 3D terrain, never cleared by the phone"],
+                    ["Compass needle", "shows where your phone points"],
+                    ["Share Location & share links", "send your position or a marked location / area to WhatsApp"],
+                  ].map(([name, why]) => (
+                    <li key={name} className="flex gap-2">
+                      <span className="text-forest-700 font-bold">✓</span>
+                      <span>
+                        <strong className="text-ink">{name}</strong>: {why}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="bg-sand-50 border border-sand-200 rounded-xl p-4 sm:p-5">
+                <h4 className="text-sm font-bold text-ink mb-3 flex items-center gap-2">
+                  <Globe size={15} className="text-forest-700" /> On the web too
+                </h4>
+                <ul className="space-y-2 text-xs text-sand-700">
+                  {[
+                    "Map, 3D terrain, contours, grid, weather, search and route planner",
+                    "Navigator survey tools, Marked Locations and Marked Areas",
+                    "Viewing and exporting your tracks and tracks shared with you",
+                    "Team Monitor for Enterprise monitor accounts",
+                    "Opening shared locations, marked locations and areas from a link, no sign-in needed",
+                    "Custom basemaps, reviews and the admin tools",
+                  ].map((item) => (
+                    <li key={item} className="flex gap-2">
+                      <span className="text-forest-700 font-bold">✓</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-3 text-[11px] text-sand-500 leading-relaxed">
+                  In an emergency the web S.O.S button still calls <strong>112</strong> and{" "}
+                  <strong>Basarnas 115</strong> directly.
+                </p>
+              </div>
+            </div>
+          </section>
+
           {/* Quick Start Overview */}
           <section>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-ink mb-4 sm:mb-6">
@@ -244,9 +314,9 @@ export const DocsPage = ({ onBack }: Props) => {
                     Activity Tracking
                   </h4>
                   <p className="text-xs text-sand-600 leading-relaxed">
-                    Click the <strong>GPS Icon</strong> to broadcast location, 
-                    use <strong>Start Activity</strong> to record trails, and sync seamlessly 
-                    even when offline.
+                    Broadcast your location to your team and record trails in the{" "}
+                    <strong>Landscape 360 Mobile App</strong> (coming soon), so it keeps working with the screen
+                    off. Enterprise monitor accounts follow the team live on the web too.
                   </p>
                 </div>
               </div>
@@ -327,9 +397,9 @@ export const DocsPage = ({ onBack }: Props) => {
                   </h4>
                   <p className="text-xs text-sand-600 leading-relaxed">
                     Record personal GPS tracks <strong>online or offline</strong> with distance,
-                    duration and elevation, then share them by email or download them as GPX.
-                    Recording is available for Enterprise accounts; Pro accounts can view, rename,
-                    export and delete their tracks.
+                    duration and elevation in the <strong>Landscape 360 Mobile App</strong> (Enterprise). On the
+                    web every account can view its own and shared tracks, share them by email and
+                    download them as GPX; Pro and Enterprise can rename their cloud tracks.
                   </p>
                 </div>
               </div>
@@ -403,7 +473,7 @@ export const DocsPage = ({ onBack }: Props) => {
                   badge: "bg-sand-100 text-sand-700 border-sand-300",
                   card: "border-sand-200",
                   features: [
-                    "1 offline map (up to 1 MB)",
+                    "1 offline map (up to 1 MB, Landscape 360 Mobile App)",
                     "2 saved surveys",
                     "10 marked locations, 5 marked areas",
                     "View your tracks and tracks shared with you",
@@ -416,10 +486,10 @@ export const DocsPage = ({ onBack }: Props) => {
                   badge: "bg-forest-50 text-forest-700 border-forest-200",
                   card: "border-forest-200",
                   features: [
-                    "3 offline maps (up to 10 MB each)",
+                    "3 offline maps (up to 10 MB each, Landscape 360 Mobile App)",
                     "4 saved surveys",
-                    "100 marked locations, 10 marked areas, share with other accounts or as a link",
-                    "GPS Tracking: broadcast your location and record activities (GPX)",
+                    "100 marked locations, 10 marked areas, share with other accounts (links in the Landscape 360 Mobile App)",
+                    "GPS Tracking: broadcast your location and record activities (Landscape 360 Mobile App)",
                     "Rename your cloud tracks",
                     "100 MB cloud storage",
                   ],
@@ -430,11 +500,11 @@ export const DocsPage = ({ onBack }: Props) => {
                   badge: "bg-gold-50 text-gold-700 border-gold-200",
                   card: "border-gold-200",
                   features: [
-                    "10 offline maps (up to 25 MB each)",
+                    "10 offline maps (up to 25 MB each, Landscape 360 Mobile App)",
                     "10 saved surveys",
-                    "1,000 marked locations, 20 marked areas, share with other accounts or as a link",
-                    "Track Recorder: record online or offline, share and export GPX",
-                    "GPS Tracking: broadcast your location",
+                    "1,000 marked locations, 20 marked areas, share with other accounts (links in the Landscape 360 Mobile App)",
+                    "Track Recorder: record in the Landscape 360 Mobile App, view, share and export GPX here",
+                    "GPS Tracking: broadcast your location (Landscape 360 Mobile App)",
                     "Rename your cloud tracks",
                     "Team Monitor: follow every active member live (Monitor accounts)",
                     "Custom Basemaps: GeoTIFF / GeoPDF overlays",
@@ -472,10 +542,11 @@ export const DocsPage = ({ onBack }: Props) => {
                 SOS
               </div>
               <p className="text-xs text-brick-700 leading-relaxed">
-                <strong>S.O.S button</strong> is not tied to a plan: the admin turns it on for each
-                account that needs it (any plan). It opens an emergency screen with your GPS
-                position, calls 112 / Basarnas 115, sends an SMS with your location to your emergency
-                contacts, and reports your message, location and battery to the admin.
+                <strong>S.O.S</strong> is not tied to a plan: the admin turns it on for each account
+                that needs it (any plan). It runs in the <strong>Landscape 360 Mobile App</strong>: an emergency
+                screen with your GPS position, calls to 112 / Basarnas 115, an SMS with your location
+                to your emergency contacts, and reports to the admin that keep going with the screen
+                off. On the web the S.O.S button explains this and still calls 112 and 115.
               </p>
             </div>
 
@@ -515,8 +586,8 @@ export const DocsPage = ({ onBack }: Props) => {
               <p className="text-[10px] text-sand-500 mt-3 leading-relaxed">
                 <strong>Cloud storage</strong> is shared by your recorded tracks, marked
                 locations, surveys and custom basemaps; your usage is shown in the{" "}
-                <strong>User Account</strong> menu. <strong>Offline maps</strong> are saved on
-                your device and do not use cloud storage. When a limit is reached nothing is
+                <strong>User Account</strong> menu. <strong>Offline maps</strong> are downloaded in
+                the Landscape 360 Mobile App, saved on your phone, and do not use cloud storage. When a limit is reached nothing is
                 deleted: new data is simply not saved until you free up space. Need more? Request
                 it by email to {UPGRADE_EMAIL}.
               </p>
@@ -933,7 +1004,8 @@ export const DocsPage = ({ onBack }: Props) => {
                     <strong> Enterprise Monitors</strong> can visualize all
                     active field units in real-time, while
                     <strong> Pro Users</strong> can broadcast their secure
-                    location data.
+                    location data from the <strong>Landscape 360 Mobile App</strong>, which keeps sending with the
+                    screen off.
                   </p>
 
                   <div className="flex flex-wrap gap-2">
@@ -1814,8 +1886,8 @@ export const DocsPage = ({ onBack }: Props) => {
                 <p className="text-xs text-sand-600 leading-relaxed">
                   When the limit is reached, new data is not saved until you delete
                   something. Deleting or shortening data always works, and nothing is ever
-                  removed automatically. Offline maps are stored on your device and have
-                  their own limits. Need more space? Contact us at{" "}
+                  removed automatically. Offline maps are downloaded in the Landscape 360 Mobile App, stored on
+                  your phone, and have their own limits. Need more space? Contact us at{" "}
                   <strong>contact@jcdigital.co.id</strong>.
                 </p>
               </div>

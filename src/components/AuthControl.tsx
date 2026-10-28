@@ -7,13 +7,12 @@ import { useSurveyStore } from "../store/useSurveyStore";
 import { useMapStore } from "../store/useMapStore";
 import { useShallow } from "zustand/react/shallow";
 import { useOfflineStore } from "../store/useOfflineStore";
-import { OfflineManager } from "./OfflineManager";
 import { RegionDrawingOverlay } from "./RegionDrawingOverlay";
 import { UserManagementPanel } from "./UserManagementPanel";
 import { AccountRequestsPanel } from "./AccountRequestsPanel";
 import { PoiManagerPanel } from "./PoiManagerPanel";
 import { useSosAlertsStore } from "../store/useSosAlertsStore";
-import { SosScreen } from "./SosScreen";
+import { NativeAppDialog, NATIVE_REASONS, SosAppDialog } from "./NativeAppNotice";
 import { AdminActivityFeed } from "./AdminActivityFeed";
 import { ChangePasswordForm } from "./ChangePasswordForm";
 import { PLANS, type Plan } from "../lib/adminUsers";
@@ -117,7 +116,7 @@ export const AuthControl = () => {
   const openSosAlerts = useSosAlertsStore((s) => s.openPanel);
 
   const [showMenu, setShowMenu] = useState(false);
-  const [showOfflineManager, setShowOfflineManager] = useState(false);
+  const [showOfflineNative, setShowOfflineNative] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showUserManagement, setShowUserManagement] = useState(false);
@@ -1053,8 +1052,8 @@ export const AuthControl = () => {
                     </button>
                     <button
                       onClick={() => {
-                        setShowOfflineManager(true);
-                        setShowMenu(false);
+                        // Offline areas are downloaded in the mobile app
+                        setShowOfflineNative(true);
                       }}
                       className="cursor-pointer flex flex-col md:flex-row items-center md:items-start gap-2 md:gap-3 p-4 rounded-xl bg-sand-50 hover:bg-sand-100 border border-sand-100 hover:border-sand-300 transition-all group text-center md:text-left"
                     >
@@ -1234,25 +1233,11 @@ export const AuthControl = () => {
           document.body,
         )}
 
-      {showOfflineManager &&
-        createPortal(
-          <OfflineManager
-            onClose={() => setShowOfflineManager(false)}
-            onBack={() => {
-              setShowOfflineManager(false);
-              setShowMenu(true);
-            }}
-          />,
-          document.body,
-        )}
-
-      {showSos && user && isAdmin && (
-        <SosScreen
-          userId={user.id}
-          userName={accountDisplayName(user) || user.email || ""}
-          onClose={() => setShowSos(false)}
-        />
+      {showOfflineNative && (
+        <NativeAppDialog feature="Offline maps" reason={NATIVE_REASONS.offline} onClose={() => setShowOfflineNative(false)} />
       )}
+
+      {showSos && user && isAdmin && <SosAppDialog onClose={() => setShowSos(false)} />}
 
       {showPoiManager &&
         isAdmin &&

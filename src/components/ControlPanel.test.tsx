@@ -194,6 +194,21 @@ describe('ControlPanel', () => {
     expect(screen.queryByTestId('icon-binoculars')).not.toBeInTheDocument();
   });
 
+  it('GPS Tracking (broadcasting) opens the mobile app notice instead of starting', () => {
+    (useSurveyStore as any).mockReturnValue({
+      isPlotMode: false,
+      togglePlotMode: vi.fn(),
+      user: { id: 'user2' },
+      subscriptionStatus: 'Pro',
+      userRole: 'pengguna360'
+    });
+    renderComponent();
+    fireEvent.click(screen.getByText('GPS Tracking'));
+    expect(mockToggleLiveTracking).not.toHaveBeenCalled();
+    expect(screen.getByRole('dialog', { name: 'GPS Tracking: Landscape 360 Mobile App' })).toBeInTheDocument();
+    expect(screen.getByText('Available in the Landscape 360 Mobile App')).toBeInTheDocument();
+  });
+
   it('should show "Team Monitor" and Binoculars icon if Monitor AND Enterprise', () => {
     (useSurveyStore as any).mockReturnValue({
       user: { id: 'monitor', email: 'monitor@app.com' },

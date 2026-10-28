@@ -9,7 +9,6 @@ import { getAzimuthData, toDMS } from "../utils/surveyUtils";
 import { getElevationAtPoint } from "../utils/elevationUtils";
 import { getVisibleLocations, useMarkedLocationStore } from "../store/useMarkedLocationStore";
 import { CATEGORY_META } from "../utils/markedLocations";
-import { requestCompassPermission } from "../lib/deviceHeading";
 
 import { SosButton } from "./SosButton";
 import { ShareLocationButton } from "./ShareLocationButton";
@@ -928,11 +927,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
 
       {/* Find My Location Button */}
       <button
-        onClick={() => {
-          // iPhone / iPad only share the compass after a tap; this is that tap
-          requestCompassPermission();
-          onGeolocate();
-        }}
+        onClick={onGeolocate}
         className="bg-white/90 backdrop-blur-sm p-2.5 rounded-xl shadow-lg border border-white/20 hover:bg-white hover:text-forest-800 transition-all active:scale-95 group cursor-pointer"
         title="Find My Location"
       >
@@ -943,7 +938,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
       </button>
 
       {/* Share where you are now (WhatsApp, other apps, copy) */}
-      <ShareLocationButton mapRef={mapRef} />
+      <ShareLocationButton />
 
       {/* Navigation Stack */}
       <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 flex flex-col">
