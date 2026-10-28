@@ -14,6 +14,7 @@ vi.mock('../lib/supabaseClient', () => ({
   supabase: {
     channel: vi.fn(),
     removeChannel: vi.fn(),
+    realtime: { setAuth: vi.fn(() => Promise.resolve()) },
   },
 }));
 
@@ -64,6 +65,7 @@ describe('useTrackerService', () => {
             return mockChannel;
         }),
         send: vi.fn().mockResolvedValue('ok'),
+        httpSend: vi.fn().mockResolvedValue({ success: true }),
         track: vi.fn().mockResolvedValue('ok'),
         state: 'joined'
     };
@@ -77,7 +79,12 @@ describe('useTrackerService', () => {
   it('should connect to supabase channel when enabled', () => {
     renderHook(() => useTrackerService());
 
-    expect(supabase.channel).toHaveBeenCalledWith('tracking-room', expect.any(Object));
+    // Private channel: the server checks is_monitor() before anyone can listen
+    expect(supabase.channel).toHaveBeenCalledWith(
+      'tracking-room',
+      expect.objectContaining({ config: expect.objectContaining({ private: true }) }),
+    );
+    expect(supabase.realtime.setAuth).toHaveBeenCalled();
     expect(mockSetConnectionStatus).toHaveBeenCalledWith('connecting');
     expect(mockChannel.subscribe).toHaveBeenCalled();
     // Since mock calls back immediately
@@ -132,12 +139,22 @@ describe('useTrackerService', () => {
 
     renderHook(() => useTrackerService());
 
-    // Initial heartbeat
-    expect(mockChannel.send).toHaveBeenCalledWith(expect.objectContaining({
-        event: 'heartbeat-request'
-    }));
+    // Initial heartbeat, posted to the app's private heartbeat channel
+    expect(supabase.channel).toHaveBeenCalledWith('tracking-heartbeat', { config: { private: true } });
+    expect(mockChannel.httpSend).toHaveBeenCalledWith('heartbeat-request', {});
 
     vi.useRealTimers();
+  });
+
+  it.each([
+    ['a member (pengguna360, Enterprise)', { userRole: 'pengguna360', subscriptionStatus: 'Enterprise', isAdmin: false }, false],
+    ['a monitor on Pro', { userRole: 'monitor360', subscriptionStatus: 'Pro', isAdmin: false }, false],
+    ['the admin', { userRole: 'pengguna360', subscriptionStatus: 'Free', isAdmin: true }, true],
+  ])('joins the live tracking channel only to watch: %s -> %s', (_label, account, joins) => {
+    (useSurveyStore as any).mockReturnValue({ user: { id: 'u', email: 'u@app.com' }, ...account });
+    renderHook(() => useTrackerService());
+    const joined = (supabase.channel as any).mock.calls.some((c: unknown[]) => c[0] === 'tracking-room');
+    expect(joined).toBe(joins);
   });
 
   it('should cleanup channel on unmount', () => {
