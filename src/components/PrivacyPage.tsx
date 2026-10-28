@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { ShieldCheck } from "lucide-react";
 import { LegalSection, SitePageLayout } from "./SitePageLayout";
 import { LEGAL_LAST_UPDATED } from "../config";
@@ -39,13 +40,19 @@ export const PrivacyPage = () => {
             <li><strong>Account request:</strong> email, full name, organization, phone / WhatsApp number and your message.</li>
             <li><strong>Account:</strong> email, display name, plan and role. Passwords are stored only in encrypted (hashed) form by our sign-in provider; we never see them.</li>
             <li><strong>Location and activity data you create:</strong> surveys and points, marked locations, recorded tracks, uploaded custom maps, and, when you turn on GPS Tracking, your live position.</li>
+            <li><strong>S.O.S:</strong> when you send an S.O.S, your position, battery level and messages go to the admin. Your emergency contacts stay on your phone.</li>
             <li><strong>Sharing:</strong> which accounts you share locations or tracks with.</li>
             <li><strong>Sign-in history:</strong> the time of each sign-in and the browser and device type, kept to protect accounts.</li>
             <li><strong>Reviews:</strong> your rating and comment, shown publicly with your first name, last initial and, if you set one in your profile, your organization.</li>
             <li><strong>Usage information:</strong> cloud storage used per feature, and anonymous page view and performance statistics.</li>
             <li><strong>Technical data:</strong> IP address and browser information processed by our hosting and map providers to deliver the Service.</li>
           </ul>
-          <p>We do not collect your location in the background: GPS is only used while a feature that needs it is on.</p>
+          <p>
+            The mobile app uses your location in the background only while you record a track,
+            share your position with GPS Tracking or send an S.O.S; a notification (Android) or the
+            blue location indicator (iPhone) shows while it does. The website uses GPS only while a
+            feature that needs it is on.
+          </p>
         </LegalSection>
 
         <LegalSection title="3. How we use your data">
@@ -54,7 +61,7 @@ export const PrivacyPage = () => {
             <li>to review account requests and to contact you about your account, plan or requests;</li>
             <li>to keep the Service secure, prevent abuse and apply plan limits;</li>
             <li>to understand and improve the Service with anonymous statistics;</li>
-            <li>to show ads through our advertising partner;</li>
+            <li>to show ads through our advertising partner (website only; the mobile app has no ads);</li>
             <li>to meet legal obligations.</li>
           </ul>
           <p>
@@ -81,7 +88,7 @@ export const PrivacyPage = () => {
 
         <LegalSection title="5. How long we keep data">
           <ul>
-            <li>Account data and the content you create: while your account exists, and deleted when you ask us to delete your account.</li>
+            <li>Account data and the content you create: while your account exists, and deleted when you delete your account (User Account &gt; Delete account in the app, or <Link to="/delete-account" className="underline font-bold text-ink">landscape360.jcdigital.co.id/delete-account</Link>).</li>
             <li>Live GPS tracking logs: deleted automatically after <strong>7 days</strong>. Tracks you record and save are kept until you delete them.</li>
             <li>Sign-in history: the latest 100 sign-ins per account.</li>
             <li>Account requests: kept to handle the request and for our records; ask us to delete yours at any time.</li>
@@ -103,7 +110,7 @@ export const PrivacyPage = () => {
           <ul>
             <li>get information about and access the personal data we hold about you;</li>
             <li>correct inaccurate data (you can change your display name yourself in the User Account menu);</li>
-            <li>have your data deleted, or end the processing of it;</li>
+            <li><Link to="/delete-account" className="underline font-bold text-ink">have your data deleted</Link>, or end the processing of it;</li>
             <li>withdraw consent at any time (for GPS sharing, turn it off; for cookies, use your browser settings);</li>
             <li>get a copy of your data (tracks and locations can be exported as GPX in the app);</li>
             <li>object to processing and complain to the competent authority.</li>

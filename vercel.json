@@ -1,11 +1,15 @@
 {
   "rewrites": [
     {
-      "source": "/((?!api/|sitemap\\.xml|robots\\.txt|manifest\\.webmanifest|sw\\.js|workbox-.*\\.js|assets|favicon\\.ico).*)",
+      "source": "/((?!api/|\\.well-known/|sitemap\\.xml|robots\\.txt|manifest\\.webmanifest|sw\\.js|workbox-.*\\.js|assets|favicon\\.ico).*)",
       "destination": "/index.html"
     }
   ],
   "headers": [
+    {
+      "source": "/.well-known/apple-app-site-association",
+      "headers": [{ "key": "Content-Type", "value": "application/json" }]
+    },
     {
       "source": "/(.*)",
       "headers": [

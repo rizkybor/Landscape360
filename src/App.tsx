@@ -13,6 +13,7 @@ const ReviewsPage = lazy(() => import('./components/ReviewsPage').then(module =>
 const FaqPage = lazy(() => import('./components/FaqPage').then(module => ({ default: module.FaqPage })));
 const TermsPage = lazy(() => import('./components/TermsPage').then(module => ({ default: module.TermsPage })));
 const PrivacyPage = lazy(() => import('./components/PrivacyPage').then(module => ({ default: module.PrivacyPage })));
+const DeleteAccountPage = lazy(() => import('./components/DeleteAccountPage').then(module => ({ default: module.DeleteAccountPage })));
 
 function App() {
   const navigate = useNavigate();
@@ -69,6 +70,7 @@ function App() {
             <Route path="/faq" element={<FaqPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/delete-account" element={<DeleteAccountPage />} />
             </Routes>
       </Suspense>
     </>
