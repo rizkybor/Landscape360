@@ -8,3 +8,10 @@ export const LOGO_AVATAR_EMAILS = ["admin@landscape360.app"];
 
 // Temporary call-to-action shown wherever the app would direct users to upgrade their plan
 export const CONTACT_ADMIN_LABEL = "Hubungi Admin";
+
+// Native mobile app (Android / iPhone). Fill in the store links on release; until then the
+// app-only features show "Coming soon on Google Play and the App Store".
+export const MOBILE_APP = {
+  playStoreUrl: null as string | null,
+  appStoreUrl: null as string | null,
+};

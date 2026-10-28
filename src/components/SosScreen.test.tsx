@@ -82,10 +82,13 @@ describe('SosButton', () => {
     expect(screen.queryByRole('button', { name: /S\.O\.S/ })).not.toBeInTheDocument();
   });
 
-  it('shows for allowed accounts', () => {
+  it('shows for allowed accounts and points to the mobile app, keeping 112 / Basarnas one tap away', () => {
     setStore({ user: { id: 'u1', email: 'u@x.com', user_metadata: {} }, canUseSos: true, isAdmin: false });
     render(<SosButton />);
-    expect(screen.getByRole('button', { name: /S\.O\.S: hold for 3 seconds/ })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'S.O.S' }));
+    expect(screen.getByText('S.O.S')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Emergency 112/ })).toHaveAttribute('href', 'tel:112');
+    expect(screen.getByRole('link', { name: /Basarnas 115/ })).toHaveAttribute('href', 'tel:115');
   });
 
   it('is not on the map for the admin (it is in User Account)', () => {

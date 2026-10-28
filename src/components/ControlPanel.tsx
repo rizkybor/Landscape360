@@ -8,6 +8,7 @@ import { useRouteStore } from "../store/useRouteStore";
 import { useCustomBasemapStore } from "../store/useCustomBasemapStore";
 import { AuthControl } from "./AuthControl";
 import { AppShareButton } from "./AppShareButton";
+import { NativeAppDialog, NATIVE_REASONS } from "./NativeAppNotice";
 import { SiteLinks } from "./SitePageLayout";
 import { CONTACT_ADMIN_LABEL } from "../config";
 import { canRecordTracks, useTrackRecorderStore } from "../store/useTrackRecorderStore";
@@ -225,6 +226,9 @@ export const ControlPanel = () => {
   ]);
 
   const [showGetStarted, setShowGetStarted] = useState(false);
+  // App-only feature whose "use the mobile app" dialog is open
+  const [nativeFeature, setNativeFeature] = useState<"gps" | null>(null);
+  const isMonitorAccount = userRole === "monitor360" && subscriptionStatus === "Enterprise";
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [activityNow, setActivityNow] = useState(() => Date.now());
   const [isJoystickDragging, setIsJoystickDragging] = useState(false);
@@ -867,7 +871,8 @@ export const ControlPanel = () => {
             }`}
           >
             <button
-              onClick={toggleLiveTracking}
+              // Team Monitor (watching) works here; broadcasting your own position is in the app
+              onClick={isMonitorAccount ? toggleLiveTracking : () => setNativeFeature("gps")}
               disabled={userRole === "pengguna360" && isActivityRecording}
               className={`w-full flex items-center cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-col justify-center text-center p-2.5 gap-1.5"}`}
             >
@@ -1686,6 +1691,9 @@ export const ControlPanel = () => {
         </aside>
 
         <GetStartedModal isOpen={showGetStarted} onClose={() => setShowGetStarted(false)} />
+        {nativeFeature === "gps" && (
+          <NativeAppDialog feature="GPS Tracking" reason={NATIVE_REASONS.gps} onClose={() => setNativeFeature(null)} />
+        )}
       </>
     );
   }
@@ -1851,6 +1859,9 @@ export const ControlPanel = () => {
         isOpen={showGetStarted}
         onClose={() => setShowGetStarted(false)}
       />
+      {nativeFeature === "gps" && (
+        <NativeAppDialog feature="GPS Tracking" reason={NATIVE_REASONS.gps} onClose={() => setNativeFeature(null)} />
+      )}
     </>
   );
 };
@@ -2126,13 +2137,13 @@ const GetStartedModal = ({
               },
               {
                 icon: <Wifi size={18} />,
-                title: "Offline Maps [All Accounts]",
-                desc: "Download map areas to use without signal on the trail: Free 1 map (1 MB), Pro 3 maps (10 MB each), Enterprise 10 maps (25 MB each).",
+                title: "Offline Maps [Landscape 360 Mobile App]",
+                desc: "Download map areas in the Landscape 360 Mobile App (coming soon on Google Play and the App Store) to use without signal on the trail: Free 1 map (1 MB), Pro 3 maps (10 MB each), Enterprise 10 maps (25 MB each).",
               },
               {
                 icon: <Navigation size={18} />,
                 title: "GPS Tracking & Monitoring [Pro & Enterprise]",
-                desc: "Click the GPS button to broadcast your location; Pro accounts can also record activities as GPX. Enterprise Monitor accounts follow every active member live. Reconnects by itself after signal loss.",
+                desc: "Broadcast your location and record activities in the Landscape 360 Mobile App, so it keeps working with the screen off. Enterprise Monitor accounts follow every active member live, here or in the app. Reconnects by itself after signal loss.",
               },
               {
                 icon: <Layers size={18} />,
@@ -2147,8 +2158,8 @@ const GetStartedModal = ({
                     Save camps, water sources, summits and more with full details, pick
                     them on the map, and export as GPX. Share one or several locations with
                     other users: pick someone you shared with before, or type part of their
-                    name or email and tap them. Or create a link for WhatsApp that anyone can
-                    open without signing in.
+                    name or email and tap them. Links for WhatsApp are made in the Landscape 360
+                    App and open here without signing in.
                     <div className="mt-2 grid grid-cols-1 gap-1 text-xs opacity-80">
                       <span>
                         • <strong>Free:</strong> 10 locations, receive shares
@@ -2166,17 +2177,17 @@ const GetStartedModal = ({
               {
                 icon: <Hexagon size={18} />,
                 title: "Marked Areas [All Accounts]",
-                desc: "Draw an area on the map by tapping its corners (a camp ground, a route zone, a search sector) and see its size and perimeter. Focus on an area to darken the rest of the map, and share it as a WhatsApp link that opens in focus view without signing in. Free 5 areas, Pro 10, Enterprise 20; links on Pro and Enterprise.",
+                desc: "Draw an area on the map by tapping its corners (a camp ground, a route zone, a search sector) and see its size and perimeter. Focus on an area to darken the rest of the map. Share links for WhatsApp are made in the Landscape 360 Mobile App and open here in focus view without signing in. Free 5 areas, Pro 10, Enterprise 20; links on Pro and Enterprise.",
               },
               {
                 icon: <Share2 size={18} />,
-                title: "Share Location",
-                desc: "Tap the share button on the right of the map to send where you are now to WhatsApp or another app, with coordinates, elevation and a link that opens the spot on the map.",
+                title: "Share Location [Landscape 360 Mobile App]",
+                desc: "Send where you are now to WhatsApp from the Landscape 360 Mobile App, with coordinates, elevation and a link. Locations shared with you open here on the map, no sign-in needed.",
               },
               {
                 icon: <Footprints size={18} />,
                 title: "Track Recorder [Enterprise Account]",
-                desc: "Record personal GPS tracks online or offline with distance, duration and elevation. Share tracks by email and export GPX. Every signed-in account can view its own and shared tracks; Pro and Enterprise accounts can rename their cloud tracks.",
+                desc: "Record personal GPS tracks online or offline with distance, duration and elevation in the Landscape 360 Mobile App, which keeps recording with the screen off. Here every signed-in account can view its own and shared tracks, share them by email and export GPX; Pro and Enterprise accounts can rename their cloud tracks.",
               },
               {
                 icon: <HardDrive size={18} />,
@@ -2186,7 +2197,7 @@ const GetStartedModal = ({
               {
                 icon: <Siren size={18} />,
                 title: "S.O.S [Allowed by the Admin]",
-                desc: "Accounts the admin allows get a red S.O.S button on the map (hold 3 seconds). It shows your GPS position, calls 112 / Basarnas 115, sends an SMS with your location to your emergency contacts, and reports your message, location and battery to the admin.",
+                desc: "S.O.S runs in the Landscape 360 Mobile App: your GPS position, calls to 112 / Basarnas 115, an SMS with your location to your emergency contacts, and reports to the admin that keep going with the screen off. On the web the red S.O.S button explains this and still calls 112 and 115 directly.",
               },
               {
                 icon: <UserPlus size={18} />,

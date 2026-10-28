@@ -4,8 +4,6 @@ import { useSurveyStore } from "../store/useSurveyStore";
 import { useMarkedAreaStore } from "../store/useMarkedAreaStore";
 import { useMarkedLocationStore } from "../store/useMarkedLocationStore";
 import { useTrackRecorderStore } from "../store/useTrackRecorderStore";
-import { createAreaLink, getAreaLink, revokeAreaLink } from "../services/markedAreaSync";
-import { areaLinkUrl, buildAreaShareText } from "../lib/shareLocation";
 import {
   AREA_COLORS,
   areaInputError,
@@ -380,20 +378,7 @@ export const MarkedAreaPanel = () => {
                   </div>
                   {shareId === a.id && (
                     <div className="mt-2">
-                      <ShareLinkBox
-                        key={a.id}
-                        what="this area (the rest of the map is darkened)"
-                        getToken={() => getAreaLink(a.id)}
-                        createToken={() => createAreaLink(a.id)}
-                        revoke={() => revokeAreaLink(a.id)}
-                        urlFor={areaLinkUrl}
-                        messageFor={(url) =>
-                          buildAreaShareText(
-                            { name: a.name, size: formatArea(a.areaM2), perimeter: formatLength(a.perimeterM) },
-                            url,
-                          )
-                        }
-                      />
+                      <ShareLinkBox key={a.id} what="this area" />
                     </div>
                   )}
                 </div>

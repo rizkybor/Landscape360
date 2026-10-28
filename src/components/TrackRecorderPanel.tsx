@@ -2,11 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Circle,
   CloudUpload,
-  Cloud,
   Download,
   Eye,
   EyeOff,
-  HardDrive,
   Loader2,
   Pause,
   Pencil,
@@ -26,13 +24,14 @@ import {
 import { useSurveyStore } from "../store/useSurveyStore";
 import { canRecordTracks, canRenameCloudTracks, useTrackRecorderStore } from "../store/useTrackRecorderStore";
 import { TrackShareManager } from "./TrackShareManager";
+import { NativeAppNotice, NATIVE_REASONS } from "./NativeAppNotice";
 import { CONTACT_ADMIN_LABEL } from "../config";
 import {
   formatDistance,
   formatDuration,
   getElapsedMs,
 } from "../utils/trackRecorderGeo";
-import type { GpsStatus, RecordedTrack, TrackMode, TrackSyncStatus } from "../types/trackRecorder";
+import type { GpsStatus, RecordedTrack, TrackSyncStatus } from "../types/trackRecorder";
 
 const SYNC_BADGES: Record<TrackSyncStatus, { label: string; className: string }> = {
   local: { label: "Device only", className: "bg-sand-100 text-sand-700 border-sand-300" },
@@ -111,7 +110,6 @@ export const TrackRecorderPanel = () => {
     viewing,
     error,
     clearError,
-    startTrack,
     pauseTrack,
     resumeTrack,
     stopTrack,
@@ -136,8 +134,6 @@ export const TrackRecorderPanel = () => {
   const [tab, setTab] = useState<"record" | "tracks" | "shared">("record");
   const [sharingId, setSharingId] = useState<string | null>(null);
   const [confirmLeaveId, setConfirmLeaveId] = useState<string | null>(null);
-  const [name, setName] = useState("");
-  const [mode, setMode] = useState<TrackMode>("online");
   const [confirm, setConfirm] = useState<"stop" | "discard" | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -171,12 +167,6 @@ export const TrackRecorderPanel = () => {
         useTrackRecorderStore.setState({ error: `Export failed: ${(err as Error).message}` });
       }
     });
-
-  const handleStart = async () => {
-    await startTrack(name, mode);
-    setName("");
-    setConfirm(null);
-  };
 
   const elapsed = activeTrack ? getElapsedMs(activeTrack, now) : 0;
 
@@ -274,51 +264,9 @@ export const TrackRecorderPanel = () => {
           </div>
         )}
 
+        {/* Recording runs in the mobile app (GPS with the screen off); the web views tracks */}
         {tab === "record" && !activeTrack && canRecord && (
-          <div className="space-y-3">
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              maxLength={120}
-              placeholder="Track name (optional)"
-              className="w-full bg-sand-50 border border-sand-200 rounded-lg px-3 py-2 text-xs text-ink placeholder:text-sand-500 outline-none focus:border-ember-300"
-            />
-            <div className="grid grid-cols-2 gap-2">
-              {(
-                [
-                  { value: "online", icon: Cloud, title: "Online", desc: "Saved on device and synced to the cloud automatically" },
-                  { value: "offline", icon: HardDrive, title: "Offline", desc: "Saved on this device only. Upload later if needed" },
-                ] as const
-              ).map(({ value, icon: Icon, title, desc }) => (
-                <button
-                  key={value}
-                  onClick={() => setMode(value)}
-                  className={`cursor-pointer text-left p-3 rounded-xl border transition-all ${
-                    mode === value
-                      ? "bg-ember-50 border-ember-300 ring-1 ring-ember-300"
-                      : "bg-sand-50 border-sand-200 hover:border-sand-300"
-                  }`}
-                >
-                  <div className="flex items-center gap-1.5 text-xs font-bold mb-1">
-                    <Icon size={14} className={mode === value ? "text-ember-700" : "text-sand-600"} />
-                    {title}
-                  </div>
-                  <div className="text-[10px] text-sand-600 leading-snug">{desc}</div>
-                </button>
-              ))}
-            </div>
-            {mode === "online" && !isOnline && (
-              <p className="text-[10px] text-gold-700">
-                No signal right now. Recording works anyway; it will sync when the connection returns.
-              </p>
-            )}
-            <button
-              onClick={handleStart}
-              className="cursor-pointer w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-ember-600 hover:bg-ember-500 text-white text-sm font-bold shadow-lg transition-colors"
-            >
-              <Circle size={12} className="fill-white" /> Start Recording
-            </button>
-          </div>
+          <NativeAppNotice feature="Track recording" reason={NATIVE_REASONS.track} />
         )}
 
         {tab === "record" && activeTrack && (

@@ -64,7 +64,7 @@ describe('MarkedAreaPanel', () => {
     expect(screen.queryByRole('button', { name: /Share/ })).not.toBeInTheDocument();
   });
 
-  it('focus darkens the rest of the map; Pro can share the area as a link', async () => {
+  it('focus darkens the rest of the map; share links point to the mobile app', async () => {
     asUser('Pro');
     vi.mocked(cloud.fetchMyAreas).mockResolvedValue([
       { id: 'a1', userId: 'u1', name: 'Camp', color: '#2563eb', notes: null, ring, areaM2: 12345, perimeterM: 450, createdAt: 0, updatedAt: 0 },
@@ -74,13 +74,9 @@ describe('MarkedAreaPanel', () => {
     fireEvent.click(await screen.findByRole('button', { name: /Focus/ }));
     expect(useMarkedAreaStore.getState().focusId).toBe('a1');
 
+    // Share links are made in the mobile app
     fireEvent.click(screen.getByRole('button', { name: /Share/ }));
-    fireEvent.click(await screen.findByRole('button', { name: /Create link/ }));
-    expect(await screen.findByLabelText('Share link')).toHaveValue(
-      'https://landscape360.jcdigital.co.id/?area=0123456789abcdef0123456789abcdef',
-    );
-    const wa = decodeURIComponent(screen.getByRole('link', { name: /Send to WhatsApp/ }).getAttribute('href')!);
-    expect(wa).toContain('🗺️ Camp');
-    expect(wa).toContain('Area 1.23 ha · perimeter 450.0 m');
+    expect(screen.getByText(/Create a WhatsApp link for this area in the Landscape 360 Mobile App/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Create link/ })).not.toBeInTheDocument();
   });
 });

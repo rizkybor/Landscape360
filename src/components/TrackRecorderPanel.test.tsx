@@ -52,12 +52,14 @@ describe('TrackRecorderPanel', () => {
   it.each([
     ['Enterprise', false],
     ['Free', true],
-  ])('lets %s (admin: %s) record', (plan, isAdmin) => {
+  ])('%s (admin: %s) is sent to the mobile app to record', (plan, isAdmin) => {
     mockAccount(plan, isAdmin);
     render(<TrackRecorderPanel />);
-    expect(screen.getByRole('button', { name: /^Online/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /^Offline/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Start Recording/i })).toBeInTheDocument();
+    expect(screen.getByText('Track recording')).toBeInTheDocument();
+    expect(screen.getByLabelText('Google Play: coming soon')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Start Recording/i })).not.toBeInTheDocument();
+    // Viewing tracks stays on the web
+    expect(screen.getByRole('button', { name: /^My Tracks/ })).toBeInTheDocument();
   });
 
   it('lists tracks shared with me with the owner email', () => {

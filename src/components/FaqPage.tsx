@@ -17,7 +17,7 @@ const GROUPS: { title: string; items: Faq[] }[] = [
     items: [
       faq(
         "What is Landscape 360?",
-        "Landscape 360 is a web app for outdoor navigation: 2D and 3D terrain maps, contour lines, survey tools, offline maps, GPS tracking and saved places, built for hikers, climbers and field teams.",
+        "Landscape 360 is an outdoor navigation app for hikers, climbers and outdoor communities: 2D and 3D terrain maps, contour lines, survey tools, saved places and areas, GPS tracking, offline maps and S.O.S. It runs on the web, and as the Landscape 360 Mobile App for Android and iPhone (coming soon).",
       ),
       faq(
         "Do I need an account?",
@@ -62,7 +62,7 @@ const GROUPS: { title: string; items: Faq[] }[] = [
     items: [
       faq(
         "How do offline maps work?",
-        "Draw an area and download it while you have signal. The map tiles are stored on your device, so that area keeps working without internet. The number and size of offline maps depend on your plan.",
+        "Offline maps are downloaded in the Landscape 360 Mobile App (Android and iPhone, coming soon on Google Play and the App Store). Draw an area and download it while you have signal; the map is stored on your phone, so that area keeps working without internet. The number and size of offline maps depend on your plan.",
       ),
       faq(
         "Can Landscape 360 replace a map and compass?",
@@ -83,15 +83,19 @@ const GROUPS: { title: string; items: Faq[] }[] = [
     items: [
       faq(
         "Does the Track Recorder work without signal?",
-        "Yes. Every GPS point is saved on your device first, so recording continues without signal and survives a closed browser. In online mode, tracks sync to the cloud when the connection returns.",
+        "Yes. Tracks are recorded in the Landscape 360 Mobile App, which saves every GPS point on your phone first, so recording continues without signal and with the screen off. Tracks sync to the cloud when the connection returns, and you can view, share and export them here on the web.",
       ),
       faq(
         "Who can see my location and tracks?",
         "Only you, unless you share them. Marked locations and tracks are visible to the accounts you share them with. Live GPS broadcast is visible to monitor accounts of your team. You can stop sharing at any time.",
       ),
       faq(
+        "What is the Landscape 360 Mobile App?",
+        "The native app for Android and iPhone, coming soon on Google Play and the App Store. It uses the same account and data as this website, and adds what needs the phone itself with the screen off: track recording, GPS broadcast, S.O.S with alerts to the admin, offline maps, the compass needle, and Share Location / share links for WhatsApp.",
+      ),
+      faq(
         "How do I share a marked location?",
-        "On Pro and Enterprise, open Marked Locations, press Share on a location (or select several) then tap someone under Recent, or type part of their name or email and tap them in the list (typing their full email also works). They will find it under the Shared tab.",
+        "On Pro and Enterprise, open Marked Locations, press Share on a location (or select several) then tap someone under Recent, or type part of their name or email and tap them in the list (typing their full email also works). They will find it under the Shared tab. To send it to anyone on WhatsApp as a link, use the Landscape 360 Mobile App; the link opens here without signing in.",
       ),
     ],
   },
