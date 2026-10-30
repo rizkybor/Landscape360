@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { Layer, Source, useMap } from "react-map-gl/mapbox";
 import { ChevronDown, ChevronUp, Hexagon, X } from "lucide-react";
-import { openAreaLink } from "../services/markedAreaSync";
+import { openAreaLink, openAreaLinkContours } from "../services/markedAreaSync";
 import { parseAreaToken } from "../lib/shareLocation";
 import { areaFeature, focusMask, formatArea, formatLength, ringBounds } from "../utils/markedAreas";
 import type { LinkedArea } from "../types/markedArea";
+import { AreaContourLines, type ContourSet } from "./AreaContourLines";
 
 const clearLink = () => {
   const url = new URL(window.location.href);
@@ -20,6 +21,7 @@ export const SharedAreaLayer = () => {
   const [area, setArea] = useState<LinkedArea | null>(null);
   const [status, setStatus] = useState<"loading" | "ok" | "gone" | "error" | "closed">("loading");
   const [open, setOpen] = useState(true);
+  const [contours, setContours] = useState<ContourSet | null>(null);
 
   useEffect(() => {
     if (!token) return;
@@ -33,6 +35,8 @@ export const SharedAreaLayer = () => {
         }
         setArea(a);
         setStatus("ok");
+        // Contours uploaded to the area, if any (website only)
+        openAreaLinkContours(token).then((c) => !cancelled && c && setContours({ data: c.data, intervalM: c.intervalM }));
       })
       .catch(() => !cancelled && setStatus("error"));
     return () => {
@@ -77,6 +81,7 @@ export const SharedAreaLayer = () => {
       <Source id="shared-area-mask" type="geojson" data={focusMask(area.ring)}>
         <Layer id="shared-area-mask-fill" type="fill" paint={{ "fill-color": "#0b0f08", "fill-opacity": 0.72 }} />
       </Source>
+      {contours && <AreaContourLines id="shared-area-contours" sets={[contours]} />}
       <Source id="shared-area" type="geojson" data={areaFeature(area.ring)}>
         <Layer id="shared-area-outline" type="line" paint={{ "line-color": area.color, "line-width": 3.5 }} />
       </Source>

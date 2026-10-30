@@ -89,3 +89,19 @@ export const buildAreaShareText = (area: { name: string; size: string; perimeter
 
 /** WhatsApp with the message filled in (the user picks the chat) */
 export const whatsappShareUrl = (text: string) => `https://wa.me/?text=${encodeURIComponent(text)}`;
+
+/** Link to a shared Classic Field Work: /?classic=<32-character token> */
+export const classicLinkUrl = (token: string, base = SITE_URL) => `${base}/?classic=${token}`;
+
+/** The token in a "?classic=" link, or null */
+export const parseClassicToken = (search: string): string | null => {
+  const token = new URLSearchParams(search).get('classic');
+  return token && /^[0-9a-f]{32}$/.test(token) ? token : null;
+};
+
+/** Removes ?classic= from the address bar (closing a shared Field Work) */
+export const clearClassicLink = () => {
+  const url = new URL(window.location.href);
+  url.searchParams.delete('classic');
+  window.history.replaceState(null, '', url.pathname + url.search + url.hash);
+};

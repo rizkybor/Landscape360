@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Check, Eye, Hexagon, Loader2, Pencil, Plus, Share2, Trash2, Undo2, X } from "lucide-react";
+import { Check, Eye, Hexagon, Loader2, Mountain, Pencil, Plus, Share2, Trash2, Undo2, X } from "lucide-react";
 import { useSurveyStore } from "../store/useSurveyStore";
 import { useMarkedAreaStore } from "../store/useMarkedAreaStore";
 import { useMarkedLocationStore } from "../store/useMarkedLocationStore";
@@ -15,6 +15,7 @@ import {
 } from "../utils/markedAreas";
 import type { LngLat, MarkedArea } from "../types/markedArea";
 import { ShareLinkBox } from "./ShareLinkBox";
+import { AreaContourBox } from "./AreaContourBox";
 
 interface FormState {
   editingId: string | null;
@@ -63,6 +64,8 @@ export const MarkedAreaPanel = () => {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [shareId, setShareId] = useState<string | null>(null);
+  const [contourId, setContourId] = useState<string | null>(null);
+  const contourMeta = useMarkedAreaStore((s) => s.contourMeta);
 
   // Load on login, clear on logout
   const userId = user?.id ?? null;
@@ -339,7 +342,10 @@ export const MarkedAreaPanel = () => {
                     </button>
                     {policy.canShare && (
                       <button
-                        onClick={() => setShareId(shareId === a.id ? null : a.id)}
+                        onClick={() => {
+                          setShareId(shareId === a.id ? null : a.id);
+                          setContourId(null);
+                        }}
                         aria-pressed={shareId === a.id}
                         className={`cursor-pointer flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold ${
                           shareId === a.id ? "bg-gold-500 text-white" : "bg-sand-100 hover:bg-sand-200 text-ink"
@@ -348,6 +354,19 @@ export const MarkedAreaPanel = () => {
                         <Share2 size={11} /> Share
                       </button>
                     )}
+                    <button
+                      onClick={() => {
+                        setContourId(contourId === a.id ? null : a.id);
+                        setShareId(null);
+                      }}
+                      aria-pressed={contourId === a.id}
+                      className={`cursor-pointer flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold ${
+                        contourId === a.id ? "bg-gold-500 text-white" : "bg-sand-100 hover:bg-sand-200 text-ink"
+                      }`}
+                    >
+                      <Mountain size={11} /> Contours
+                      {contourMeta[a.id] && <span className="w-1.5 h-1.5 rounded-full bg-forest-600" aria-label="has uploaded contours" />}
+                    </button>
                     {confirmDeleteId === a.id ? (
                       <span className="flex items-center gap-1 ml-auto text-[10px] text-brick-600">
                         Delete?
@@ -376,6 +395,11 @@ export const MarkedAreaPanel = () => {
                       </button>
                     )}
                   </div>
+                  {contourId === a.id && (
+                    <div className="mt-2">
+                      <AreaContourBox key={a.id} area={a} allowed={policy.canShare} />
+                    </div>
+                  )}
                   {shareId === a.id && (
                     <div className="mt-2">
                       <ShareLinkBox key={a.id} what="this area" />

@@ -31,18 +31,23 @@ import { SosAdminLayer } from "./SosAdminLayer";
 import { SharedLocationMarker } from "./SharedLocationMarker";
 import { SharedPlaceLayer } from "./SharedPlaceLayer";
 import { SharedAreaLayer } from "./SharedAreaLayer";
+import { SharedClassicLink } from "./SharedClassicLink";
 import { MarkedAreaLayer } from "./MarkedAreaLayer";
 import { MarkedAreaPanel } from "./MarkedAreaPanel";
-import { parseAreaToken, parsePlaceToken, parseSharedPoint } from "../lib/shareLocation";
+import { ClassicLayer } from "./ClassicLayer";
+import { ClassicPanel } from "./ClassicPanel";
+import { parseAreaToken, parseClassicToken, parsePlaceToken, parseSharedPoint } from "../lib/shareLocation";
 
 // Opened from a share link: the map starts at the shared point, not at the user
 const sharedAtStart =
   parseSharedPoint(window.location.search) !== null ||
   parsePlaceToken(window.location.search) !== null ||
-  parseAreaToken(window.location.search) !== null;
+  parseAreaToken(window.location.search) !== null ||
+  parseClassicToken(window.location.search) !== null;
 import { WeatherWidget } from "./WeatherWidget";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { usePoiStore } from "../store/usePoiStore";
+import { useClassicStore } from "../store/useClassicStore";
 
 // Lazy Load LiveTrackerLayer
 const LiveTrackerLayer = React.lazy(() =>
@@ -181,6 +186,7 @@ const MapBoxContainerComponent = ({
   const { basemaps, loadBasemaps, layerOpacities, isManagerOpen, toggleManager } = useCustomBasemapStore();
   const { user, isPlotMode } = useSurveyStore();
   const isRoutePlannerEnabled = useRouteStore((s) => s.isRoutePlannerEnabled);
+  const isClassicOpen = useClassicStore((s) => s.isPanelOpen);
 
   useEffect(() => {
     if (user) {
@@ -921,6 +927,9 @@ const MapBoxContainerComponent = ({
             <MarkedAreaLayer />
           </ErrorBoundary>
         )}
+        <ErrorBoundary fallback={null}>
+          <ClassicLayer />
+        </ErrorBoundary>
 
         {mode === "3D" && (
           <ErrorBoundary fallback={null}>
@@ -944,8 +953,9 @@ const MapBoxContainerComponent = ({
         {/* User Location Indicator */}
         <ErrorBoundary fallback={null}>
           {/* With a shared link the map starts at the shared point, which is not where the
-              user is: then the dot waits for a real GPS fix */}
-          <UserLocationMarker initialLocation={sharedAtStart ? null : initialLocation} />
+              user is: then the dot waits for a real GPS fix. Hidden during Classic practice:
+              in a resection your position is the answer, so the dot would give it away */}
+          <UserLocationMarker initialLocation={sharedAtStart ? null : initialLocation} hidden={isClassicOpen} />
         </ErrorBoundary>
 
         {/* A location someone shared with a /?at=lat,lng link */}
@@ -1213,6 +1223,8 @@ const MapBoxContainerComponent = ({
       {showControls && <TrackRecorderPanel />}
       {showControls && <MarkedLocationPanel />}
       {showControls && <MarkedAreaPanel />}
+      {showControls && <ClassicPanel />}
+      <SharedClassicLink />
       {showControls && <SearchPanel />}
       {showControls && <WeatherWidget />}
       {/* Custom Basemap Manager */}
