@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Marker } from 'react-map-gl/mapbox';
 
-export const UserLocationMarker = ({ initialLocation }: { initialLocation?: [number, number] | null }) => {
+// `hidden` hides the dot but keeps following the GPS, so it is back at once when shown again
+export const UserLocationMarker = ({ initialLocation, hidden = false }: { initialLocation?: [number, number] | null; hidden?: boolean }) => {
   const [coords, setCoords] = useState<{longitude: number, latitude: number, heading: number | null} | null>(
     initialLocation ? { longitude: initialLocation[0], latitude: initialLocation[1], heading: null } : null
   );
@@ -72,7 +73,7 @@ export const UserLocationMarker = ({ initialLocation }: { initialLocation?: [num
     };
   }, []);
 
-  if (!coords) return null;
+  if (!coords || hidden) return null;
 
   // Direction of travel from the GPS while moving (the compass needle is in the mobile app)
   const gpsHeading = coords.heading !== null && !isNaN(coords.heading) ? coords.heading : null;

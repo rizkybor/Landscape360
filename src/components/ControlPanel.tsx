@@ -6,6 +6,7 @@ import { useSurveyStore } from "../store/useSurveyStore";
 import { useTrackerStore } from "../store/useTrackerStore"; // Import Tracker Store
 import { useRouteStore } from "../store/useRouteStore";
 import { useCustomBasemapStore } from "../store/useCustomBasemapStore";
+import { useClassicStore } from "../store/useClassicStore";
 import { AuthControl } from "./AuthControl";
 import { AppShareButton } from "./AppShareButton";
 import { NativeAppDialog, NATIVE_REASONS } from "./NativeAppNotice";
@@ -45,6 +46,7 @@ import {
   CircleHelp,
   PanelLeftClose,
   Hexagon,
+  DraftingCompass,
   Share2,
 } from "lucide-react";
 import landscapeLogo from "../assets/LandscapeLogo.svg";
@@ -156,6 +158,7 @@ export const ControlPanel = () => {
     if (!isMarkedLocationsOpen) {
       useTrackRecorderStore.getState().setPanelOpen(false);
       useMarkedAreaStore.getState().setPanelOpen(false);
+      useClassicStore.getState().setPanelOpen(false);
     }
     useMarkedLocationStore.getState().togglePanel();
   };
@@ -167,8 +170,19 @@ export const ControlPanel = () => {
     if (!isMarkedAreasOpen) {
       useTrackRecorderStore.getState().setPanelOpen(false);
       useMarkedLocationStore.getState().setPanelOpen(false);
+      useClassicStore.getState().setPanelOpen(false);
     }
     useMarkedAreaStore.getState().togglePanel();
+  };
+  // Classic (resection / intersection practice, no sign-in needed): same spot on screen too
+  const isClassicOpen = useClassicStore((s) => s.isPanelOpen);
+  const toggleClassic = () => {
+    if (!isClassicOpen) {
+      useTrackRecorderStore.getState().setPanelOpen(false);
+      useMarkedLocationStore.getState().setPanelOpen(false);
+      useMarkedAreaStore.getState().setPanelOpen(false);
+    }
+    useClassicStore.getState().togglePanel();
   };
   const { isRoutePlannerEnabled, setRoutePlannerEnabled } = useRouteStore();
   const {
@@ -192,6 +206,7 @@ export const ControlPanel = () => {
   } = useTrackerStore();
 
   const { isManagerOpen, toggleManager } = useCustomBasemapStore();
+  const canManageBasemaps = subscriptionStatus === "Enterprise";
 
   // Auto-stop tracking/monitoring when user logs out or role changes to incompatible state
   useEffect(() => {
@@ -284,6 +299,7 @@ export const ControlPanel = () => {
     isMarkedLocationsOpen ||
     isMarkedAreasOpen ||
     isDrawingArea ||
+    isClassicOpen ||
     isManagerOpen;
   const reopenAfterToolSheet = useRef(false);
   useEffect(() => {
@@ -453,47 +469,6 @@ export const ControlPanel = () => {
   const toolButtons = (
     <>
 
-    {/* Search Toggle (desktop; on phones it is the search icon in the sheet header) */}
-    {!isMobile && (
-      <button
-        onClick={() => setShowSearch(!showSearch)}
-        className={`w-full h-full flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
-          showSearch
-            ? "bg-forest-50 border-forest-200 "
-            : "bg-sand-50 border-sand-200 hover:bg-sand-100"
-        } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-col justify-center text-center p-2.5 gap-1.5"}`}
-      >
-        <div
-          className={`p-2 rounded-lg transition-colors ${
-            showSearch
-              ? "bg-forest-700 text-white shadow-lg "
-              : "bg-sand-100 text-sand-600 group-hover:text-ink"
-          } ${isMobile ? "mb-1" : ""}`}
-        >
-          <Search size={isMobile ? 18 : 16} />
-        </div>
-
-        <div className="flex-1">
-          <div
-            className={`font-bold transition-colors ${
-              showSearch ? "text-ink" : "text-sand-700"
-            } ${isMobile ? "text-[10px] leading-tight" : "text-xs leading-tight"}`}
-          >
-            Search
-          </div>
-
-          {!isMobile && (
-            <div
-              className={`text-[10px] ${
-                showSearch ? "text-forest-700" : "text-sand-500"
-              }`}
-            >
-              {showSearch ? "Active" : "Location"}
-            </div>
-          )}
-        </div>
-      </button>
-    )}
 
     {/* Navigator Mode */}
     <button
@@ -790,9 +765,36 @@ export const ControlPanel = () => {
       </div>
     </button>
 
+    {/* Classic: resection / intersection practice with typed DMS (everyone, website only) */}
+    <button
+      onClick={toggleClassic}
+      className={`cursor-pointer w-full h-full flex items-center rounded-xl border transition-all duration-200 group ${
+        isClassicOpen ? "bg-gold-50 border-gold-200 " : "bg-sand-50 border-sand-200 hover:bg-sand-100"
+      } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-col justify-center text-center p-2.5 gap-1.5"}`}
+    >
+      <div
+        className={`p-2 rounded-lg transition-colors ${
+          isClassicOpen ? "bg-gold-500 text-white shadow-lg " : "bg-sand-100 text-sand-600 group-hover:text-ink"
+        } ${isMobile ? "mb-1" : ""}`}
+      >
+        <DraftingCompass size={isMobile ? 18 : 16} />
+      </div>
+      <div className="flex-1">
+        <div
+          className={`font-bold transition-colors ${isClassicOpen ? "text-ink" : "text-sand-700"} ${
+            isMobile ? "text-[10px] leading-tight" : "text-xs leading-tight"
+          }`}
+        >
+          Classic
+        </div>
+        {!isMobile && <div className="text-[10px] text-sand-500">Resection & Intersection</div>}
+      </div>
+    </button>
+
     {/* Custom Basemaps Toggle: every Enterprise account (Monitor or User role); the
-        admin counts as Enterprise. Same rule as can_upload_custom_basemaps() */}
-    {subscriptionStatus === "Enterprise" && (
+        admin counts as Enterprise. Same rule as can_upload_custom_basemaps(). On phones it
+        is an icon in the sheet header, left of Search */}
+    {canManageBasemaps && !isMobile && (
       <button
         onClick={toggleManager}
         className={`w-full h-full flex items-center rounded-xl border transition-all duration-200 cursor-pointer group ${
@@ -1576,9 +1578,9 @@ export const ControlPanel = () => {
     </>
   );
 
-  // A dot on Tools (rail icon / phone tab) while any tool is switched on
+  // A dot on Tools (rail icon / phone tab) while any tool is switched on (Search has its own
+  // button: on the rail on desktops, in the sheet header on phones)
   const anyToolActive =
-    showSearch ||
     isPlotMode ||
     isRoutePlannerEnabled ||
     showWeather ||
@@ -1587,6 +1589,7 @@ export const ControlPanel = () => {
     isTrackRecording ||
     isMarkedLocationsOpen ||
     isMarkedAreasOpen ||
+    isClassicOpen ||
     isManagerOpen ||
     isLiveTrackingEnabled;
   const panelSections: { id: DeskSection; label: string; title: string; icon: typeof Compass }[] = [
@@ -1613,6 +1616,7 @@ export const ControlPanel = () => {
             <img src={landscapeLogo} alt="Landscape 360" className="w-9 h-9 object-contain" />
           </button>
           <div className="w-8 h-px bg-sand-200 my-1" />
+          <RailButton icon={Search} label="Search" active={showSearch} onClick={() => setShowSearch(!showSearch)} />
           {panelSections.map((sec) => (
             <RailButton
               key={sec.id}
@@ -1770,7 +1774,7 @@ export const ControlPanel = () => {
               <CircleHelp size={18} />
             </button>
             <AppShareButton className="cursor-pointer p-1.5 rounded-lg text-sand-600 hover:bg-sand-100 hover:text-ink" />
-            {/* Weather and Search live here on phones (the sheet closes by swiping it down) */}
+            {/* Weather, Basemaps (Enterprise) and Search live here on phones (the sheet closes by swiping it down) */}
             <button
               onClick={() => {
                 if (!showWeather) lowerSheetOnPhone();
@@ -1786,6 +1790,19 @@ export const ControlPanel = () => {
               <CloudSun size={18} />
             </button>
 
+            {canManageBasemaps && (
+              <button
+                onClick={toggleManager}
+                aria-pressed={isManagerOpen}
+                className={`cursor-pointer p-1.5 rounded-lg transition-colors ${
+                  isManagerOpen ? "bg-forest-700 text-white" : "text-sand-600 hover:bg-sand-100 hover:text-ink"
+                }`}
+                title="Custom Basemaps"
+                aria-label="Custom Basemaps"
+              >
+                <Layers size={18} />
+              </button>
+            )}
             <button
               onClick={() => setShowSearch(!showSearch)}
               aria-pressed={showSearch}
@@ -2098,6 +2115,11 @@ const GetStartedModal = ({
                 desc: "Left drag moves the map, right drag rotates and tilts. To look around with the left button instead, choose \"Drag to: Look around\" in Terrain Controls. Scroll to zoom, Shift + scroll to tilt. On a phone: one finger pans, pinch zooms, twist rotates, two-finger drag tilts in 3D.",
               },
               {
+                icon: <Search size={18} />,
+                title: "Search Location",
+                desc: "On a computer, the Search button sits on the left rail, right above Tools. On a phone it is the magnifier at the top of the sheet. Type a place, peak or coordinates and the map flies there.",
+              },
+              {
                 icon: <Activity size={18} />,
                 title: "Terrain Analysis",
                 desc: "Toggle contours and adjust exaggeration to visualize elevation details.",
@@ -2148,7 +2170,7 @@ const GetStartedModal = ({
               {
                 icon: <Layers size={18} />,
                 title: "Custom Basemaps [Enterprise Account]",
-                desc: "Upload your own GeoTIFF or PDF maps as overlays with adjustable opacity. A GeoTIFF is placed from its own coordinates; a PDF is placed by typing its edges or with Pick on Map. Every Enterprise account (5 MB of maps).",
+                desc: "Upload your own GeoTIFF or PDF maps as overlays with adjustable opacity. A GeoTIFF is placed from its own coordinates; a PDF is placed by typing its edges or with Pick on Map. Open Basemaps in Tools on a computer, or the layers icon left of Search at the top of the sheet on a phone. Every Enterprise account (5 MB of maps).",
               },
               {
                 icon: <MapPinned size={18} />,
@@ -2177,7 +2199,45 @@ const GetStartedModal = ({
               {
                 icon: <Hexagon size={18} />,
                 title: "Marked Areas [All Accounts]",
-                desc: "Draw an area on the map by tapping its corners (a camp ground, a route zone, a search sector) and see its size and perimeter. Focus on an area to darken the rest of the map. Share links for WhatsApp are made in the Landscape 360 Mobile App and open here in focus view without signing in. Free 5 areas, Pro 10, Enterprise 20; links on Pro and Enterprise.",
+                desc: "Draw an area on the map by tapping its corners (a camp ground, a route zone, a search sector) and see its size and perimeter. Focus on an area to darken the rest of the map. Share links for WhatsApp are made in the Landscape 360 Mobile App and open here in focus view without signing in. Free 5 areas, Pro 10, Enterprise 20; links on Pro and Enterprise. Pro and Enterprise can also download an area's contours (SHP, GeoTIFF DEM, GeoJSON, KML, KMZ, from SRTM elevation data) and upload their own contours to show on the map (website only).",
+              },
+              {
+                icon: <DraftingCompass size={18} />,
+                title: "Classic [All Accounts, website]",
+                desc: (
+                  <>
+                    Practise map-and-compass navigation, no sign-in needed. Positions are picked on the map or
+                    typed in degrees, minutes and seconds; bearings in compass degrees (0–360°), shown on a
+                    digital compass and drawn on the map as lines. The steps are under How it works.
+                    <div className="mt-2 grid grid-cols-1 gap-1 text-xs opacity-80">
+                      <span>
+                        • <strong>Resection</strong>: set your position (an estimate) once; for point A, B, C… type only the
+                        azimuth and the back azimuth (under 180° add 180°, over 180° subtract 180°). Both are drawn from
+                        your position.
+                      </span>
+                      <span>
+                        • <strong>Intersection</strong> (where is the object?): from positions A and B, type the azimuth
+                        to the object and its back azimuth; the azimuth lines cross at X, with a pulsing circle where the
+                        object most likely is.
+                      </span>
+                      <span>
+                        • <strong>Hints</strong> point out what to fix; each bearing shows its compass point (ENE, WSW…,
+                        explained in Indonesian). Drag the dot at the end of a line to make it longer or shorter.
+                      </span>
+                      <span>
+                        • <strong>Field Works</strong>: separate exercises you rename, edit and delete. Per mode: Free 1,
+                        Pro 5, Enterprise 10, admin unlimited. Remembered in this browser.
+                      </span>
+                      <span>
+                        • <strong>Share</strong> (signed in): a link anyone can open to look at, with or without an
+                        account; it always shows your latest version until you stop sharing.
+                      </span>
+                      <span>
+                        • Minimize the panel, or hide your position and each card to one line, to see more of the map.
+                      </span>
+                    </div>
+                  </>
+                ),
               },
               {
                 icon: <Share2 size={18} />,
@@ -2192,7 +2252,7 @@ const GetStartedModal = ({
               {
                 icon: <HardDrive size={18} />,
                 title: "Cloud Storage",
-                desc: "Tracks, marked locations, surveys and custom basemaps share your account's storage: Free 10 MB, Pro 100 MB, Enterprise 1 GB. Check your usage in the User Account menu; contact us if you need more space.",
+                desc: "Tracks, marked locations and areas (with uploaded contours), surveys and custom basemaps share your account's storage: Free 10 MB, Pro 100 MB, Enterprise 1 GB. Check your usage in the User Account menu; contact us if you need more space.",
               },
               {
                 icon: <Siren size={18} />,

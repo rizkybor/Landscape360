@@ -6,7 +6,9 @@ import { X } from "lucide-react";
 import { useMarkedAreaStore } from "../store/useMarkedAreaStore";
 import { useMarkedLocationStore } from "../store/useMarkedLocationStore";
 import { useTrackRecorderStore } from "../store/useTrackRecorderStore";
+import { useClassicStore } from "../store/useClassicStore";
 import { areaFeature, focusMask, ringBounds, ringCenter } from "../utils/markedAreas";
+import { AreaContourLines, type ContourSet } from "./AreaContourLines";
 
 const FILL_LAYER = "marked-areas-fill";
 
@@ -21,6 +23,19 @@ export const MarkedAreaLayer = () => {
   const focusId = useMarkedAreaStore((s) => s.focusId);
   const setFocus = useMarkedAreaStore((s) => s.setFocus);
   const focused = areas.find((a) => a.id === focusId) ?? null;
+  const contourMeta = useMarkedAreaStore((s) => s.contourMeta);
+  const shownContours = useMarkedAreaStore((s) => s.shownContours);
+  const contourSets = useMemo<ContourSet[]>(
+    () =>
+      Object.entries(shownContours).map(([id, data]) => ({ data, intervalM: contourMeta[id]?.intervalM ?? null })),
+    [shownContours, contourMeta],
+  );
+
+  // Focusing an area with uploaded contours shows them
+  const focusHasContours = !!(focusId && contourMeta[focusId]);
+  useEffect(() => {
+    if (focusId && focusHasContours) useMarkedAreaStore.getState().showContours(focusId).catch(() => undefined);
+  }, [focusId, focusHasContours]);
 
   const shapes = useMemo<FeatureCollection<Polygon>>(
     () => ({
@@ -90,7 +105,8 @@ export const MarkedAreaLayer = () => {
     if (!map || isDrawing) return;
     const onClick = (e: MapMouseEvent) => {
       const id = e.features?.[0]?.properties?.id;
-      if (!id) return;
+      // A tap that places a Classic point is not a tap on the area
+      if (!id || useClassicStore.getState().picking) return;
       // Same spot on screen as the Marked Locations and Track Recorder panels
       useMarkedLocationStore.getState().setPanelOpen(false);
       useTrackRecorderStore.getState().setPanelOpen(false);
@@ -131,6 +147,8 @@ export const MarkedAreaLayer = () => {
           <Layer id="marked-area-focus-mask" type="fill" paint={{ "fill-color": "#0b0f08", "fill-opacity": 0.72 }} />
         </Source>
       )}
+
+      <AreaContourLines id="marked-area-contours" sets={contourSets} />
 
       <Source id="marked-areas" type="geojson" data={shapes}>
         <Layer

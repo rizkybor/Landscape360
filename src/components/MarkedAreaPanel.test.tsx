@@ -15,6 +15,10 @@ vi.mock('../services/markedAreaSync', () => ({
   createAreaLink: vi.fn(() => Promise.resolve('0123456789abcdef0123456789abcdef')),
   getAreaLink: vi.fn(() => Promise.resolve(null)),
   revokeAreaLink: vi.fn(() => Promise.resolve()),
+  fetchMyContourMeta: vi.fn(() => Promise.resolve([])),
+  fetchAreaContours: vi.fn(),
+  saveAreaContours: vi.fn(),
+  deleteAreaContours: vi.fn(() => Promise.resolve()),
 }));
 
 const ring: [number, number][] = [
@@ -78,5 +82,36 @@ describe('MarkedAreaPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: /Share/ }));
     expect(screen.getByText(/Create a WhatsApp link for this area in the Landscape 360 Mobile App/)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Create link/ })).not.toBeInTheDocument();
+  });
+
+  it('Contours: Free sees the plan note, Pro can download and upload; uploaded sets are listed', async () => {
+    const camp: MarkedArea = { id: 'a1', userId: 'u1', name: 'Camp', color: '#2563eb', notes: null, ring, areaM2: 12345, perimeterM: 450, createdAt: 0, updatedAt: 0 };
+    vi.mocked(cloud.fetchMyAreas).mockResolvedValue([camp]);
+
+    asUser('Free');
+    const { unmount } = render(<MarkedAreaPanel />);
+    act(() => useMarkedAreaStore.getState().setPanelOpen(true));
+    fireEvent.click(await screen.findByRole('button', { name: /Contours/ }));
+    expect(screen.getByText(/available on the/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Download SHP/ })).not.toBeInTheDocument();
+    unmount();
+
+    useMarkedAreaStore.getState().reset();
+    vi.mocked(cloud.fetchMyContourMeta).mockResolvedValue([
+      { areaId: 'a1', sourceName: 'kontur_rbi.zip', sourceFormat: 'shp', intervalM: 12.5, lineCount: 132, minElevation: 850, maxElevation: 2958, updatedAt: 0 },
+    ]);
+    asUser('Pro');
+    render(<MarkedAreaPanel />);
+    act(() => useMarkedAreaStore.getState().setPanelOpen(true));
+    fireEvent.click(await screen.findByRole('button', { name: /Contours/ }));
+    for (const f of ['SHP', 'GeoTIFF', 'GeoJSON', 'KML', 'KMZ']) {
+      expect(screen.getByRole('button', { name: new RegExp(`^${f}$`) })).toBeInTheDocument();
+    }
+    expect(screen.getByText('kontur_rbi.zip')).toBeInTheDocument();
+    expect(screen.getByText(/132 lines · 850 m–2,958 m · every 12.5 m/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Replace with another file/ })).toBeInTheDocument();
+    // A GeoTIFF is the elevation grid, so it cannot be made from uploaded lines
+    fireEvent.click(screen.getByRole('button', { name: 'Uploaded file' }));
+    expect(screen.getByRole('button', { name: /^GeoTIFF$/ })).toBeDisabled();
   });
 });

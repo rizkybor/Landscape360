@@ -6,6 +6,7 @@ import { useMapStore } from '../store/useMapStore';
 import { useSurveyStore } from '../store/useSurveyStore';
 import { useTrackerStore } from '../store/useTrackerStore';
 import { BrowserRouter } from 'react-router-dom';
+import { useClassicStore } from '../store/useClassicStore';
 
 // Mocks
 vi.mock('../store/useMapStore');
@@ -99,6 +100,11 @@ describe('ControlPanel', () => {
   it('desktop rail: Tools is open first, Map and Terrain switch the panel, the same icon hides it', () => {
     renderComponent();
     expect(screen.getByRole('heading', { name: 'Tools & Exploration' })).toBeInTheDocument();
+    // Search sits on the rail, right above Tools, not as a tile in the panel
+    const rail = screen.getByRole('navigation', { name: 'Sidebar' });
+    const railLabels = [...rail.querySelectorAll('button')].map((b) => b.getAttribute('aria-label'));
+    expect(railLabels.indexOf('Search')).toBe(railLabels.indexOf('Tools') - 1);
+    expect(screen.getAllByText('Search')).toHaveLength(1);
     openMapSection();
     expect(screen.getByRole('heading', { name: 'Map' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Terrain' }));
@@ -123,6 +129,10 @@ describe('ControlPanel', () => {
       // Weather too: an icon in the header, not a tile
       expect(screen.getByRole('button', { name: 'Weather' })).toBeInTheDocument();
       expect(screen.queryByText('Weather')).not.toBeInTheDocument();
+      // Basemaps (Enterprise): an icon in the header, just left of Search
+      const header = [...screen.getByRole('button', { name: 'Search location' }).parentElement!.querySelectorAll('button')].map((b) => b.getAttribute('aria-label'));
+      expect(header.indexOf('Custom Basemaps')).toBe(header.indexOf('Search location') - 1);
+      expect(screen.queryByText('Basemaps')).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Hide panel' })).not.toBeInTheDocument();
       fireEvent.click(tabs[1]);
       expect(screen.getByText('Streets')).toBeInTheDocument();
@@ -240,6 +250,22 @@ describe('ControlPanel', () => {
     // Default mock is Enterprise Monitor -> "Team Monitor"
     fireEvent.click(screen.getByText('Team Monitor'));
     expect(mockToggleLiveTracking).toHaveBeenCalled();
+  });
+
+  it.each([
+    ['signed out', null, 'Free', false],
+    ['Free', { id: 'u1' }, 'Free', false],
+    ['Pro', { id: 'u1' }, 'Pro', false],
+    ['Enterprise', { id: 'u1' }, 'Enterprise', false],
+    ['admin', { id: 'u1' }, 'Enterprise', true],
+  ])('Classic is open to every account (%s)', (_name, user, subscriptionStatus, isAdmin) => {
+    (useSurveyStore as any).mockReturnValue({ isPlotMode: false, togglePlotMode: vi.fn(), user, subscriptionStatus, isAdmin, userRole: 'pengguna360' });
+    useClassicStore.getState().setPanelOpen(false);
+    renderComponent();
+    const tile = screen.getByRole('button', { name: /Classic/ });
+    expect(tile).toBeEnabled();
+    fireEvent.click(tile);
+    expect(useClassicStore.getState().isPanelOpen).toBe(true);
   });
 
   it('should render AuthControl', () => {

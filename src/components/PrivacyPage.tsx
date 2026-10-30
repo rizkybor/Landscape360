@@ -39,7 +39,7 @@ export const PrivacyPage = () => {
           <ul>
             <li><strong>Account request:</strong> email, full name, organization, phone / WhatsApp number and your message.</li>
             <li><strong>Account:</strong> email, display name, plan and role. Passwords are stored only in encrypted (hashed) form by our sign-in provider; we never see them.</li>
-            <li><strong>Location and activity data you create:</strong> surveys and points, marked locations, recorded tracks, uploaded custom maps, and, when you turn on GPS Tracking, your live position.</li>
+            <li><strong>Location and activity data you create:</strong> surveys and points, marked locations and areas, contours you upload to an area, Classic Field Works you share as a link, recorded tracks, uploaded custom maps, and, when you turn on GPS Tracking, your live position.</li>
             <li><strong>S.O.S:</strong> when you send an S.O.S, your position, battery level and messages go to the admin. Your emergency contacts stay on your phone.</li>
             <li><strong>Sharing:</strong> which accounts you share locations or tracks with.</li>
             <li><strong>Sign-in history:</strong> the time of each sign-in and the browser and device type, kept to protect accounts.</li>
@@ -76,7 +76,7 @@ export const PrivacyPage = () => {
           <ul>
             <li><strong>People you choose:</strong> accounts you share locations or tracks with, and monitor accounts of your team when you broadcast your position.</li>
             <li><strong>The public:</strong> your reviews (first name and last initial, organization if set, rating and comment).</li>
-            <li><strong>Service providers</strong> that process data for us: Supabase (database and sign-in), Vercel (hosting and anonymous analytics), Mapbox (map tiles and terrain), BMKG (weather requests), Google Maps (only when you open Directions) and our advertising partner, which processes data under its own privacy policy.</li>
+            <li><strong>Service providers</strong> that process data for us: Supabase (database and sign-in), Vercel (hosting and anonymous analytics), Mapbox (map tiles and terrain), BMKG (weather requests), Amazon Web Services (open elevation tiles, when you download area contours), Google Maps (only when you open Directions) and our advertising partner, which processes data under its own privacy policy.</li>
             <li><strong>Authorities,</strong> when the law requires it.</li>
           </ul>
           <p>

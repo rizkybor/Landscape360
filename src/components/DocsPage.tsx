@@ -18,6 +18,10 @@ import {
   ShieldCheck,
   HardDrive,
   Tent,
+  Search,
+  Hexagon,
+  DraftingCompass,
+  Compass,
 } from "lucide-react";
 import streetsView from "../assets/Street-View.png";
 import outdoorsView from "../assets/Outdoors-View.png";
@@ -227,6 +231,8 @@ export const DocsPage = ({ onBack }: Props) => {
                   {[
                     "Map, 3D terrain, contours, grid, weather, search and route planner",
                     "Navigator survey tools, Marked Locations and Marked Areas",
+                    "Classic (website only): practise resection and intersection with typed degrees, minutes and seconds",
+                    "Area contours (website only): download as SHP, GeoTIFF DEM, GeoJSON, KML or KMZ, or upload your own",
                     "Viewing and exporting your tracks and tracks shared with you",
                     "Team Monitor for Enterprise monitor accounts",
                     "Opening shared locations, marked locations and areas from a link, no sign-in needed",
@@ -347,7 +353,8 @@ export const DocsPage = ({ onBack }: Props) => {
                   </h4>
                   <p className="text-xs text-sand-600 leading-relaxed">
                     Upload and overlay your own <strong>GeoTIFF</strong> or <strong>PDF</strong>{" "}
-                    maps (Enterprise). A PDF is placed by typing its edges or with Pick on Map.
+                    maps (Enterprise). A PDF is placed by typing its edges or with Pick on Map. Open
+                    it from Tools &amp; Exploration on a computer, or the layers icon next to Search on a phone.
                   </p>
                 </div>
               </div>
@@ -404,6 +411,47 @@ export const DocsPage = ({ onBack }: Props) => {
                 </div>
               </div>
 
+              <div className="bg-white border border-sand-200 rounded-xl p-4 flex gap-4 items-start group hover:border-forest-200 transition-all">
+                <div className="w-8 h-8 rounded-lg bg-forest-50 flex items-center justify-center text-forest-700 shrink-0">
+                  <Search size={16} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-ink mb-1">
+                    Search Location
+                  </h4>
+                  <p className="text-xs text-sand-600 leading-relaxed">
+                    On a computer, the <strong>Search</strong> button sits on the left rail, right above Tools. On a phone it is the magnifier in the top row of the sheet. Type a place, peak or coordinates and the map flies there.
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-white border border-sand-200 rounded-xl p-4 flex gap-4 items-start group hover:border-gold-200 transition-all">
+                <div className="w-8 h-8 rounded-lg bg-gold-50 flex items-center justify-center text-gold-700 shrink-0">
+                  <Hexagon size={16} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-ink mb-1">
+                    Marked Areas &amp; Contours
+                  </h4>
+                  <p className="text-xs text-sand-600 leading-relaxed">
+                    Draw an area by tapping its corners, see its size and perimeter, and focus on it. Pro and Enterprise can download its <strong>contours</strong> (SHP, GeoTIFF, GeoJSON, KML, KMZ) or upload their own (website).
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-white border border-sand-200 rounded-xl p-4 flex gap-4 items-start group hover:border-gold-200 transition-all">
+                <div className="w-8 h-8 rounded-lg bg-gold-50 flex items-center justify-center text-gold-700 shrink-0">
+                  <DraftingCompass size={16} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-ink mb-1">
+                    Classic: Resection &amp; Intersection
+                  </h4>
+                  <p className="text-xs text-sand-600 leading-relaxed">
+                    Practise map-and-compass navigation with typed coordinates and <strong>compass degrees (0–360°)</strong>: sight points from your position (resection), or find an object where the lines from two positions cross (intersection). Keep several <strong>Field Works</strong> and share one as a view-only link. Every account, website only.
+                  </p>
+                </div>
+              </div>
               <div className="bg-white border border-sand-200 rounded-xl p-4 flex gap-4 items-start group hover:border-forest-200 transition-all">
                 <div className="w-8 h-8 rounded-lg bg-forest-50 flex items-center justify-center text-forest-700 shrink-0">
                   <UserPlus size={16} />
@@ -476,6 +524,7 @@ export const DocsPage = ({ onBack }: Props) => {
                     "1 offline map (up to 1 MB, Landscape 360 Mobile App)",
                     "2 saved surveys",
                     "10 marked locations, 5 marked areas",
+                    "Classic: resection & intersection practice, 1 Field Work per mode (website)",
                     "View your tracks and tracks shared with you",
                     "10 MB cloud storage",
                   ],
@@ -489,6 +538,8 @@ export const DocsPage = ({ onBack }: Props) => {
                     "3 offline maps (up to 10 MB each, Landscape 360 Mobile App)",
                     "4 saved surveys",
                     "100 marked locations, 10 marked areas, share with other accounts (links in the Landscape 360 Mobile App)",
+                    "Area contours on the web: download (SHP, GeoTIFF, GeoJSON, KML, KMZ) and upload your own",
+                    "Classic: 5 Field Works per mode, share them as links",
                     "GPS Tracking: broadcast your location and record activities (Landscape 360 Mobile App)",
                     "Rename your cloud tracks",
                     "100 MB cloud storage",
@@ -503,6 +554,8 @@ export const DocsPage = ({ onBack }: Props) => {
                     "10 offline maps (up to 25 MB each, Landscape 360 Mobile App)",
                     "10 saved surveys",
                     "1,000 marked locations, 20 marked areas, share with other accounts (links in the Landscape 360 Mobile App)",
+                    "Area contours on the web: download (SHP, GeoTIFF, GeoJSON, KML, KMZ) and upload your own",
+                    "Classic: 10 Field Works per mode, share them as links",
                     "Track Recorder: record in the Landscape 360 Mobile App, view, share and export GPX here",
                     "GPS Tracking: broadcast your location (Landscape 360 Mobile App)",
                     "Rename your cloud tracks",
@@ -1586,7 +1639,9 @@ export const DocsPage = ({ onBack }: Props) => {
                     Upload high-resolution <strong>GeoTIFF</strong> or{" "}
                     <strong>PDF</strong> maps to overlay on the 2D and 3D terrain, with
                     adjustable opacity. Ideal for trail maps, site plans, historical
-                    maps or drone orthomosaics. Available on every Enterprise account.
+                    maps or drone orthomosaics. Available on every Enterprise account: open{" "}
+                    <strong>Basemaps</strong> in Tools &amp; Exploration on a computer, or the layers
+                    icon left of Search at the top of the sheet on a phone.
                   </p>
 
                   <div className="space-y-3 pt-2">
@@ -1818,6 +1873,259 @@ export const DocsPage = ({ onBack }: Props) => {
                 </div>
               </div>
             </div>
+          </section>
+
+          {/* Marked Areas & Contours */}
+          <section id="marked-areas" className="space-y-8 pt-8 border-t border-sand-100 scroll-mt-24">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-ink mb-4 sm:mb-6">
+              <div className="p-2 bg-gold-50 rounded-lg border border-gold-200">
+                <Hexagon className="w-5 h-5 text-gold-700" />
+              </div>
+              <h3 className="text-lg sm:text-2xl font-bold leading-tight">Marked Areas &amp; Contours</h3>
+              <span className="px-2 py-1 rounded bg-gold-50 text-[10px] text-gold-700 font-bold uppercase border border-gold-200">
+                All Accounts
+              </span>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="bg-white border border-sand-200 rounded-xl p-6 space-y-4">
+                <h4 className="text-base sm:text-lg font-bold text-ink">Draw, Focus and Share</h4>
+                <div className="space-y-3">
+                  {[
+                    {
+                      title: "Draw an area",
+                      desc: "Open Marked Areas in Tools & Exploration and press Add area. Tap the map at each corner (Undo removes the last one), then Done. Give it a name, a colour and notes. Size and perimeter are worked out for you.",
+                    },
+                    {
+                      title: "Focus",
+                      desc: "Focus darkens everything outside the area and fits it on screen. Exit focus from the bar at the top. Tap an area on the map to open it in the list.",
+                    },
+                    {
+                      title: "Share",
+                      desc: "WhatsApp links are made in the Landscape 360 Mobile App (Pro, Enterprise, admin). Anyone opens the link here without signing in and sees the area in focus, with its uploaded contours.",
+                    },
+                  ].map((step, i) => (
+                    <div key={step.title} className="flex items-start gap-3 p-3 bg-sand-50 rounded-lg border border-sand-100">
+                      <div className="mt-0.5 text-gold-700 font-bold text-[10px]">{String(i + 1).padStart(2, "0")}</div>
+                      <div>
+                        <strong className="text-ink text-xs block">{step.title}</strong>
+                        <p className="text-[10px] text-sand-600">{step.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[10px] text-sand-500 leading-relaxed">
+                  Limits: Free 5 areas, Pro 10, Enterprise 20, admin unlimited. Areas count toward cloud storage.
+                </p>
+              </div>
+
+              <div className="bg-white border border-sand-200 rounded-xl p-6 space-y-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h4 className="text-base sm:text-lg font-bold text-ink">Contours of an Area</h4>
+                  <span className="px-2 py-0.5 rounded bg-forest-50 text-[10px] text-forest-700 font-bold uppercase border border-forest-200">
+                    Pro · Enterprise · Website
+                  </span>
+                </div>
+                <p className="text-xs text-sand-600 leading-relaxed text-justify">
+                  Press <strong>Contours</strong> on an area card.
+                </p>
+                <ul className="space-y-2 text-xs text-sand-600 leading-relaxed">
+                  <li className="flex gap-2">
+                    <span className="text-gold-700">•</span>
+                    <span>
+                      <strong>Download</strong> contour lines every 5, 10, 12.5, 25, 50 or 100 m, cut to the
+                      area, as <strong>SHP</strong> (zip), <strong>GeoJSON</strong>, <strong>KML</strong> or{" "}
+                      <strong>KMZ</strong>, or the elevation grid itself as a <strong>GeoTIFF</strong> DEM. All in
+                      WGS84, with an elevation per line and index lines marked.
+                    </span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-gold-700">•</span>
+                    <span>
+                      Made from <strong>SRTM</strong> elevation data (NASA, about 30 m) via the open AWS Terrain
+                      Tiles, free to reuse. Accuracy follows the data, not a field survey. Very large areas
+                      are made at a lower resolution; split them for full detail.
+                    </span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-gold-700">•</span>
+                    <span>
+                      <strong>Upload</strong> your own contours: SHP (.zip, or .shp + .dbf + .prj together, any
+                      coordinate system with its .prj), GeoTIFF DEM (made into contours at the interval you
+                      choose), GeoJSON, KML or KMZ. Lines outside the area are cut off; the rest is saved
+                      with the area (up to 5 MB) and drawn in brown with height labels.
+                    </span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-gold-700">•</span>
+                    <span>
+                      Uploaded contours show when you focus the area (or with the eye button), can be
+                      downloaded again in any line format, replaced or removed.
+                    </span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          {/* Classic */}
+          <section id="classic" className="space-y-8 pt-8 border-t border-sand-100 scroll-mt-24">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-ink mb-4 sm:mb-6">
+              <div className="p-2 bg-gold-50 rounded-lg border border-gold-200">
+                <DraftingCompass className="w-5 h-5 text-gold-700" />
+              </div>
+              <h3 className="text-lg sm:text-2xl font-bold leading-tight">Classic: Resection &amp; Intersection</h3>
+              <span className="px-2 py-1 rounded bg-gold-50 text-[10px] text-gold-700 font-bold uppercase border border-gold-200">
+                All Accounts · Website
+              </span>
+            </div>
+
+            <p className="text-xs text-sand-600 leading-relaxed text-justify">
+              Learn map-and-compass navigation the classic way. Open <strong>Classic</strong> in Tools &amp;
+              Exploration (no sign-in needed). Positions are picked on the map or typed in{" "}
+              <strong>degrees, minutes and seconds</strong>; bearings are typed in{" "}
+              <strong>compass degrees (0–360°)</strong>, and every bearing is drawn on the map as a line. In a
+              resection your position (an estimate) is set once and each point only needs its azimuth and back
+              azimuth. In an intersection each position also gets an azimuth and back azimuth, and the azimuth lines
+              from two positions cross (<strong>X</strong>) at the object: one line only tells you it is somewhere
+              along it. The steps are under <strong>How it works</strong> at the top of the panel.
+            </p>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {[
+                {
+                  title: "Resection: sighting points from your position",
+                  steps: [
+                    "Find your position on the map, once: pick it or type degrees, minutes and seconds. It is an estimate, so the lines are only as accurate as this point.",
+                    "Sight point A with the compass and note the azimuth (e.g. 60°).",
+                    "Work out the back azimuth: under 180° add 180°, over 180° subtract 180° (60° + 180° = 240°).",
+                    "Both are drawn from your position: the azimuth toward point A (red), the back azimuth the opposite way (gold).",
+                    "Repeat for point B (and C, D…): only the azimuth and back azimuth, from the same position.",
+                    "The summary lists every point's azimuth and back azimuth with its compass direction.",
+                  ],
+                },
+                {
+                  title: "Intersection: where is the object I see?",
+                  steps: [
+                    "Make sure your position (position A) is known exactly on the map.",
+                    "Sight the object from position A, note the azimuth and work out its back azimuth (±180°).",
+                    "Both are drawn from position A: the azimuth toward the object (red), the back azimuth the opposite way (gold).",
+                    "Move to position B, far enough away with the object still in sight, and find it on the map.",
+                    "Sight the object again: azimuth and back azimuth from position B.",
+                    "Where the azimuth lines from A and B cross (X) is the object.",
+                  ],
+                },
+              ].map((method) => (
+                <div key={method.title} className="bg-white border border-sand-200 rounded-xl p-6 space-y-3">
+                  <h4 className="text-base sm:text-lg font-bold text-ink">{method.title}</h4>
+                  <ol className="space-y-2">
+                    {method.steps.map((step, i) => (
+                      <li key={step} className="flex items-start gap-3 p-2.5 bg-sand-50 rounded-lg border border-sand-100">
+                        <span className="mt-0.5 text-gold-700 font-bold text-[10px]">{String(i + 1).padStart(2, "0")}</span>
+                        <span className="text-[11px] text-sand-700 leading-snug">{step}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              ))}
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-4">
+              {[
+                {
+                  icon: Compass,
+                  title: "Digital compass",
+                  desc: "Each azimuth has a compass whose needle swings to the degrees you type. Drag the dial, or use the arrow keys (Shift for 10°). On the back azimuth the azimuth stays faint on the dial, so the half turn shows.",
+                },
+                {
+                  icon: ShieldCheck,
+                  title: "Hints",
+                  desc: "Hints explain typos, the compass range (0–360°), the back azimuth rule (the number is shown after two wrong checks), shallow cuts and, with three or more positions, the triangle of error. Every bearing also shows its compass point (N, ENE, WSW…); \"Apa arti ENE, WSW…?\" lists all 16 with their Indonesian names.",
+                },
+                {
+                  icon: Map,
+                  title: "On the map",
+                  desc: "A compass rose sits at your position (resection) or at each position (intersection), and the lines are drawn as you type. Drag the dot at the end of a line to make it longer or shorter: its direction and start stay the same. In an intersection X marks the crossing, with a pulsing circle where the object most likely is (from a ±2° compass error, the distance and the angle of the cut); with three or more positions the triangle of error is measured. Your GPS dot is hidden while Classic is open.",
+                },
+              ].map((item) => (
+                <div key={item.title} className="bg-white border border-sand-200 rounded-xl p-4 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <item.icon size={15} className="text-gold-700" />
+                    <h4 className="text-sm font-bold text-ink">{item.title}</h4>
+                  </div>
+                  <p className="text-[11px] text-sand-600 leading-relaxed">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="bg-white border border-sand-200 rounded-xl p-6 space-y-3">
+                <h4 className="text-base sm:text-lg font-bold text-ink">Field Works</h4>
+                <p className="text-xs text-sand-600 leading-relaxed text-justify">
+                  Each mode keeps its own <strong>Field Works</strong>: separate exercises, each with its own
+                  positions, bearings and line lengths. Switch between them with the chips at the top of the panel
+                  (the open one is on the map), add one with <strong>New</strong>, rename it with the pencil, and
+                  delete it with the bin (the last one is only cleared). Editing is simply working in it. They are
+                  remembered in this browser.
+                </p>
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="text-left text-[10px] uppercase tracking-wider text-sand-500 border-b border-sand-200">
+                      <th className="py-2 font-bold">Account</th>
+                      <th className="py-2 font-bold">Field Works per mode</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-sand-700">
+                    {[
+                      ["Guest / Free", "1"],
+                      ["Pro", "5"],
+                      ["Enterprise", "10"],
+                      ["Admin", "Unlimited"],
+                    ].map(([account, limit]) => (
+                      <tr key={account} className="border-b border-sand-100 last:border-0">
+                        <td className="py-2 font-bold">{account}</td>
+                        <td className="py-2 font-mono">{limit}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="bg-white border border-sand-200 rounded-xl p-6 space-y-3">
+                <h4 className="text-base sm:text-lg font-bold text-ink">Share a Field Work</h4>
+                <ul className="space-y-2 text-xs text-sand-600 leading-relaxed">
+                  <li className="flex gap-2">
+                    <span className="text-gold-700">•</span>
+                    <span>
+                      Any signed-in account can share: press the share icon next to the Field Work's name, then{" "}
+                      <strong>Create link</strong>. Copy it or send it to WhatsApp.
+                    </span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-gold-700">•</span>
+                    <span>
+                      Anyone with the link can look at it, <strong>with or without an account</strong>: the panel opens
+                      as <strong>Shared · view only</strong> with the positions, bearings, lines and (intersection) X.
+                      Nothing can be changed, and the viewer's own Field Works are not touched.
+                    </span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-gold-700">•</span>
+                    <span>
+                      The link always shows <strong>your latest version</strong>: changes are saved to it a moment after
+                      you stop typing. <strong>Stop sharing</strong> (or deleting the Field Work) turns the link off. Up
+                      to 100 shared Field Works per account.
+                    </span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <p className="text-[10px] text-sand-500 leading-relaxed">
+              The panel can be minimized to its header (the arrow next to Start over), and your position and each point
+              or position card can be hidden to one line. On a phone Classic opens as a sheet: drag it down to see the
+              map, tap or drag up to continue. Magnetic declination can be set below the first step (true bearing =
+              compass reading + declination); across Indonesia it is within about 1°, so 0 is fine for practice.
+            </p>
           </section>
 
           {/* Accounts & Access */}

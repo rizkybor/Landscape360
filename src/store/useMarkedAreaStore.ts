@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import * as cloud from '../services/markedAreaSync';
-import type { LngLat, MarkedArea, MarkedAreaInput } from '../types/markedArea';
+import type { AreaContourData, AreaContourInput, AreaContourMeta, LngLat, MarkedArea, MarkedAreaInput } from '../types/markedArea';
 
 interface MarkedAreaStore {
   userId: string | null;
@@ -33,7 +33,21 @@ interface MarkedAreaStore {
   createArea: (input: MarkedAreaInput) => Promise<MarkedArea>;
   updateArea: (id: string, input: MarkedAreaInput) => Promise<MarkedArea>;
   deleteArea: (id: string) => Promise<void>;
+
+  // Contours uploaded to an area: which areas have them, and the lines shown on the map
+  contourMeta: Record<string, AreaContourMeta>;
+  shownContours: Record<string, AreaContourData>;
+  showContours: (areaId: string) => Promise<void>;
+  hideContours: (areaId: string) => void;
+  saveContours: (input: AreaContourInput) => Promise<void>;
+  removeContours: (areaId: string) => Promise<void>;
 }
+
+const without = <T,>(record: Record<string, T>, key: string) => {
+  const next = { ...record };
+  delete next[key];
+  return next;
+};
 
 const message = (err: unknown) => (err instanceof Error ? err.message : String(err));
 
@@ -66,14 +80,26 @@ export const useMarkedAreaStore = create<MarkedAreaStore>((set, get) => ({
     await get().load();
   },
   reset: () =>
-    set({ userId: null, areas: [], isPanelOpen: false, isDrawing: false, draft: [], focusId: null, selectedId: null, error: null }),
+    set({
+      userId: null,
+      areas: [],
+      isPanelOpen: false,
+      isDrawing: false,
+      draft: [],
+      focusId: null,
+      selectedId: null,
+      error: null,
+      contourMeta: {},
+      shownContours: {},
+    }),
 
   load: async () => {
     const userId = get().userId;
     if (!userId) return;
     set({ isLoading: true });
     try {
-      set({ areas: await cloud.fetchMyAreas(userId), error: null });
+      const [areas, meta] = await Promise.all([cloud.fetchMyAreas(userId), cloud.fetchMyContourMeta(userId).catch(() => [])]);
+      set({ areas, contourMeta: Object.fromEntries(meta.map((m) => [m.areaId, m])), error: null });
     } catch (err) {
       set({ error: message(err) });
     } finally {
@@ -97,6 +123,28 @@ export const useMarkedAreaStore = create<MarkedAreaStore>((set, get) => ({
       areas: s.areas.filter((a) => a.id !== id),
       focusId: s.focusId === id ? null : s.focusId,
       selectedId: s.selectedId === id ? null : s.selectedId,
+      contourMeta: without(s.contourMeta, id),
+      shownContours: without(s.shownContours, id),
     }));
+  },
+
+  contourMeta: {},
+  shownContours: {},
+  showContours: async (areaId) => {
+    if (get().shownContours[areaId] || !get().contourMeta[areaId]) return;
+    const data = await cloud.fetchAreaContours(areaId);
+    set((s) => ({ shownContours: { ...s.shownContours, [areaId]: data } }));
+  },
+  hideContours: (areaId) => set((s) => ({ shownContours: without(s.shownContours, areaId) })),
+  saveContours: async (input) => {
+    const meta = await cloud.saveAreaContours(input);
+    set((s) => ({
+      contourMeta: { ...s.contourMeta, [input.areaId]: meta },
+      shownContours: { ...s.shownContours, [input.areaId]: input.data },
+    }));
+  },
+  removeContours: async (areaId) => {
+    await cloud.deleteAreaContours(areaId);
+    set((s) => ({ contourMeta: without(s.contourMeta, areaId), shownContours: without(s.shownContours, areaId) }));
   },
 }));
