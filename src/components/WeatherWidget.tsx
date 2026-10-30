@@ -12,9 +12,11 @@ import {
   Calendar,
   ChevronDown,
   ChevronUp,
+  RefreshCw,
 } from "lucide-react";
 import { useMapStore } from "../store/useMapStore";
 import { useShallow } from "zustand/react/shallow";
+import { loadVillageIndex, type Village } from "../utils/villages";
 
 interface WeatherData {
   datetime: string;
@@ -47,9 +49,48 @@ const WEATHER_ICONS: Record<string, any> = {
   "Hujan Petir": CloudLightning,
 };
 
-// Default location: Jakarta (Kemayoran)
-// In a real app, we would reverse-geocode the map center to an ADM4 code.
+// BMKG forecasts by village (ADM4 code). The forecast is for the village nearest to the user,
+// or to the map centre without location, as in the mobile app; Kemayoran (Jakarta Pusat) is
+// only the fallback. The nearest village is found in the browser (utils/villages.ts), so only
+// its code goes to BMKG, never the position.
 const DEFAULT_ADM4 = "31.71.03.1001";
+const DEFAULT_LOCATION = "Jakarta Pusat";
+
+type Source = "gps" | "map" | "outside" | "fallback";
+const SOURCE_TEXT: Record<Source, string> = {
+  gps: "Near your location",
+  map: "Map centre",
+  outside: "Outside BMKG coverage · Jakarta Pusat",
+  fallback: "Default location",
+};
+
+/** The user's position, if the browser allows it within a few seconds; otherwise null */
+const devicePosition = () =>
+  new Promise<[number, number] | null>((resolve) => {
+    if (!navigator.geolocation) return resolve(null);
+    navigator.geolocation.getCurrentPosition(
+      (p) => resolve([p.coords.longitude, p.coords.latitude]),
+      () => resolve(null),
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 10 * 60 * 1000 },
+    );
+  });
+
+const fetchBmkg = async (adm4: string) => {
+  const response = await fetch(`https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=${adm4}`);
+  if (!response.ok) throw new Error("Failed to fetch weather data");
+  const data: BmkgResponse = await response.json();
+  // A code BMKG does not know (a newer village split) comes back without a forecast
+  if (!data?.data?.length || !data.data[0].cuaca) throw new Error("No forecast for this village");
+  return data;
+};
+
+// What the code below reads from a BMKG answer
+interface BmkgResponse {
+  data?: { lokasi?: Record<string, unknown>; cuaca?: unknown[] }[];
+  lokasi?: Record<string, unknown>;
+}
+
+const text = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
 
 export const WeatherWidget = () => {
   const { showWeather } = useMapStore(
@@ -58,7 +99,11 @@ export const WeatherWidget = () => {
   const [loading, setLoading] = useState(true);
   const [forecast, setForecast] = useState<DailyForecast[]>([]);
   const [current, setCurrent] = useState<WeatherData | null>(null);
-  const [locationName, setLocationName] = useState("Jakarta Pusat");
+  const [locationName, setLocationName] = useState(DEFAULT_LOCATION);
+  const [region, setRegion] = useState<string | null>(null);
+  const [source, setSource] = useState<Source | null>(null);
+  // Bumped by the refresh button, to look up the place again
+  const [reloads, setReloads] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [isMinimized, setIsMinimized] = useState(false);
 
@@ -69,17 +114,37 @@ export const WeatherWidget = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(
-          `https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=${DEFAULT_ADM4}`,
-        );
-        if (!response.ok) throw new Error("Failed to fetch weather data");
+        // Where: the user's position, else the centre of the map
+        const gps = await devicePosition();
+        const at = gps ?? useMapStore.getState().center;
+        let candidates: Village[] = [];
+        try {
+          candidates = (await loadVillageIndex()).nearest(at[1], at[0]);
+        } catch (err) {
+          console.warn("Village lookup failed:", err);
+        }
+        // The nearest village first; if BMKG does not know its code, the next
+        let data: BmkgResponse | null = null;
+        for (const v of candidates) {
+          try {
+            data = await fetchBmkg(v.code);
+            break;
+          } catch {
+            // try the next village
+          }
+        }
+        const fallback = !data;
+        if (!data) data = await fetchBmkg(DEFAULT_ADM4);
+        setSource(fallback ? (candidates.length ? "fallback" : "outside") : gps ? "gps" : "map");
 
-        const data = await response.json();
-        // console.log("Weather Data:", data);
-
-        if (data && data.data && data.data.length > 0) {
-          const weatherData = data.data[0].cuaca;
-          setLocationName(data.data[0].lokasi?.kotakab || "Jakarta Pusat");
+        if (data.data && data.data.length > 0) {
+          const weatherData = data.data[0].cuaca ?? [];
+          // "Desa, Kecamatan" and the city below; BMKG names the city field "kotkab"
+          const lokasi = data.data[0].lokasi ?? data.lokasi ?? {};
+          const desa = text(lokasi.desa);
+          const city = text(lokasi.kotkab) ?? text(lokasi.kotakab);
+          setLocationName(desa ? [desa, text(lokasi.kecamatan)].filter(Boolean).join(", ") : (city ?? DEFAULT_LOCATION));
+          setRegion(desa ? city : null);
 
           // Flatten and Parse Data
           const allForecasts: WeatherData[] = weatherData
@@ -155,7 +220,7 @@ export const WeatherWidget = () => {
     // Refresh every 30 mins
     const interval = setInterval(fetchWeather, 30 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [showWeather]);
+  }, [showWeather, reloads]);
 
   if (!showWeather) return null;
 
@@ -209,13 +274,32 @@ export const WeatherWidget = () => {
         className="px-3 py-2 md:p-3 bg-sand-50 border-b border-sand-200 flex justify-between items-center gap-2 cursor-pointer hover:bg-sand-100 transition-colors"
         onClick={() => setIsMinimized(true)}
       >
-        <div className="flex items-center gap-2 min-w-0">
-          <MapPin size={14} className="text-brick-600 shrink-0" />
-          <span className="text-[11px] md:text-xs font-bold uppercase tracking-wider truncate">
-            {locationName}
-          </span>
+        <div className="flex items-start gap-2 min-w-0">
+          <MapPin size={14} className="text-brick-600 shrink-0 mt-0.5" />
+          <div className="min-w-0">
+            <div className="text-[11px] md:text-xs font-bold uppercase tracking-wider truncate" title={locationName}>
+              {locationName}
+            </div>
+            {(region || source) && (
+              <div className="text-[9px] md:text-[10px] text-sand-600 truncate">
+                {[region, source && SOURCE_TEXT[source]].filter(Boolean).join(" · ")}
+              </div>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setReloads((n) => n + 1);
+            }}
+            disabled={loading}
+            className="cursor-pointer p-1 rounded-md text-sand-600 hover:text-ink hover:bg-sand-200 disabled:opacity-40"
+            title="Update for my location (or the map centre)"
+            aria-label="Update the weather for my location"
+          >
+            <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
+          </button>
           <div className="text-[10px] text-sand-600">BMKG</div>
           <ChevronUp size={14} className="text-sand-600" />
         </div>

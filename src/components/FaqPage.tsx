@@ -70,7 +70,7 @@ const GROUPS: { title: string; items: Faq[] }[] = [
       ),
       faq(
         "Where does the weather data come from?",
-        "Weather information comes from BMKG (Badan Meteorologi, Klimatologi, dan Geofisika). Always check official forecasts before your trip.",
+        "Weather information comes from BMKG (Badan Meteorologi, Klimatologi, dan Geofisika), for the desa or kelurahan nearest to you, or to the map centre when location is off. Only the village code is sent to BMKG, not your position. Always check official forecasts before your trip.",
       ),
       faq(
         "Why is the Directions button opening Google Maps?",

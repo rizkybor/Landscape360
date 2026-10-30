@@ -971,9 +971,11 @@ export const DocsPage = ({ onBack }: Props) => {
                   </h4>
                   <p className="text-xs text-sand-600 leading-relaxed mb-4">
                     Integrated live weather feed from BMKG (Badan Meteorologi,
-                    Klimatologi, dan Geofisika). Provides essential
-                    environmental context for field surveys, including 3-day
-                    forecasting.
+                    Klimatologi, dan Geofisika), now and for the next 3 days, for the
+                    desa / kelurahan nearest to you (or to the map centre when location is
+                    off). The nearest village is found on your device, so only its code goes
+                    to BMKG. Outside Indonesia it shows Jakarta Pusat. Press the refresh icon
+                    after moving to update it.
                   </p>
 
                   <div className="flex flex-wrap gap-2">
