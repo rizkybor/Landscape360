@@ -32,6 +32,7 @@ import { SharedLocationMarker } from "./SharedLocationMarker";
 import { SharedPlaceLayer } from "./SharedPlaceLayer";
 import { SharedAreaLayer } from "./SharedAreaLayer";
 import { SharedClassicLink } from "./SharedClassicLink";
+import { PaymentReturn } from "./PaymentReturn";
 import { MarkedAreaLayer } from "./MarkedAreaLayer";
 import { MarkedAreaPanel } from "./MarkedAreaPanel";
 import { ClassicLayer } from "./ClassicLayer";
@@ -1225,6 +1226,7 @@ const MapBoxContainerComponent = ({
       {showControls && <MarkedAreaPanel />}
       {showControls && <ClassicPanel />}
       <SharedClassicLink />
+      <PaymentReturn />
       {showControls && <SearchPanel />}
       {showControls && <WeatherWidget />}
       {/* Custom Basemap Manager */}
