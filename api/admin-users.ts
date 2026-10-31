@@ -436,16 +436,23 @@ async function handleUpdate(request: Request, supabase: SupabaseClient, admin: U
   }
 
   if (plan !== undefined || role !== undefined || hasStorageLimit || hasSos) {
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        ...(plan !== undefined && { status_subscribe: plan }),
-        ...(role !== undefined && { status_user: role }),
-        ...(hasStorageLimit && { storage_limit_mb: storageLimitMb }),
-        ...(hasSos && { can_use_sos: body.canUseSos }),
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', id);
+    const planChanged = plan !== undefined || role !== undefined;
+    const update = (clearExpiry: boolean) =>
+      supabase
+        .from('profiles')
+        .update({
+          ...(plan !== undefined && { status_subscribe: plan }),
+          ...(role !== undefined && { status_user: role }),
+          // A plan set by hand has no end date: a paid period no longer applies
+          ...(clearExpiry && { subscription_expires_at: null }),
+          ...(hasStorageLimit && { storage_limit_mb: storageLimitMb }),
+          ...(hasSos && { can_use_sos: body.canUseSos }),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id);
+    let { error } = await update(planChanged);
+    // Before the 20261031000023 migration there is no subscription_expires_at column
+    if (planChanged && (error?.code === MISSING_COLUMN_CODE || error?.code === 'PGRST204')) ({ error } = await update(false));
     if (error?.code === MISSING_COLUMN_CODE && hasSos) {
       throw new HttpError(400, 'Run the 20261024000014_sos_permission migration to manage S.O.S access');
     }

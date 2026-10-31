@@ -13,6 +13,11 @@ const ReviewsPage = lazy(() => import('./components/ReviewsPage').then(module =>
 const FaqPage = lazy(() => import('./components/FaqPage').then(module => ({ default: module.FaqPage })));
 const TermsPage = lazy(() => import('./components/TermsPage').then(module => ({ default: module.TermsPage })));
 const PrivacyPage = lazy(() => import('./components/PrivacyPage').then(module => ({ default: module.PrivacyPage })));
+// Midtrans test page: only with VITE_PAYMENTS_TEST=true (local / preview), never on the public site
+const PaymentsTestPage =
+  import.meta.env.VITE_PAYMENTS_TEST === 'true'
+    ? lazy(() => import('./components/PaymentsTestPage').then(module => ({ default: module.PaymentsTestPage })))
+    : null;
 const DeleteAccountPage = lazy(() => import('./components/DeleteAccountPage').then(module => ({ default: module.DeleteAccountPage })));
 
 function App() {
@@ -72,6 +77,7 @@ function App() {
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/delete-account" element={<DeleteAccountPage />} />
+            {PaymentsTestPage && <Route path="/payments-test" element={<PaymentsTestPage />} />}
             </Routes>
       </Suspense>
     </>

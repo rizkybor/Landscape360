@@ -8,7 +8,12 @@
   "headers": [
     {
       "source": "/.well-known/apple-app-site-association",
-      "headers": [{ "key": "Content-Type", "value": "application/json" }]
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
+      ]
     },
     {
       "source": "/(.*)",
@@ -42,6 +47,12 @@
           "value": "same-origin-allow-popups"
         }
       ]
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/payments?cron",
+      "schedule": "0 17 * * *"
     }
   ]
 }
