@@ -1,11 +1,18 @@
 import { create } from 'zustand';
 import type { LngLat } from '../types/markedArea';
-import type { Attachment, CommunityPost, FeedPost } from '../lib/community';
+import type { Annotation, AnnotationKind, Attachment, CommunityPost, FeedPost, LivePosition, SavedView } from '../lib/community';
 
 // Community panel and map layer state (COMMUNITY_PRD.md). Posts are read from the server each
 // time; nothing here is kept in the browser.
 
-export type CommunityView = 'feed' | 'mine' | 'post' | 'compose' | 'reports' | 'clubs' | 'club';
+/** fit: bumped to fit the map to everyone's positions */
+export interface LiveMap {
+  positions: LivePosition[];
+  trail: { userId: string; coords: LngLat[] } | null;
+  fit: number;
+}
+
+export type CommunityView = 'feed' | 'mine' | 'post' | 'compose' | 'reports' | 'clubs' | 'club' | 'event';
 
 interface CommunityStore {
   isPanelOpen: boolean;
@@ -27,6 +34,22 @@ interface CommunityStore {
   clubId: string | null;
   openClubs: () => void;
   openClub: (id: string) => void;
+  /** The event open in the event view (its club stays in clubId) */
+  eventId: string | null;
+  openEvent: (id: string) => void;
+  /** Live positions of the open event's participants, and one participant's trail, for the map */
+  live: LiveMap | null;
+  setLive: (live: LiveMap | null) => void;
+
+  /** The club map's drawings, shown while its tab is open (selected: highlighted, fitted) */
+  clubMap: { annotations: Annotation[]; selectedId: string | null; fit: number } | null;
+  setClubMap: (m: { annotations: Annotation[]; selectedId: string | null; fit: number } | null) => void;
+  /** Drawing on the map: each tap adds a point (a pin or note keeps the last one) */
+  draw: { kind: AnnotationKind; points: LngLat[]; color: string } | null;
+  setDraw: (d: { kind: AnnotationKind; points: LngLat[]; color: string } | null) => void;
+  /** Fly the map to a saved view (n bumps for the same view again) */
+  cameraTo: { view: SavedView; n: number } | null;
+  flyToView: (view: SavedView) => void;
   /** The feed's audience: null for everyone's posts (and your clubs'), or one club */
   feedClub: string | null;
   setFeedClub: (id: string | null) => void;
@@ -66,22 +89,33 @@ interface CommunityStore {
 
 export const useCommunityStore = create<CommunityStore>((set) => ({
   isPanelOpen: false,
-  setPanelOpen: (open) => set(open ? { isPanelOpen: true } : { isPanelOpen: false, picking: false, focused: null, shownItem: null }),
+  setPanelOpen: (open) => set(open ? { isPanelOpen: true } : { isPanelOpen: false, picking: false, focused: null, shownItem: null, live: null, clubMap: null, draw: null }),
   togglePanel: () =>
-    set((s) => (s.isPanelOpen ? { isPanelOpen: false, picking: false, focused: null, shownItem: null } : { isPanelOpen: true })),
+    set((s) => (s.isPanelOpen ? { isPanelOpen: false, picking: false, focused: null, shownItem: null, live: null, clubMap: null, draw: null } : { isPanelOpen: true })),
 
   view: 'feed',
   listView: 'feed',
   postId: null,
   editing: null,
-  openFeed: () => set({ view: 'feed', listView: 'feed', postId: null, editing: null, focused: null, shownItem: null }),
+  openFeed: () =>
+    set({ view: 'feed', listView: 'feed', postId: null, editing: null, focused: null, shownItem: null, live: null, clubMap: null, draw: null }),
   openPost: (id) => set({ view: 'post', postId: id, editing: null, isPanelOpen: true, shownItem: null }),
   openCompose: (editing = null) => set({ view: 'compose', editing, picked: null, isPanelOpen: true }),
   openReports: () => set({ view: 'reports', postId: null, editing: null, focused: null }),
   openMine: () => set({ view: 'mine', listView: 'mine', postId: null, editing: null, focused: null, shownItem: null }),
   clubId: null,
   openClubs: () => set({ view: 'clubs', listView: 'clubs', clubId: null, postId: null, editing: null, focused: null }),
-  openClub: (clubId) => set({ view: 'club', clubId, postId: null, editing: null, focused: null }),
+  openClub: (clubId) => set({ view: 'club', clubId, postId: null, editing: null, focused: null, live: null, shownItem: null, draw: null }),
+  eventId: null,
+  openEvent: (eventId) => set({ view: 'event', eventId, postId: null, editing: null, focused: null, shownItem: null }),
+  live: null,
+  setLive: (live) => set({ live }),
+  clubMap: null,
+  setClubMap: (clubMap) => set({ clubMap }),
+  draw: null,
+  setDraw: (draw) => set({ draw }),
+  cameraTo: null,
+  flyToView: (view) => set((s) => ({ cameraTo: { view, n: (s.cameraTo?.n ?? 0) + 1 } })),
   feedClub: null,
   setFeedClub: (feedClub) => set({ feedClub }),
 

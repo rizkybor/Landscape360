@@ -6,6 +6,14 @@ import {
   attachmentCoords,
   canEdit,
   contactHref,
+  annotationGeometry,
+  annotationPoints,
+  densifyLine,
+  lineLengthM,
+  profileStats,
+  eventInputError,
+  minutesAgo,
+  trailSummary,
   exportItem,
   itemFileName,
   joinUrl,
@@ -135,5 +143,70 @@ describe('club invites and workspace export', () => {
     const pts = Array.from({ length: 4000 }, (_, i) => ({ lat: -6 - i / 1e4, lng: 106 + i / 1e4 }));
     expect(attachmentCoords(trackAttachment('t', 1, pts))).toHaveLength(1500);
     expect(attachmentCoords(trackAttachment('t', 1, pts, 5000))).toHaveLength(4000);
+  });
+});
+
+describe('club events', () => {
+  const now = Date.UTC(2026, 10, 2, 8, 0);
+  const ev = { title: 'Gede', description: '', startsAt: now + 3600000, endsAt: now + 86400000, meetingName: '', meeting: null, routeItemId: null, quota: null, needsApproval: false };
+
+  it('checks an event before it is sent', () => {
+    expect(eventInputError(ev, true, now)).toBeNull();
+    expect(eventInputError({ ...ev, title: ' ' }, true, now)).toMatch(/title/);
+    expect(eventInputError({ ...ev, endsAt: ev.startsAt }, true, now)).toMatch(/after the start/);
+    expect(eventInputError({ ...ev, endsAt: ev.startsAt + 31 * 86400000 }, true, now)).toMatch(/30 days/);
+    expect(eventInputError({ ...ev, startsAt: now - 3 * 86400000 }, true, now)).toMatch(/past/);
+    expect(eventInputError({ ...ev, startsAt: now - 3 * 86400000 }, false, now)).toBeNull();
+    expect(eventInputError({ ...ev, quota: 0 }, true, now)).toMatch(/1 to 500/);
+    expect(eventInputError({ ...ev, startsAt: NaN }, true, now)).toMatch(/start and the end/);
+  });
+
+  it('sums up a trail: distance, moving time and climb', () => {
+    const t0 = now;
+    // ~111 m north per step, 2 minutes apart, climbing 10 m; then a 30-minute stop in place
+    const pts = [0, 1, 2, 3].map((i) => ({ lat: -6.7 + i * 0.001, lng: 106.9, altitudeM: 1000 + i * 10, recordedAt: t0 + i * 120000 }));
+    pts.push({ lat: pts[3].lat, lng: 106.9, altitudeM: 1025, recordedAt: t0 + 3 * 120000 + 1800000 });
+    const s = trailSummary(pts);
+    expect(Math.round(s.distanceM)).toBe(334);
+    expect(s.movingMs).toBe(3 * 120000);
+    expect(s.gainM).toBe(30);
+    expect(s.points).toBe(5);
+    expect(trailSummary([]).distanceM).toBe(0);
+  });
+
+  it('counts minutes since a position', () => {
+    expect(minutesAgo(now - 61 * 60000, now)).toBe(61);
+    expect(minutesAgo(now + 5000, now)).toBe(0);
+  });
+});
+
+describe('club map', () => {
+  it('turns tapped points into the right shape, and back', () => {
+    expect(annotationGeometry('pin', [])).toBeNull();
+    expect(annotationGeometry('pin', [[1, 2], [3, 4]])).toEqual({ type: 'Point', coordinates: [3, 4] });
+    expect(annotationGeometry('line', [[1, 2]])).toBeNull();
+    const area = annotationGeometry('area', [[0, 0], [1, 0], [1, 1]])!;
+    expect(area).toEqual({ type: 'Polygon', coordinates: [[[0, 0], [1, 0], [1, 1], [0, 0]]] });
+    expect(annotationPoints(area)).toEqual([[0, 0], [1, 0], [1, 1]]);
+    expect(annotationGeometry('note', [[106.1234567, -6.7654321]])).toEqual({ type: 'Point', coordinates: [106.123457, -6.765432] });
+  });
+
+  it('measures a line and samples it evenly with distances', () => {
+    const line: [number, number][] = [[106.9, -6.7], [106.9, -6.71], [106.91, -6.71]];
+    const len = lineLengthM(line);
+    expect(Math.round(len)).toBeGreaterThan(2200);
+    expect(Math.round(len)).toBeLessThan(2240);
+    const s = densifyLine(line, 50);
+    expect(s).toHaveLength(50);
+    expect(s[0].at).toEqual([106.9, -6.7]);
+    expect(s[49].at[0]).toBeCloseTo(106.91, 6);
+    expect(s[49].distM).toBeCloseTo(len, 3);
+    // Passes the corner
+    expect(s.some((p) => Math.abs(p.at[0] - 106.9) < 1e-9 && Math.abs(p.at[1] + 6.71) < 1e-3)).toBe(true);
+  });
+
+  it('sums up an elevation profile and skips gaps', () => {
+    expect(profileStats([1000, 1050, 1030, NaN, 1100])).toEqual({ min: 1000, max: 1100, gain: 120, loss: 20, start: 1000, end: 1100 });
+    expect(profileStats([NaN])).toBeNull();
   });
 });

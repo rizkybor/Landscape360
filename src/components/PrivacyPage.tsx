@@ -43,7 +43,7 @@ export const PrivacyPage = () => {
             <li><strong>S.O.S:</strong> when you send an S.O.S, your position, battery level and messages go to the admin. Your emergency contacts stay on your phone.</li>
             <li><strong>Sharing:</strong> which accounts you share locations or tracks with.</li>
             <li><strong>Sign-in history:</strong> the time of each sign-in and the browser and device type, kept to protect accounts.</li>
-            <li><strong>Community:</strong> the trail reports, stories, photos and comments you post, where they are on the map, the date, Helpful marks and reports you make, and the clubs you own or belong to. Photos are made smaller on your device and their location data (EXIF) is removed before upload.</li>
+            <li><strong>Community:</strong> the trail reports, stories, photos and comments you post, where they are on the map, the date, Helpful marks and reports you make, and the clubs you own or belong to. Photos are made smaller on your device and their location data (EXIF) is removed before upload. For club events: whether you join, the emergency contact you choose to give, your checklist ticks, the drawings, comments and saved map views you add to a club map and, only if you turn on <em>Share my position</em> in the mobile app, your position, altitude and battery level while the event runs.</li>
             <li><strong>Reviews:</strong> your rating and comment, shown publicly with your first name, last initial and, if you set one in your profile, your organization.</li>
             <li><strong>Usage information:</strong> cloud storage used per feature, and anonymous page view and performance statistics.</li>
             <li><strong>Technical data:</strong> IP address and browser information processed by our hosting and map providers to deliver the Service.</li>
@@ -76,7 +76,7 @@ export const PrivacyPage = () => {
         <LegalSection title="4. Who we share data with">
           <ul>
             <li><strong>People you choose:</strong> accounts you share locations or tracks with, and monitor accounts of your team when you broadcast your position.</li>
-            <li><strong>The public:</strong> your reviews (first name and last initial, organization if set, rating and comment), and your Community posts and comments, with the same name and organization, the place on the map and the photos. Club posts are shown only to the club&apos;s members; a club owner sees the email addresses of its members.</li>
+            <li><strong>The public:</strong> your reviews (first name and last initial, organization if set, rating and comment), and your Community posts and comments, with the same name and organization, the place on the map and the photos. Club posts are shown only to the club&apos;s members; a club leader and its admins see the email addresses of its members. The positions you share during a club event are seen by that club&apos;s members; your emergency contact for an event is seen only by its organisers.</li>
             <li><strong>Service providers</strong> that process data for us: Supabase (database and sign-in), Vercel (hosting and anonymous analytics), Mapbox (map tiles and terrain), BMKG (weather requests), Amazon Web Services (open elevation tiles, when you download area contours), Google Maps (only when you open Directions) and our advertising partner, which processes data under its own privacy policy.</li>
             <li><strong>Authorities,</strong> when the law requires it.</li>
           </ul>
@@ -91,7 +91,7 @@ export const PrivacyPage = () => {
           <ul>
             <li>Account data and the content you create: while your account exists, and deleted when you delete your account (User Account &gt; Delete account in the app, or <Link to="/delete-account" className="underline font-bold text-ink">landscape360.jcdigital.co.id/delete-account</Link>).</li>
             <li>Live GPS tracking logs: deleted automatically after <strong>7 days</strong>. Tracks you record and save are kept until you delete them.</li>
-            <li>Community posts, photos and comments: until you delete them or your account; posts removed by the admin are kept hidden for our records. Deleting a club deletes its posts.</li>
+            <li>Community posts, photos and comments: until you delete them or your account; posts removed by the admin are kept hidden for our records. Deleting a club deletes its posts. Positions shared during a club event: deleted 30 days after the event ends.</li>
             <li>Sign-in history: the latest 100 sign-ins per account.</li>
             <li>Account requests: kept to handle the request and for our records; ask us to delete yours at any time.</li>
             <li>Data on your device (offline maps, local recordings, settings): until you delete it or clear your browser data.</li>

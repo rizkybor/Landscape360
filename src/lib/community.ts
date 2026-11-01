@@ -273,7 +273,7 @@ export const compressPhoto = async (file: Blob, maxSide = MAX_SIDE): Promise<Com
 const MISSING = /PGRST202|PGRST205|42P01|could not find the (function|table)|relation .* does not exist/i;
 const fail = (error: { message: string; code?: string }) =>
   new Error(
-    MISSING.test(`${error.code ?? ''} ${error.message}`) ? 'Community is not set up yet (run the 20261102000024 to 0028 migrations)' : error.message,
+    MISSING.test(`${error.code ?? ''} ${error.message}`) ? 'Community is not set up yet (run the 20261102000024 to 0030 migrations)' : error.message,
   );
 
 type Row = Record<string, unknown>;
@@ -776,6 +776,527 @@ export const pinPost = async (postId: string, pinned: boolean) => {
 /** You have seen the club's feed: its "new posts" count starts again */
 export const markClubRead = async (clubId: string) => {
   const { error } = await supabase.rpc('mark_community_club_read', { p_club_id: clubId });
+  if (error) throw fail(error);
+};
+
+// Events (expeditions): plan, participants, checklist, live positions (shared from the mobile app)
+
+export type EventState = 'planned' | 'running' | 'ended' | 'cancelled';
+export type ParticipantStatus = 'pending' | 'going' | 'declined';
+export const EVENT_STATE_LABEL: Record<EventState, string> = { planned: 'Upcoming', running: 'Running now', ended: 'Ended', cancelled: 'Cancelled' };
+/** A participant sharing their position counts as not seen after this long */
+export const LIVE_STALE_MIN = 15;
+/** Organisers are warned about a participant not seen for this long */
+export const LIVE_MISSING_MIN = 60;
+
+export interface ClubEventSummary {
+  id: string;
+  title: string;
+  startsAt: number;
+  endsAt: number;
+  state: EventState;
+  meetingName: string | null;
+  goingCount: number;
+  pendingCount: number;
+  quota: number | null;
+  myStatus: ParticipantStatus | null;
+  sharingCount: number;
+}
+
+export interface ClubEvent extends Omit<ClubEventSummary, 'sharingCount' | 'meetingName'> {
+  clubId: string;
+  clubName: string;
+  description: string | null;
+  meetingName: string | null;
+  meetingLat: number | null;
+  meetingLng: number | null;
+  routeItemId: string | null;
+  routeName: string | null;
+  needsApproval: boolean;
+  createdByName: string;
+  myEmergencyName: string | null;
+  myEmergencyPhone: string | null;
+  iAmSharing: boolean;
+  canShare: boolean;
+  canManage: boolean;
+}
+
+export interface EventParticipant {
+  userId: string;
+  name: string;
+  organization: string | null;
+  status: ParticipantStatus;
+  joinedAt: number;
+  isMe: boolean;
+  /** Only for the organisers */
+  emergencyName: string | null;
+  emergencyPhone: string | null;
+  checkedCount: number;
+  sharing: boolean;
+  lastSeenAt: number | null;
+}
+
+export interface ChecklistItem {
+  id: string;
+  label: string;
+  checked: boolean;
+  checkedCount: number;
+}
+
+export interface LivePosition {
+  userId: string;
+  name: string;
+  lat: number;
+  lng: number;
+  accuracyM: number | null;
+  altitudeM: number | null;
+  battery: number | null;
+  recordedAt: number;
+  sharing: boolean;
+  isMe: boolean;
+}
+
+export interface TrailPoint {
+  lat: number;
+  lng: number;
+  altitudeM: number | null;
+  recordedAt: number;
+}
+
+export interface EventInput {
+  title: string;
+  description: string;
+  startsAt: number;
+  endsAt: number;
+  meetingName: string;
+  meeting: LngLat | null;
+  routeItemId: string | null;
+  quota: number | null;
+  needsApproval: boolean;
+}
+
+const num = (v: unknown) => (v === null || v === undefined ? null : Number(v));
+const time = (v: unknown) => Date.parse(v as string);
+
+/** Problems with an event before it is sent (the server checks again) */
+export const eventInputError = (e: EventInput, isNew: boolean, now = Date.now()) => {
+  if (e.title.trim().length < 2) return 'Give the event a title.';
+  if (!Number.isFinite(e.startsAt) || !Number.isFinite(e.endsAt)) return 'Set the start and the end.';
+  if (e.endsAt <= e.startsAt) return 'The end must be after the start.';
+  if (e.endsAt - e.startsAt > 30 * 86400000) return 'An event can last up to 30 days.';
+  if (isNew && e.startsAt < now - 86400000) return 'The start cannot be in the past.';
+  if (e.quota !== null && (!Number.isInteger(e.quota) || e.quota < 1 || e.quota > 500)) return 'The number of places is 1 to 500.';
+  return null;
+};
+
+/** How long ago a position was taken, in minutes */
+export const minutesAgo = (t: number, now = Date.now()) => Math.max(0, Math.round((now - t) / 60000));
+
+/** Distance, moving time and climb of a trail (moving: steps faster than 0.3 m/s, under 10 min apart) */
+export const trailSummary = (pts: TrailPoint[]) => {
+  let distanceM = 0;
+  let movingMs = 0;
+  let gainM = 0;
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1];
+    const b = pts[i];
+    const d = haversineM(a.lat, a.lng, b.lat, b.lng);
+    const dt = b.recordedAt - a.recordedAt;
+    distanceM += d;
+    if (dt > 0 && dt < 600000 && d / (dt / 1000) > 0.3) movingMs += dt;
+    if (a.altitudeM !== null && b.altitudeM !== null && b.altitudeM > a.altitudeM) gainM += b.altitudeM - a.altitudeM;
+  }
+  return { distanceM, movingMs, gainM, points: pts.length };
+};
+
+const haversineM = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+  const r = (d: number) => (d * Math.PI) / 180;
+  const a = Math.sin(r(lat2 - lat1) / 2) ** 2 + Math.cos(r(lat1)) * Math.cos(r(lat2)) * Math.sin(r(lng2 - lng1) / 2) ** 2;
+  return 2 * 6371000 * Math.asin(Math.sqrt(a));
+};
+
+export const fetchClubEvents = async (clubId: string, past = false): Promise<ClubEventSummary[]> => {
+  const { data, error } = await supabase.rpc('community_events', { p_club_id: clubId, p_past: past });
+  if (error) throw fail(error);
+  return ((data ?? []) as Row[]).map((r) => ({
+    id: r.id as string,
+    title: r.title as string,
+    startsAt: time(r.starts_at),
+    endsAt: time(r.ends_at),
+    state: r.state as EventState,
+    meetingName: (r.meeting_name as string | null) ?? null,
+    goingCount: Number(r.going_count ?? 0),
+    pendingCount: Number(r.pending_count ?? 0),
+    quota: num(r.quota),
+    myStatus: (r.my_status as ParticipantStatus | null) ?? null,
+    sharingCount: Number(r.sharing_count ?? 0),
+  }));
+};
+
+export const fetchClubEvent = async (id: string): Promise<ClubEvent | null> => {
+  const { data, error } = await supabase.rpc('community_event', { p_id: id });
+  if (error) throw fail(error);
+  const r = ((data ?? []) as Row[])[0];
+  if (!r) return null;
+  return {
+    id: r.id as string,
+    clubId: r.club_id as string,
+    clubName: r.club_name as string,
+    title: r.title as string,
+    description: (r.description as string | null) ?? null,
+    startsAt: time(r.starts_at),
+    endsAt: time(r.ends_at),
+    state: r.state as EventState,
+    meetingName: (r.meeting_name as string | null) ?? null,
+    meetingLat: num(r.meeting_lat),
+    meetingLng: num(r.meeting_lng),
+    routeItemId: (r.route_item_id as string | null) ?? null,
+    routeName: (r.route_name as string | null) ?? null,
+    quota: num(r.quota),
+    needsApproval: r.needs_approval === true,
+    goingCount: Number(r.going_count ?? 0),
+    pendingCount: Number(r.pending_count ?? 0),
+    createdByName: (r.created_by_name as string) ?? '',
+    myStatus: (r.my_status as ParticipantStatus | null) ?? null,
+    myEmergencyName: (r.my_emergency_name as string | null) ?? null,
+    myEmergencyPhone: (r.my_emergency_phone as string | null) ?? null,
+    iAmSharing: r.i_am_sharing === true,
+    canShare: r.can_share === true,
+    canManage: r.can_manage === true,
+  };
+};
+
+/** Creates (id null) or changes an event; returns its id */
+export const saveClubEvent = async (clubId: string, id: string | null, e: EventInput): Promise<string> => {
+  const { data, error } = await supabase.rpc('save_community_event', {
+    p_club_id: clubId,
+    p_id: id,
+    p_title: e.title,
+    p_description: e.description.trim() || null,
+    p_starts_at: new Date(e.startsAt).toISOString(),
+    p_ends_at: new Date(e.endsAt).toISOString(),
+    p_meeting_name: e.meetingName.trim() || null,
+    p_meeting_lat: e.meeting ? e.meeting[1] : null,
+    p_meeting_lng: e.meeting ? e.meeting[0] : null,
+    p_route_item_id: e.routeItemId,
+    p_quota: e.quota,
+    p_needs_approval: e.needsApproval,
+  });
+  if (error) throw fail(error);
+  return data as string;
+};
+
+export const cancelClubEvent = async (id: string) => {
+  const { error } = await supabase.rpc('cancel_community_event', { p_id: id });
+  if (error) throw fail(error);
+};
+
+export const deleteClubEvent = async (id: string) => {
+  const { error } = await supabase.rpc('delete_community_event', { p_id: id });
+  if (error) throw fail(error);
+};
+
+/** Joins (or updates your emergency contact); returns going or pending */
+export const joinClubEvent = async (id: string, emergencyName: string, emergencyPhone: string): Promise<ParticipantStatus> => {
+  const { data, error } = await supabase.rpc('join_community_event', {
+    p_id: id,
+    p_emergency_name: emergencyName.trim() || null,
+    p_emergency_phone: emergencyPhone.trim() || null,
+  });
+  if (error) throw fail(error);
+  return data as ParticipantStatus;
+};
+
+export const leaveClubEvent = async (id: string) => {
+  const { error } = await supabase.rpc('leave_community_event', { p_id: id });
+  if (error) throw fail(error);
+};
+
+export const decideParticipant = async (id: string, userId: string, status: 'going' | 'declined') => {
+  const { error } = await supabase.rpc('decide_community_event_participant', { p_id: id, p_user_id: userId, p_status: status });
+  if (error) throw fail(error);
+};
+
+export const fetchParticipants = async (id: string): Promise<EventParticipant[]> => {
+  const { data, error } = await supabase.rpc('community_event_participants', { p_id: id });
+  if (error) throw fail(error);
+  return ((data ?? []) as Row[]).map((r) => ({
+    userId: r.user_id as string,
+    name: (r.name as string) ?? 'Landscape 360 user',
+    organization: (r.organization as string | null) ?? null,
+    status: r.status as ParticipantStatus,
+    joinedAt: time(r.joined_at),
+    isMe: r.is_me === true,
+    emergencyName: (r.emergency_name as string | null) ?? null,
+    emergencyPhone: (r.emergency_phone as string | null) ?? null,
+    checkedCount: Number(r.checked_count ?? 0),
+    sharing: r.sharing === true,
+    lastSeenAt: r.last_seen_at ? time(r.last_seen_at) : null,
+  }));
+};
+
+export const fetchChecklist = async (id: string): Promise<ChecklistItem[]> => {
+  const { data, error } = await supabase.rpc('community_event_checklist', { p_id: id });
+  if (error) throw fail(error);
+  return ((data ?? []) as Row[]).map((r) => ({
+    id: r.id as string,
+    label: r.label as string,
+    checked: r.checked === true,
+    checkedCount: Number(r.checked_count ?? 0),
+  }));
+};
+
+export const addChecklistItem = async (id: string, label: string) => {
+  const { error } = await supabase.rpc('add_community_event_checklist_item', { p_id: id, p_label: label });
+  if (error) throw fail(error);
+};
+
+export const deleteChecklistItem = async (itemId: string) => {
+  const { error } = await supabase.rpc('delete_community_event_checklist_item', { p_item_id: itemId });
+  if (error) throw fail(error);
+};
+
+export const toggleCheck = async (itemId: string): Promise<boolean> => {
+  const { data, error } = await supabase.rpc('toggle_community_event_check', { p_item_id: itemId });
+  if (error) throw fail(error);
+  return data === true;
+};
+
+export const fetchLiveLatest = async (id: string): Promise<LivePosition[]> => {
+  const { data, error } = await supabase.rpc('community_live_latest', { p_id: id });
+  if (error) throw fail(error);
+  return ((data ?? []) as Row[]).map((r) => ({
+    userId: r.user_id as string,
+    name: (r.name as string) ?? '',
+    lat: Number(r.lat),
+    lng: Number(r.lng),
+    accuracyM: num(r.accuracy_m),
+    altitudeM: num(r.altitude_m),
+    battery: num(r.battery),
+    recordedAt: time(r.recorded_at),
+    sharing: r.sharing === true,
+    isMe: r.is_me === true,
+  }));
+};
+
+export const fetchLiveTrail = async (id: string, userId: string): Promise<TrailPoint[]> => {
+  const { data, error } = await supabase.rpc('community_live_trail', { p_id: id, p_user_id: userId });
+  if (error) throw fail(error);
+  return ((data ?? []) as Row[]).map((r) => ({ lat: Number(r.lat), lng: Number(r.lng), altitudeM: num(r.altitude_m), recordedAt: time(r.recorded_at) }));
+};
+
+/** Stops sharing your position for an event (sharing itself starts in the mobile app) */
+export const stopLiveSharing = async (id: string) => {
+  const { error } = await supabase.rpc('stop_community_live', { p_id: id });
+  if (error) throw fail(error);
+};
+
+// Club map: shared drawings (pins, lines, areas, notes) with comments, and saved camera views
+
+export type AnnotationKind = 'pin' | 'line' | 'area' | 'note';
+export const ANNOTATION_KINDS: { id: AnnotationKind; label: string }[] = [
+  { id: 'pin', label: 'Pin' },
+  { id: 'line', label: 'Line' },
+  { id: 'area', label: 'Area' },
+  { id: 'note', label: 'Note' },
+];
+export const ANNOTATION_COLORS = ['#d49b22', '#b4302a', '#1f6feb', '#2f7d3b', '#7b4bb7', '#1a2214'] as const;
+
+export type AnnotationGeometry =
+  | { type: 'Point'; coordinates: LngLat }
+  | { type: 'LineString'; coordinates: LngLat[] }
+  | { type: 'Polygon'; coordinates: LngLat[][] };
+
+export interface Annotation {
+  id: string;
+  kind: AnnotationKind;
+  label: string;
+  note: string | null;
+  color: string;
+  geometry: AnnotationGeometry;
+  authorName: string;
+  isMine: boolean;
+  commentCount: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface AnnotationComment {
+  id: string;
+  body: string;
+  authorName: string;
+  isMine: boolean;
+  createdAt: number;
+}
+
+export interface SavedView {
+  id: string;
+  name: string;
+  lng: number;
+  lat: number;
+  zoom: number;
+  pitch: number;
+  bearing: number;
+  terrain: boolean;
+  authorName: string;
+  isMine: boolean;
+}
+
+/** The geometry for a drawing from the points tapped on the map (null: not enough points yet) */
+export const annotationGeometry = (kind: AnnotationKind, pts: LngLat[]): AnnotationGeometry | null => {
+  const r = pts.map(([x, y]) => [r6(x), r6(y)] as LngLat);
+  if (kind === 'pin' || kind === 'note') return r.length ? { type: 'Point', coordinates: r[r.length - 1] } : null;
+  if (kind === 'line') return r.length >= 2 ? { type: 'LineString', coordinates: r } : null;
+  return r.length >= 3 ? { type: 'Polygon', coordinates: [[...r, r[0]]] } : null;
+};
+
+/** The points of a drawing's geometry (an area without its closing point), to edit it again */
+export const annotationPoints = (g: AnnotationGeometry): LngLat[] =>
+  g.type === 'Point' ? [g.coordinates] : g.type === 'LineString' ? g.coordinates : g.coordinates[0].slice(0, -1);
+
+/** Length of a line in metres */
+export const lineLengthM = (coords: LngLat[]) => {
+  let m = 0;
+  for (let i = 1; i < coords.length; i++) m += haversineM(coords[i - 1][1], coords[i - 1][0], coords[i][1], coords[i][0]);
+  return m;
+};
+
+/** Evenly spaced points along a line (at most `max`), each with its distance from the start */
+export const densifyLine = (coords: LngLat[], max = 200): { at: LngLat; distM: number }[] => {
+  const total = lineLengthM(coords);
+  if (coords.length < 2 || total === 0) return coords.map((c) => ({ at: c, distM: 0 }));
+  const n = Math.max(2, Math.min(max, Math.ceil(total / 10) + 1));
+  const step = total / (n - 1);
+  const out: { at: LngLat; distM: number }[] = [];
+  let seg = 0;
+  let segStart = 0;
+  let segLen = haversineM(coords[0][1], coords[0][0], coords[1][1], coords[1][0]);
+  for (let i = 0; i < n; i++) {
+    const d = Math.min(i * step, total);
+    while (seg < coords.length - 2 && d > segStart + segLen) {
+      segStart += segLen;
+      seg++;
+      segLen = haversineM(coords[seg][1], coords[seg][0], coords[seg + 1][1], coords[seg + 1][0]);
+    }
+    const f = segLen ? Math.min(1, (d - segStart) / segLen) : 0;
+    const [a, b] = [coords[seg], coords[seg + 1]];
+    out.push({ at: [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f], distM: d });
+  }
+  return out;
+};
+
+/** Lowest, highest, total climb and descent of an elevation profile (gaps without data skipped) */
+export const profileStats = (heights: number[]) => {
+  const h = heights.filter((v) => Number.isFinite(v));
+  if (h.length === 0) return null;
+  let gain = 0;
+  let loss = 0;
+  for (let i = 1; i < h.length; i++) {
+    const d = h[i] - h[i - 1];
+    if (d > 0) gain += d;
+    else loss -= d;
+  }
+  return { min: Math.min(...h), max: Math.max(...h), gain, loss, start: h[0], end: h[h.length - 1] };
+};
+
+export const fetchAnnotations = async (clubId: string): Promise<Annotation[]> => {
+  const { data, error } = await supabase.rpc('community_club_annotations', { p_club_id: clubId });
+  if (error) throw fail(error);
+  return ((data ?? []) as Row[]).map((r) => ({
+    id: r.id as string,
+    kind: r.kind as AnnotationKind,
+    label: r.label as string,
+    note: (r.note as string | null) ?? null,
+    color: (r.color as string) ?? ANNOTATION_COLORS[0],
+    geometry: r.geometry as AnnotationGeometry,
+    authorName: (r.author_name as string) ?? '',
+    isMine: r.is_mine === true,
+    commentCount: Number(r.comment_count ?? 0),
+    createdAt: time(r.created_at),
+    updatedAt: time(r.updated_at),
+  }));
+};
+
+/** Creates (id null) or changes a drawing; returns its id */
+export const saveAnnotation = async (
+  clubId: string,
+  id: string | null,
+  a: { kind: AnnotationKind; label: string; note: string; color: string; geometry: AnnotationGeometry },
+): Promise<string> => {
+  const { data, error } = await supabase.rpc('save_community_club_annotation', {
+    p_club_id: clubId,
+    p_id: id,
+    p_kind: a.kind,
+    p_label: a.label,
+    p_note: a.note.trim() || null,
+    p_color: a.color,
+    p_geometry: a.geometry,
+  });
+  if (error) throw fail(error);
+  return data as string;
+};
+
+export const deleteAnnotation = async (id: string) => {
+  const { error } = await supabase.rpc('delete_community_club_annotation', { p_id: id });
+  if (error) throw fail(error);
+};
+
+export const fetchAnnotationComments = async (id: string): Promise<AnnotationComment[]> => {
+  const { data, error } = await supabase.rpc('community_club_annotation_comments', { p_id: id });
+  if (error) throw fail(error);
+  return ((data ?? []) as Row[]).map((r) => ({
+    id: r.id as string,
+    body: r.body as string,
+    authorName: (r.author_name as string) ?? '',
+    isMine: r.is_mine === true,
+    createdAt: time(r.created_at),
+  }));
+};
+
+export const addAnnotationComment = async (id: string, body: string) => {
+  const { error } = await supabase.rpc('add_community_club_annotation_comment', { p_id: id, p_body: body });
+  if (error) throw fail(error);
+};
+
+export const deleteAnnotationComment = async (id: string) => {
+  const { error } = await supabase.rpc('delete_community_club_annotation_comment', { p_id: id });
+  if (error) throw fail(error);
+};
+
+export const fetchSavedViews = async (clubId: string): Promise<SavedView[]> => {
+  const { data, error } = await supabase.rpc('community_club_views', { p_club_id: clubId });
+  if (error) throw fail(error);
+  return ((data ?? []) as Row[]).map((r) => ({
+    id: r.id as string,
+    name: r.name as string,
+    lng: Number(r.lng),
+    lat: Number(r.lat),
+    zoom: Number(r.zoom),
+    pitch: Number(r.pitch),
+    bearing: Number(r.bearing),
+    terrain: r.terrain === true,
+    authorName: (r.author_name as string) ?? '',
+    isMine: r.is_mine === true,
+  }));
+};
+
+export const saveView = async (clubId: string, v: Omit<SavedView, 'id' | 'authorName' | 'isMine'>): Promise<string> => {
+  const { data, error } = await supabase.rpc('save_community_club_view', {
+    p_club_id: clubId,
+    p_name: v.name,
+    p_lng: v.lng,
+    p_lat: v.lat,
+    p_zoom: v.zoom,
+    p_pitch: v.pitch,
+    p_bearing: v.bearing,
+    p_terrain: v.terrain,
+  });
+  if (error) throw fail(error);
+  return data as string;
+};
+
+export const deleteView = async (id: string) => {
+  const { error } = await supabase.rpc('delete_community_club_view', { p_id: id });
   if (error) throw fail(error);
 };
 
