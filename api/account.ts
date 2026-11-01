@@ -10,8 +10,8 @@
  * Every table that holds the user's data references auth.users with ON DELETE CASCADE
  * (20261024000010_cascade_user_delete.sql), so deleting the auth user removes surveys,
  * tracks, marked locations and areas, shares and links, offline map rows, S.O.S alerts,
- * tracker logs and the profile. Files in Storage do not cascade: the custom basemaps under
- * `<user id>/` are removed first. The admin account cannot be deleted this way.
+ * tracker logs, Community posts and the profile. Files in Storage do not cascade: the custom
+ * basemaps and Community photos under `<user id>/` are removed first. The admin account cannot be deleted this way.
  *
  * Requires SUPABASE_SERVICE_ROLE_KEY and SUPABASE_URL (or VITE_SUPABASE_URL)
  * in the Vercel project environment variables.
@@ -19,6 +19,7 @@
 import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js';
 
 const BASEMAP_BUCKET = 'custom-basemaps';
+const COMMUNITY_PHOTO_BUCKET = 'community-photos';
 const PAGE = 1000;
 
 class HttpError extends Error {
@@ -51,9 +52,9 @@ async function caller(request: Request, supabase: SupabaseClient): Promise<User>
   return data.user;
 }
 
-// Every file in the user's basemap folder, page by page
-async function removeBasemapFiles(supabase: SupabaseClient, userId: string) {
-  const bucket = supabase.storage.from(BASEMAP_BUCKET);
+// Every file in the user's folder of a bucket, page by page
+async function removeUserFiles(supabase: SupabaseClient, bucketId: string, userId: string) {
+  const bucket = supabase.storage.from(bucketId);
   for (;;) {
     const { data, error } = await bucket.list(userId, { limit: PAGE });
     if (error) throw new HttpError(500, `Could not list your files: ${error.message}`);
@@ -78,7 +79,9 @@ async function handleDelete(request: Request) {
   // There is a single admin (profiles_single_admin); deleting it would leave no one to run the service
   if (profile?.is_admin) throw new HttpError(403, 'The admin account cannot be deleted. Contact support.');
 
-  await removeBasemapFiles(supabase, user.id);
+  await removeUserFiles(supabase, BASEMAP_BUCKET, user.id);
+  // Community photos (20261102000024_community.sql); the posts go with the account
+  await removeUserFiles(supabase, COMMUNITY_PHOTO_BUCKET, user.id);
 
   const { error } = await supabase.auth.admin.deleteUser(user.id);
   if (error) throw new HttpError(500, `Could not delete the account: ${error.message}`);

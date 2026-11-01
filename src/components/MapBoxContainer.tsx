@@ -37,14 +37,20 @@ import { MarkedAreaLayer } from "./MarkedAreaLayer";
 import { MarkedAreaPanel } from "./MarkedAreaPanel";
 import { ClassicLayer } from "./ClassicLayer";
 import { ClassicPanel } from "./ClassicPanel";
+import { CommunityLayer } from "./CommunityLayer";
+import { CommunityPanel } from "./CommunityPanel";
+import { SharedPostLink } from "./SharedPostLink";
+import { SharedJoinLink } from "./SharedJoinLink";
 import { parseAreaToken, parseClassicToken, parsePlaceToken, parseSharedPoint } from "../lib/shareLocation";
+import { parsePostParam } from "../lib/community";
 
 // Opened from a share link: the map starts at the shared point, not at the user
 const sharedAtStart =
   parseSharedPoint(window.location.search) !== null ||
   parsePlaceToken(window.location.search) !== null ||
   parseAreaToken(window.location.search) !== null ||
-  parseClassicToken(window.location.search) !== null;
+  parseClassicToken(window.location.search) !== null ||
+  parsePostParam(window.location.search) !== null;
 import { WeatherWidget } from "./WeatherWidget";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { usePoiStore } from "../store/usePoiStore";
@@ -931,6 +937,9 @@ const MapBoxContainerComponent = ({
         <ErrorBoundary fallback={null}>
           <ClassicLayer />
         </ErrorBoundary>
+        <ErrorBoundary fallback={null}>
+          <CommunityLayer />
+        </ErrorBoundary>
 
         {mode === "3D" && (
           <ErrorBoundary fallback={null}>
@@ -1225,7 +1234,14 @@ const MapBoxContainerComponent = ({
       {showControls && <MarkedLocationPanel />}
       {showControls && <MarkedAreaPanel />}
       {showControls && <ClassicPanel />}
+      {showControls && (
+        <ErrorBoundary fallback={null}>
+          <CommunityPanel />
+        </ErrorBoundary>
+      )}
       <SharedClassicLink />
+      <SharedPostLink />
+      <SharedJoinLink />
       <PaymentReturn />
       {showControls && <SearchPanel />}
       {showControls && <WeatherWidget />}

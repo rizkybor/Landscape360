@@ -6,6 +6,7 @@ import { SpeedInsights } from "@vercel/speed-insights/react"
 import { Analytics } from "@vercel/analytics/react"
 import { Loader2 } from 'lucide-react';
 import { parseAreaToken, parseClassicToken, parsePlaceToken, parseSharedPoint } from './lib/shareLocation';
+import { parsePostParam } from './lib/community';
 
 // Lazy load heavy map component
 const MapDashboard = lazy(() => import('./components/MapDashboard').then(module => ({ default: module.MapDashboard })));
@@ -18,6 +19,7 @@ const PaymentsTestPage =
   import.meta.env.VITE_PAYMENTS_TEST === 'true'
     ? lazy(() => import('./components/PaymentsTestPage').then(module => ({ default: module.PaymentsTestPage })))
     : null;
+const CommunityPostPage = lazy(() => import('./components/CommunityPostPage').then(module => ({ default: module.CommunityPostPage })));
 const DeleteAccountPage = lazy(() => import('./components/DeleteAccountPage').then(module => ({ default: module.DeleteAccountPage })));
 
 function App() {
@@ -40,7 +42,8 @@ function App() {
     // Request geolocation when user explicitly starts the app (not when opening a shared
     // location link: the map flies there, and a late GPS fix would pull it away)
     const opensSharedLink =
-      parsePlaceToken(window.location.search) || parseAreaToken(window.location.search) || parseClassicToken(window.location.search);
+      parsePlaceToken(window.location.search) || parseAreaToken(window.location.search) || parseClassicToken(window.location.search) ||
+      parsePostParam(window.location.search);
     if (!initialLocation && !opensSharedLink && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -77,6 +80,7 @@ function App() {
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/delete-account" element={<DeleteAccountPage />} />
+            <Route path="/community/:id" element={<CommunityPostPage />} />
             {PaymentsTestPage && <Route path="/payments-test" element={<PaymentsTestPage />} />}
             </Routes>
       </Suspense>

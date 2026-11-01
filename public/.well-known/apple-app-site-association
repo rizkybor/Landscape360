@@ -6,7 +6,10 @@
         "components": [
           { "/": "/", "?": { "at": "*" }, "comment": "Shared position" },
           { "/": "/", "?": { "place": "*" }, "comment": "Shared marked location" },
-          { "/": "/", "?": { "area": "*" }, "comment": "Shared marked area" }
+          { "/": "/", "?": { "area": "*" }, "comment": "Shared marked area" },
+          { "/": "/community/*", "comment": "Community post" },
+          { "/": "/", "?": { "post": "*" }, "comment": "Community post on the map" },
+          { "/": "/", "?": { "join": "*" }, "comment": "Club invite link" }
         ]
       }
     ]
