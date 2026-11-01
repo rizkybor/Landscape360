@@ -6,6 +6,9 @@ import {
   attachmentCoords,
   canEdit,
   contactHref,
+  eventInputError,
+  minutesAgo,
+  trailSummary,
   exportItem,
   itemFileName,
   joinUrl,
@@ -135,5 +138,39 @@ describe('club invites and workspace export', () => {
     const pts = Array.from({ length: 4000 }, (_, i) => ({ lat: -6 - i / 1e4, lng: 106 + i / 1e4 }));
     expect(attachmentCoords(trackAttachment('t', 1, pts))).toHaveLength(1500);
     expect(attachmentCoords(trackAttachment('t', 1, pts, 5000))).toHaveLength(4000);
+  });
+});
+
+describe('club events', () => {
+  const now = Date.UTC(2026, 10, 2, 8, 0);
+  const ev = { title: 'Gede', description: '', startsAt: now + 3600000, endsAt: now + 86400000, meetingName: '', meeting: null, routeItemId: null, quota: null, needsApproval: false };
+
+  it('checks an event before it is sent', () => {
+    expect(eventInputError(ev, true, now)).toBeNull();
+    expect(eventInputError({ ...ev, title: ' ' }, true, now)).toMatch(/title/);
+    expect(eventInputError({ ...ev, endsAt: ev.startsAt }, true, now)).toMatch(/after the start/);
+    expect(eventInputError({ ...ev, endsAt: ev.startsAt + 31 * 86400000 }, true, now)).toMatch(/30 days/);
+    expect(eventInputError({ ...ev, startsAt: now - 3 * 86400000 }, true, now)).toMatch(/past/);
+    expect(eventInputError({ ...ev, startsAt: now - 3 * 86400000 }, false, now)).toBeNull();
+    expect(eventInputError({ ...ev, quota: 0 }, true, now)).toMatch(/1 to 500/);
+    expect(eventInputError({ ...ev, startsAt: NaN }, true, now)).toMatch(/start and the end/);
+  });
+
+  it('sums up a trail: distance, moving time and climb', () => {
+    const t0 = now;
+    // ~111 m north per step, 2 minutes apart, climbing 10 m; then a 30-minute stop in place
+    const pts = [0, 1, 2, 3].map((i) => ({ lat: -6.7 + i * 0.001, lng: 106.9, altitudeM: 1000 + i * 10, recordedAt: t0 + i * 120000 }));
+    pts.push({ lat: pts[3].lat, lng: 106.9, altitudeM: 1025, recordedAt: t0 + 3 * 120000 + 1800000 });
+    const s = trailSummary(pts);
+    expect(Math.round(s.distanceM)).toBe(334);
+    expect(s.movingMs).toBe(3 * 120000);
+    expect(s.gainM).toBe(30);
+    expect(s.points).toBe(5);
+    expect(trailSummary([]).distanceM).toBe(0);
+  });
+
+  it('counts minutes since a position', () => {
+    expect(minutesAgo(now - 61 * 60000, now)).toBe(61);
+    expect(minutesAgo(now + 5000, now)).toBe(0);
   });
 });

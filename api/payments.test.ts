@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 let profile: Record<string, unknown> | null;
 let payments: Record<string, Record<string, unknown>>;
 let rpcCalls: [string, unknown][];
+let purgeFails = false;
 
 const table = (name: string) => {
   let filter: [string, unknown] | null = null;
@@ -43,7 +44,8 @@ vi.mock('@supabase/supabase-js', () => ({
     },
     rpc: async (fn: string, args: unknown) => {
       rpcCalls.push([fn, args]);
-      return { data: fn === 'expire_subscriptions' ? 3 : '2026-12-01T00:00:00Z', error: null };
+      if (fn === 'purge_community_live' && purgeFails) return { data: null, error: { message: 'missing' } };
+      return { data: fn === 'expire_subscriptions' ? 3 : fn === 'purge_community_live' ? 12 : '2026-12-01T00:00:00Z', error: null };
     },
   }),
 }));
@@ -171,6 +173,17 @@ describe('/api/payments', () => {
   it('the daily cron needs the secret', async () => {
     expect((await GET(new Request('https://x/api/payments?cron'))).status).toBe(401);
     const res = await GET(new Request('https://x/api/payments?cron', { headers: { Authorization: 'Bearer cron-secret' } }));
-    expect(await res.json()).toEqual({ ok: true, expired: 3 });
+    expect(await res.json()).toEqual({ ok: true, expired: 3, livePositionsPurged: 12 });
+    expect(rpcCalls.map(([fn]) => fn)).toEqual(['expire_subscriptions', 'purge_community_live']);
+  });
+
+  it('the cron still expires plans when the Community cleanup fails', async () => {
+    purgeFails = true;
+    const err = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const res = await GET(new Request('https://x/api/payments?cron', { headers: { Authorization: 'Bearer cron-secret' } }));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ ok: true, expired: 3, livePositionsPurged: null });
+    purgeFails = false;
+    err.mockRestore();
   });
 });

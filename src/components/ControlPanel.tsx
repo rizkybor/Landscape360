@@ -2262,7 +2262,7 @@ const GetStartedModal = ({
                       </span>
                       <span>
                         • <strong>Enterprise:</strong> 50 reports, 20 stories, and up to 5 clubs: members-only posts for
-                        your team; add members by email or an invite link (up to 200), name admins, share a workspace of tracks, areas and places, pin announcements
+                        your team; add members by email or an invite link (up to 200), name admins, share a workspace of tracks, areas and places, pin announcements, plan events with a gear checklist and see participants' live positions (shared from the mobile app)
                       </span>
                     </div>
                   </>

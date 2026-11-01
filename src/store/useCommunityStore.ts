@@ -1,11 +1,18 @@
 import { create } from 'zustand';
 import type { LngLat } from '../types/markedArea';
-import type { Attachment, CommunityPost, FeedPost } from '../lib/community';
+import type { Attachment, CommunityPost, FeedPost, LivePosition } from '../lib/community';
 
 // Community panel and map layer state (COMMUNITY_PRD.md). Posts are read from the server each
 // time; nothing here is kept in the browser.
 
-export type CommunityView = 'feed' | 'mine' | 'post' | 'compose' | 'reports' | 'clubs' | 'club';
+/** fit: bumped to fit the map to everyone's positions */
+export interface LiveMap {
+  positions: LivePosition[];
+  trail: { userId: string; coords: LngLat[] } | null;
+  fit: number;
+}
+
+export type CommunityView = 'feed' | 'mine' | 'post' | 'compose' | 'reports' | 'clubs' | 'club' | 'event';
 
 interface CommunityStore {
   isPanelOpen: boolean;
@@ -27,6 +34,12 @@ interface CommunityStore {
   clubId: string | null;
   openClubs: () => void;
   openClub: (id: string) => void;
+  /** The event open in the event view (its club stays in clubId) */
+  eventId: string | null;
+  openEvent: (id: string) => void;
+  /** Live positions of the open event's participants, and one participant's trail, for the map */
+  live: LiveMap | null;
+  setLive: (live: LiveMap | null) => void;
   /** The feed's audience: null for everyone's posts (and your clubs'), or one club */
   feedClub: string | null;
   setFeedClub: (id: string | null) => void;
@@ -66,22 +79,26 @@ interface CommunityStore {
 
 export const useCommunityStore = create<CommunityStore>((set) => ({
   isPanelOpen: false,
-  setPanelOpen: (open) => set(open ? { isPanelOpen: true } : { isPanelOpen: false, picking: false, focused: null, shownItem: null }),
+  setPanelOpen: (open) => set(open ? { isPanelOpen: true } : { isPanelOpen: false, picking: false, focused: null, shownItem: null, live: null }),
   togglePanel: () =>
-    set((s) => (s.isPanelOpen ? { isPanelOpen: false, picking: false, focused: null, shownItem: null } : { isPanelOpen: true })),
+    set((s) => (s.isPanelOpen ? { isPanelOpen: false, picking: false, focused: null, shownItem: null, live: null } : { isPanelOpen: true })),
 
   view: 'feed',
   listView: 'feed',
   postId: null,
   editing: null,
-  openFeed: () => set({ view: 'feed', listView: 'feed', postId: null, editing: null, focused: null, shownItem: null }),
+  openFeed: () => set({ view: 'feed', listView: 'feed', postId: null, editing: null, focused: null, shownItem: null, live: null }),
   openPost: (id) => set({ view: 'post', postId: id, editing: null, isPanelOpen: true, shownItem: null }),
   openCompose: (editing = null) => set({ view: 'compose', editing, picked: null, isPanelOpen: true }),
   openReports: () => set({ view: 'reports', postId: null, editing: null, focused: null }),
   openMine: () => set({ view: 'mine', listView: 'mine', postId: null, editing: null, focused: null, shownItem: null }),
   clubId: null,
   openClubs: () => set({ view: 'clubs', listView: 'clubs', clubId: null, postId: null, editing: null, focused: null }),
-  openClub: (clubId) => set({ view: 'club', clubId, postId: null, editing: null, focused: null }),
+  openClub: (clubId) => set({ view: 'club', clubId, postId: null, editing: null, focused: null, live: null, shownItem: null }),
+  eventId: null,
+  openEvent: (eventId) => set({ view: 'event', eventId, postId: null, editing: null, focused: null, shownItem: null }),
+  live: null,
+  setLive: (live) => set({ live }),
   feedClub: null,
   setFeedClub: (feedClub) => set({ feedClub }),
 

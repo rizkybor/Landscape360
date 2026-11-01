@@ -3,7 +3,7 @@ import { Layer, Source, useMap } from "react-map-gl/mapbox";
 import type { MapMouseEvent } from "mapbox-gl";
 import type { Feature, FeatureCollection, Geometry, Point } from "geojson";
 import { useCommunityStore } from "../store/useCommunityStore";
-import { attachmentCoords, conditionOf, fetchFeed, isOldReport, REPORT_FRESH_DAYS } from "../lib/community";
+import { attachmentCoords, conditionOf, fetchFeed, isOldReport, LIVE_STALE_MIN, minutesAgo, REPORT_FRESH_DAYS } from "../lib/community";
 
 const POINTS_LAYER = "community-posts-dot";
 
@@ -16,6 +16,7 @@ export const CommunityLayer = () => {
   const mapPosts = useCommunityStore((s) => s.mapPosts);
   const focused = useCommunityStore((s) => s.focused);
   const shownItem = useCommunityStore((s) => s.shownItem);
+  const live = useCommunityStore((s) => s.live);
   const picking = useCommunityStore((s) => s.picking);
   const picked = useCommunityStore((s) => s.picked);
   const version = useCommunityStore((s) => s.version);
@@ -152,6 +153,52 @@ export const CommunityLayer = () => {
     [picked],
   );
 
+  // Fit everyone sharing in view when asked (the event page's "Show on map")
+  const liveFit = live?.fit ?? 0;
+  useEffect(() => {
+    const map = mapRef?.getMap();
+    const pts = useCommunityStore.getState().live?.positions ?? [];
+    if (!map || !liveFit || pts.length === 0) return;
+    if (pts.length === 1) {
+      map.flyTo({ center: [pts[0].lng, pts[0].lat], zoom: Math.max(map.getZoom(), 14), duration: 900 });
+      return;
+    }
+    map.fitBounds(
+      [
+        [Math.min(...pts.map((p) => p.lng)), Math.min(...pts.map((p) => p.lat))],
+        [Math.max(...pts.map((p) => p.lng)), Math.max(...pts.map((p) => p.lat))],
+      ],
+      { padding: { top: 80, bottom: 340, left: 60, right: 80 }, duration: 900, maxZoom: 16 },
+    );
+  }, [mapRef, liveFit]);
+
+  // An event's participants: last positions (faded when not seen for a while) and one trail
+  const livePoints = useMemo<FeatureCollection<Point>>(
+    () => ({
+      type: "FeatureCollection",
+      features: (live?.positions ?? []).map((p) => ({
+        type: "Feature",
+        properties: {
+          name: p.isMe ? `${p.name} (you)` : p.name,
+          stale: !p.sharing || minutesAgo(p.recordedAt) > LIVE_STALE_MIN,
+          selected: live?.trail?.userId === p.userId,
+        },
+        geometry: { type: "Point", coordinates: [p.lng, p.lat] },
+      })),
+    }),
+    [live],
+  );
+  const liveTrail = useMemo<FeatureCollection>(
+    () => ({
+      type: "FeatureCollection",
+      features:
+        live?.trail && live.trail.coords.length > 1
+          ? [{ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: live.trail.coords } }]
+          : [],
+    }),
+    [live],
+  );
+
   if (!isPanelOpen) return null;
 
   return (
@@ -181,6 +228,27 @@ export const CommunityLayer = () => {
             "circle-stroke-color": "#ffffff",
             "circle-stroke-width": ["case", ["get", "open"], 3, 2],
           }}
+        />
+      </Source>
+      <Source id="community-live-trail" type="geojson" data={liveTrail}>
+        <Layer id="community-live-trail-line" type="line" paint={{ "line-color": "#1f6feb", "line-width": 3, "line-opacity": 0.85 }} />
+      </Source>
+      <Source id="community-live" type="geojson" data={livePoints}>
+        <Layer
+          id="community-live-dot"
+          type="circle"
+          paint={{
+            "circle-radius": ["case", ["get", "selected"], 9, 7],
+            "circle-color": ["case", ["get", "stale"], "#9aa0a6", "#1f6feb"],
+            "circle-stroke-color": "#ffffff",
+            "circle-stroke-width": 2.5,
+          }}
+        />
+        <Layer
+          id="community-live-label"
+          type="symbol"
+          layout={{ "text-field": ["get", "name"], "text-size": 11, "text-offset": [0, 1.4], "text-anchor": "top", "text-allow-overlap": false }}
+          paint={{ "text-color": "#1a2214", "text-halo-color": "#ffffff", "text-halo-width": 1.5 }}
         />
       </Source>
       <Source id="community-picked" type="geojson" data={pickedPoint}>

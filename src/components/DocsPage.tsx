@@ -2196,6 +2196,18 @@ export const DocsPage = ({ onBack }: Props) => {
                 the club&apos;s workspace (up to 500 items, in folders). Members show items on the map and download them
                 as GPX, KML or GeoJSON.
               </li>
+              <li>
+                • <strong>Club events (expeditions)</strong>: the leader or an admin plans a trip with its time, meeting
+                point, route from the workspace, number of places and whether to approve who comes. Members join (with an
+                emergency contact only the organisers see) and tick their own gear checklist.
+              </li>
+              <li>
+                • <strong>Live positions</strong>: while an event runs, participants who are going can turn on{" "}
+                <em>Share my position</em> in the Landscape 360 Mobile App. Club members see everyone&apos;s last position
+                and trail on the map, here or in the app; organisers are warned when someone has not been seen for over an
+                hour. Sharing stops by itself when the event ends, and positions are deleted 30 days later. Afterwards you
+                see your distance, moving time and climb, and can save your track to the workspace.
+              </li>
             </ul>
             <p className="text-[10px] text-sand-500 leading-relaxed">
               Posts come from other hikers. Always check with the park or trail managers before you go.

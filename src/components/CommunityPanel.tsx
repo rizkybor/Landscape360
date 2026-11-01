@@ -16,6 +16,10 @@ import {
   Pin,
   Route,
   Eye,
+  CalendarDays,
+  Radio,
+  Phone,
+  Smartphone,
   Loader2,
   LocateFixed,
   Lock,
@@ -84,6 +88,28 @@ import {
   contactHref,
   CLUB_PHOTO_SIDE,
   ROLE_LABEL,
+  EVENT_STATE_LABEL,
+  LIVE_MISSING_MIN,
+  LIVE_STALE_MIN,
+  addChecklistItem,
+  cancelClubEvent,
+  decideParticipant,
+  deleteChecklistItem,
+  deleteClubEvent,
+  eventInputError,
+  fetchChecklist,
+  fetchClubEvent,
+  fetchClubEvents,
+  fetchLiveLatest,
+  fetchLiveTrail,
+  fetchParticipants,
+  joinClubEvent,
+  leaveClubEvent,
+  minutesAgo,
+  saveClubEvent,
+  stopLiveSharing,
+  toggleCheck,
+  trailSummary,
   WORKSPACE_TRACK_POINTS,
   addClubItem,
   createClubInvite,
@@ -108,6 +134,13 @@ import {
   type ClubMember,
   type ClubProfile,
   type ClubFolder,
+  type ClubEvent,
+  type ClubEventSummary,
+  type ChecklistItem,
+  type EventInput,
+  type EventParticipant,
+  type EventState,
+  type LivePosition,
   type ClubInvite,
   type ClubItem,
   type ItemFormat,
@@ -127,6 +160,7 @@ import { fetchRemotePoints } from "../services/trackRecorderSync";
 import { getPoints } from "../utils/trackRecorderDb";
 import { distanceKm, loadVillageIndex } from "../utils/villages";
 import { saveBlob } from "../utils/contourFormats";
+import type { LngLat } from "../types/markedArea";
 
 const field =
   "w-full bg-sand-50 border border-sand-200 rounded-lg px-2.5 py-1.5 text-base sm:text-xs text-ink placeholder:text-sand-500 outline-none focus:border-gold-300";
@@ -1539,7 +1573,7 @@ const ClubView = () => {
   const { clubId, openClubs, openFeed, setFeedClub, refresh } = useCommunityStore();
   const clubs = useMyClubs(true);
   const club = clubs.find((c) => c.id === clubId) ?? null;
-  const [tab, setTab] = useState<"members" | "workspace">("members");
+  const [tab, setTab] = useState<"members" | "workspace" | "events">("members");
   const [editing, setEditing] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -1625,8 +1659,8 @@ const ClubView = () => {
         {club.newPosts > 0 && <span className="px-1.5 rounded-full bg-white text-forest-800 text-[10px]">{club.newPosts} new</span>}
       </button>
 
-      <div className="grid grid-cols-2 gap-1 p-1 rounded-lg bg-sand-100" role="tablist" aria-label="Club">
-        {(["members", "workspace"] as const).map((t) => (
+      <div className="grid grid-cols-3 gap-1 p-1 rounded-lg bg-sand-100" role="tablist" aria-label="Club">
+        {(["members", "events", "workspace"] as const).map((t) => (
           <button
             key={t}
             role="tab"
@@ -1634,11 +1668,12 @@ const ClubView = () => {
             onClick={() => setTab(t)}
             className={`cursor-pointer flex items-center justify-center gap-1 py-1.5 rounded-md text-xs font-bold ${tab === t ? "bg-white shadow text-ink" : "text-sand-600"}`}
           >
-            {t === "members" ? <Users size={12} /> : <Folder size={12} />} {t === "members" ? `Members · ${club.memberCount}` : "Workspace"}
+            {t === "members" ? <Users size={12} /> : t === "events" ? <CalendarDays size={12} /> : <Folder size={12} />}{" "}
+            {t === "members" ? `Members · ${club.memberCount}` : t === "events" ? "Events" : "Workspace"}
           </button>
         ))}
       </div>
-      {tab === "members" ? <ClubMembersTab club={club} /> : <ClubWorkspaceTab club={club} />}
+      {tab === "members" ? <ClubMembersTab club={club} /> : tab === "events" ? <ClubEventsTab club={club} /> : <ClubWorkspaceTab club={club} />}
 
       <ErrorLine text={error} />
       {confirm ? (
@@ -2131,6 +2166,857 @@ const ClubWorkspaceTab = ({ club }: { club: Club }) => {
   );
 };
 
+// --- Club events (expeditions) ---------------------------------------------------------------
+
+const STATE_STYLE: Record<EventState, string> = {
+  planned: "bg-sand-100 text-sand-700 border-sand-200",
+  running: "bg-forest-50 text-forest-800 border-forest-200",
+  ended: "bg-white text-sand-500 border-sand-200",
+  cancelled: "bg-brick-50 text-brick-600 border-brick-200",
+};
+
+const StateBadge = ({ state }: { state: EventState }) => (
+  <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[9px] font-bold uppercase tracking-wide ${STATE_STYLE[state]}`}>
+    {state === "running" && <span className="w-1.5 h-1.5 rounded-full bg-forest-600 animate-pulse" />}
+    {EVENT_STATE_LABEL[state]}
+  </span>
+);
+
+const when = (start: number, end: number) => {
+  const d = (t: number) => new Date(t).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+  const h = (t: number) => new Date(t).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  const sameDay = new Date(start).toDateString() === new Date(end).toDateString();
+  return sameDay ? `${d(start)}, ${h(start)}–${h(end)}` : `${d(start)} ${h(start)} – ${d(end)} ${h(end)}`;
+};
+
+// <input type="datetime-local"> works in local time without a zone
+const toLocalInput = (t: number) => {
+  const d = new Date(t);
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+};
+const fromLocalInput = (v: string) => (v ? new Date(v).getTime() : NaN);
+
+const ClubEventsTab = ({ club }: { club: Club }) => {
+  const { openEvent } = useCommunityStore();
+  const version = useCommunityStore((s) => s.version);
+  const [past, setPast] = useState(false);
+  const [events, setEvents] = useState<ClubEventSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchClubEvents(club.id, past)
+      .then((e) => {
+        if (cancelled) return;
+        setEvents(e);
+        setError(null);
+      })
+      .catch((e: Error) => !cancelled && setError(e.message))
+      .finally(() => !cancelled && setLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [club.id, past, version]);
+
+  if (creating) return <EventForm clubId={club.id} event={null} onDone={(id) => (id ? openEvent(id) : setCreating(false))} />;
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-1.5">
+        <button className={pill(!past)} aria-pressed={!past} onClick={() => setPast(false)}>
+          Upcoming
+        </button>
+        <button className={pill(past)} aria-pressed={past} onClick={() => setPast(true)}>
+          Past
+        </button>
+        {club.canManage && (
+          <button
+            onClick={() => setCreating(true)}
+            className="cursor-pointer ml-auto inline-flex items-center gap-1 h-7 px-3 rounded-full bg-forest-800 hover:bg-forest-700 text-white text-[11px] font-bold"
+          >
+            <Plus size={12} /> New event
+          </button>
+        )}
+      </div>
+      <ErrorLine text={error} />
+      {loading ? (
+        <div className="space-y-2">
+          {[0, 1].map((i) => (
+            <div key={i} className="h-16 rounded-xl bg-sand-100 animate-pulse" />
+          ))}
+        </div>
+      ) : events.length === 0 ? (
+        <EmptyState
+          icon={CalendarDays}
+          title={past ? "No past events" : "No events planned"}
+          text={
+            club.canManage
+              ? "Plan a trip or field exercise: time, meeting point, route, who comes, and a gear checklist."
+              : "When the leader or an admin plans a trip, it shows up here."
+          }
+        />
+      ) : (
+        <ul className="space-y-2">
+          {events.map((e) => (
+            <li key={e.id}>
+              <button
+                onClick={() => openEvent(e.id)}
+                className="cursor-pointer w-full text-left rounded-xl border border-sand-200 bg-white shadow-sm hover:shadow-md hover:border-gold-300 transition-all p-3 space-y-1"
+              >
+                <span className="flex items-center gap-2">
+                  <StateBadge state={e.state} />
+                  {e.myStatus && (
+                    <span className="text-[9px] font-bold uppercase text-forest-700">{e.myStatus === "going" ? "You're going" : e.myStatus === "pending" ? "Waiting for approval" : "Declined"}</span>
+                  )}
+                  {e.sharingCount > 0 && (
+                    <span className="ml-auto inline-flex items-center gap-0.5 text-[10px] font-bold text-[#1f6feb]">
+                      <Radio size={11} /> {e.sharingCount} live
+                    </span>
+                  )}
+                </span>
+                <span className="block text-[13px] font-bold text-ink">{e.title}</span>
+                <span className="block text-[10px] text-sand-600">
+                  {when(e.startsAt, e.endsAt)}
+                  {e.meetingName ? ` · ${e.meetingName}` : ""}
+                </span>
+                <span className="block text-[10px] text-sand-500">
+                  {e.goingCount}
+                  {e.quota ? `/${e.quota}` : ""} going{e.pendingCount ? ` · ${e.pendingCount} waiting` : ""}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+};
+
+/** New event (event null) or editing one; onDone gets the id, or null when cancelled */
+const EventForm = ({ clubId, event, onDone }: { clubId: string; event: ClubEvent | null; onDone: (id: string | null) => void }) => {
+  const { picking, picked, startPicking, stopPicking } = useCommunityStore();
+  const [input, setInput] = useState<EventInput>(() => {
+    const start = event?.startsAt ?? Math.ceil((Date.now() + 86400000) / 3600000) * 3600000;
+    return {
+      title: event?.title ?? "",
+      description: event?.description ?? "",
+      startsAt: start,
+      endsAt: event?.endsAt ?? start + 2 * 86400000,
+      meetingName: event?.meetingName ?? "",
+      meeting: event?.meetingLat !== null && event?.meetingLat !== undefined && event.meetingLng !== null ? [event.meetingLng, event.meetingLat] : null,
+      routeItemId: event?.routeItemId ?? null,
+      quota: event?.quota ?? null,
+      needsApproval: event?.needsApproval ?? false,
+    };
+  });
+  const [routes, setRoutes] = useState<ClubItem[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [pickingMeeting, setPickingMeeting] = useState(false);
+  const set = <K extends keyof EventInput>(k: K, v: EventInput[K]) => setInput((i) => ({ ...i, [k]: v }));
+
+  useEffect(() => {
+    fetchClubItems(clubId).then((items) => setRoutes(items.filter((i) => i.kind === "track" || i.kind === "area")), () => undefined);
+  }, [clubId]);
+  // The point tapped on the map becomes the meeting point
+  const [seenPick, setSeenPick] = useState(picked);
+  if (picked !== seenPick) {
+    setSeenPick(picked);
+    if (pickingMeeting && picked) {
+      setInput((i) => ({ ...i, meeting: picked }));
+      setPickingMeeting(false);
+    }
+  }
+
+  const save = async () => {
+    const problem = eventInputError(input, !event);
+    if (problem) return setError(problem);
+    setBusy(true);
+    setError(null);
+    try {
+      onDone(await saveClubEvent(clubId, event?.id ?? null, input));
+    } catch (e) {
+      setError((e as Error).message);
+      setBusy(false);
+    }
+  };
+
+  if (picking && pickingMeeting) {
+    return (
+      <div className="flex items-center gap-2 text-xs">
+        <Crosshair size={14} className="text-gold-700 animate-pulse" />
+        <span className="flex-1 font-bold">Tap the meeting point on the map</span>
+        <button
+          onClick={() => {
+            stopPicking();
+            setPickingMeeting(false);
+          }}
+          className="cursor-pointer px-2 py-1 rounded-lg bg-sand-100 font-bold"
+        >
+          Cancel
+        </button>
+      </div>
+    );
+  }
+
+  const label = "text-[10px] font-bold uppercase tracking-wider text-sand-600";
+  return (
+    <div className="space-y-2.5">
+      <h4 className="text-sm font-bold">{event ? "Edit event" : "New event"}</h4>
+      <label className="block space-y-0.5">
+        <span className={label}>Title *</span>
+        <input value={input.title} onChange={(e) => set("title", e.target.value)} maxLength={80} placeholder="e.g. Gede-Pangrango via Cibodas" className={field} />
+      </label>
+      <div className="grid grid-cols-2 gap-2">
+        <label className="block space-y-0.5">
+          <span className={label}>Starts *</span>
+          <input type="datetime-local" value={toLocalInput(input.startsAt)} onChange={(e) => set("startsAt", fromLocalInput(e.target.value))} className={field} />
+        </label>
+        <label className="block space-y-0.5">
+          <span className={label}>Ends *</span>
+          <input type="datetime-local" value={toLocalInput(input.endsAt)} onChange={(e) => set("endsAt", fromLocalInput(e.target.value))} className={field} />
+        </label>
+      </div>
+      <label className="block space-y-0.5">
+        <span className={label}>Plan</span>
+        <textarea
+          value={input.description}
+          onChange={(e) => set("description", e.target.value)}
+          maxLength={2000}
+          rows={4}
+          placeholder="Itinerary, cost, what to bring, who to contact…"
+          className={`${field} resize-y`}
+        />
+      </label>
+      <div className="space-y-1">
+        <span className={label}>Meeting point</span>
+        <input value={input.meetingName} onChange={(e) => set("meetingName", e.target.value)} maxLength={120} placeholder="e.g. Basecamp Cibodas" className={field} />
+        <div className="flex flex-wrap items-center gap-1.5">
+          <button
+            onClick={() => {
+              setPickingMeeting(true);
+              startPicking();
+            }}
+            className="cursor-pointer flex items-center gap-1 px-2 py-1 rounded-lg bg-sand-100 hover:bg-sand-200 text-[10px] font-bold"
+          >
+            <MapPin size={11} /> {input.meeting ? "Move on map" : "Pick on map"}
+          </button>
+          {input.meeting && (
+            <>
+              <span className="text-[10px] text-sand-500 tabular-nums">
+                {input.meeting[1].toFixed(5)}, {input.meeting[0].toFixed(5)}
+              </span>
+              <button onClick={() => set("meeting", null)} className="cursor-pointer text-[10px] font-bold text-brick-600">
+                Remove
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+      <label className="block space-y-0.5">
+        <span className={label}>Planned route (from the workspace)</span>
+        <select value={input.routeItemId ?? ""} onChange={(e) => set("routeItemId", e.target.value || null)} className={field}>
+          <option value="">None</option>
+          {routes.map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.kind === "track" ? "Track" : "Area"}: {r.name}
+            </option>
+          ))}
+        </select>
+        {routes.length === 0 && <span className="block text-[10px] text-sand-500">Add a track or area to the club workspace to use it as the route.</span>}
+      </label>
+      <div className="grid grid-cols-2 gap-2 items-end">
+        <label className="block space-y-0.5">
+          <span className={label}>Places</span>
+          <input
+            type="number"
+            min={1}
+            max={500}
+            value={input.quota ?? ""}
+            onChange={(e) => set("quota", e.target.value ? Number(e.target.value) : null)}
+            placeholder="No limit"
+            className={field}
+          />
+        </label>
+        <label className="flex items-center gap-2 pb-1.5 text-[11px] text-sand-700 cursor-pointer">
+          <input type="checkbox" checked={input.needsApproval} onChange={(e) => set("needsApproval", e.target.checked)} className="accent-forest-800" />
+          Approve who comes
+        </label>
+      </div>
+      <ErrorLine text={error} />
+      <div className="flex justify-end gap-1.5">
+        <button onClick={() => onDone(null)} disabled={busy} className="cursor-pointer px-3 py-1.5 rounded-lg bg-sand-100 text-sand-700 text-xs font-bold">
+          Cancel
+        </button>
+        <button onClick={save} disabled={busy} className="cursor-pointer flex items-center gap-1 px-3 py-1.5 rounded-lg bg-forest-800 hover:bg-forest-700 text-white text-xs font-bold disabled:opacity-50">
+          {busy ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} {event ? "Save" : "Create event"}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const EventView = () => {
+  const { eventId, openClub, setLive, setShownItem, setLowered, setFeedClub, openCompose, refresh } = useCommunityStore();
+  const user = useSurveyStore((s) => s.user);
+  const [event, setEvent] = useState<ClubEvent | null>(null);
+  const [people, setPeople] = useState<EventParticipant[]>([]);
+  const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
+  const [positions, setPositions] = useState<LivePosition[]>([]);
+  const [trailOf, setTrailOf] = useState<string | null>(null);
+  const [myTrail, setMyTrail] = useState<ReturnType<typeof trailSummary> | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [joining, setJoining] = useState(false);
+  const [contact, setContact] = useState({ name: "", phone: "" });
+  const [newItem, setNewItem] = useState("");
+  const [confirm, setConfirm] = useState<"cancel" | "delete" | "leave" | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [now, setNow] = useState(() => Date.now());
+
+  const load = useCallback(async () => {
+    if (!eventId) return;
+    try {
+      const [e, p, c] = await Promise.all([fetchClubEvent(eventId), fetchParticipants(eventId), fetchChecklist(eventId)]);
+      setEvent(e);
+      setPeople(p);
+      setChecklist(c);
+      setError(e ? null : "This event is no longer available.");
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }, [eventId]);
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  // Live positions: every 30 s while the event page is open (running, or ended within 30 days)
+  const showsLive = !!event && (event.state === "running" || event.state === "ended");
+  useEffect(() => {
+    if (!eventId || !showsLive) return;
+    let cancelled = false;
+    const tick = () =>
+      fetchLiveLatest(eventId).then(
+        (pos) => {
+          if (cancelled) return;
+          setPositions(pos);
+          setNow(Date.now());
+        },
+        () => undefined,
+      );
+    tick();
+    const timer = setInterval(tick, 30000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [eventId, showsLive]);
+
+  // The positions (and the chosen trail) go to the map layer
+  const [trail, setTrail] = useState<{ userId: string; coords: LngLat[] } | null>(null);
+  const [fit, setFit] = useState(0);
+  useEffect(() => {
+    setLive(showsLive ? { positions, trail, fit } : null);
+  }, [showsLive, positions, trail, fit, setLive]);
+  useEffect(() => () => setLive(null), [setLive]);
+
+  useEffect(() => {
+    if (!eventId || !trailOf) return;
+    let cancelled = false;
+    fetchLiveTrail(eventId, trailOf).then(
+      (pts) => !cancelled && setTrail({ userId: trailOf, coords: pts.map((p) => [p.lng, p.lat] as LngLat) }),
+      () => undefined,
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [eventId, trailOf, positions]);
+
+  // After the event: your own summary, if you shared
+  const iShared = positions.some((p) => p.isMe);
+  useEffect(() => {
+    if (!eventId || event?.state !== "ended" || !iShared || !user) return;
+    fetchLiveTrail(eventId, user.id).then((pts) => setMyTrail(trailSummary(pts)), () => undefined);
+  }, [eventId, event?.state, iShared, user]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-8">
+        <Loader2 size={18} className="animate-spin text-sand-500" />
+      </div>
+    );
+  }
+  if (!event) return <ErrorLine text={error ?? "This event is no longer available."} />;
+  if (editing) {
+    return (
+      <EventForm
+        clubId={event.clubId}
+        event={event}
+        onDone={(id) => {
+          setEditing(false);
+          if (id) {
+            refresh();
+            load();
+          }
+        }}
+      />
+    );
+  }
+
+  const act = async (fn: () => Promise<unknown>, after?: string) => {
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      await fn();
+      if (after) setNotice(after);
+      await load();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  const lowerOnPhone = () => window.matchMedia("(max-width: 767px)").matches && setLowered(true);
+  const showMeeting = () => {
+    if (event.meetingLat === null || event.meetingLng === null) return;
+    setShownItem({ kind: "place", name: event.meetingName ?? "Meeting point", category: "meeting", geometry: { type: "Point", coordinates: [event.meetingLng, event.meetingLat] } });
+    lowerOnPhone();
+  };
+  const showRoute = () =>
+    act(async () => {
+      if (!event.routeItemId) return;
+      const data = await fetchClubItemData(event.routeItemId);
+      if (data) {
+        setShownItem(data);
+        lowerOnPhone();
+      }
+    });
+  const join = () =>
+    act(async () => {
+      const status = await joinClubEvent(event.id, contact.name, contact.phone);
+      setJoining(false);
+      refresh();
+      setNotice(status === "pending" ? "Request sent. The organisers will approve it." : "You're going.");
+    });
+  const ended = event.state === "ended" || event.state === "cancelled";
+  const going = people.filter((p) => p.status === "going");
+  const pending = people.filter((p) => p.status === "pending");
+  const sharingPeople = positions.length;
+  const label = "text-[10px] font-bold uppercase tracking-wider text-sand-600";
+
+  return (
+    <div className="space-y-3">
+      <div className="space-y-1">
+        <div className="flex items-center gap-2">
+          <StateBadge state={event.state} />
+          <span className="text-[10px] text-sand-500 truncate">{event.clubName}</span>
+        </div>
+        <h4 className="text-base font-bold text-ink leading-snug">{event.title}</h4>
+        <p className="text-[11px] text-sand-700">
+          <CalendarDays size={11} className="inline -mt-0.5" /> {when(event.startsAt, event.endsAt)}
+        </p>
+        {event.meetingName && (
+          <p className="text-[11px] text-sand-700">
+            <MapPin size={11} className="inline -mt-0.5" /> {event.meetingName}
+          </p>
+        )}
+        <p className="text-[10px] text-sand-500">Organised by {event.createdByName}</p>
+      </div>
+
+      <div className="flex flex-wrap gap-1.5">
+        {event.meetingLat !== null && (
+          <button onClick={showMeeting} className={pill(false)}>
+            <MapPin size={11} /> Meeting point
+          </button>
+        )}
+        {event.routeItemId && (
+          <button onClick={showRoute} disabled={busy} className={pill(false)}>
+            <Route size={11} /> Route{event.routeName ? `: ${event.routeName}` : ""}
+          </button>
+        )}
+      </div>
+      {event.description && <p className="text-xs text-ink whitespace-pre-wrap break-words leading-relaxed">{event.description}</p>}
+
+      {/* Your place in it */}
+      {!ended && (
+        <div className="rounded-xl border border-sand-200 bg-white p-3 space-y-2">
+          {event.myStatus === "going" || event.myStatus === "pending" ? (
+            <>
+              <p className="text-xs font-bold text-forest-800">
+                {event.myStatus === "going" ? "You're going." : "Waiting for the organisers to approve you."}
+              </p>
+              {event.myEmergencyName || event.myEmergencyPhone ? (
+                <p className="text-[10px] text-sand-600">
+                  Emergency contact: {[event.myEmergencyName, event.myEmergencyPhone].filter(Boolean).join(" · ")}
+                </p>
+              ) : null}
+            </>
+          ) : event.myStatus === "declined" ? (
+            <p className="text-xs text-brick-600">The organisers declined your request for this event.</p>
+          ) : (
+            <p className="text-xs text-sand-700">
+              {going.length}
+              {event.quota ? ` of ${event.quota}` : ""} going{event.needsApproval ? " · the organisers approve who comes" : ""}.
+            </p>
+          )}
+          {joining ? (
+            <div className="space-y-1.5">
+              <p className="text-[10px] text-sand-600">Emergency contact (optional): only the organisers see it.</p>
+              <div className="grid grid-cols-2 gap-1.5">
+                <input value={contact.name} onChange={(e) => setContact((c) => ({ ...c, name: e.target.value }))} maxLength={80} placeholder="Name" aria-label="Emergency contact name" className={field} />
+                <input value={contact.phone} onChange={(e) => setContact((c) => ({ ...c, phone: e.target.value }))} maxLength={30} placeholder="Phone" inputMode="tel" aria-label="Emergency contact phone" className={field} />
+              </div>
+              <div className="flex justify-end gap-1.5">
+                <button onClick={() => setJoining(false)} className="cursor-pointer px-3 py-1 rounded-lg bg-sand-100 text-[11px] font-bold">
+                  Cancel
+                </button>
+                <button onClick={join} disabled={busy} className="cursor-pointer px-3 py-1 rounded-lg bg-forest-800 text-white text-[11px] font-bold disabled:opacity-50">
+                  {event.myStatus ? "Save" : event.needsApproval ? "Ask to join" : "Join"}
+                </button>
+              </div>
+            </div>
+          ) : event.myStatus !== "declined" ? (
+            <div className="flex flex-wrap gap-1.5">
+              {!event.myStatus && (
+                <button
+                  onClick={() => setJoining(true)}
+                  className="cursor-pointer inline-flex items-center gap-1 h-8 px-3.5 rounded-full bg-forest-800 hover:bg-forest-700 text-white text-xs font-bold"
+                >
+                  <Check size={13} /> {event.needsApproval ? "Ask to join" : "I'm going"}
+                </button>
+              )}
+              {event.myStatus && (
+                <>
+                  <button
+                    onClick={() => {
+                      setContact({ name: event.myEmergencyName ?? "", phone: event.myEmergencyPhone ?? "" });
+                      setJoining(true);
+                    }}
+                    className={pill(false)}
+                  >
+                    <Phone size={11} /> Emergency contact
+                  </button>
+                  {confirm === "leave" ? (
+                    <span className="flex items-center gap-1 text-[11px] font-bold text-brick-600">
+                      Leave?
+                      <button onClick={() => act(() => leaveClubEvent(event.id))} className="cursor-pointer px-2 py-0.5 rounded bg-brick-600 text-white">
+                        Yes
+                      </button>
+                      <button onClick={() => setConfirm(null)} className="cursor-pointer px-2 py-0.5 rounded bg-sand-100 text-sand-700">
+                        No
+                      </button>
+                    </span>
+                  ) : (
+                    <button onClick={() => setConfirm("leave")} className={pill(false)}>
+                      Not going
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          ) : null}
+        </div>
+      )}
+
+      {/* Live tracking */}
+      {(event.state === "running" || event.state === "planned" || sharingPeople > 0) && event.state !== "cancelled" && (
+        <section className="rounded-xl border border-[#1f6feb]/25 bg-[#1f6feb]/5 p-3 space-y-2" aria-label="Live positions">
+          <div className="flex items-center gap-2">
+            <Radio size={14} className="text-[#1f6feb]" />
+            <span className="text-xs font-bold text-ink">Live positions</span>
+            {sharingPeople > 0 && (
+              <button
+                onClick={() => {
+                  setFit((f) => f + 1);
+                  lowerOnPhone();
+                }}
+                className="cursor-pointer ml-auto text-[10px] font-bold text-[#1f6feb] hover:underline"
+              >
+                Show on map
+              </button>
+            )}
+          </div>
+          {event.iAmSharing ? (
+            <div className="flex items-center gap-2 text-[11px]">
+              <span className="w-2 h-2 rounded-full bg-[#1f6feb] animate-pulse" />
+              <span className="flex-1">You are sharing your position with {event.clubName} until the event ends.</span>
+              <button onClick={() => act(() => stopLiveSharing(event.id), "You stopped sharing your position.")} disabled={busy} className="cursor-pointer px-2 py-0.5 rounded bg-white border border-sand-200 font-bold">
+                Stop
+              </button>
+            </div>
+          ) : event.myStatus === "going" ? (
+            <p className="flex items-start gap-1.5 text-[11px] text-sand-700">
+              <Smartphone size={13} className="shrink-0 mt-0.5" />
+              <span>
+                Share your position from the <strong>Landscape 360 Mobile App</strong> (open this event there and turn on Share my position). It
+                works from 2 hours before the start and stops by itself when the event ends.
+              </span>
+            </p>
+          ) : (
+            <p className="text-[11px] text-sand-600">Participants who are going can share their position from the mobile app while the event runs.</p>
+          )}
+          {positions.length === 0 ? (
+            showsLive && <p className="text-[10px] text-sand-500">No one has shared a position yet.</p>
+          ) : (
+            <ul className="divide-y divide-[#1f6feb]/10">
+              {positions.map((p) => {
+                const mins = minutesAgo(p.recordedAt, now);
+                const missing = p.sharing && mins > LIVE_MISSING_MIN;
+                return (
+                  <li key={p.userId}>
+                    <button
+                      onClick={() => {
+                        setTrailOf(trailOf === p.userId ? null : p.userId);
+                        setTrail(null);
+                      }}
+                      aria-pressed={trailOf === p.userId}
+                      className="cursor-pointer w-full flex items-center gap-2 py-1.5 text-left"
+                    >
+                      <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${!p.sharing || mins > LIVE_STALE_MIN ? "bg-sand-400" : "bg-[#1f6feb]"}`} />
+                      <span className="flex-1 min-w-0">
+                        <span className="block text-[11px] font-bold truncate">
+                          {p.name}
+                          {p.isMe ? " (you)" : ""}
+                        </span>
+                        <span className={`block text-[10px] ${missing ? "text-brick-600 font-bold" : "text-sand-500"}`}>
+                          {missing ? `Not seen for ${mins} min` : mins === 0 ? "Just now" : `${mins} min ago`}
+                          {p.sharing ? "" : " · stopped"}
+                          {p.altitudeM !== null ? ` · ${Math.round(p.altitudeM)} m` : ""}
+                          {p.battery !== null ? ` · battery ${p.battery}%` : ""}
+                        </span>
+                      </span>
+                      <span className="text-[10px] font-bold text-[#1f6feb] shrink-0">{trailOf === p.userId ? "Hide trail" : "Trail"}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+      )}
+
+      {/* After the event */}
+      {event.state === "ended" && (
+        <section className="rounded-xl border border-gold-200 bg-gold-50/40 p-3 space-y-2">
+          <div className="text-xs font-bold">After the trip</div>
+          {myTrail && myTrail.points > 1 && (
+            <div className="grid grid-cols-3 gap-1.5 text-center">
+              <div className="rounded-lg bg-white border border-sand-200 py-1.5">
+                <div className="text-sm font-bold">{(myTrail.distanceM / 1000).toFixed(1)} km</div>
+                <div className="text-[9px] text-sand-500">distance</div>
+              </div>
+              <div className="rounded-lg bg-white border border-sand-200 py-1.5">
+                <div className="text-sm font-bold">
+                  {Math.floor(myTrail.movingMs / 3600000)}h {Math.round((myTrail.movingMs % 3600000) / 60000)}m
+                </div>
+                <div className="text-[9px] text-sand-500">moving</div>
+              </div>
+              <div className="rounded-lg bg-white border border-sand-200 py-1.5">
+                <div className="text-sm font-bold">{Math.round(myTrail.gainM)} m</div>
+                <div className="text-[9px] text-sand-500">climbed</div>
+              </div>
+            </div>
+          )}
+          <div className="flex flex-wrap gap-1.5">
+            {myTrail && myTrail.points > 1 && user && (
+              <button
+                onClick={() =>
+                  act(async () => {
+                    const pts = await fetchLiveTrail(event.id, user.id);
+                    await addClubItem(
+                      event.clubId,
+                      null,
+                      trackAttachment(`${event.title} (live track)`, myTrail.distanceM, pts, WORKSPACE_TRACK_POINTS),
+                      `Shared live during ${event.title}`,
+                    );
+                  }, "Your track is in the club workspace.")
+                }
+                disabled={busy}
+                className={pill(false)}
+              >
+                <Folder size={11} /> Save my track to the workspace
+              </button>
+            )}
+            <button
+              onClick={() => {
+                setFeedClub(event.clubId);
+                openCompose();
+              }}
+              className={pill(true)}
+            >
+              <Pencil size={11} /> Write a story
+            </button>
+          </div>
+        </section>
+      )}
+
+      {/* Checklist */}
+      {(checklist.length > 0 || event.canManage) && (
+        <section className="space-y-1.5" aria-label="Checklist">
+          <div className={label}>Checklist</div>
+          <ul className="rounded-xl border border-sand-200 bg-white divide-y divide-sand-100">
+            {checklist.map((i) => (
+              <li key={i.id} className="flex items-center gap-2 px-3 py-1.5">
+                <label className="flex-1 flex items-center gap-2 text-[11px] cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={i.checked}
+                    disabled={busy || !(event.myStatus === "going" || event.myStatus === "pending")}
+                    onChange={() =>
+                      act(async () => {
+                        const on = await toggleCheck(i.id);
+                        setChecklist((c) => c.map((x) => (x.id === i.id ? { ...x, checked: on } : x)));
+                      })
+                    }
+                    className="accent-forest-800"
+                  />
+                  <span className={i.checked ? "line-through text-sand-500" : ""}>{i.label}</span>
+                </label>
+                <span className="text-[9px] text-sand-500 tabular-nums">
+                  {i.checkedCount}/{going.length + pending.length || 0}
+                </span>
+                {event.canManage && (
+                  <button onClick={() => act(() => deleteChecklistItem(i.id))} className="cursor-pointer p-0.5 text-brick-600" aria-label={`Remove ${i.label}`}>
+                    <X size={11} />
+                  </button>
+                )}
+              </li>
+            ))}
+            {checklist.length === 0 && <li className="px-3 py-2 text-[10px] text-sand-500">No items yet.</li>}
+          </ul>
+          {event.canManage && !ended && (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (newItem.trim())
+                  act(async () => {
+                    await addChecklistItem(event.id, newItem);
+                    setNewItem("");
+                  });
+              }}
+              className="flex gap-1.5"
+            >
+              <input value={newItem} onChange={(e) => setNewItem(e.target.value)} maxLength={80} placeholder="Add gear, e.g. Headlamp" aria-label="Checklist item" className={field} />
+              <button type="submit" disabled={busy || !newItem.trim()} className="cursor-pointer shrink-0 px-3 rounded-lg bg-forest-800 text-white text-[11px] font-bold disabled:opacity-40">
+                Add
+              </button>
+            </form>
+          )}
+        </section>
+      )}
+
+      {/* Participants */}
+      <section className="space-y-1.5" aria-label="Participants">
+        <div className={label}>
+          Going · {going.length}
+          {event.quota ? `/${event.quota}` : ""}
+          {pending.length > 0 && event.canManage ? ` · ${pending.length} waiting` : ""}
+        </div>
+        <ul className="rounded-xl border border-sand-200 bg-white divide-y divide-sand-100">
+          {people.map((p) => {
+            const missing = p.sharing && p.lastSeenAt !== null && minutesAgo(p.lastSeenAt, now) > LIVE_MISSING_MIN;
+            return (
+              <li key={p.userId} className="flex items-center gap-2 px-3 py-1.5">
+                <Initial name={p.name} />
+                <span className="flex-1 min-w-0">
+                  <span className="block text-[11px] font-bold truncate">
+                    {p.name}
+                    {p.isMe ? " (you)" : ""}
+                    {p.status !== "going" && <span className="ml-1 text-[9px] uppercase text-gold-700">{p.status === "pending" ? "waiting" : "declined"}</span>}
+                    {p.sharing && <Radio size={10} className="inline ml-1 text-[#1f6feb]" aria-label="sharing" />}
+                  </span>
+                  {(p.emergencyName || p.emergencyPhone) && (
+                    <span className="block text-[10px] text-sand-600 truncate">
+                      SOS: {p.emergencyName}
+                      {p.emergencyPhone && (
+                        <>
+                          {" "}
+                          <a href={`tel:${p.emergencyPhone.replace(/[^\d+]/g, "")}`} className="font-bold text-forest-700">
+                            {p.emergencyPhone}
+                          </a>
+                        </>
+                      )}
+                    </span>
+                  )}
+                  {missing && <span className="block text-[10px] font-bold text-brick-600">Not seen for over {LIVE_MISSING_MIN} min</span>}
+                </span>
+                {checklist.length > 0 && <span className="text-[9px] text-sand-500 tabular-nums">{p.checkedCount}/{checklist.length}</span>}
+                {event.canManage && p.status === "pending" && (
+                  <span className="flex gap-1">
+                    <button onClick={() => act(() => decideParticipant(event.id, p.userId, "going"))} disabled={busy} className="cursor-pointer px-2 py-0.5 rounded bg-forest-800 text-white text-[10px] font-bold">
+                      Approve
+                    </button>
+                    <button onClick={() => act(() => decideParticipant(event.id, p.userId, "declined"))} disabled={busy} className="cursor-pointer px-2 py-0.5 rounded bg-sand-100 text-[10px] font-bold">
+                      Decline
+                    </button>
+                  </span>
+                )}
+              </li>
+            );
+          })}
+          {people.length === 0 && <li className="px-3 py-2 text-[10px] text-sand-500">No one yet.</li>}
+        </ul>
+      </section>
+
+      {notice && <p className="text-[11px] font-bold text-forest-700">{notice}</p>}
+      <ErrorLine text={error} />
+
+      {event.canManage && (
+        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-sand-200 text-[11px]">
+          {event.state !== "cancelled" && event.state !== "ended" && (
+            <button onClick={() => setEditing(true)} className="cursor-pointer flex items-center gap-1 font-bold text-sand-700 hover:underline">
+              <Pencil size={11} /> Edit
+            </button>
+          )}
+          {confirm === "cancel" || confirm === "delete" ? (
+            <span className="flex items-center gap-1 font-bold text-brick-600">
+              {confirm === "cancel" ? "Cancel the event for everyone?" : "Delete the event and its positions?"}
+              <button
+                onClick={() =>
+                  act(async () => {
+                    if (confirm === "cancel") await cancelClubEvent(event.id);
+                    else {
+                      await deleteClubEvent(event.id);
+                      refresh();
+                      openClub(event.clubId);
+                    }
+                    setConfirm(null);
+                  })
+                }
+                className="cursor-pointer px-2 py-0.5 rounded bg-brick-600 text-white"
+              >
+                Yes
+              </button>
+              <button onClick={() => setConfirm(null)} className="cursor-pointer px-2 py-0.5 rounded bg-sand-100 text-sand-700">
+                No
+              </button>
+            </span>
+          ) : (
+            <>
+              {event.state !== "cancelled" && event.state !== "ended" && (
+                <button onClick={() => setConfirm("cancel")} className="cursor-pointer font-bold text-brick-600 hover:underline">
+                  Cancel event
+                </button>
+              )}
+              <button onClick={() => setConfirm("delete")} className="cursor-pointer font-bold text-brick-600 hover:underline">
+                Delete
+              </button>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // --- Admin: reports ------------------------------------------------------------------------------
 
 const ReportsView = () => {
@@ -2217,7 +3103,8 @@ const ReportsView = () => {
 // Community: trail reports and trip stories on the map (COMMUNITY_PRD.md). Anyone can read;
 // signed-in accounts post within their plan's daily limits; the admin moderates.
 export const CommunityPanel = () => {
-  const { isPanelOpen, setPanelOpen, view, listView, openFeed, openMine, openClubs, openReports, editing, postId } = useCommunityStore();
+  const { isPanelOpen, setPanelOpen, view, listView, openFeed, openMine, openClubs, openClub, openReports, editing, postId, clubId } =
+    useCommunityStore();
   const { user, isAdmin } = useSurveyStore();
   const clubs = useMyClubs(!!user);
   const isTrackRecorderOpen = useTrackRecorderStore((s) => s.isPanelOpen);
@@ -2271,7 +3158,16 @@ export const CommunityPanel = () => {
   if (!isPanelOpen) return null;
   const signedIn = !!user;
   const isSubView = !["feed", "clubs", "mine"].includes(view);
-  const back = view === "club" ? openClubs : listView === "mine" ? openMine : listView === "clubs" ? openClubs : openFeed;
+  const back =
+    view === "event" && clubId
+      ? () => openClub(clubId)
+      : view === "club"
+        ? openClubs
+        : listView === "mine"
+          ? openMine
+          : listView === "clubs"
+            ? openClubs
+            : openFeed;
   const newClubPosts = clubs.reduce((n, c) => n + c.newPosts, 0);
   const title =
     view === "compose"
@@ -2282,7 +3178,9 @@ export const CommunityPanel = () => {
         ? "Reported posts"
         : view === "club"
           ? "Club"
-          : view === "post"
+          : view === "event"
+            ? "Event"
+            : view === "post"
             ? "Post"
             : "Community";
 
@@ -2396,6 +3294,7 @@ export const CommunityPanel = () => {
         {view === "reports" && isAdmin && <ReportsView />}
         {view === "clubs" && user && <ClubsView />}
         {view === "club" && user && <ClubView />}
+        {view === "event" && user && <EventView />}
       </div>
     </div>
   );

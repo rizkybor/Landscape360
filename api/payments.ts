@@ -9,7 +9,9 @@
  *   GET  /api/payments?order=<id>      -> signed in: the order's status (asks Midtrans if still pending)
  *   POST /api/payments?notify          -> Midtrans payment notification (signature checked, then the
  *                                         status is read back from Midtrans before anything changes)
- *   GET  /api/payments?cron            -> Vercel Cron, daily: paid plans that ran out go back to Free
+ *   GET  /api/payments?cron            -> Vercel Cron, daily: paid plans that ran out go back to Free;
+ *                                         also deletes Community live positions 30 days after their event
+ *                                         (purge_community_live, 20261102000029_community_club_events.sql)
  *
  * Requires SUPABASE_SERVICE_ROLE_KEY, SUPABASE_URL (or VITE_SUPABASE_URL), MIDTRANS_SERVER_KEY,
  * MIDTRANS_IS_PRODUCTION ("true" for live payments; sandbox otherwise) and CRON_SECRET.
@@ -276,9 +278,13 @@ async function handleOrder(request: Request, orderId: string) {
 async function handleCron(request: Request) {
   const secret = process.env.CRON_SECRET;
   if (!secret || request.headers.get('authorization') !== `Bearer ${secret}`) throw new HttpError(401, 'Not allowed');
-  const { data, error } = await getAdminClient().rpc('expire_subscriptions');
+  const supabase = getAdminClient();
+  const { data, error } = await supabase.rpc('expire_subscriptions');
   if (error) throw new HttpError(500, error.message);
-  return json({ ok: true, expired: data });
+  // A failure here (e.g. the Community migration not run yet) must not stop the plan expiry
+  const purge = await supabase.rpc('purge_community_live');
+  if (purge.error) console.error('purge_community_live failed:', purge.error.message);
+  return json({ ok: true, expired: data, livePositionsPurged: purge.error ? null : purge.data });
 }
 
 const withErrors =
