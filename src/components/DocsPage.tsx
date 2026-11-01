@@ -2208,6 +2208,13 @@ export const DocsPage = ({ onBack }: Props) => {
                 hour. Sharing stops by itself when the event ends, and positions are deleted 30 days later. Afterwards you
                 see your distance, moving time and climb, and can save your track to the workspace.
               </li>
+              <li>
+                • <strong>Club map</strong>: members draw pins, lines, areas and notes with a label and colour; everyone
+                in the club sees them on the map, in 2D or draped on the 3D terrain, and can comment. Each drawing shows
+                its length, or area and perimeter; tap <em>Elevation profile</em> for the climb, descent, lowest and
+                highest point along a line (from SRTM data), or <em>Height here</em> on a pin. <em>Save this view</em>{" "}
+                keeps the camera (position, zoom, tilt, 2D or 3D) so the team can jump to it in a briefing.
+              </li>
             </ul>
             <p className="text-[10px] text-sand-500 leading-relaxed">
               Posts come from other hikers. Always check with the park or trail managers before you go.

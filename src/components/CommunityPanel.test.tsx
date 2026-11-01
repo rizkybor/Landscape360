@@ -12,6 +12,8 @@ import {
   fetchMyClubs,
   fetchMyPosts,
   fetchParticipants,
+  saveAnnotation,
+  type Club,
   type ClubEvent,
   type FeedPost,
 } from '../lib/community';
@@ -28,6 +30,11 @@ vi.mock('../lib/community', async (importOriginal) => ({
   fetchLiveLatest: vi.fn(),
   fetchLiveTrail: vi.fn(() => Promise.resolve([])),
   decideParticipant: vi.fn(() => Promise.resolve()),
+  fetchClubMembers: vi.fn(() => Promise.resolve([])),
+  fetchClubInvites: vi.fn(() => Promise.resolve([])),
+  fetchAnnotations: vi.fn(() => Promise.resolve([])),
+  fetchSavedViews: vi.fn(() => Promise.resolve([])),
+  saveAnnotation: vi.fn(() => Promise.resolve('a1')),
   markClubRead: vi.fn(() => Promise.resolve()),
   photoUrl: (p: string) => `https://cdn/${p}`,
 }));
@@ -140,5 +147,36 @@ describe('CommunityPanel event page', () => {
     expect(useCommunityStore.getState().live?.positions).toHaveLength(1);
     fireEvent.click(screen.getByRole('button', { name: 'Approve' }));
     await waitFor(() => expect(decideParticipant).toHaveBeenCalledWith('e1', 'u3', 'going'));
+  });
+});
+
+describe('CommunityPanel club map', () => {
+  const club: Club = {
+    id: 'c1', name: 'Makopala', description: null, role: 'member', memberCount: 3, ownerName: 'Dodi', createdAt: 0,
+    region: null, contact: null, photoPath: null, updatedAt: null, newPosts: 0, canManage: false,
+  };
+
+  it('draws a line point by point and saves it for the club', async () => {
+    signIn(true);
+    vi.mocked(fetchMyClubs).mockResolvedValue([club]);
+    useCommunityStore.setState({ isPanelOpen: true, view: 'club', clubId: 'c1', lowered: false, draw: null, clubMap: null });
+    render(<CommunityPanel />);
+    fireEvent.click(await screen.findByRole('tab', { name: /Map/ }));
+    expect(await screen.findByText('Nothing drawn yet')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /Line/ }));
+    expect(screen.getByRole('button', { name: /Done/ }).hasAttribute('disabled')).toBe(true);
+    // Two taps on the map (the map layer adds them to the drawing)
+    const d = useCommunityStore.getState().draw!;
+    useCommunityStore.getState().setDraw({ ...d, points: [[106.9, -6.7], [106.91, -6.71]] });
+    expect(await screen.findByText(/Length 1\.5\d km/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /Done/ }));
+    fireEvent.change(screen.getByLabelText('Label'), { target: { value: 'Jalur alternatif' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() =>
+      expect(saveAnnotation).toHaveBeenCalledWith('c1', null, expect.objectContaining({
+        kind: 'line', label: 'Jalur alternatif', geometry: { type: 'LineString', coordinates: [[106.9, -6.7], [106.91, -6.71]] },
+      })),
+    );
+    expect(useCommunityStore.getState().draw).toBeNull();
   });
 });

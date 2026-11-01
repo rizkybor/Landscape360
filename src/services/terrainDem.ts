@@ -170,3 +170,47 @@ export const fetchAreaDem = async (
     toLngLat: (x, y) => [west + x * resX, north - y * resY],
   };
 };
+
+/**
+ * Heights at points (for elevation profiles), from the same open tiles, bilinear between
+ * pixels. NaN where there is no data. Tiles are fetched once each, a few at a time.
+ */
+export const sampleElevations = async (points: LngLat[], zoom = 13): Promise<number[]> => {
+  const keyOf = (x: number, y: number) => `${x}/${y}`;
+  const px = points.map(([lng, lat]) => [mercX(lng, zoom), mercY(lat, zoom)] as const);
+  const needed = new Map<string, [number, number]>();
+  for (const [x, y] of px) {
+    for (const gx of [Math.floor(x), Math.floor(x) + 1])
+      for (const gy of [Math.floor(y), Math.floor(y) + 1]) {
+        const tx = Math.floor(gx / TILE);
+        const ty = Math.floor(gy / TILE);
+        needed.set(keyOf(tx, ty), [tx, ty]);
+      }
+  }
+  if (needed.size > 400) throw new Error('This line is too long for an elevation profile.');
+  const keys = [...needed.values()];
+  const tiles = new Map<string, Float32Array | null>();
+  let next = 0;
+  const worker = async () => {
+    while (next < keys.length) {
+      const [x, y] = keys[next++];
+      tiles.set(keyOf(x, y), await loadTile(zoom, x, y));
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(CONCURRENCY, keys.length) }, worker));
+  const at = (gx: number, gy: number) => {
+    const tx = Math.floor(gx / TILE);
+    const ty = Math.floor(gy / TILE);
+    const h = tiles.get(keyOf(tx, ty));
+    return h ? h[(gy - ty * TILE) * TILE + (gx - tx * TILE)] : NaN;
+  };
+  return px.map(([x, y]) => {
+    const x0 = Math.floor(x);
+    const y0 = Math.floor(y);
+    const fx = x - x0;
+    const fy = y - y0;
+    const top = at(x0, y0) * (1 - fx) + at(x0 + 1, y0) * fx;
+    const bottom = at(x0, y0 + 1) * (1 - fx) + at(x0 + 1, y0 + 1) * fx;
+    return top * (1 - fy) + bottom * fy;
+  });
+};

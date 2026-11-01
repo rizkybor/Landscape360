@@ -6,6 +6,11 @@ import {
   attachmentCoords,
   canEdit,
   contactHref,
+  annotationGeometry,
+  annotationPoints,
+  densifyLine,
+  lineLengthM,
+  profileStats,
   eventInputError,
   minutesAgo,
   trailSummary,
@@ -172,5 +177,36 @@ describe('club events', () => {
   it('counts minutes since a position', () => {
     expect(minutesAgo(now - 61 * 60000, now)).toBe(61);
     expect(minutesAgo(now + 5000, now)).toBe(0);
+  });
+});
+
+describe('club map', () => {
+  it('turns tapped points into the right shape, and back', () => {
+    expect(annotationGeometry('pin', [])).toBeNull();
+    expect(annotationGeometry('pin', [[1, 2], [3, 4]])).toEqual({ type: 'Point', coordinates: [3, 4] });
+    expect(annotationGeometry('line', [[1, 2]])).toBeNull();
+    const area = annotationGeometry('area', [[0, 0], [1, 0], [1, 1]])!;
+    expect(area).toEqual({ type: 'Polygon', coordinates: [[[0, 0], [1, 0], [1, 1], [0, 0]]] });
+    expect(annotationPoints(area)).toEqual([[0, 0], [1, 0], [1, 1]]);
+    expect(annotationGeometry('note', [[106.1234567, -6.7654321]])).toEqual({ type: 'Point', coordinates: [106.123457, -6.765432] });
+  });
+
+  it('measures a line and samples it evenly with distances', () => {
+    const line: [number, number][] = [[106.9, -6.7], [106.9, -6.71], [106.91, -6.71]];
+    const len = lineLengthM(line);
+    expect(Math.round(len)).toBeGreaterThan(2200);
+    expect(Math.round(len)).toBeLessThan(2240);
+    const s = densifyLine(line, 50);
+    expect(s).toHaveLength(50);
+    expect(s[0].at).toEqual([106.9, -6.7]);
+    expect(s[49].at[0]).toBeCloseTo(106.91, 6);
+    expect(s[49].distM).toBeCloseTo(len, 3);
+    // Passes the corner
+    expect(s.some((p) => Math.abs(p.at[0] - 106.9) < 1e-9 && Math.abs(p.at[1] + 6.71) < 1e-3)).toBe(true);
+  });
+
+  it('sums up an elevation profile and skips gaps', () => {
+    expect(profileStats([1000, 1050, 1030, NaN, 1100])).toEqual({ min: 1000, max: 1100, gain: 120, loss: 20, start: 1000, end: 1100 });
+    expect(profileStats([NaN])).toBeNull();
   });
 });
