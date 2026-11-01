@@ -7,6 +7,7 @@ import { useTrackerStore } from "../store/useTrackerStore"; // Import Tracker St
 import { useRouteStore } from "../store/useRouteStore";
 import { useCustomBasemapStore } from "../store/useCustomBasemapStore";
 import { useClassicStore } from "../store/useClassicStore";
+import { useCommunityStore } from "../store/useCommunityStore";
 import { AuthControl } from "./AuthControl";
 import { AppShareButton } from "./AppShareButton";
 import { NativeAppDialog, NATIVE_REASONS } from "./NativeAppNotice";
@@ -47,6 +48,7 @@ import {
   PanelLeftClose,
   Hexagon,
   DraftingCompass,
+  MessagesSquare,
   Share2,
 } from "lucide-react";
 import landscapeLogo from "../assets/LandscapeLogo.svg";
@@ -159,6 +161,7 @@ export const ControlPanel = () => {
       useTrackRecorderStore.getState().setPanelOpen(false);
       useMarkedAreaStore.getState().setPanelOpen(false);
       useClassicStore.getState().setPanelOpen(false);
+      useCommunityStore.getState().setPanelOpen(false);
     }
     useMarkedLocationStore.getState().togglePanel();
   };
@@ -171,6 +174,7 @@ export const ControlPanel = () => {
       useTrackRecorderStore.getState().setPanelOpen(false);
       useMarkedLocationStore.getState().setPanelOpen(false);
       useClassicStore.getState().setPanelOpen(false);
+      useCommunityStore.getState().setPanelOpen(false);
     }
     useMarkedAreaStore.getState().togglePanel();
   };
@@ -181,8 +185,20 @@ export const ControlPanel = () => {
       useTrackRecorderStore.getState().setPanelOpen(false);
       useMarkedLocationStore.getState().setPanelOpen(false);
       useMarkedAreaStore.getState().setPanelOpen(false);
+      useCommunityStore.getState().setPanelOpen(false);
     }
     useClassicStore.getState().togglePanel();
+  };
+  // Community (trail reports and stories; anyone can read): same spot on screen too
+  const isCommunityOpen = useCommunityStore((s) => s.isPanelOpen);
+  const toggleCommunity = () => {
+    if (!isCommunityOpen) {
+      useTrackRecorderStore.getState().setPanelOpen(false);
+      useMarkedLocationStore.getState().setPanelOpen(false);
+      useMarkedAreaStore.getState().setPanelOpen(false);
+      useClassicStore.getState().setPanelOpen(false);
+    }
+    useCommunityStore.getState().togglePanel();
   };
   const { isRoutePlannerEnabled, setRoutePlannerEnabled } = useRouteStore();
   const {
@@ -300,6 +316,7 @@ export const ControlPanel = () => {
     isMarkedAreasOpen ||
     isDrawingArea ||
     isClassicOpen ||
+    isCommunityOpen ||
     isManagerOpen;
   const reopenAfterToolSheet = useRef(false);
   useEffect(() => {
@@ -788,6 +805,32 @@ export const ControlPanel = () => {
           Classic
         </div>
         {!isMobile && <div className="text-[10px] text-sand-500">Resection & Intersection</div>}
+      </div>
+    </button>
+
+    {/* Community: trail reports, trip stories and clubs (anyone reads; signed in to post) */}
+    <button
+      onClick={toggleCommunity}
+      className={`cursor-pointer w-full h-full flex items-center rounded-xl border transition-all duration-200 group ${
+        isCommunityOpen ? "bg-gold-50 border-gold-200 " : "bg-sand-50 border-sand-200 hover:bg-sand-100"
+      } ${isMobile ? "flex-col justify-center text-center p-2 h-full gap-1.5" : "flex-col justify-center text-center p-2.5 gap-1.5"}`}
+    >
+      <div
+        className={`p-2 rounded-lg transition-colors ${
+          isCommunityOpen ? "bg-gold-500 text-white shadow-lg " : "bg-sand-100 text-sand-600 group-hover:text-ink"
+        } ${isMobile ? "mb-1" : ""}`}
+      >
+        <MessagesSquare size={isMobile ? 18 : 16} />
+      </div>
+      <div className="flex-1">
+        <div
+          className={`font-bold transition-colors ${isCommunityOpen ? "text-ink" : "text-sand-700"} ${
+            isMobile ? "text-[10px] leading-tight" : "text-xs leading-tight"
+          }`}
+        >
+          Community
+        </div>
+        {!isMobile && <div className="text-[10px] text-sand-500">Trail reports & clubs</div>}
       </div>
     </button>
 
@@ -2200,6 +2243,30 @@ const GetStartedModal = ({
                 icon: <Hexagon size={18} />,
                 title: "Marked Areas [All Accounts]",
                 desc: "Draw an area on the map by tapping its corners (a camp ground, a route zone, a search sector) and see its size and perimeter. Focus on an area to darken the rest of the map. Share links for WhatsApp are made in the Landscape 360 Mobile App and open here in focus view without signing in. Free 5 areas, Pro 10, Enterprise 20; links on Pro and Enterprise. Pro and Enterprise can also download an area's contours (SHP, GeoTIFF DEM, GeoJSON, KML, KMZ, from SRTM elevation data) and upload their own contours to show on the map (website only).",
+              },
+              {
+                icon: <MessagesSquare size={18} />,
+                title: "Community [Everyone reads, signed in to post]",
+                desc: (
+                  <>
+                    Trail reports (conditions now: muddy, landslide, water source dry…) and trip stories, pinned on the
+                    map. Anyone can read them, also without signing in; signed-in accounts post, comment and mark posts
+                    Helpful. Photos are made smaller and their location data is removed. Report a wrong or unsafe post;
+                    three reports hide it until the admin looks.
+                    <div className="mt-2 grid grid-cols-1 gap-1 text-xs opacity-80">
+                      <span>
+                        • <strong>Free:</strong> 5 trail reports and 1 story a day, 1 photo per post
+                      </span>
+                      <span>
+                        • <strong>Pro:</strong> 20 reports, 5 stories, 4 photos, attach a track, area, place or Field Work
+                      </span>
+                      <span>
+                        • <strong>Enterprise:</strong> 50 reports, 20 stories, and up to 5 clubs: members-only posts for
+                        your team; add members by email or an invite link (up to 200), name admins, share a workspace of tracks, areas and places, pin announcements
+                      </span>
+                    </div>
+                  </>
+                ),
               },
               {
                 icon: <DraftingCompass size={18} />,

@@ -89,6 +89,8 @@ export const TermsPage = () => (
           <li>Surveys, tracks, marked locations, uploaded maps and reviews you create remain yours. You allow us to store, process and display them only as needed to run the Service (for example, showing a location to the people you share it with).</li>
           <li>When you share content with another account, that person can see it until you stop sharing it.</li>
           <li>Reviews are public and shown with your first name and last initial, and your organization if you set one in your profile. Only account holders can write a review, one per account; you can edit or delete it at any time. Replies come from the Landscape 360 team.</li>
+          <li>Community posts and comments are public (club posts only to the club&apos;s members) and shown with the same name and organization. Post only what you saw yourself, do not post other people&apos;s personal data or photos of people without their consent, and no advertising or spam. Trail information comes from other users and may be wrong or out of date: check with the park or trail managers before you go; we are not responsible for decisions made on it.</li>
+          <li>A club owner decides who is a member and is responsible for the club. Posting limits per plan apply; repeated breaches can block an account from posting in Community.</li>
           <li>We may hide or remove content, including reviews, that breaks these Terms.</li>
         </ul>
       </LegalSection>

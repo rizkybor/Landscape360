@@ -21,6 +21,7 @@ import {
   Search,
   Hexagon,
   DraftingCompass,
+  MessagesSquare,
   Compass,
 } from "lucide-react";
 import streetsView from "../assets/Street-View.png";
@@ -232,6 +233,7 @@ export const DocsPage = ({ onBack }: Props) => {
                     "Map, 3D terrain, contours, grid, weather, search and route planner",
                     "Navigator survey tools, Marked Locations and Marked Areas",
                     "Classic (website only): practise resection and intersection with typed degrees, minutes and seconds",
+                    "Community: trail reports, trip stories and clubs on the map, readable without signing in",
                     "Area contours (website only): download as SHP, GeoTIFF DEM, GeoJSON, KML or KMZ, or upload your own",
                     "Viewing and exporting your tracks and tracks shared with you",
                     "Team Monitor for Enterprise monitor accounts",
@@ -452,6 +454,17 @@ export const DocsPage = ({ onBack }: Props) => {
                   </p>
                 </div>
               </div>
+              <div className="bg-white border border-sand-200 rounded-xl p-4 flex gap-4 items-start group hover:border-gold-200 transition-all">
+                <div className="w-8 h-8 rounded-lg bg-gold-50 flex items-center justify-center text-gold-700 shrink-0">
+                  <MessagesSquare size={16} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-ink mb-1">Community</h4>
+                  <p className="text-xs text-sand-600 leading-relaxed">
+                    Read and post <strong>trail reports</strong> (conditions now) and <strong>trip stories</strong> pinned on the map. Anyone can read; signed-in accounts post, comment and mark posts Helpful. Enterprise accounts start <strong>clubs</strong> with members-only posts.
+                  </p>
+                </div>
+              </div>
               <div className="bg-white border border-sand-200 rounded-xl p-4 flex gap-4 items-start group hover:border-forest-200 transition-all">
                 <div className="w-8 h-8 rounded-lg bg-forest-50 flex items-center justify-center text-forest-700 shrink-0">
                   <UserPlus size={16} />
@@ -525,6 +538,7 @@ export const DocsPage = ({ onBack }: Props) => {
                     "2 saved surveys",
                     "10 marked locations, 5 marked areas",
                     "Classic: resection & intersection practice, 1 Field Work per mode (website)",
+                    "Community: 5 trail reports and 1 story a day, 1 photo per post; join clubs you are added to",
                     "View your tracks and tracks shared with you",
                     "10 MB cloud storage",
                   ],
@@ -540,6 +554,7 @@ export const DocsPage = ({ onBack }: Props) => {
                     "100 marked locations, 10 marked areas, share with other accounts (links in the Landscape 360 Mobile App)",
                     "Area contours on the web: download (SHP, GeoTIFF, GeoJSON, KML, KMZ) and upload your own",
                     "Classic: 5 Field Works per mode, share them as links",
+                    "Community: 20 trail reports and 5 stories a day, 4 photos, attach a track, area, place or Field Work",
                     "GPS Tracking: broadcast your location and record activities (Landscape 360 Mobile App)",
                     "Rename your cloud tracks",
                     "100 MB cloud storage",
@@ -556,6 +571,7 @@ export const DocsPage = ({ onBack }: Props) => {
                     "1,000 marked locations, 20 marked areas, share with other accounts (links in the Landscape 360 Mobile App)",
                     "Area contours on the web: download (SHP, GeoTIFF, GeoJSON, KML, KMZ) and upload your own",
                     "Classic: 10 Field Works per mode, share them as links",
+                    "Community: 50 trail reports and 20 stories a day; up to 5 clubs with members-only posts (200 members each)",
                     "Track Recorder: record in the Landscape 360 Mobile App, view, share and export GPX here",
                     "GPS Tracking: broadcast your location (Landscape 360 Mobile App)",
                     "Rename your cloud tracks",
@@ -2127,6 +2143,62 @@ export const DocsPage = ({ onBack }: Props) => {
               or position card can be hidden to one line. On a phone Classic opens as a sheet: drag it down to see the
               map, tap or drag up to continue. Magnetic declination can be set below the first step (true bearing =
               compass reading + declination); across Indonesia it is within about 1°, so 0 is fine for practice.
+            </p>
+          </section>
+
+          {/* Community */}
+          <section id="community" className="space-y-6 pt-8 border-t border-sand-100 scroll-mt-24">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-ink mb-4 sm:mb-6">
+              <div className="p-2 bg-gold-50 rounded-lg border border-gold-200">
+                <MessagesSquare className="w-5 h-5 text-gold-700" />
+              </div>
+              <h3 className="text-lg sm:text-2xl font-bold leading-tight">Community</h3>
+              <span className="px-2 py-1 rounded bg-gold-50 text-[10px] text-gold-700 font-bold uppercase border border-gold-200">
+                Everyone reads · Signed in to post
+              </span>
+            </div>
+            <p className="text-xs text-sand-600 leading-relaxed text-justify">
+              Open <strong>Community</strong> in Tools &amp; Exploration. Posts in the part of the map you are looking
+              at show as dots, coloured by trail condition (stories in gold); the list can show only the map area or
+              all posts, and be filtered by type and condition. Every post has a public page to share on WhatsApp.
+            </p>
+            <ul className="space-y-2 text-xs text-sand-700">
+              <li>
+                • <strong>Trail report</strong>: what the trail is like now, up to 500 characters, with at least one
+                condition (Trail OK, muddy, landslide, fallen tree, water source dry, closed…). Reports over 30 days old
+                are marked old and leave the map.
+              </li>
+              <li>
+                • <strong>Story</strong>: your trip with a title, up to 5,000 characters. Pro and Enterprise can attach a
+                track, a marked area or location, or a shared Classic Field Work; a copy goes with the post.
+              </li>
+              <li>
+                • <strong>Photos</strong>: made smaller in your browser, and the camera&apos;s location data is removed
+                before upload. If the post is near where you are now, you are warned first.
+              </li>
+              <li>
+                • <strong>Edit and delete</strong>: edit the text for 24 hours, delete any time. Mark posts Helpful,
+                comment, or report a wrong or unsafe post: three reports hide it until the admin looks.
+              </li>
+              <li>
+                • <strong>Clubs</strong>: an Enterprise account starts up to 5 clubs and adds members by their
+                Landscape 360 email (any account, up to 200). The leader edits the club&apos;s photo, name,
+                description, home base and contact. Posts can then go to <em>Everyone</em> or{" "}
+                <em>Members only</em>; club posts are never on the public page. Members can leave at any time.
+              </li>
+              <li>
+                • <strong>Club roles and invites</strong>: the leader names <em>admins</em> (pengurus), who add and
+                remove members, make <strong>invite links</strong> (valid 7 days; anyone signed in who opens one joins)
+                and pin up to 3 announcements on top of the club feed. A red dot shows new club posts.
+              </li>
+              <li>
+                • <strong>Club workspace</strong>: every member can copy their tracks, areas, places and Field Works into
+                the club&apos;s workspace (up to 500 items, in folders). Members show items on the map and download them
+                as GPX, KML or GeoJSON.
+              </li>
+            </ul>
+            <p className="text-[10px] text-sand-500 leading-relaxed">
+              Posts come from other hikers. Always check with the park or trail managers before you go.
             </p>
           </section>
 
