@@ -1353,7 +1353,7 @@ const AttachmentPicker = ({
 
 // --- Clubs -------------------------------------------------------------------------------------
 
-const ClubAvatar = ({ club, size }: { club: Pick<Club, "name" | "photoPath">; size: "sm" | "lg" }) => {
+export const ClubAvatar = ({ club, size }: { club: Pick<Club, "name" | "photoPath">; size: "sm" | "lg" }) => {
   const box = size === "lg" ? "w-14 h-14 rounded-xl text-lg" : "w-10 h-10 rounded-xl text-sm";
   return club.photoPath ? (
     <img src={photoUrl(club.photoPath)} alt="" className={`${box} object-cover shrink-0 bg-sand-100`} />

@@ -15,6 +15,7 @@ import { useSosAlertsStore } from "../store/useSosAlertsStore";
 import { NativeAppDialog, NATIVE_REASONS, SosAppDialog } from "./NativeAppNotice";
 import { AdminActivityFeed } from "./AdminActivityFeed";
 import { ChangePasswordForm } from "./ChangePasswordForm";
+import { AccountClubs } from "./AccountClubs";
 import { PLANS, type Plan } from "../lib/adminUsers";
 import { submitAccountRequest } from "../lib/accountRequests";
 import { SEEN_AT_KEY, useAccountRequestAlerts } from "../services/useAccountRequestAlerts";
@@ -988,6 +989,9 @@ export const AuthControl = () => {
                       </div>
                     </div>
                   )}
+
+                  {/* Community clubs, as on the Account page of the mobile app */}
+                  <AccountClubs onOpen={() => setShowMenu(false)} />
 
                   {/* Usage */}
                   <div className="space-y-3">
