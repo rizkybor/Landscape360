@@ -13,6 +13,8 @@ import {
   buildGpx,
   createAccumulator,
   emptyStats,
+  GPX_IMPORT_MAX_BYTES,
+  parseGpx,
   shouldRejectPoint,
   type StatsAccumulator,
 } from '../utils/trackRecorderGeo';
@@ -72,6 +74,7 @@ interface TrackRecorderStore {
   renameTrack: (trackId: string, name: string) => Promise<void>;
   deleteTrack: (trackId: string) => Promise<void>;
   exportGpx: (trackId: string) => Promise<{ filename: string; content: string }>;
+  importGpx: (file: File) => Promise<string | null>;
 
   sharedTracks: SharedTrack[];
   isLoadingShared: boolean;
@@ -424,6 +427,44 @@ export const useTrackRecorderStore = create<TrackRecorderStore>((set, get) => {
       const points = get().activeTrack?.id === trackId ? get().activePoints : await loadPoints(track);
       const safeName = track.name.replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '_') || 'track';
       return { filename: `${safeName}.gpx`, content: buildGpx(track, points) };
+    },
+
+    // Any signed-in account may import; the track stays on this device until uploaded
+    importGpx: async (file) => {
+      const { userId } = get();
+      if (!userId) return null;
+      try {
+        if (file.size > GPX_IMPORT_MAX_BYTES) throw new Error('The file is larger than 20 MB');
+        const { name, points } = parseGpx(await file.text(), file.lastModified || Date.now());
+        const stats = accumulatePoints(points).stats;
+        const startedAt = points[0].timestamp;
+        const endedAt = points[points.length - 1].timestamp;
+        const fileName = file.name.replace(/\.gpx$/i, '').trim();
+        const track: RecordedTrack = {
+          id: crypto.randomUUID(),
+          userId,
+          name: (name || fileName || defaultTrackName(new Date(startedAt))).slice(0, 120),
+          mode: 'offline',
+          status: 'completed',
+          startedAt,
+          endedAt,
+          elapsedMs: endedAt - startedAt,
+          lastResumedAt: null,
+          ...stats,
+          syncStatus: 'local',
+          syncError: null,
+          syncedAt: null,
+          updatedAt: Date.now(),
+        };
+        await enqueue(() => localDb.replacePoints(track.id, points));
+        await persistTrack(track);
+        if (get().userId !== userId) return null;
+        set({ viewing: { track, points }, error: null });
+        return track.id;
+      } catch (err) {
+        set({ error: `Could not import ${file.name}: ${errorMessage(err)}` });
+        return null;
+      }
     },
 
     loadSharedTracks: async () => {

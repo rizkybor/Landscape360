@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Circle,
   CloudUpload,
@@ -20,6 +20,7 @@ import {
   Lock,
   Share2,
   LogOut,
+  Upload,
 } from "lucide-react";
 import { useSurveyStore } from "../store/useSurveyStore";
 import { canRecordTracks, canRenameCloudTracks, useTrackRecorderStore } from "../store/useTrackRecorderStore";
@@ -121,6 +122,7 @@ export const TrackRecorderPanel = () => {
     renameTrack,
     deleteTrack,
     exportGpx,
+    importGpx,
     sharedTracks,
     isLoadingShared,
     loadSharedTracks,
@@ -139,6 +141,8 @@ export const TrackRecorderPanel = () => {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
+  const [importing, setImporting] = useState(false);
+  const importInput = useRef<HTMLInputElement>(null);
 
   // The list shows live stats for the track being recorded
   const listedTracks = useMemo(
@@ -167,6 +171,18 @@ export const TrackRecorderPanel = () => {
         useTrackRecorderStore.setState({ error: `Export failed: ${(err as Error).message}` });
       }
     });
+
+  const handleImport = async (files: FileList | null) => {
+    const list = Array.from(files ?? []);
+    if (importInput.current) importInput.current.value = "";
+    if (list.length === 0) return;
+    setImporting(true);
+    try {
+      for (const file of list) await importGpx(file);
+    } finally {
+      setImporting(false);
+    }
+  };
 
   const elapsed = activeTrack ? getElapsedMs(activeTrack, now) : 0;
 
@@ -385,19 +401,38 @@ export const TrackRecorderPanel = () => {
               <span className="text-[10px] text-sand-500">
                 {isOnline ? "Device and cloud tracks" : "Device tracks (offline)"}
               </span>
-              <button
-                onClick={loadTracks}
-                disabled={isLoadingTracks}
-                className="cursor-pointer p-1.5 rounded-lg hover:bg-sand-100 text-sand-600 hover:text-ink transition-colors disabled:opacity-50"
-                title="Refresh"
-              >
-                <RefreshCw size={14} className={isLoadingTracks ? "animate-spin" : ""} />
-              </button>
+              <div className="flex items-center gap-1">
+                <input
+                  ref={importInput}
+                  type="file"
+                  accept=".gpx,application/gpx+xml"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => handleImport(e.target.files)}
+                />
+                <button
+                  onClick={() => importInput.current?.click()}
+                  disabled={importing}
+                  className="cursor-pointer flex items-center gap-1 px-2 py-1 rounded-lg bg-ember-50 hover:bg-ember-100 text-ember-700 text-[11px] font-bold transition-colors disabled:opacity-50"
+                  title="Import a GPX file into My Tracks"
+                >
+                  {importing ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />}
+                  Import GPX
+                </button>
+                <button
+                  onClick={loadTracks}
+                  disabled={isLoadingTracks}
+                  className="cursor-pointer p-1.5 rounded-lg hover:bg-sand-100 text-sand-600 hover:text-ink transition-colors disabled:opacity-50"
+                  title="Refresh"
+                >
+                  <RefreshCw size={14} className={isLoadingTracks ? "animate-spin" : ""} />
+                </button>
+              </div>
             </div>
 
             {listedTracks.length === 0 ? (
               <div className="py-8 text-center text-xs text-sand-500">
-                {isLoadingTracks ? "Loading tracks..." : "No tracks yet. Start your first recording."}
+                {isLoadingTracks ? "Loading tracks..." : "No tracks yet. Import a GPX file or record one in the mobile app."}
               </div>
             ) : (
               listedTracks.map((t, index) => {

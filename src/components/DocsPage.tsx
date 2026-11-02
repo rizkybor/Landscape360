@@ -407,8 +407,9 @@ export const DocsPage = ({ onBack }: Props) => {
                   <p className="text-xs text-sand-600 leading-relaxed">
                     Record personal GPS tracks <strong>online or offline</strong> with distance,
                     duration and elevation in the <strong>Landscape 360 Mobile App</strong> (Enterprise). On the
-                    web every account can view its own and shared tracks, share them by email and
-                    download them as GPX; Pro and Enterprise can rename their cloud tracks.
+                    web every signed-in account can view its own and shared tracks, <strong>import GPX
+                    files</strong> from other apps (kept on that device; Enterprise can upload them to the
+                    cloud), share by email and download as GPX; Pro and Enterprise can rename their cloud tracks.
                   </p>
                 </div>
               </div>
