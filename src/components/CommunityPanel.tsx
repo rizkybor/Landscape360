@@ -1602,6 +1602,7 @@ const ClubView = () => {
   const clubs = useMyClubs(true);
   const club = clubs.find((c) => c.id === clubId) ?? null;
   const [tab, setTab] = useState<"members" | "workspace" | "events" | "map">("members");
+  const drawing = useCommunityStore((s) => s.draw !== null);
   const [editing, setEditing] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -1617,6 +1618,9 @@ const ClubView = () => {
     );
   }
   const leader = club.role === "owner";
+  // Drawing on the map: only the drawing controls, so more of the map is free to tap. The
+  // rest is hidden in place (not returned early) so the Map tab keeps its drawing state.
+  const compact = drawing && tab === "map";
 
   const leaveOrDelete = async () => {
     setBusy(true);
@@ -1635,7 +1639,7 @@ const ClubView = () => {
 
   return (
     <div className="space-y-2.5">
-      {editing ? (
+      {compact ? null : editing ? (
         <ClubEditForm
           club={club}
           onDone={() => {
@@ -1670,12 +1674,13 @@ const ClubView = () => {
           )}
         </div>
       )}
-      {!editing && club.description && <p className="text-[11px] text-sand-700 whitespace-pre-wrap break-words">{club.description}</p>}
-      {!club.canManage && club.role !== "member" && (
+      {!compact && !editing && club.description && <p className="text-[11px] text-sand-700 whitespace-pre-wrap break-words">{club.description}</p>}
+      {!compact && !club.canManage && club.role !== "member" && (
         <p className="text-[10px] p-2 rounded-lg border bg-gold-50 border-gold-200 text-gold-800">
           The leader&apos;s account is no longer Enterprise: the club keeps working, but members, links, folders and pins cannot be changed.
         </p>
       )}
+      {!compact && (
       <button
         onClick={() => {
           setFeedClub(club.id);
@@ -1686,8 +1691,9 @@ const ClubView = () => {
         <MessagesSquare size={13} /> Club posts
         {club.newPosts > 0 && <span className="px-1.5 rounded-full bg-white text-forest-800 text-[10px]">{club.newPosts} new</span>}
       </button>
+      )}
 
-      <div className="grid grid-cols-4 gap-1 p-1 rounded-lg bg-sand-100" role="tablist" aria-label="Club">
+      <div className={`grid grid-cols-4 gap-1 p-1 rounded-lg bg-sand-100 ${compact ? "hidden" : ""}`} role="tablist" aria-label="Club">
         {(["members", "events", "map", "workspace"] as const).map((t) => (
           <button
             key={t}
@@ -1712,7 +1718,7 @@ const ClubView = () => {
       )}
 
       <ErrorLine text={error} />
-      {confirm ? (
+      {compact ? null : confirm ? (
         <div className="flex items-center gap-1.5 text-[11px] font-bold text-brick-600">
           {leader ? "Delete the club, its posts and its workspace?" : "Leave this club?"}
           <button onClick={leaveOrDelete} disabled={busy} className="cursor-pointer px-2 py-1 rounded-lg bg-brick-600 text-white">
