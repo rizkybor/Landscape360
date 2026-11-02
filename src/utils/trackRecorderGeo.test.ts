@@ -4,6 +4,7 @@ import {
   buildGpx,
   getElapsedMs,
   haversineDistance,
+  parseGpx,
   shouldRejectPoint,
   splitSegments,
 } from './trackRecorderGeo';
@@ -117,5 +118,51 @@ describe('trackRecorderGeo', () => {
     expect(gpx.match(/<trkpt /g)).toHaveLength(3);
     expect(gpx).toContain('<ele>1000.0</ele>');
     expect(gpx).toContain('<time>1970-01-01T00:00:05.000Z</time>');
+  });
+
+  describe('parseGpx', () => {
+    const gpx = (body: string) =>
+      `<?xml version="1.0"?><gpx version="1.1" creator="test" xmlns="http://www.topografix.com/GPX/1/1">${body}</gpx>`;
+
+    it('reads track segments with elevation and time', () => {
+      const { name, points } = parseGpx(
+        gpx(`<trk><name>Merbabu</name>
+          <trkseg><trkpt lat="-7.45" lon="110.43"><ele>1800</ele><time>2026-10-01T00:00:00Z</time></trkpt>
+                  <trkpt lat="-7.46" lon="110.44"><ele>1850.5</ele><time>2026-10-01T00:10:00Z</time></trkpt></trkseg>
+          <trkseg><trkpt lat="-7.47" lon="110.45"><time>2026-10-01T00:20:00Z</time></trkpt></trkseg>
+        </trk>`),
+      );
+      expect(name).toBe('Merbabu');
+      expect(points.map((p) => p.segment)).toEqual([0, 0, 1]);
+      expect(points[1]).toMatchObject({ lat: -7.46, lng: 110.44, alt: 1850.5, timestamp: Date.parse('2026-10-01T00:10:00Z') });
+      expect(points[2].alt).toBeNull();
+    });
+
+    it('falls back to a route, and to one time for points without <time>', () => {
+      const { name, points } = parseGpx(
+        gpx(`<metadata><name>Plan</name></metadata><rte><rtept lat="1" lon="2"/><rtept lat="1.01" lon="2"/></rte>`),
+        5000,
+      );
+      expect(name).toBe('Plan');
+      expect(points).toHaveLength(2);
+      expect(points.every((p) => p.timestamp === 5000)).toBe(true);
+      // No time between points means no moving time
+      expect(accumulatePoints(points).stats.movingTimeMs).toBe(0);
+    });
+
+    it('takes the metadata name and skips invalid points', () => {
+      const { name, points } = parseGpx(
+        gpx(`<metadata><name>Day 1</name></metadata><trk><trkseg>
+          <trkpt lat="95" lon="2"/><trkpt lat="x" lon="2"/><trkpt lon="2"/><trkpt lat="1" lon="2"/></trkseg></trk>`),
+      );
+      expect(name).toBe('Day 1');
+      expect(points).toHaveLength(1);
+    });
+
+    it('rejects files that are not GPX or have no points', () => {
+      expect(() => parseGpx('<kml></kml>')).toThrow(/not a valid GPX/);
+      expect(() => parseGpx('not xml at all')).toThrow(/not a valid GPX/);
+      expect(() => parseGpx(gpx('<wpt lat="1" lon="2"/>'))).toThrow(/no track or route/);
+    });
   });
 });

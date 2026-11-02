@@ -2314,7 +2314,7 @@ const GetStartedModal = ({
               {
                 icon: <Footprints size={18} />,
                 title: "Track Recorder [Enterprise Account]",
-                desc: "Record personal GPS tracks online or offline with distance, duration and elevation in the Landscape 360 Mobile App, which keeps recording with the screen off. Here every signed-in account can view its own and shared tracks, share them by email and export GPX; Pro and Enterprise accounts can rename their cloud tracks.",
+                desc: "Record personal GPS tracks online or offline with distance, duration and elevation in the Landscape 360 Mobile App, which keeps recording with the screen off. Here every signed-in account can view its own and shared tracks, import GPX files from other apps, share them by email and export GPX; Pro and Enterprise accounts can rename their cloud tracks.",
               },
               {
                 icon: <HardDrive size={18} />,

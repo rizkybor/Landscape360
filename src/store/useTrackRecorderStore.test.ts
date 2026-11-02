@@ -35,6 +35,13 @@ const walk = (steps: number, alt = 1000) => {
   }
 };
 
+// jsdom's File has no text(); browsers do
+const gpxFile = (content: string, name: string) => {
+  const file = new File([content], name, { type: 'application/gpx+xml' });
+  Object.defineProperty(file, 'text', { value: async () => content });
+  return file;
+};
+
 const setOnline = (online: boolean) =>
   Object.defineProperty(navigator, 'onLine', { value: online, configurable: true });
 
@@ -212,6 +219,38 @@ describe('useTrackRecorderStore', () => {
     const { filename, content } = await store().exportGpx(id);
     expect(filename).toBe('Export_me.gpx');
     expect(content.match(/<trkpt /g)).toHaveLength(2);
+  });
+
+  it('imports a GPX file as a device track and shows it on the map', async () => {
+    const file = gpxFile(
+      `<gpx version="1.1" xmlns="http://www.topografix.com/GPX/1/1"><trk><name>Imported</name><trkseg>
+          <trkpt lat="-7.45" lon="110.43"><ele>1800</ele><time>2026-10-01T00:00:00Z</time></trkpt>
+          <trkpt lat="-7.46" lon="110.43"><ele>1900</ele><time>2026-10-01T01:00:00Z</time></trkpt>
+        </trkseg></trk></gpx>`,
+      'merbabu.gpx',
+    );
+    const id = await store().importGpx(file);
+    expect(store().error).toBeNull();
+
+    const [saved] = await localDb.listTracks(userId);
+    expect(saved).toMatchObject({ id, name: 'Imported', mode: 'offline', status: 'completed', syncStatus: 'local', pointCount: 2 });
+    expect(saved.elapsedMs).toBe(3_600_000);
+    expect(saved.elevationGainM).toBe(100);
+    expect(await localDb.getPoints(saved.id)).toHaveLength(2);
+    expect(store().viewing?.track.id).toBe(id);
+    expect(cloud.uploadTrack).not.toHaveBeenCalled();
+  });
+
+  it('reports an invalid GPX file without saving anything', async () => {
+    const id = await store().importGpx(gpxFile('<kml/>', 'bad.gpx'));
+    expect(id).toBeNull();
+    expect(store().error).toMatch(/Could not import bad\.gpx/);
+    expect(await localDb.listTracks(userId)).toHaveLength(0);
+  });
+
+  it('does not import while signed out', async () => {
+    store().reset();
+    expect(await store().importGpx(gpxFile('<gpx/>', 'a.gpx'))).toBeNull();
   });
 
   describe('sharing', () => {

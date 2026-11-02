@@ -171,3 +171,73 @@ export const formatDuration = (ms: number) => {
   const s = total % 60;
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 };
+
+// GPX import: tracks (each <trkseg> becomes a segment), or routes when the file has no track
+export const GPX_IMPORT_MAX_BYTES = 20 * 1024 * 1024;
+export const GPX_IMPORT_MAX_POINTS = 50_000;
+
+export interface ParsedGpx {
+  name: string | null;
+  points: TrackPoint[];
+}
+
+const childText = (el: Element, tag: string) => {
+  for (const child of Array.from(el.children)) {
+    if (child.localName === tag) return child.textContent?.trim() || null;
+  }
+  return null;
+};
+
+const byTag = (root: Element | Document, tag: string) => Array.from(root.getElementsByTagNameNS('*', tag));
+
+// Points without a <time> reuse the previous time (or `fallbackTime`), so they add no moving time
+export const parseGpx = (text: string, fallbackTime = Date.now()): ParsedGpx => {
+  const doc = new DOMParser().parseFromString(text, 'application/xml');
+  const root = doc.documentElement;
+  if (!root || root.localName !== 'gpx' || byTag(doc, 'parsererror').length > 0) {
+    throw new Error('This is not a valid GPX file');
+  }
+
+  const tracks = byTag(doc, 'trk');
+  const segments: Element[][] = tracks.length
+    ? tracks.flatMap((trk) => byTag(trk, 'trkseg').map((seg) => byTag(seg, 'trkpt')))
+    : byTag(doc, 'rte').map((rte) => byTag(rte, 'rtept'));
+
+  const points: TrackPoint[] = [];
+  let lastTime: number | null = null;
+  let segment = 0;
+  for (const els of segments) {
+    let added = false;
+    for (const el of els) {
+      const lat = Number(el.getAttribute('lat'));
+      const lng = Number(el.getAttribute('lon'));
+      if (!el.hasAttribute('lat') || !el.hasAttribute('lon') || !Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+      if (Math.abs(lat) > 90 || Math.abs(lng) > 180) continue;
+      const ele = childText(el, 'ele');
+      const alt = ele !== null && Number.isFinite(Number(ele)) ? Number(ele) : null;
+      const parsedTime = Date.parse(childText(el, 'time') ?? '');
+      // Out-of-order times would break duration and moving time; keep them monotonic
+      const time: number | null = Number.isFinite(parsedTime) && (lastTime === null || parsedTime >= lastTime) ? parsedTime : (lastTime ?? null);
+      if (time !== null) lastTime = time;
+      points.push({ lat, lng, alt, accuracy: 0, speed: null, timestamp: time ?? Number.NaN, segment });
+      added = true;
+      if (points.length > GPX_IMPORT_MAX_POINTS) {
+        throw new Error(`The GPX file has more than ${GPX_IMPORT_MAX_POINTS.toLocaleString()} points`);
+      }
+    }
+    if (added) segment++;
+  }
+  if (points.length === 0) throw new Error('The GPX file has no track or route points');
+
+  // Points before the first timed one take that time
+  const firstTime = points.find((p) => Number.isFinite(p.timestamp))?.timestamp ?? fallbackTime;
+  for (const p of points) {
+    if (!Number.isFinite(p.timestamp)) p.timestamp = firstTime;
+    else break;
+  }
+
+  const firstTrack = tracks[0] ?? byTag(doc, 'rte')[0];
+  const metadata = byTag(doc, 'metadata')[0];
+  const name = (firstTrack && childText(firstTrack, 'name')) || (metadata && childText(metadata, 'name')) || null;
+  return { name, points };
+};
