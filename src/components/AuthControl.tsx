@@ -16,6 +16,7 @@ import { NativeAppDialog, NATIVE_REASONS, SosAppDialog } from "./NativeAppNotice
 import { AdminActivityFeed } from "./AdminActivityFeed";
 import { ChangePasswordForm } from "./ChangePasswordForm";
 import { AccountClubs } from "./AccountClubs";
+import { FriendsButton } from "./FriendsPanel";
 import { PLANS, type Plan } from "../lib/adminUsers";
 import { submitAccountRequest } from "../lib/accountRequests";
 import { SEEN_AT_KEY, useAccountRequestAlerts } from "../services/useAccountRequestAlerts";
@@ -992,6 +993,9 @@ export const AuthControl = () => {
 
                   {/* Community clubs, as on the Account page of the mobile app */}
                   <AccountClubs onOpen={() => setShowMenu(false)} />
+
+                  {/* Friends & Chat, as in the mobile app */}
+                  <FriendsButton onOpen={() => setShowMenu(false)} />
 
                   {/* Usage */}
                   <div className="space-y-3">
