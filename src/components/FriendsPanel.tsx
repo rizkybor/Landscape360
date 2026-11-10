@@ -30,7 +30,6 @@ import {
   CHAT_REFRESH_MS,
   deleteChatMessage,
   fetchChatMessages,
-  fetchChatUnread,
   fetchFriendLinkInfo,
   fetchFriendRequests,
   fetchFriends,
@@ -53,6 +52,8 @@ import {
 import { useCommunityStore } from "../store/useCommunityStore";
 import { useMapStore } from "../store/useMapStore";
 import { useSurveyStore } from "../store/useSurveyStore";
+import { useFriendsStore } from "../store/useFriendsStore";
+import { useBackLayer } from "../hooks/useBackLayer";
 
 // Friends & Chat on the web (the app has the same): the Friends button in User Account with the
 // unread badge; the panel with a bottom bar (Chats, Friends with requests, My QR, Add friend); one
@@ -60,7 +61,8 @@ import { useSurveyStore } from "../store/useSurveyStore";
 // "Show on map"); and the card a friend link (/?friend=<token>) opens.
 
 const pill = "cursor-pointer px-3 py-1.5 rounded-lg text-xs font-bold";
-const field = "w-full rounded-lg border border-sand-200 bg-white px-3 py-2 text-sm focus:outline-none focus:border-forest-500";
+// 16px text on phones: iOS zooms into smaller fields
+const field = "w-full rounded-lg border border-sand-200 bg-white px-3 py-2 text-base sm:text-sm focus:outline-none focus:border-forest-500";
 
 // My bubbles and the send button: the logo's orange, softened (as in the app)
 const PEACH = "#fce4d2";
@@ -143,8 +145,9 @@ const Contours = () => {
   );
 };
 
-/** Shows a location or a map item from a chat on the map */
+/** Shows a location or a map item from a chat on the map, back on the map as in the app */
 const showOnMap = (item: Attachment) => {
+  useFriendsStore.getState().showOnMap();
   useCommunityStore.getState().setShownItem(item);
   const g = "geometry" in item ? item.geometry : null;
   if (g?.type === "Point") useMapStore.getState().triggerFlyTo({ center: g.coordinates, zoom: 15 });
@@ -156,47 +159,70 @@ const showOnMap = (item: Attachment) => {
 
 export const FriendsButton = ({ onOpen }: { onOpen?: () => void }) => {
   const user = useSurveyStore((s) => s.user);
-  const [open, setOpen] = useState(false);
-  const [unread, setUnread] = useState(0);
+  const { messages, requests } = useFriendsStore((s) => s.unread);
+  const unread = messages + requests;
 
-  const refresh = useCallback(() => {
-    fetchChatUnread().then(
-      (u) => setUnread(u.messages + u.requests),
-      () => undefined,
-    );
-  }, []);
-
+  // Each time User Account opens: the latest count
   useEffect(() => {
-    if (!user) return;
-    refresh();
-    // Back to the tab: new messages and requests
-    window.addEventListener("focus", refresh);
-    return () => window.removeEventListener("focus", refresh);
-  }, [user, refresh]);
+    if (user) useFriendsStore.getState().refreshUnread();
+  }, [user]);
 
   if (!user) return null;
+  const detail = [
+    messages > 0 && `${messages} new ${messages === 1 ? "message" : "messages"}`,
+    requests > 0 && `${requests} friend ${requests === 1 ? "request" : "requests"}`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
   return (
-    <>
-      <button
-        onClick={() => {
-          setOpen(true);
-          onOpen?.();
-        }}
-        className="cursor-pointer w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-sand-200 bg-white hover:bg-sand-50 text-sm font-bold text-ink"
-      >
-        <Users size={15} className="text-forest-700" />
-        <span className="flex-1 text-left">Friends</span>
-        {unread > 0 && <span className="min-w-5 px-1.5 rounded-full bg-ember-500 text-white text-[11px] text-center">{unread > 99 ? "99+" : unread}</span>}
-      </button>
-      {open && (
-        <FriendsPanel
-          onClose={() => {
-            setOpen(false);
-            refresh();
-          }}
-        />
-      )}
-    </>
+    <button
+      onClick={() => {
+        // The panel lives on the map page, so closing User Account does not close it
+        useFriendsStore.getState().open();
+        onOpen?.();
+      }}
+      className="cursor-pointer w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-sand-200 bg-white hover:bg-sand-50 text-left"
+    >
+      <Users size={16} className="shrink-0 text-forest-700" />
+      <span className="flex-1 min-w-0">
+        <span className="block text-sm font-bold text-ink">Friends</span>
+        <span className="block text-[11px] text-sand-600 truncate">{detail || "Chat, share your location and map data"}</span>
+      </span>
+      {unread > 0 && <span className="min-w-5 px-1.5 rounded-full bg-ember-500 text-white text-[11px] font-bold text-center">{unread > 99 ? "99+" : unread}</span>}
+    </button>
+  );
+};
+
+/** The Friends panel when open, and the badge kept current for the signed-in account */
+export const FriendsHost = () => {
+  const user = useSurveyStore((s) => s.user);
+  const isOpen = useFriendsStore((s) => s.isOpen);
+
+  useEffect(() => {
+    const store = useFriendsStore.getState();
+    if (!user) {
+      store.reset();
+      return;
+    }
+    store.refreshUnread();
+    // Back to the tab: new messages and requests
+    const refresh = () => useFriendsStore.getState().refreshUnread();
+    window.addEventListener("focus", refresh);
+    const timer = setInterval(refresh, FRIENDS_REFRESH_MS * 2);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      clearInterval(timer);
+    };
+  }, [user]);
+
+  if (!user || !isOpen) return null;
+  return (
+    <FriendsPanel
+      onClose={() => {
+        useFriendsStore.getState().close();
+        useFriendsStore.getState().refreshUnread();
+      }}
+    />
   );
 };
 
@@ -276,21 +302,44 @@ export const FriendsPanel = ({ onClose }: { onClose: () => void }) => {
           : "Send a request by email";
   const section = "px-1 pt-3 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-sand-600";
 
+  // Back (browser or phone) closes the chat, then Friends; Escape does the same on a computer
+  const closeChat = () => {
+    setChat(null);
+    load();
+  };
+  useBackLayer(true, onClose);
+  // Back in Friends: the item a chat showed on the map goes away (Community clears its own)
+  useEffect(() => {
+    const community = useCommunityStore.getState();
+    if (!community.isPanelOpen) community.setShownItem(null);
+  }, []);
+  useBackLayer(!!chat, closeChat);
+  const escape = useRef(() => undefined as void);
+  useEffect(() => {
+    escape.current = chat ? closeChat : onClose;
+  });
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && escape.current();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   return (
-    <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-ink/40 p-0 sm:p-4" role="dialog" aria-modal aria-label="Friends">
-      <div className="w-full sm:w-[420px] h-[85vh] sm:h-[640px] bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col text-ink overflow-hidden">
+    // Phones: a full-screen page pushed in from the right, as in the app; computers: a dialog
+    <div className="fixed inset-0 z-[70] flex sm:items-center justify-center sm:bg-ink/40 sm:p-4" role="dialog" aria-modal aria-label="Friends">
+      <div className="relative w-full h-dvh sm:w-[420px] sm:h-[640px] sm:max-h-full bg-white sm:rounded-2xl sm:shadow-2xl flex flex-col text-ink overflow-hidden max-sm:motion-safe:animate-page-in">
         {chat ? (
-          <ChatView
-            friend={chat}
-            stillFriend={friends.some((f) => f.userId === chat.userId)}
-            onBack={() => {
-              setChat(null);
-              load();
-            }}
-          />
-        ) : (
+          // A key per friend: each chat slides in as its own page
+          <div key={chat.userId} className="absolute inset-0 z-10 flex flex-col bg-white max-sm:motion-safe:animate-page-in">
+            <ChatView friend={chat} stillFriend={friends.some((f) => f.userId === chat.userId)} onBack={closeChat} />
+          </div>
+        ) : null}
+        {/* The list stays under an open chat, as in a stack of pages */}
           <>
-            <div className="flex items-center gap-3 px-4 py-3 border-b border-sand-200">
+            <div className="flex items-center gap-3 px-4 pt-[calc(0.75rem+env(safe-area-inset-top))] sm:pt-3 pb-3 border-b border-sand-200">
+              <button onClick={onClose} className="sm:hidden cursor-pointer -ml-1.5 p-1.5 rounded-lg hover:bg-sand-100" aria-label="Back to the map">
+                <ArrowLeft size={20} />
+              </button>
               <span className="p-1 rounded-xl bg-sand-50">
                 <img src="/android-chrome-192x192.png" alt="" className="w-9 h-9 rounded-lg" />
               </span>
@@ -298,7 +347,7 @@ export const FriendsPanel = ({ onClose }: { onClose: () => void }) => {
                 <h2 className="text-xl font-extrabold leading-tight">{title}</h2>
                 <span className="block text-[11.5px] text-sand-600 truncate">{subtitle}</span>
               </span>
-              <button onClick={onClose} className="cursor-pointer p-1.5 rounded-lg hover:bg-sand-100 text-sand-500" aria-label="Close">
+              <button onClick={onClose} className="hidden sm:block cursor-pointer p-1.5 rounded-lg hover:bg-sand-100 text-sand-500" aria-label="Close">
                 <X size={18} />
               </button>
             </div>
@@ -412,7 +461,7 @@ export const FriendsPanel = ({ onClose }: { onClose: () => void }) => {
               {view === "qr" && <MyCode />}
               {view === "add" && <AddFriend onSent={load} />}
             </div>
-            <div className="bg-sand-50 px-4 pt-1.5 pb-3">
+            <div className="bg-sand-50 px-4 pt-1.5 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
               <nav className="h-[66px] px-1.5 flex rounded-[22px] bg-white border border-sand-200 shadow-[0_4px_16px_rgba(30,60,19,.08)]" aria-label="Friends">
                 <NavItem active={view === "chats"} label="Chats" dot={unreadChats > 0} onClick={() => setView("chats")}>
                   <MessageCircle size={21} />
@@ -429,7 +478,6 @@ export const FriendsPanel = ({ onClose }: { onClose: () => void }) => {
               </nav>
             </div>
           </>
-        )}
       </div>
     </div>
   );
@@ -578,7 +626,11 @@ const ChatView = ({ friend, stillFriend, onBack }: { friend: Friend; stillFriend
     const timer = setInterval(load, CHAT_REFRESH_MS);
     return () => clearInterval(timer);
   }, [load]);
-  useEffect(() => bottom.current?.scrollIntoView({ block: "end" }), [messages.length]);
+  // A block body: newer browsers return a promise from scrollIntoView, which React would take
+  // for the effect's cleanup and fail on
+  useEffect(() => {
+    bottom.current?.scrollIntoView({ block: "end" });
+  }, [messages.length]);
 
   const send = async (m: Parameters<typeof sendChatMessage>[1]) => {
     setBusy(true);
@@ -614,7 +666,7 @@ const ChatView = ({ friend, stillFriend, onBack }: { friend: Friend; stillFriend
 
   return (
     <>
-      <div className="flex items-center gap-2.5 px-3 py-2.5 border-b border-sand-200">
+      <div className="flex items-center gap-2.5 px-3 pt-[calc(0.625rem+env(safe-area-inset-top))] sm:pt-2.5 pb-2.5 border-b border-sand-200">
         <button onClick={onBack} className="cursor-pointer p-1.5 rounded-lg hover:bg-sand-100" aria-label="Back">
           <ArrowLeft size={18} />
         </button>
@@ -693,7 +745,8 @@ const ChatView = ({ friend, stillFriend, onBack }: { friend: Friend; stillFriend
                           onClick={() => {
                             if (window.confirm("Delete this message for both of you?")) deleteChatMessage(m.id).then(load, (e: Error) => setError(e.message));
                           }}
-                          className="cursor-pointer hidden group-hover:inline mr-1"
+                          // No hover on touch screens: always there while it can be deleted
+                          className="cursor-pointer hidden group-hover:inline [@media(hover:none)]:inline mr-1"
                           aria-label="Delete message"
                         >
                           <Trash2 size={11} />
@@ -722,7 +775,7 @@ const ChatView = ({ friend, stillFriend, onBack }: { friend: Friend; stillFriend
             e.preventDefault();
             if (text.trim()) send({ kind: "text", body: text }).then(() => setText(""));
           }}
-          className="flex items-end gap-2 p-2 border-t border-sand-200 bg-white"
+          className="flex items-end gap-2 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] border-t border-sand-200 bg-white"
         >
           <button type="button" onClick={sendLocation} disabled={busy} className="cursor-pointer w-10 h-10 shrink-0 flex items-center justify-center rounded-full hover:bg-sand-100 text-forest-700" aria-label="Send my location">
             <PlusCircle size={22} />
@@ -740,7 +793,7 @@ const ChatView = ({ friend, stillFriend, onBack }: { friend: Friend; stillFriend
             rows={1}
             placeholder="Message"
             aria-label="Message"
-            className="flex-1 resize-none rounded-[22px] border border-sand-200 bg-sand-50 px-4 py-2.5 text-sm focus:outline-none focus:border-forest-500"
+            className="flex-1 resize-none rounded-[22px] border border-sand-200 bg-sand-50 px-4 py-2.5 text-base sm:text-sm focus:outline-none focus:border-forest-500"
           />
           <button
             type="submit"
@@ -803,7 +856,7 @@ export const SharedFriendLink = () => {
     setError(null);
     try {
       const r = await requestFriendByLink(token);
-      setResult(r === "friends" ? "You are now friends. Open Friends in User Account to chat." : "Request sent. They will see it in Friends.");
+      setResult(r === "friends" ? "You are now friends." : "Request sent. They will see it in Friends.");
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -828,7 +881,18 @@ export const SharedFriendLink = () => {
         {status === "gone" ? (
           <p className="text-xs text-brick-600">This friend link is no longer valid.</p>
         ) : result ? (
-          <p className="text-xs font-bold text-forest-700">{result}</p>
+          <div className="space-y-2">
+            <p className="text-xs font-bold text-forest-700">{result}</p>
+            <button
+              onClick={() => {
+                close();
+                useFriendsStore.getState().open();
+              }}
+              className="cursor-pointer w-full flex items-center justify-center gap-1.5 py-2 rounded-lg border border-sand-200 bg-white hover:bg-sand-50 text-sm font-bold"
+            >
+              <Users size={14} /> Open Friends
+            </button>
+          </div>
         ) : info?.isMe ? (
           <p className="text-xs text-sand-600">This is your own code.</p>
         ) : user ? (

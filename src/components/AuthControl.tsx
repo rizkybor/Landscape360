@@ -17,6 +17,7 @@ import { AdminActivityFeed } from "./AdminActivityFeed";
 import { ChangePasswordForm } from "./ChangePasswordForm";
 import { AccountClubs } from "./AccountClubs";
 import { FriendsButton } from "./FriendsPanel";
+import { useFriendsStore } from "../store/useFriendsStore";
 import { PLANS, type Plan } from "../lib/adminUsers";
 import { submitAccountRequest } from "../lib/accountRequests";
 import { SEEN_AT_KEY, useAccountRequestAlerts } from "../services/useAccountRequestAlerts";
@@ -152,6 +153,7 @@ export const AuthControl = () => {
     !!user && isAdmin,
     requestsSeenAt,
   );
+  const friendsUnread = useFriendsStore((s) => s.unread.messages + s.unread.requests);
 
   useEffect(() => {
     // Check active session
@@ -754,6 +756,15 @@ export const AuthControl = () => {
           >
             <span className="absolute inset-0 rounded-full bg-brick-500 animate-ping opacity-60" />
             <span className="relative">{newRequestCount > 99 ? "99+" : newRequestCount}</span>
+          </span>
+        )}
+        {/* New chat messages and friend requests (the admin's account-request badge comes first) */}
+        {newRequestCount === 0 && friendsUnread > 0 && (
+          <span
+            className="absolute -top-2 -right-2 flex h-5 min-w-5 px-1 items-center justify-center rounded-full bg-ember-500 text-white text-[10px] font-bold ring-2 ring-white shadow"
+            aria-label={`${friendsUnread} new messages and friend requests`}
+          >
+            {friendsUnread > 99 ? "99+" : friendsUnread}
           </span>
         )}
         {usesLogoAvatar ? (

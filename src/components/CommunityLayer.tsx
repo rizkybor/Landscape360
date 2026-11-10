@@ -296,25 +296,30 @@ export const CommunityLayer = () => {
     return () => clearTimeout(t);
   }, [mapRef, cameraTo]);
 
-  if (!isPanelOpen) return null;
+  const attachmentSource = (
+    <Source id="community-attachment" type="geojson" data={attachment}>
+      <Layer id="community-attachment-fill" type="fill" filter={["==", ["geometry-type"], "Polygon"]} paint={{ "fill-color": "#d49b22", "fill-opacity": 0.15 }} />
+      <Layer
+        id="community-attachment-line"
+        type="line"
+        filter={["!=", ["geometry-type"], "Point"]}
+        paint={{ "line-color": "#d49b22", "line-width": 3 }}
+      />
+      <Layer
+        id="community-attachment-point"
+        type="circle"
+        filter={["==", ["geometry-type"], "Point"]}
+        paint={{ "circle-radius": 6, "circle-color": "#ffffff", "circle-stroke-color": "#d49b22", "circle-stroke-width": 3 }}
+      />
+    </Source>
+  );
+
+  // Closed: only an item shown from elsewhere (a location or map data in a Friends chat)
+  if (!isPanelOpen) return shownItem ? attachmentSource : null;
 
   return (
     <>
-      <Source id="community-attachment" type="geojson" data={attachment}>
-        <Layer id="community-attachment-fill" type="fill" filter={["==", ["geometry-type"], "Polygon"]} paint={{ "fill-color": "#d49b22", "fill-opacity": 0.15 }} />
-        <Layer
-          id="community-attachment-line"
-          type="line"
-          filter={["!=", ["geometry-type"], "Point"]}
-          paint={{ "line-color": "#d49b22", "line-width": 3 }}
-        />
-        <Layer
-          id="community-attachment-point"
-          type="circle"
-          filter={["==", ["geometry-type"], "Point"]}
-          paint={{ "circle-radius": 6, "circle-color": "#ffffff", "circle-stroke-color": "#d49b22", "circle-stroke-width": 3 }}
-        />
-      </Source>
+      {attachmentSource}
       <Source id="community-posts" type="geojson" data={points}>
         <Layer
           id={POINTS_LAYER}

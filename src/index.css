@@ -73,11 +73,18 @@
   --animate-fade-in-up: fadeInUp 0.8s ease-out forwards;
   --animate-fade-in-up-delay: fadeInUp 0.8s ease-out 0.3s forwards;
   --animate-pulse-slow: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  /* A page pushed in from the right, as in the mobile app (Friends, a chat) */
+  --animate-page-in: pageIn 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
 
   @keyframes shine {
     to {
       background-position: 200% center;
     }
+  }
+
+  @keyframes pageIn {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
   }
 
   @keyframes fadeOut {
