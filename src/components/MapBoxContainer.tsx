@@ -41,7 +41,7 @@ import { CommunityLayer } from "./CommunityLayer";
 import { CommunityPanel } from "./CommunityPanel";
 import { SharedPostLink } from "./SharedPostLink";
 import { SharedJoinLink } from "./SharedJoinLink";
-import { SharedFriendLink } from "./FriendsPanel";
+import { FriendsHost, SharedFriendLink } from "./FriendsPanel";
 import { parseAreaToken, parseClassicToken, parsePlaceToken, parseSharedPoint } from "../lib/shareLocation";
 import { parsePostParam } from "../lib/community";
 
@@ -1244,6 +1244,7 @@ const MapBoxContainerComponent = ({
       <SharedPostLink />
       <SharedJoinLink />
       <SharedFriendLink />
+      <FriendsHost />
       <PaymentReturn />
       {showControls && <SearchPanel />}
       {showControls && <WeatherWidget />}

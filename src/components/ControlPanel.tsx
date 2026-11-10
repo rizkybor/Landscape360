@@ -8,6 +8,7 @@ import { useRouteStore } from "../store/useRouteStore";
 import { useCustomBasemapStore } from "../store/useCustomBasemapStore";
 import { useClassicStore } from "../store/useClassicStore";
 import { useCommunityStore } from "../store/useCommunityStore";
+import { useFriendsStore } from "../store/useFriendsStore";
 import { AuthControl } from "./AuthControl";
 import { AppShareButton } from "./AppShareButton";
 import { NativeAppDialog, NATIVE_REASONS } from "./NativeAppNotice";
@@ -337,6 +338,15 @@ export const ControlPanel = () => {
   const lowerSheetOnPhone = () => {
     if (isMobile) setIsOpen(false);
   };
+
+  // "Show on map" in a chat: back on the map, with the sheet out of the way (as in the app)
+  useEffect(
+    () =>
+      useFriendsStore.subscribe((s, prev) => {
+        if (isMobile && s.shownOnMap !== prev.shownOnMap) setIsOpen(false);
+      }),
+    [isMobile],
+  );
 
   // Swipe Down to Close Logic (Mobile). A touch only becomes a drag once the finger moves,
   // so tapping a button in the header (e.g. Sign In) does not re-render this whole panel.
