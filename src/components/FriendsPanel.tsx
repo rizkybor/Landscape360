@@ -1,74 +1,35 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import {
-  ArrowLeft,
-  ArrowUp,
-  Ban,
-  Check,
-  CheckCheck,
-  Loader2,
-  Lock,
-  LocateFixed,
-  Map as MapIcon,
-  MessageCircle,
-  MessagesSquare,
-  PlusCircle,
-  QrCode,
-  RefreshCw,
-  Route,
-  Share2,
-  Trash2,
-  UserPlus,
-  Users,
-  X,
-} from "lucide-react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { ArrowLeft, Ban, Check, Loader2, LocateFixed, MessageCircle, MessagesSquare, QrCode, RefreshCw, Route, Share2, Smartphone, Trash2, UserPlus, Users, X } from "lucide-react";
 import QRCode from "qrcode";
-import type { Attachment } from "../lib/community";
 import {
   answerFriendRequest,
-  CHAT_BODY_MAX,
-  CHAT_DELETE_WINDOW_MS,
-  CHAT_REFRESH_MS,
-  deleteChatMessage,
-  fetchChatMessages,
   fetchFriendLinkInfo,
   fetchFriendRequests,
   fetchFriends,
   fetchMyFriendLink,
   FRIENDS_REFRESH_MS,
   friendLinkUrl,
-  markChatRead,
-  mergeMessages,
   parseFriendParam,
   removeFriend,
   renewMyFriendLink,
   requestFriendByEmail,
   requestFriendByLink,
-  sendChatMessage,
-  type ChatLocation,
-  type ChatMessage,
   type Friend,
   type FriendRequest,
 } from "../lib/friends";
-import { useCommunityStore } from "../store/useCommunityStore";
-import { useMapStore } from "../store/useMapStore";
 import { useSurveyStore } from "../store/useSurveyStore";
 import { useFriendsStore } from "../store/useFriendsStore";
 import { useBackLayer } from "../hooks/useBackLayer";
 
-// Friends & Chat on the web (the app has the same): the Friends button in User Account with the
-// unread badge; the panel with a bottom bar (Chats, Friends with requests, My QR, Add friend); one
-// chat (read again every 15 s while open; text and my location; map data from the app shows with
-// "Show on map"); and the card a friend link (/?friend=<token>) opens.
+// Friends on the web: the Friends button in User Account with the unread badge; the panel with a
+// bottom bar (Chats, Friends with requests, My QR, Add friend); and the card a friend link
+// (/?friend=<token>) opens. Chats are listed with their unread counts, but reading and writing
+// messages (and groups, replies, locations, map data) is in the app only: opening a chat here
+// says so.
 
 const pill = "cursor-pointer px-3 py-1.5 rounded-lg text-xs font-bold";
 // 16px text on phones: iOS zooms into smaller fields
 const field = "w-full rounded-lg border border-sand-200 bg-white px-3 py-2 text-base sm:text-sm focus:outline-none focus:border-forest-500";
-
-// My bubbles and the send button: the logo's orange, softened (as in the app)
-const PEACH = "#fce4d2";
-const PEACH_LINE = "#f5cdae";
-const PEACH_SUB = "#9c6b4c";
-const SEND_ORANGE = "#f08a4b";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const sameDay = (a: number, b: number) => new Date(a).toDateString() === new Date(b).toDateString();
@@ -80,15 +41,6 @@ const chatTime = (t: number) => {
   if (sameDay(t, now.getTime())) return clock(t);
   return `${d.getDate()} ${MONTHS[d.getMonth()]}${d.getFullYear() === now.getFullYear() ? "" : ` ${d.getFullYear()}`}`;
 };
-
-const dayLabel = (t: number) => {
-  const now = Date.now();
-  if (sameDay(t, now)) return "Today";
-  if (sameDay(t, now - 86_400_000)) return "Yesterday";
-  return chatTime(t);
-};
-
-const thousands = (n: number) => n.toLocaleString("en-US");
 
 // A friend's first letter on a soft colour picked from their name (the same colour as in the app)
 const PALETTE: [string, string][] = [
@@ -110,49 +62,6 @@ const Avatar = ({ name, size = 36 }: { name: string; size?: number }) => {
       {n.charAt(0).toUpperCase() || "?"}
     </span>
   );
-};
-
-/** Faint topographic lines behind the messages: a few hills drawn as wobbly rings */
-const Contours = () => {
-  const paths = useMemo(() => {
-    const hills: [number, number, number, number][] = [
-      [0.12, 0.18, 7, 0],
-      [0.92, 0.55, 8, 1.7],
-      [0.3, 0.95, 6, 3.1],
-    ];
-    const W = 420, H = 640, unit = Math.max(W, H) / 18;
-    const out: string[] = [];
-    for (const [cx, cy, rings, phase] of hills) {
-      for (let k = 1; k <= rings; k++) {
-        const base = unit * k * 0.9;
-        let d = "";
-        for (let i = 0; i <= 96; i++) {
-          const t = (i / 96) * 2 * Math.PI;
-          const r = base * (1 + 0.12 * Math.sin(3 * t + phase + k * 0.35) + 0.06 * Math.sin(5 * t - phase));
-          d += `${i ? "L" : "M"}${(W * cx + Math.cos(t) * r * 1.25).toFixed(1)} ${(H * cy + Math.sin(t) * r).toFixed(1)}`;
-        }
-        out.push(d + "Z");
-      }
-    }
-    return out;
-  }, []);
-  return (
-    <svg className="pointer-events-none absolute inset-0 w-full h-full" viewBox="0 0 420 640" preserveAspectRatio="xMidYMid slice" aria-hidden>
-      {paths.map((d, i) => (
-        <path key={i} d={d} fill="none" stroke="var(--color-sand-300)" strokeOpacity={0.35} strokeWidth={0.8} />
-      ))}
-    </svg>
-  );
-};
-
-/** Shows a location or a map item from a chat on the map, back on the map as in the app */
-const showOnMap = (item: Attachment) => {
-  useFriendsStore.getState().showOnMap();
-  useCommunityStore.getState().setShownItem(item);
-  const g = "geometry" in item ? item.geometry : null;
-  if (g?.type === "Point") useMapStore.getState().triggerFlyTo({ center: g.coordinates, zoom: 15 });
-  else if (g?.type === "LineString" && g.coordinates.length) useMapStore.getState().triggerFlyTo({ center: g.coordinates[0], zoom: 13 });
-  else if (g?.type === "Polygon" && g.coordinates[0]?.length) useMapStore.getState().triggerFlyTo({ center: g.coordinates[0][0], zoom: 13 });
 };
 
 // --- The button in User Account ------------------------------------------------------------------
@@ -186,7 +95,7 @@ export const FriendsButton = ({ onOpen }: { onOpen?: () => void }) => {
       <Users size={16} className="shrink-0 text-forest-700" />
       <span className="flex-1 min-w-0">
         <span className="block text-sm font-bold text-ink">Friends</span>
-        <span className="block text-[11px] text-sand-600 truncate">{detail || "Chat, share your location and map data"}</span>
+        <span className="block text-[11px] text-sand-600 truncate">{detail || "Friends and requests · chat in the app"}</span>
       </span>
       {unread > 0 && <span className="min-w-5 px-1.5 rounded-full bg-ember-500 text-white text-[11px] font-bold text-center">{unread > 99 ? "99+" : unread}</span>}
     </button>
@@ -308,11 +217,6 @@ export const FriendsPanel = ({ onClose }: { onClose: () => void }) => {
     load();
   };
   useBackLayer(true, onClose);
-  // Back in Friends: the item a chat showed on the map goes away (Community clears its own)
-  useEffect(() => {
-    const community = useCommunityStore.getState();
-    if (!community.isPanelOpen) community.setShownItem(null);
-  }, []);
   useBackLayer(!!chat, closeChat);
   const escape = useRef(() => undefined as void);
   useEffect(() => {
@@ -331,7 +235,7 @@ export const FriendsPanel = ({ onClose }: { onClose: () => void }) => {
         {chat ? (
           // A key per friend: each chat slides in as its own page
           <div key={chat.userId} className="absolute inset-0 z-10 flex flex-col bg-white max-sm:motion-safe:animate-page-in">
-            <ChatView friend={chat} stillFriend={friends.some((f) => f.userId === chat.userId)} onBack={closeChat} />
+            <AppOnlyChat friend={chat} onBack={closeChat} />
           </div>
         ) : null}
         {/* The list stays under an open chat, as in a stack of pages */}
@@ -361,7 +265,7 @@ export const FriendsPanel = ({ onClose }: { onClose: () => void }) => {
                       <p className="text-sm font-bold">{loaded ? "No chats yet" : "Loading…"}</p>
                       {loaded && (
                         <p className="text-xs text-sand-500">
-                          {friends.length ? "Open a friend in Friends to send a message." : "Add a friend by email or with your QR code, then send them a message or your location."}
+                          {friends.length ? "Chats start in the Landscape 360 app." : "Add a friend by email or with your QR code, then chat in the Landscape 360 app."}
                         </p>
                       )}
                     </div>
@@ -571,246 +475,36 @@ const MyCode = () => {
   );
 };
 
-// --- One chat ----------------------------------------------------------------------------------
+// --- One chat: in the app only ---------------------------------------------------------------------
 
-const MapCard = ({ mine, kind, title, detail, icon, onClick }: { mine: boolean; kind: string; title: string; detail: string; icon: ReactNode; onClick: () => void }) => (
-  <button onClick={onClick} className="cursor-pointer block w-full min-w-[220px] text-left rounded-[13px] overflow-hidden" style={{ background: mine ? "rgba(255,255,255,.6)" : "var(--color-sand-50)" }}>
-    <span className="flex items-center gap-3 px-2.5 py-2.5">
-      <span className="w-10 h-10 shrink-0 rounded-[11px] flex items-center justify-center" style={{ background: mine ? PEACH : "var(--color-forest-100)", color: mine ? "var(--color-ember-600)" : "var(--color-forest-700)" }}>
-        {icon}
+/** Opening a chat on the web: who it is with and where the messages are (the app) */
+const AppOnlyChat = ({ friend, onBack }: { friend: Friend; onBack: () => void }) => (
+  <>
+    <div className="flex items-center gap-2.5 px-3 pt-[calc(0.625rem+env(safe-area-inset-top))] sm:pt-2.5 pb-2.5 border-b border-sand-200">
+      <button onClick={onBack} className="cursor-pointer p-1.5 rounded-lg hover:bg-sand-100" aria-label="Back">
+        <ArrowLeft size={18} />
+      </button>
+      <Avatar name={friend.name} size={36} />
+      <span className="flex-1 min-w-0">
+        <span className="block text-[15px] font-bold truncate">{friend.name}</span>
+        <span className="block text-xs text-sand-600 truncate">{friend.organization ?? "Landscape 360 friend"}</span>
       </span>
-      <span className="min-w-0">
-        <span className="block text-[9.5px] font-bold uppercase tracking-wider" style={{ color: mine ? PEACH_SUB : "var(--color-sand-600)" }}>
-          {kind}
+    </div>
+    <div className="flex-1 overflow-y-auto bg-sand-50 px-5 py-8" role="status">
+      <div className="mx-auto max-w-[330px] rounded-2xl border border-sand-200 bg-white p-5 text-center space-y-3 shadow-[0_4px_16px_rgba(30,60,19,.06)]">
+        <span className="mx-auto w-12 h-12 rounded-full bg-forest-100 text-forest-800 flex items-center justify-center">
+          <Smartphone size={22} />
         </span>
-        <span className="block text-[13.5px] font-bold truncate">{title}</span>
-        <span className="block text-[11px] truncate" style={{ color: mine ? PEACH_SUB : "var(--color-sand-600)" }}>
-          {detail}
-        </span>
-      </span>
-    </span>
-    <span
-      className="flex items-center justify-center gap-1.5 py-2 text-xs font-bold border-t"
-      style={{ borderColor: mine ? PEACH_LINE : "var(--color-sand-200)", color: mine ? "var(--color-ember-600)" : "var(--color-forest-700)" }}
-    >
-      <MapIcon size={14} /> Show on map
-    </span>
-  </button>
+        <h3 className="text-base font-extrabold">Chat is in the Landscape 360 app</h3>
+        <p className="text-xs text-sand-600 leading-relaxed">
+          Messages, your location, map data, groups and replies are sent and read in the app, not here.
+          {friend.unread > 0 && ` ${friend.unread} unread ${friend.unread === 1 ? "message" : "messages"} from ${friend.name} ${friend.unread === 1 ? "is" : "are"} waiting there.`}
+        </p>
+        <p className="text-[11px] text-sand-500 leading-relaxed">The app is in testing as an Android .apk; it is not in the App Store or Play Store yet.</p>
+      </div>
+    </div>
+  </>
 );
-
-const ChatView = ({ friend, stillFriend, onBack }: { friend: Friend; stillFriend: boolean; onBack: () => void }) => {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [text, setText] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const since = useRef<number | null>(null);
-  const bottom = useRef<HTMLDivElement>(null);
-
-  const newest = (ms: ChatMessage[]) => ms.reduce<number | null>((t, m) => (t === null || m.updatedAt > t ? m.updatedAt : t), null);
-
-  const load = useCallback(async () => {
-    try {
-      const changed = await fetchChatMessages(friend.userId, since.current ? { since: since.current } : {});
-      if (changed.length === 0) return;
-      const n = newest(changed);
-      if (n && (!since.current || n > since.current)) since.current = n;
-      setMessages((cur) => mergeMessages(cur, changed));
-      if (changed.some((m) => !m.fromMe && !m.readAt)) markChatRead(friend.userId).catch(() => undefined);
-    } catch (e) {
-      setError((e as Error).message);
-    }
-  }, [friend.userId]);
-
-  useEffect(() => {
-    load();
-    const timer = setInterval(load, CHAT_REFRESH_MS);
-    return () => clearInterval(timer);
-  }, [load]);
-  // A block body: newer browsers return a promise from scrollIntoView, which React would take
-  // for the effect's cleanup and fail on
-  useEffect(() => {
-    bottom.current?.scrollIntoView({ block: "end" });
-  }, [messages.length]);
-
-  const send = async (m: Parameters<typeof sendChatMessage>[1]) => {
-    setBusy(true);
-    setError(null);
-    try {
-      await sendChatMessage(friend.userId, m);
-      await load();
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const sendLocation = () =>
-    navigator.geolocation.getCurrentPosition(
-      (p) => {
-        const data: ChatLocation = {
-          lat: +p.coords.latitude.toFixed(6),
-          lng: +p.coords.longitude.toFixed(6),
-          accuracy: Math.round(p.coords.accuracy),
-          ...(p.coords.altitude != null ? { elevation: Math.round(p.coords.altitude) } : {}),
-        };
-        send({ kind: "location", data });
-      },
-      () => setError("Allow location in the browser to send where you are."),
-      { enableHighAccuracy: true, timeout: 15000 },
-    );
-
-  const ordered = [...messages].reverse();
-  const myNewest = messages.find((m) => m.fromMe);
-  const since0 = new Date(friend.since);
-
-  return (
-    <>
-      <div className="flex items-center gap-2.5 px-3 pt-[calc(0.625rem+env(safe-area-inset-top))] sm:pt-2.5 pb-2.5 border-b border-sand-200">
-        <button onClick={onBack} className="cursor-pointer p-1.5 rounded-lg hover:bg-sand-100" aria-label="Back">
-          <ArrowLeft size={18} />
-        </button>
-        <Avatar name={friend.name} size={36} />
-        <span className="flex-1 min-w-0">
-          <span className="block text-[15px] font-bold truncate">{friend.name}</span>
-          <span className="block text-xs text-sand-600 truncate">{friend.organization ?? "Landscape 360 friend"}</span>
-        </span>
-      </div>
-      <div className="relative flex-1 min-h-0 bg-sand-50">
-        <Contours />
-        <div className="relative h-full overflow-y-auto px-3 py-3">
-          {ordered.length === 0 ? (
-            <div className="py-10 text-center space-y-2">
-              <span className="inline-block">
-                <Avatar name={friend.name} size={64} />
-              </span>
-              <p className="text-base font-bold">{friend.name}</p>
-              <p className="text-xs text-sand-600">Say hello, or send your location. Messages arrive within about 15 seconds.</p>
-            </div>
-          ) : (
-            <p className="flex flex-col items-center gap-1 pt-2 pb-1 text-center text-xs text-sand-500">
-              <Lock size={14} />
-              Friends since {since0.getDate()} {MONTHS[since0.getMonth()]} {since0.getFullYear()}
-              <br />
-              Only the two of you can read this chat
-            </p>
-          )}
-          {ordered.map((m, i) => {
-            const older = ordered[i - 1];
-            const newDay = !older || !sameDay(older.createdAt, m.createdAt);
-            const groupStart = newDay || older.fromMe !== m.fromMe;
-            const mine = m.fromMe;
-            const loc = !m.deleted && m.kind === "location" && m.data ? (m.data as unknown as ChatLocation) : null;
-            const att = !m.deleted && m.kind === "attachment" && m.data ? (m.data as unknown as Attachment) : null;
-            const card = !!(loc || att);
-            const canDelete = mine && !m.deleted && Date.now() - m.createdAt < CHAT_DELETE_WINDOW_MS;
-            const sub = mine ? PEACH_SUB : "var(--color-sand-500)";
-            const r = "18px", tail = "5px";
-            // CSS order: top-left, top-right, bottom-right, bottom-left; the tail side is tighter
-            const radius = mine ? `${r} ${groupStart ? r : tail} ${tail} ${r}` : `${groupStart ? r : tail} ${r} ${r} ${tail}`;
-            const read = mine && m.readAt;
-            return (
-              <div key={m.id}>
-                {newDay && (
-                  <div className="flex justify-center py-3">
-                    <span className="px-3 py-1 rounded-full bg-white border border-sand-200 text-xs font-semibold text-sand-600">{dayLabel(m.createdAt)}</span>
-                  </div>
-                )}
-                <div className={`flex ${mine ? "justify-end" : "justify-start"} ${groupStart ? "mt-2" : "mt-0.5"}`}>
-                  <div
-                    className={`group max-w-[78%] border shadow-[0_1px_3px_rgba(0,0,0,.05)] ${card ? "p-1.5" : "px-3 pt-[7px] pb-[5px]"}`}
-                    style={{ background: mine ? PEACH : "#fff", borderColor: mine ? PEACH_LINE : "var(--color-sand-200)", borderRadius: radius }}
-                  >
-                    {m.deleted ? (
-                      <span className="flex items-center gap-1.5 text-sm italic" style={{ color: sub }}>
-                        <Ban size={14} /> Message deleted
-                      </span>
-                    ) : loc ? (
-                      <MapCard
-                        mine={mine}
-                        kind="Location"
-                        title={loc.elevation != null ? `${thousands(Math.round(loc.elevation))} mdpl` : "My location"}
-                        detail={[`${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)}`, loc.accuracy != null ? `±${Math.round(loc.accuracy)} m` : null].filter(Boolean).join(" · ")}
-                        icon={<LocateFixed size={20} />}
-                        onClick={() => showOnMap({ kind: "place", name: `${friend.name}'s location`, category: "location", geometry: { type: "Point", coordinates: [loc.lng, loc.lat] } })}
-                      />
-                    ) : att ? (
-                      <MapCard mine={mine} kind="Map data" title={att.name} detail="Track, area, location or Field Work" icon={<Route size={20} />} onClick={() => showOnMap(att)} />
-                    ) : (
-                      <span className="block whitespace-pre-wrap break-words text-sm leading-[1.35]">{m.body}</span>
-                    )}
-                    <span className={`flex items-center justify-end gap-1 text-[10px] ${card ? "px-1.5 pt-1 pb-0.5" : "pt-0.5"}`} style={{ color: sub }}>
-                      {canDelete && (
-                        <button
-                          onClick={() => {
-                            if (window.confirm("Delete this message for both of you?")) deleteChatMessage(m.id).then(load, (e: Error) => setError(e.message));
-                          }}
-                          // No hover on touch screens: always there while it can be deleted
-                          className="cursor-pointer hidden group-hover:inline [@media(hover:none)]:inline mr-1"
-                          aria-label="Delete message"
-                        >
-                          <Trash2 size={11} />
-                        </button>
-                      )}
-                      {clock(m.createdAt)}
-                      {mine &&
-                        (read ? (
-                          <CheckCheck size={14} aria-label="Read" style={{ color: m.id === myNewest?.id ? "var(--color-ember-500)" : sub }} />
-                        ) : (
-                          <Check size={14} />
-                        ))}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-          <div ref={bottom} />
-        </div>
-      </div>
-      {error && <p className="px-3 pt-2 text-xs text-brick-600">{error}</p>}
-      {stillFriend ? (
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (text.trim()) send({ kind: "text", body: text }).then(() => setText(""));
-          }}
-          className="flex items-end gap-2 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] border-t border-sand-200 bg-white"
-        >
-          <button type="button" onClick={sendLocation} disabled={busy} className="cursor-pointer w-10 h-10 shrink-0 flex items-center justify-center rounded-full hover:bg-sand-100 text-forest-700" aria-label="Send my location">
-            <PlusCircle size={22} />
-          </button>
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                if (text.trim()) send({ kind: "text", body: text }).then(() => setText(""));
-              }
-            }}
-            maxLength={CHAT_BODY_MAX}
-            rows={1}
-            placeholder="Message"
-            aria-label="Message"
-            className="flex-1 resize-none rounded-[22px] border border-sand-200 bg-sand-50 px-4 py-2.5 text-base sm:text-sm focus:outline-none focus:border-forest-500"
-          />
-          <button
-            type="submit"
-            disabled={busy || !text.trim()}
-            className="cursor-pointer w-10 h-10 shrink-0 flex items-center justify-center rounded-full text-white disabled:cursor-default"
-            style={{ background: busy || !text.trim() ? "var(--color-sand-200)" : SEND_ORANGE }}
-            aria-label="Send"
-          >
-            {busy ? <Loader2 size={18} className="animate-spin" /> : <ArrowUp size={20} />}
-          </button>
-        </form>
-      ) : (
-        <p className="p-3 text-center text-xs text-sand-500 border-t border-sand-200 bg-white">You are no longer friends, so you cannot send messages.</p>
-      )}
-    </>
-  );
-};
 
 // --- A friend link (/?friend=<token>) --------------------------------------------------------------
 

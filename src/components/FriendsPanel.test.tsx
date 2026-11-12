@@ -68,28 +68,20 @@ describe('Friends', () => {
     expect(useFriendsStore.getState()).toMatchObject({ isOpen: false, unread: { messages: 0, requests: 0 } });
   });
 
-  it('opens a chat in a browser whose scrollIntoView returns a promise', async () => {
+  it('opening a chat says messages are in the app, with the unread count', async () => {
     signIn(true);
     const sari: Friend = {
       userId: 'f1', name: 'Sari W.', organization: null, since: 0, lastAt: 1000, lastKind: 'text', lastBody: 'Halo',
-      lastFromMe: false, lastDeleted: false, unread: 1,
+      lastFromMe: false, lastDeleted: false, unread: 2,
     };
     vi.mocked(fetchFriends).mockResolvedValue([sari]);
-    vi.mocked(fetchChatMessages).mockResolvedValue([
-      { id: 'm1', fromMe: false, kind: 'text', body: 'Besok jadi ke Gede?', data: null, createdAt: 1000, readAt: null, deleted: false, updatedAt: 1000 },
-    ]);
-    const original = Element.prototype.scrollIntoView;
-    Element.prototype.scrollIntoView = (() => Promise.resolve()) as never;
-    try {
-      useFriendsStore.getState().open();
-      const { unmount } = render(<FriendsHost />);
-      fireEvent.click(await screen.findByText('Sari W.'));
-      expect(await screen.findByText('Besok jadi ke Gede?')).toBeTruthy();
-      // Leaving the chat runs the effects' cleanups (a promise there used to throw)
-      unmount();
-    } finally {
-      Element.prototype.scrollIntoView = original;
-    }
+    useFriendsStore.getState().open();
+    render(<FriendsHost />);
+    expect(await screen.findByText('Halo')).toBeTruthy();
+    fireEvent.click(screen.getByText('Sari W.'));
+    expect(await screen.findByText('Chat is in the Landscape 360 app')).toBeTruthy();
+    expect(screen.getByText(/2 unread messages from Sari W\. are waiting there/)).toBeTruthy();
+    expect(fetchChatMessages).not.toHaveBeenCalled();
   });
 
   it('closes the chat, then Friends, with the Back button', async () => {
@@ -120,20 +112,5 @@ describe('Friends', () => {
     await back();
     expect(screen.queryByRole('dialog', { name: 'Friends' })).toBeNull();
     expect(useFriendsStore.getState().isOpen).toBe(false);
-  });
-
-  it('goes back to the map for "Show on map"', async () => {
-    signIn(true);
-    vi.mocked(fetchFriends).mockResolvedValue([
-      { userId: 'f1', name: 'Sari W.', organization: null, since: 0, lastAt: 1000, lastKind: 'location', lastBody: null, lastFromMe: false, lastDeleted: false, unread: 0 },
-    ]);
-    vi.mocked(fetchChatMessages).mockResolvedValue([
-      { id: 'm1', fromMe: false, kind: 'location', body: null, data: { lat: -6.74, lng: 106.98 }, createdAt: 1000, readAt: 1, deleted: false, updatedAt: 1000 },
-    ]);
-    useFriendsStore.getState().open();
-    render(<FriendsHost />);
-    fireEvent.click(await screen.findByText('Sari W.'));
-    fireEvent.click(await screen.findByText('Show on map'));
-    expect(screen.queryByRole('dialog', { name: 'Friends' })).toBeNull();
   });
 });
